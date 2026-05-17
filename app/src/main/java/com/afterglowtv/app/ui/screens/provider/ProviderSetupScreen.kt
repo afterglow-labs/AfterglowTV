@@ -87,6 +87,16 @@ import android.widget.Toast
 
 private enum class SourceType { XTREAM, STALKER, M3U_URL, M3U_FILE }
 
+internal fun shouldInlineProviderSetupActions(
+    isTelevisionDevice: Boolean,
+    viewportHeightDp: Int
+): Boolean = !isTelevisionDevice || viewportHeightDp < 520
+
+internal fun shouldUseProviderSetupSideRail(
+    isTelevisionDevice: Boolean,
+    viewportWidthDp: Int
+): Boolean = isTelevisionDevice && viewportWidthDp >= 700
+
 // Screen
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -346,19 +356,24 @@ fun ProviderSetupScreen(
                     )
             )
         }
-        val isWide = maxWidth >= 700.dp
+        val isTelevisionDevice = rememberIsTelevisionDevice()
+        val isWide = shouldUseProviderSetupSideRail(
+            isTelevisionDevice = isTelevisionDevice,
+            viewportWidthDp = maxWidth.value.toInt()
+        )
+        val isShortPhoneLandscape = !isTelevisionDevice && maxHeight < 520.dp
         val hPad = if (isWide) 24.dp else 16.dp
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = hPad, vertical = 14.dp)
+                .padding(horizontal = hPad, vertical = if (isShortPhoneLandscape) 8.dp else 14.dp)
         ) {
             // ── Hero brand strip ──────────────────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 14.dp),
+                    .padding(bottom = if (isShortPhoneLandscape) 8.dp else 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
@@ -368,7 +383,13 @@ fun ProviderSetupScreen(
                     ),
                     contentDescription = "Afterglow TV",
                     modifier = Modifier
-                        .size(if (isWide) 64.dp else 48.dp)
+                        .size(
+                            when {
+                                isShortPhoneLandscape -> 40.dp
+                                isWide -> 64.dp
+                                else -> 48.dp
+                            }
+                        )
                         .afterglow(
                             specs = listOf(
                                 GlowSpec(
@@ -684,264 +705,322 @@ private fun ProviderFormContent(
         border = Border(border = BorderStroke(1.dp, SurfaceHighlight), shape = RoundedCornerShape(20.dp)),
         colors = SurfaceDefaults.colors(containerColor = SurfaceElevated.copy(alpha = 0.95f))
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding()
-                .padding(18.dp)
-        ) {
-            val showScrollHint by remember {
-                derivedStateOf { scrollState.value < scrollState.maxValue }
-            }
-            Box(modifier = Modifier.weight(1f)) {
-                Column(
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val inlineActions = shouldInlineProviderSetupActions(
+                isTelevisionDevice = isTelevisionDevice,
+                viewportHeightDp = maxHeight.value.toInt()
+            )
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(bottom = if (showScrollHint) 34.dp else 0.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                        if (maxWidth >= 560.dp) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                SetupSectionBox(modifier = Modifier.weight(0.46f)) {
-                                    SetupSummaryStrip(sourceType = sourceType, isEditing = uiState.isEditing)
+                    .imePadding()
+                    .then(if (inlineActions) Modifier.navigationBarsPadding() else Modifier)
+                    .padding(18.dp)
+            ) {
+                val showScrollHint by remember {
+                    derivedStateOf { scrollState.value < scrollState.maxValue }
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(bottom = if (showScrollHint) 34.dp else 0.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                            if (maxWidth >= 560.dp) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    SetupSectionBox(modifier = Modifier.weight(0.46f)) {
+                                        SetupSummaryStrip(sourceType = sourceType, isEditing = uiState.isEditing)
+                                    }
+                                    SetupSectionBox(modifier = Modifier.weight(0.54f)) {
+                                        ProviderTextField(
+                                            value = name,
+                                            onValueChange = onNameChange,
+                                            placeholder = androidx.compose.ui.res.stringResource(R.string.setup_name_hint),
+                                            modifier = Modifier.fillMaxWidth(0.72f)
+                                        )
+                                    }
                                 }
-                                SetupSectionBox(modifier = Modifier.weight(0.54f)) {
-                                    ProviderTextField(
-                                        value = name,
-                                        onValueChange = onNameChange,
-                                        placeholder = androidx.compose.ui.res.stringResource(R.string.setup_name_hint),
-                                        modifier = Modifier.fillMaxWidth(0.72f)
-                                    )
-                                }
-                            }
-                        } else {
-                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                SetupSectionBox {
-                                    SetupSummaryStrip(sourceType = sourceType, isEditing = uiState.isEditing)
-                                }
-                                SetupSectionBox {
-                                    ProviderTextField(
-                                        value = name,
-                                        onValueChange = onNameChange,
-                                        placeholder = androidx.compose.ui.res.stringResource(R.string.setup_name_hint)
-                                    )
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    SetupSectionBox {
+                                        SetupSummaryStrip(sourceType = sourceType, isEditing = uiState.isEditing)
+                                    }
+                                    SetupSectionBox {
+                                        ProviderTextField(
+                                            value = name,
+                                            onValueChange = onNameChange,
+                                            placeholder = androidx.compose.ui.res.stringResource(R.string.setup_name_hint)
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    SetupSectionBox {
-                        when (sourceType) {
-                            SourceType.XTREAM -> {
-                            ProviderTextField(
-                                value = serverUrl, onValueChange = onServerUrlChange,
-                                placeholder = androidx.compose.ui.res.stringResource(R.string.setup_server_hint),
-                                keyboardOptions = KeyboardOptions(
-                                    capitalization = KeyboardCapitalization.None,
-                                    autoCorrectEnabled = false,
-                                    keyboardType = if (isTelevisionDevice) KeyboardType.Ascii else KeyboardType.Uri,
-                                    imeAction = ImeAction.Next
-                                )
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SetupSectionBox {
+                            when (sourceType) {
+                                SourceType.XTREAM -> {
                                 ProviderTextField(
-                                    value = username, onValueChange = onUsernameChange,
-                                    placeholder = androidx.compose.ui.res.stringResource(R.string.setup_user_hint),
-                                    modifier = Modifier.weight(1f),
+                                    value = serverUrl, onValueChange = onServerUrlChange,
+                                    placeholder = androidx.compose.ui.res.stringResource(R.string.setup_server_hint),
                                     keyboardOptions = KeyboardOptions(
                                         capitalization = KeyboardCapitalization.None,
+                                        autoCorrectEnabled = false,
+                                        keyboardType = if (isTelevisionDevice) KeyboardType.Ascii else KeyboardType.Uri,
+                                        imeAction = ImeAction.Next
+                                    )
+                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    ProviderTextField(
+                                        value = username, onValueChange = onUsernameChange,
+                                        placeholder = androidx.compose.ui.res.stringResource(R.string.setup_user_hint),
+                                        modifier = Modifier.weight(1f),
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.None,
+                                            autoCorrectEnabled = false,
+                                            keyboardType = KeyboardType.Ascii,
+                                            imeAction = ImeAction.Next
+                                        )
+                                    )
+                                    ProviderTextField(
+                                        value = password, onValueChange = onPasswordChange,
+                                        placeholder = androidx.compose.ui.res.stringResource(R.string.setup_pass_hint),
+                                        modifier = Modifier.weight(1f),
+                                        isPassword = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.None,
+                                            autoCorrectEnabled = false,
+                                            keyboardType = if (isTelevisionDevice) KeyboardType.Ascii else KeyboardType.Password,
+                                            imeAction = ImeAction.Done
+                                        )
+                                    )
+                                }
+                                AdvancedProviderOptionsSection(
+                                    sourceType = sourceType,
+                                    uiState = uiState,
+                                    httpUserAgent = httpUserAgent,
+                                    onHttpUserAgentChange = onHttpUserAgentChange,
+                                    httpHeaders = httpHeaders,
+                                    onHttpHeadersChange = onHttpHeadersChange,
+                                    onToggleM3uVodClassification = onToggleM3uVodClassification,
+                                    onToggleXtreamFastSync = onToggleXtreamFastSync,
+                                    onSelectEpgSyncMode = onSelectEpgSyncMode,
+                                    onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
+                                    stalkerDeviceProfile = stalkerDeviceProfile,
+                                    onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
+                                    stalkerDeviceTimezone = stalkerDeviceTimezone,
+                                    onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
+                                    stalkerDeviceLocale = stalkerDeviceLocale,
+                                    onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
+                                )
+                                }
+
+                                SourceType.STALKER -> {
+                                ProviderTextField(
+                                    value = serverUrl, onValueChange = onServerUrlChange,
+                                    placeholder = "Portal URL",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.None,
+                                        autoCorrectEnabled = false,
+                                        keyboardType = if (isTelevisionDevice) KeyboardType.Ascii else KeyboardType.Uri,
+                                        imeAction = ImeAction.Next
+                                    )
+                                )
+                                ProviderTextField(
+                                    value = stalkerMacAddress, onValueChange = onStalkerMacAddressChange,
+                                    placeholder = "MAC address",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Characters,
                                         autoCorrectEnabled = false,
                                         keyboardType = KeyboardType.Ascii,
                                         imeAction = ImeAction.Next
                                     )
                                 )
-                                ProviderTextField(
-                                    value = password, onValueChange = onPasswordChange,
-                                    placeholder = androidx.compose.ui.res.stringResource(R.string.setup_pass_hint),
-                                    modifier = Modifier.weight(1f),
-                                    isPassword = true,
-                                    keyboardOptions = KeyboardOptions(
-                                        capitalization = KeyboardCapitalization.None,
-                                        autoCorrectEnabled = false,
-                                        keyboardType = if (isTelevisionDevice) KeyboardType.Ascii else KeyboardType.Password,
-                                        imeAction = ImeAction.Done
+                                AdvancedProviderOptionsSection(
+                                    sourceType = sourceType,
+                                    uiState = uiState,
+                                    httpUserAgent = httpUserAgent,
+                                    onHttpUserAgentChange = onHttpUserAgentChange,
+                                    httpHeaders = httpHeaders,
+                                    onHttpHeadersChange = onHttpHeadersChange,
+                                    onToggleM3uVodClassification = onToggleM3uVodClassification,
+                                    onToggleXtreamFastSync = onToggleXtreamFastSync,
+                                    onSelectEpgSyncMode = onSelectEpgSyncMode,
+                                    onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
+                                    stalkerDeviceProfile = stalkerDeviceProfile,
+                                    onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
+                                    stalkerDeviceTimezone = stalkerDeviceTimezone,
+                                    onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
+                                    stalkerDeviceLocale = stalkerDeviceLocale,
+                                    onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
+                                )
+                                }
+
+                                SourceType.M3U_URL -> {
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    com.afterglowtv.app.ui.components.ClipboardPasteButton(
+                                        onPaste = { onM3uUrlChange(it) },
+                                        label = "Paste M3U URL",
                                     )
+                                    com.afterglowtv.app.ui.components.ClipboardCopyButton(
+                                        text = m3uUrl,
+                                        label = "Copy"
+                                    )
+                                    com.afterglowtv.app.ui.components.ClipboardClearButton(
+                                        onClear = { onM3uUrlChange("") },
+                                        label = "Clear",
+                                        enabled = m3uUrl.isNotEmpty()
+                                    )
+                                }
+                                ProviderTextField(
+                                    value = m3uUrl, onValueChange = onM3uUrlChange,
+                                    placeholder = androidx.compose.ui.res.stringResource(R.string.setup_m3u_hint),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next)
                                 )
-                            }
-                            AdvancedProviderOptionsSection(
-                                sourceType = sourceType,
-                                uiState = uiState,
-                                httpUserAgent = httpUserAgent,
-                                onHttpUserAgentChange = onHttpUserAgentChange,
-                                httpHeaders = httpHeaders,
-                                onHttpHeadersChange = onHttpHeadersChange,
-                                onToggleM3uVodClassification = onToggleM3uVodClassification,
-                                onToggleXtreamFastSync = onToggleXtreamFastSync,
-                                onSelectEpgSyncMode = onSelectEpgSyncMode,
-                                onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
-                                stalkerDeviceProfile = stalkerDeviceProfile,
-                                onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
-                                stalkerDeviceTimezone = stalkerDeviceTimezone,
-                                onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
-                                stalkerDeviceLocale = stalkerDeviceLocale,
-                                onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
-                            )
-                            }
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    com.afterglowtv.app.ui.components.ClipboardPasteButton(
+                                        onPaste = { onM3uEpgUrlChange(it) },
+                                        label = "Paste EPG URL",
+                                    )
+                                    com.afterglowtv.app.ui.components.ClipboardCopyButton(
+                                        text = m3uEpgUrl,
+                                        label = "Copy"
+                                    )
+                                    com.afterglowtv.app.ui.components.ClipboardClearButton(
+                                        onClear = { onM3uEpgUrlChange("") },
+                                        label = "Clear",
+                                        enabled = m3uEpgUrl.isNotEmpty()
+                                    )
+                                }
+                                ProviderTextField(
+                                    value = m3uEpgUrl, onValueChange = onM3uEpgUrlChange,
+                                    placeholder = androidx.compose.ui.res.stringResource(R.string.setup_epg_url_hint),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
+                                )
+                                AdvancedProviderOptionsSection(
+                                    sourceType = sourceType,
+                                    uiState = uiState,
+                                    httpUserAgent = httpUserAgent,
+                                    onHttpUserAgentChange = onHttpUserAgentChange,
+                                    httpHeaders = httpHeaders,
+                                    onHttpHeadersChange = onHttpHeadersChange,
+                                    onToggleM3uVodClassification = onToggleM3uVodClassification,
+                                    onToggleXtreamFastSync = onToggleXtreamFastSync,
+                                    onSelectEpgSyncMode = onSelectEpgSyncMode,
+                                    onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
+                                    stalkerDeviceProfile = stalkerDeviceProfile,
+                                    onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
+                                    stalkerDeviceTimezone = stalkerDeviceTimezone,
+                                    onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
+                                    stalkerDeviceLocale = stalkerDeviceLocale,
+                                    onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
+                                )
+                                }
 
-                            SourceType.STALKER -> {
-                            ProviderTextField(
-                                value = serverUrl, onValueChange = onServerUrlChange,
-                                placeholder = "Portal URL",
-                                keyboardOptions = KeyboardOptions(
-                                    capitalization = KeyboardCapitalization.None,
-                                    autoCorrectEnabled = false,
-                                    keyboardType = if (isTelevisionDevice) KeyboardType.Ascii else KeyboardType.Uri,
-                                    imeAction = ImeAction.Next
+                                SourceType.M3U_FILE -> {
+                                FileSelectorCard(
+                                    fileName = if (m3uUrl.startsWith("file://")) m3uUrl.substringAfterLast("/") else null,
+                                    fileSelectedHint = androidx.compose.ui.res.stringResource(R.string.setup_file_replace_hint),
+                                    emptySelectionTitle = androidx.compose.ui.res.stringResource(R.string.setup_file_select_title),
+                                    emptySelectionHint = androidx.compose.ui.res.stringResource(R.string.setup_file_browse_hint),
+                                    onClick = onFilePick
                                 )
-                            )
-                            ProviderTextField(
-                                value = stalkerMacAddress, onValueChange = onStalkerMacAddressChange,
-                                placeholder = "MAC address",
-                                keyboardOptions = KeyboardOptions(
-                                    capitalization = KeyboardCapitalization.Characters,
-                                    autoCorrectEnabled = false,
-                                    keyboardType = KeyboardType.Ascii,
-                                    imeAction = ImeAction.Next
+                                fileImportError?.let {
+                                    Text(text = it, style = MaterialTheme.typography.bodyMedium, color = ErrorColor)
+                                }
+                                AdvancedProviderOptionsSection(
+                                    sourceType = sourceType,
+                                    uiState = uiState,
+                                    httpUserAgent = httpUserAgent,
+                                    onHttpUserAgentChange = onHttpUserAgentChange,
+                                    httpHeaders = httpHeaders,
+                                    onHttpHeadersChange = onHttpHeadersChange,
+                                    onToggleM3uVodClassification = onToggleM3uVodClassification,
+                                    onToggleXtreamFastSync = onToggleXtreamFastSync,
+                                    onSelectEpgSyncMode = onSelectEpgSyncMode,
+                                    onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
+                                    stalkerDeviceProfile = stalkerDeviceProfile,
+                                    onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
+                                    stalkerDeviceTimezone = stalkerDeviceTimezone,
+                                    onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
+                                    stalkerDeviceLocale = stalkerDeviceLocale,
+                                    onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
                                 )
-                            )
-                            AdvancedProviderOptionsSection(
-                                sourceType = sourceType,
-                                uiState = uiState,
-                                httpUserAgent = httpUserAgent,
-                                onHttpUserAgentChange = onHttpUserAgentChange,
-                                httpHeaders = httpHeaders,
-                                onHttpHeadersChange = onHttpHeadersChange,
-                                onToggleM3uVodClassification = onToggleM3uVodClassification,
-                                onToggleXtreamFastSync = onToggleXtreamFastSync,
-                                onSelectEpgSyncMode = onSelectEpgSyncMode,
-                                onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
-                                stalkerDeviceProfile = stalkerDeviceProfile,
-                                onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
-                                stalkerDeviceTimezone = stalkerDeviceTimezone,
-                                onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
-                                stalkerDeviceLocale = stalkerDeviceLocale,
-                                onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
-                            )
-                            }
-
-                            SourceType.M3U_URL -> {
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                com.afterglowtv.app.ui.components.ClipboardPasteButton(
-                                    onPaste = { onM3uUrlChange(it) },
-                                    label = "Paste M3U URL",
-                                )
-                                com.afterglowtv.app.ui.components.ClipboardCopyButton(
-                                    text = m3uUrl,
-                                    label = "Copy"
-                                )
-                                com.afterglowtv.app.ui.components.ClipboardClearButton(
-                                    onClear = { onM3uUrlChange("") },
-                                    label = "Clear",
-                                    enabled = m3uUrl.isNotEmpty()
-                                )
-                            }
-                            ProviderTextField(
-                                value = m3uUrl, onValueChange = onM3uUrlChange,
-                                placeholder = androidx.compose.ui.res.stringResource(R.string.setup_m3u_hint),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next)
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                com.afterglowtv.app.ui.components.ClipboardPasteButton(
-                                    onPaste = { onM3uEpgUrlChange(it) },
-                                    label = "Paste EPG URL",
-                                )
-                                com.afterglowtv.app.ui.components.ClipboardCopyButton(
-                                    text = m3uEpgUrl,
-                                    label = "Copy"
-                                )
-                                com.afterglowtv.app.ui.components.ClipboardClearButton(
-                                    onClear = { onM3uEpgUrlChange("") },
-                                    label = "Clear",
-                                    enabled = m3uEpgUrl.isNotEmpty()
-                                )
-                            }
-                            ProviderTextField(
-                                value = m3uEpgUrl, onValueChange = onM3uEpgUrlChange,
-                                placeholder = androidx.compose.ui.res.stringResource(R.string.setup_epg_url_hint),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
-                            )
-                            AdvancedProviderOptionsSection(
-                                sourceType = sourceType,
-                                uiState = uiState,
-                                httpUserAgent = httpUserAgent,
-                                onHttpUserAgentChange = onHttpUserAgentChange,
-                                httpHeaders = httpHeaders,
-                                onHttpHeadersChange = onHttpHeadersChange,
-                                onToggleM3uVodClassification = onToggleM3uVodClassification,
-                                onToggleXtreamFastSync = onToggleXtreamFastSync,
-                                onSelectEpgSyncMode = onSelectEpgSyncMode,
-                                onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
-                                stalkerDeviceProfile = stalkerDeviceProfile,
-                                onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
-                                stalkerDeviceTimezone = stalkerDeviceTimezone,
-                                onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
-                                stalkerDeviceLocale = stalkerDeviceLocale,
-                                onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
-                            )
-                            }
-
-                            SourceType.M3U_FILE -> {
-                            FileSelectorCard(
-                                fileName = if (m3uUrl.startsWith("file://")) m3uUrl.substringAfterLast("/") else null,
-                                fileSelectedHint = androidx.compose.ui.res.stringResource(R.string.setup_file_replace_hint),
-                                emptySelectionTitle = androidx.compose.ui.res.stringResource(R.string.setup_file_select_title),
-                                emptySelectionHint = androidx.compose.ui.res.stringResource(R.string.setup_file_browse_hint),
-                                onClick = onFilePick
-                            )
-                            fileImportError?.let {
-                                Text(text = it, style = MaterialTheme.typography.bodyMedium, color = ErrorColor)
-                            }
-                            AdvancedProviderOptionsSection(
-                                sourceType = sourceType,
-                                uiState = uiState,
-                                httpUserAgent = httpUserAgent,
-                                onHttpUserAgentChange = onHttpUserAgentChange,
-                                httpHeaders = httpHeaders,
-                                onHttpHeadersChange = onHttpHeadersChange,
-                                onToggleM3uVodClassification = onToggleM3uVodClassification,
-                                onToggleXtreamFastSync = onToggleXtreamFastSync,
-                                onSelectEpgSyncMode = onSelectEpgSyncMode,
-                                onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
-                                stalkerDeviceProfile = stalkerDeviceProfile,
-                                onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
-                                stalkerDeviceTimezone = stalkerDeviceTimezone,
-                                onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
-                                stalkerDeviceLocale = stalkerDeviceLocale,
-                                onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
-                            )
+                                }
                             }
                         }
+                        FormErrors(uiState.validationError, uiState.error)
+                        if (inlineActions) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            ProviderSetupActionButtons(
+                                primaryActionText = primaryActionText,
+                                isPrimaryLoading = uiState.isLoading,
+                                onPrimaryAction = primaryAction,
+                                showImportBackupButton = showImportBackupButton,
+                                isImportingBackup = isImportingBackup,
+                                onImportBackup = onImportBackup
+                            )
+                        }
                     }
-                    FormErrors(uiState.validationError, uiState.error)
+
+                    if (showScrollHint) {
+                        ScrollDownHint(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 4.dp)
+                        )
+                    }
                 }
-                if (showScrollHint) {
-                    ScrollDownHint(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 4.dp)
+
+                if (!inlineActions) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    ProviderSetupActionButtons(
+                        primaryActionText = primaryActionText,
+                        isPrimaryLoading = uiState.isLoading,
+                        onPrimaryAction = primaryAction,
+                        showImportBackupButton = showImportBackupButton,
+                        isImportingBackup = isImportingBackup,
+                        onImportBackup = onImportBackup
                     )
                 }
             }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(12.dp))
-            if (showImportBackupButton) {
+@Composable
+private fun ProviderSetupActionButtons(
+    primaryActionText: String,
+    isPrimaryLoading: Boolean,
+    onPrimaryAction: () -> Unit,
+    showImportBackupButton: Boolean,
+    isImportingBackup: Boolean,
+    onImportBackup: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        if (showImportBackupButton) {
+            if (maxWidth < 430.dp) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ActionButton(
+                        text = primaryActionText,
+                        isLoading = isPrimaryLoading,
+                        onClick = onPrimaryAction
+                    )
+                    ActionButton(
+                        text = androidx.compose.ui.res.stringResource(R.string.setup_import_backup),
+                        isLoading = isImportingBackup,
+                        onClick = onImportBackup
+                    )
+                }
+            } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     ActionButton(
                         text = primaryActionText,
-                        isLoading = uiState.isLoading,
-                        onClick = primaryAction,
+                        isLoading = isPrimaryLoading,
+                        onClick = onPrimaryAction,
                         modifier = Modifier.weight(1f)
                     )
                     ActionButton(
@@ -951,13 +1030,13 @@ private fun ProviderFormContent(
                         modifier = Modifier.weight(1f)
                     )
                 }
-            } else {
-                ActionButton(
-                    text = primaryActionText,
-                    isLoading = uiState.isLoading,
-                    onClick = primaryAction
-                )
             }
+        } else {
+            ActionButton(
+                text = primaryActionText,
+                isLoading = isPrimaryLoading,
+                onClick = onPrimaryAction
+            )
         }
     }
 }
