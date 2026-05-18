@@ -44,4 +44,17 @@ class EpgScreenStateTest {
         assertThat(shouldRenderGuideChrome(state)).isTrue()
         assertThat(resolveGuideEmptyAction(state)).isEqualTo(GuideEmptyAction.ResetFilters)
     }
+
+    @Test
+    fun `active provider empty guide keeps toolbar reachable on no channel count`() {
+        val state = EpgUiState(
+            currentProviderName = "Provider",
+            channels = emptyList(),
+            totalChannelCount = 0,
+            error = null
+        )
+
+        assertThat(shouldRenderGuideChrome(state)).isTrue()
+        assertThat(resolveGuideEmptyAction(state)).isEqualTo(GuideEmptyAction.Retry)
+    }
 }

@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.afterglowtv.domain.model.GuideNoDataTextMode
 
 @Singleton
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
@@ -149,6 +150,8 @@ class PreferencesRepository @Inject constructor(
         val GUIDE_DEFAULT_CATEGORY_ID = longPreferencesKey("guide_default_category_id")
         val GUIDE_NO_DATA_BLOCK_MINUTES = intPreferencesKey("guide_no_data_block_minutes")
         val GUIDE_NO_DATA_SHOW_CHANNEL_TEXT = booleanPreferencesKey("guide_no_data_show_channel_text")
+        val GUIDE_NO_DATA_TEXT_MODE = stringPreferencesKey("guide_no_data_text_mode")
+        val GUIDE_NO_DATA_CUSTOM_TEXT = stringPreferencesKey("guide_no_data_custom_text")
         val GUIDE_FAVORITES_ONLY = intPreferencesKey("guide_favorites_only")
         val GUIDE_ANCHOR_TIME = longPreferencesKey("guide_anchor_time")
         val PROMOTED_LIVE_GROUP_IDS = stringPreferencesKey("promoted_live_group_ids")
@@ -1557,6 +1560,40 @@ class PreferencesRepository @Inject constructor(
     suspend fun setGuideNoDataShowChannelText(show: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.GUIDE_NO_DATA_SHOW_CHANNEL_TEXT] = show
+            preferences[PreferencesKeys.GUIDE_NO_DATA_TEXT_MODE] = if (show) {
+                GuideNoDataTextMode.CHANNEL_NAME.name
+            } else {
+                GuideNoDataTextMode.BLANK.name
+            }
+        }
+    }
+
+    val guideNoDataTextMode: Flow<GuideNoDataTextMode> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.GUIDE_NO_DATA_TEXT_MODE]
+            ?.let(GuideNoDataTextMode::fromStorage)
+            ?: if (preferences[PreferencesKeys.GUIDE_NO_DATA_SHOW_CHANNEL_TEXT] == false) {
+                GuideNoDataTextMode.BLANK
+            } else {
+                GuideNoDataTextMode.CHANNEL_NAME
+            }
+    }
+
+    suspend fun setGuideNoDataTextMode(mode: GuideNoDataTextMode) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.GUIDE_NO_DATA_TEXT_MODE] = mode.name
+            preferences[PreferencesKeys.GUIDE_NO_DATA_SHOW_CHANNEL_TEXT] = mode != GuideNoDataTextMode.BLANK
+        }
+    }
+
+    val guideNoDataCustomText: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.GUIDE_NO_DATA_CUSTOM_TEXT].orEmpty()
+    }
+
+    suspend fun setGuideNoDataCustomText(text: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.GUIDE_NO_DATA_CUSTOM_TEXT] = text.trim().take(160)
+            preferences[PreferencesKeys.GUIDE_NO_DATA_TEXT_MODE] = GuideNoDataTextMode.CUSTOM.name
+            preferences[PreferencesKeys.GUIDE_NO_DATA_SHOW_CHANNEL_TEXT] = true
         }
     }
 

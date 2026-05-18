@@ -16,6 +16,7 @@ import com.afterglowtv.domain.model.CombinedCategory
 import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.EpgOverrideCandidate
 import com.afterglowtv.domain.model.Favorite
+import com.afterglowtv.domain.model.GuideNoDataTextMode
 import com.afterglowtv.domain.model.Program
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
@@ -161,7 +162,8 @@ private data class GuideBaseRequest(
     val windowStart: Long,
     val windowEnd: Long,
     val noDataBlockMinutes: Int,
-    val noDataShowChannelText: Boolean
+    val noDataTextMode: GuideNoDataTextMode,
+    val noDataCustomText: String
 )
 
 private data class GuideBaseSnapshot(
@@ -185,7 +187,8 @@ private data class GuideBaseSnapshot(
     val guideWindowStart: Long,
     val guideWindowEnd: Long,
     val noDataBlockMinutes: Int,
-    val noDataShowChannelText: Boolean,
+    val noDataTextMode: GuideNoDataTextMode,
+    val noDataCustomText: String,
     val hiddenCategoryIds: Set<Long> = emptySet(),
     val nextRawChannelOffset: Int = 0,
     val hasMoreChannels: Boolean = false
@@ -217,7 +220,8 @@ private data class GuideSelectionRequest(
     val anchorTime: Long,
     val favoritesOnly: Boolean,
     val noDataBlockMinutes: Int,
-    val noDataShowChannelText: Boolean,
+    val noDataTextMode: GuideNoDataTextMode,
+    val noDataCustomText: String,
     val parentalControlLevel: Int,
     val unlockedCategoryIds: Set<Long>,
     val isStartupSelection: Boolean
@@ -225,7 +229,8 @@ private data class GuideSelectionRequest(
 
 private data class GuideNoDataPreferences(
     val blockMinutes: Int,
-    val showChannelText: Boolean
+    val textMode: GuideNoDataTextMode,
+    val customText: String
 )
 
 private data class CombinedGuideDependencies(
@@ -291,6 +296,7 @@ class EpgViewModel @Inject constructor(
         private const val NO_GUIDE_DATA_CATEGORY = "No guide data"
         private const val DEFAULT_NO_DATA_BLOCK_MINUTES = 60
         private const val MINUTE_MS = 60 * 1000L
+        private const val DAY_MS = 24L * 60L * MINUTE_MS
         private const val MIN_PLACEHOLDER_RECORDING_MS = 60 * MINUTE_MS
     }
 
@@ -890,7 +896,8 @@ class EpgViewModel @Inject constructor(
                         anchorTime = selection.anchorTime,
                         favoritesOnly = selection.favoritesOnly,
                         noDataBlockMinutes = selection.noDataBlockMinutes,
-                        noDataShowChannelText = selection.noDataShowChannelText,
+                        noDataTextMode = selection.noDataTextMode,
+                        noDataCustomText = selection.noDataCustomText,
                         parentalControlLevel = parentalControlLevel,
                         unlockedCategoryIds = unlockedCategoryIds,
                         isStartupSelection = selection.isStartupSelection
@@ -924,7 +931,8 @@ class EpgViewModel @Inject constructor(
                     windowStart = selection.anchorTime - LOOKBACK_MS,
                     windowEnd = selection.anchorTime + LOOKAHEAD_MS,
                     noDataBlockMinutes = selection.noDataBlockMinutes,
-                    noDataShowChannelText = selection.noDataShowChannelText
+                    noDataTextMode = selection.noDataTextMode,
+                    noDataCustomText = selection.noDataCustomText
                 )
             }.collectLatest { request ->
                 val categories = request.categories
@@ -1032,7 +1040,8 @@ class EpgViewModel @Inject constructor(
                     windowStart = data.selection.first.anchorTime - LOOKBACK_MS,
                     windowEnd = data.selection.first.anchorTime + LOOKAHEAD_MS,
                     noDataBlockMinutes = data.selection.first.noDataBlockMinutes,
-                    noDataShowChannelText = data.selection.first.noDataShowChannelText
+                    noDataTextMode = data.selection.first.noDataTextMode,
+                    noDataCustomText = data.selection.first.noDataCustomText
                 ),
                 providerIds = data.providerIds
             )
@@ -1137,10 +1146,14 @@ class EpgViewModel @Inject constructor(
 
     private fun guideNoDataPreferencesFlow(): Flow<GuideNoDataPreferences> =
         preferencesRepository.guideNoDataBlockMinutes
-            .combine(preferencesRepository.guideNoDataShowChannelText) { blockMinutes, showChannelText ->
+            .combine(preferencesRepository.guideNoDataTextMode) { blockMinutes, textMode ->
+                normalizeGuideNoDataBlockMinutes(blockMinutes) to textMode
+            }
+            .combine(preferencesRepository.guideNoDataCustomText) { (blockMinutes, textMode), customText ->
                 GuideNoDataPreferences(
-                    blockMinutes = normalizeGuideNoDataBlockMinutes(blockMinutes),
-                    showChannelText = showChannelText
+                    blockMinutes = blockMinutes,
+                    textMode = textMode,
+                    customText = customText
                 )
             }
 
@@ -1157,13 +1170,15 @@ class EpgViewModel @Inject constructor(
                 anchorTime = anchorTime,
                 favoritesOnly = favoritesOnly,
                 noDataBlockMinutes = DEFAULT_NO_DATA_BLOCK_MINUTES,
-                noDataShowChannelText = true,
+                noDataTextMode = GuideNoDataTextMode.CHANNEL_NAME,
+                noDataCustomText = "",
                 isStartupSelection = startupSelectionId != null
             )
         }.combine(guideNoDataPreferencesFlow()) { seed, noDataPreferences ->
             seed.copy(
                 noDataBlockMinutes = noDataPreferences.blockMinutes,
-                noDataShowChannelText = noDataPreferences.showChannelText
+                noDataTextMode = noDataPreferences.textMode,
+                noDataCustomText = noDataPreferences.customText
             )
         }
 
@@ -1218,7 +1233,8 @@ class EpgViewModel @Inject constructor(
             guideWindowStart = request.windowStart,
             guideWindowEnd = request.windowEnd,
             noDataBlockMinutes = request.noDataBlockMinutes,
-            noDataShowChannelText = request.noDataShowChannelText,
+            noDataTextMode = request.noDataTextMode,
+            noDataCustomText = request.noDataCustomText,
             hiddenCategoryIds = request.hiddenCategoryIds,
             nextRawChannelOffset = MAX_CHANNELS,
             hasMoreChannels = if (supportsOffsetPaging) {
@@ -1710,16 +1726,25 @@ class EpgViewModel @Inject constructor(
         } else {
             buildSearchGuideSnapshot(baseSnapshot, normalizedQuery)
         }
+        val candidateProgramsWithPlaceholders = candidateProgramsByChannel.withChannelGuidePlaceholders(
+            channels = candidateChannels,
+            windowStart = baseSnapshot.guideWindowStart,
+            windowEnd = baseSnapshot.guideWindowEnd,
+            blockMinutes = baseSnapshot.noDataBlockMinutes,
+            textMode = baseSnapshot.noDataTextMode,
+            customText = baseSnapshot.noDataCustomText,
+            providerName = baseSnapshot.currentProviderName
+        )
 
         val displayChannels = candidateChannels.filter { channel ->
             val programs = channel.guideLookupKey()
-                ?.let { lookupKey -> candidateProgramsByChannel[lookupKey].orEmpty() }
+                ?.let { lookupKey -> candidateProgramsWithPlaceholders[lookupKey].orEmpty() }
                 .orEmpty()
-            val matchesScheduled = !scheduledOnly || programs.hasRealGuidePrograms()
+            val matchesScheduled = !scheduledOnly || programs.hasDisplayGuidePrograms()
             val matchesMode = when (channelMode) {
                 GuideChannelMode.ALL -> true
                 GuideChannelMode.ANCHORED -> programs.any { program ->
-                    !program.isPlaceholder && baseSnapshot.guideAnchorTime in program.startTime until program.endTime
+                    baseSnapshot.guideAnchorTime in program.startTime until program.endTime
                 }
                 GuideChannelMode.ARCHIVE_READY -> programs.any { program ->
                     !program.isPlaceholder && channel.isArchivePlayable(program, baseSnapshot.guideAnchorTime)
@@ -1735,17 +1760,10 @@ class EpgViewModel @Inject constructor(
         val hasUpcomingData = candidateProgramsByChannel.values.any { programs ->
             programs.any { program -> !program.isPlaceholder && program.endTime > baseSnapshot.guideWindowStart }
         }
-        val displayProgramsByChannel = candidateProgramsByChannel.withChannelGuidePlaceholders(
-            channels = displayChannels,
-            windowStart = baseSnapshot.guideWindowStart,
-            windowEnd = baseSnapshot.guideWindowEnd,
-            blockMinutes = baseSnapshot.noDataBlockMinutes,
-            showChannelText = baseSnapshot.noDataShowChannelText
-        )
 
         return GuideDisplaySnapshot(
             channels = displayChannels,
-            programsByChannel = displayProgramsByChannel,
+            programsByChannel = candidateProgramsWithPlaceholders,
             totalChannelCount = candidateChannels.size,
             channelsWithSchedule = channelsWithSchedule,
             isGuideStale = candidateChannels.isNotEmpty() && (channelsWithSchedule == 0 || !hasUpcomingData)
@@ -1757,19 +1775,30 @@ class EpgViewModel @Inject constructor(
         windowStart: Long,
         windowEnd: Long,
         blockMinutes: Int,
-        showChannelText: Boolean
+        textMode: GuideNoDataTextMode,
+        customText: String,
+        providerName: String
     ): Map<String, List<Program>> {
         if (channels.isEmpty()) return this
         val slotMs = normalizeGuideNoDataBlockMinutes(blockMinutes) * MINUTE_MS
+        val normalizedCustomText = customText.trim().take(160)
         val placeholders = channels.mapNotNull { channel ->
             val lookupKey = channel.guideLookupKey() ?: return@mapNotNull null
             if (this[lookupKey].orEmpty().hasRealGuidePrograms()) return@mapNotNull null
+            val useCatalogBlock = channel.shouldUseCatalogGuidePlaceholder(providerName)
+            val useFullSlotDuration = useCatalogBlock || slotMs >= DAY_MS
             lookupKey to channel.toGuidePlaceholderPrograms(
                 lookupKey = lookupKey,
                 windowStart = windowStart,
                 windowEnd = windowEnd,
-                slotMs = slotMs,
-                showChannelText = showChannelText
+                slotMs = if (useCatalogBlock) {
+                    DAY_MS
+                } else {
+                    slotMs
+                },
+                useFullSlotDuration = useFullSlotDuration,
+                textMode = textMode,
+                customText = normalizedCustomText
             )
         }
         if (placeholders.isEmpty()) return this
@@ -1781,16 +1810,22 @@ class EpgViewModel @Inject constructor(
         windowStart: Long,
         windowEnd: Long,
         slotMs: Long,
-        showChannelText: Boolean
+        useFullSlotDuration: Boolean,
+        textMode: GuideNoDataTextMode,
+        customText: String
     ): List<Program> {
         if (windowEnd <= windowStart) return emptyList()
-        val description = if (showChannelText) buildGuidePlaceholderDescription() else ""
-        val title = if (showChannelText) name else ""
-        val category = NO_GUIDE_DATA_CATEGORY.takeIf { showChannelText }
+        val placeholderText = customText.ifBlank { name }
+        val (title, description, category) = when (textMode) {
+            GuideNoDataTextMode.CHANNEL_NAME -> Triple(name, buildGuidePlaceholderDescription(), NO_GUIDE_DATA_CATEGORY)
+            GuideNoDataTextMode.GENERIC -> Triple(NO_GUIDE_DATA_CATEGORY, buildGuidePlaceholderDescription(), NO_GUIDE_DATA_CATEGORY)
+            GuideNoDataTextMode.CUSTOM -> Triple(placeholderText, placeholderText, NO_GUIDE_DATA_CATEGORY)
+            GuideNoDataTextMode.BLANK -> Triple("", "", null)
+        }
         return buildList {
             var slotStart = windowStart
             while (slotStart < windowEnd) {
-                val slotEnd = minOf(slotStart + slotMs, windowEnd)
+                val slotEnd = if (useFullSlotDuration) slotStart + slotMs else minOf(slotStart + slotMs, windowEnd)
                 add(
                     Program(
                         channelId = lookupKey,
@@ -1823,8 +1858,50 @@ class EpgViewModel @Inject constructor(
         }
     }
 
+    private fun Channel.shouldUseCatalogGuidePlaceholder(providerName: String): Boolean {
+        val path = streamUrl
+            .lowercase()
+            .substringBefore('?')
+            .substringBefore('#')
+        val provider = providerName.lowercase()
+        val category = categoryName.orEmpty().lowercase()
+        val group = groupTitle.orEmpty().lowercase()
+        val liveHint = path.contains("/live/") ||
+            path.contains("/live.php") ||
+            path.contains("/live-tv/") ||
+            path.contains("/livetv/") ||
+            category.contains("live tv") ||
+            category.contains("live channel") ||
+            group.contains("live tv") ||
+            group.contains("live channel")
+        if (liveHint) return false
+
+        val vodPathHint = path.endsWith(".mp4") ||
+            path.endsWith(".mkv") ||
+            path.endsWith(".avi") ||
+            path.endsWith(".mov") ||
+            path.endsWith(".m4v") ||
+            path.endsWith(".webm") ||
+            path.contains("/movie/") ||
+            path.contains("/movies/") ||
+            path.contains("/vod/") ||
+            path.contains("/series/")
+        val textHint = listOf(provider, category, group).any { value ->
+            value.contains("vod") ||
+                value.contains("movie") ||
+                value.contains("movies") ||
+                value.contains("film") ||
+                value.contains("series") ||
+                value.contains("season")
+        }
+        return vodPathHint || textHint
+    }
+
     private fun List<Program>.hasRealGuidePrograms(): Boolean =
         any { !it.isPlaceholder }
+
+    private fun List<Program>.hasDisplayGuidePrograms(): Boolean =
+        isNotEmpty()
 
     private suspend fun buildSearchGuideSnapshot(
         baseSnapshot: GuideBaseSnapshot,
@@ -1976,7 +2053,8 @@ private data class GuideSelectionSeed(
     val anchorTime: Long,
     val favoritesOnly: Boolean,
     val noDataBlockMinutes: Int,
-    val noDataShowChannelText: Boolean,
+    val noDataTextMode: GuideNoDataTextMode,
+    val noDataCustomText: String,
     val isStartupSelection: Boolean
 )
 

@@ -139,8 +139,11 @@ internal enum class GuideEmptyAction {
 
 internal fun shouldRenderGuideChrome(state: EpgUiState): Boolean {
     if (state.error == EpgViewModel.NO_ACTIVE_PROVIDER) return false
-    if (state.error != null && state.channels.isEmpty() && state.totalChannelCount == 0) return false
+    if (state.error != null && state.channels.isEmpty() && state.totalChannelCount == 0 && state.currentProviderName == null) {
+        return false
+    }
 
+    if (state.currentProviderName != null) return true
     return state.channels.isNotEmpty() ||
         state.totalChannelCount > 0 ||
         state.categories.isNotEmpty() ||
@@ -184,6 +187,7 @@ fun FullEpgScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val overrideUiState by viewModel.overrideUiState.collectAsStateWithLifecycle()
     val programReminderUiState by viewModel.programReminderUiState.collectAsStateWithLifecycle()
+    val isTelevisionDevice = rememberIsTelevisionDevice()
     var selectedProgram by remember { mutableStateOf<Pair<Channel, Program>?>(null) }
     var focusedChannel by remember { mutableStateOf<Channel?>(null) }
     var focusedProgram by remember { mutableStateOf<Program?>(null) }
@@ -368,7 +372,7 @@ fun FullEpgScreen(
         title = stringResource(R.string.nav_epg),
         subtitle = stringResource(R.string.guide_shell_subtitle),
         navigationChrome = AppNavigationChrome.TopBar,
-        topBarVisible = topNavVisible,
+        topBarVisible = topNavVisible || (!isTelevisionDevice && uiState.channels.isEmpty()),
         compactHeader = true,
         showScreenHeader = false,
         fullBleed = true,   // EPG wants every pixel for the program grid
