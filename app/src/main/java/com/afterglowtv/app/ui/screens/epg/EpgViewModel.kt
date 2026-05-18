@@ -779,6 +779,21 @@ class EpgViewModel @Inject constructor(
         }
     }
 
+    fun resetGuideFilters() {
+        startupCategoryId.value = null
+        selectedCategoryId.value = ChannelRepository.ALL_CHANNELS_ID
+        programSearchQuery.value = ""
+        showScheduledOnly.value = false
+        selectedChannelMode.value = GuideChannelMode.ALL
+        showFavoritesOnly.value = false
+        viewModelScope.launch {
+            preferencesRepository.setGuideDefaultCategoryId(ChannelRepository.ALL_CHANNELS_ID)
+            preferencesRepository.setGuideScheduledOnly(false)
+            preferencesRepository.setGuideChannelMode(GuideChannelMode.ALL.name)
+            preferencesRepository.setGuideFavoritesOnly(false)
+        }
+    }
+
     fun applyNavigationContext(
         categoryId: Long?,
         anchorTime: Long?,

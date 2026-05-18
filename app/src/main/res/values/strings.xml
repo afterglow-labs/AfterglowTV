@@ -1239,10 +1239,13 @@
     <string name="epg_retry_hint">Try again or switch to another category.</string>
     <string name="epg_no_channels_in_category">No channels found in this guide category</string>
     <string name="epg_no_scheduled_channels">No channels with guide data in this selection</string>
+    <string name="epg_no_visible_channels">No channels match this guide view</string>
     <string name="epg_no_search_results">No matching programs in this guide window</string>
     <string name="epg_search_empty_hint">Try another title, broaden the category, or clear the search.</string>
+    <string name="epg_filtered_empty_hint">Guide data is loaded, but the current category, favorites, search, or guide mode is hiding every channel.</string>
     <string name="epg_scheduled_only_hint">Turn off Scheduled only or switch to another category.</string>
     <string name="epg_filter_hint">Choose another category or refresh the guide.</string>
+    <string name="epg_show_all_channels">Show all channels</string>
     <string name="epg_title">TV Guide</string>
     <string name="epg_catchup_available">Catch-up available (%1$d days)</string>
     <string name="epg_archive_ready_hint">Archive or catch-up playback should be available for this program.</string>
