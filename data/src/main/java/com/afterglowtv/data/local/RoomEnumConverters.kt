@@ -2,6 +2,7 @@ package com.afterglowtv.data.local
 
 import androidx.room.TypeConverter
 import com.afterglowtv.domain.model.ContentType
+import com.afterglowtv.domain.model.LocalMediaKind
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
 import com.afterglowtv.domain.model.ProviderStatus
 import com.afterglowtv.domain.model.ProviderType
@@ -46,6 +47,13 @@ class RoomEnumConverters {
     @TypeConverter
     fun toContentType(value: String?): ContentType? =
         enumValueOrDefault(value, ContentType.LIVE, contentTypeAliases())
+
+    @TypeConverter
+    fun fromLocalMediaKind(value: LocalMediaKind?): String? = value?.name
+
+    @TypeConverter
+    fun toLocalMediaKind(value: String?): LocalMediaKind? =
+        enumValueOrDefault(value, LocalMediaKind.UNKNOWN, localMediaKindAliases())
 
     private inline fun <reified T : Enum<T>> enumValueOrDefault(
         value: String?,
@@ -92,5 +100,11 @@ class RoomEnumConverters {
         "SHOW" to ContentType.SERIES,
         "VOD" to ContentType.MOVIE,
         "CHANNEL" to ContentType.LIVE
+    )
+
+    private fun localMediaKindAliases(): Map<String, LocalMediaKind> = mapOf(
+        "SERIES_EPISODE" to LocalMediaKind.EPISODE,
+        "TV" to LocalMediaKind.EPISODE,
+        "VOD" to LocalMediaKind.MOVIE
     )
 }

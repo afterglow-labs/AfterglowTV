@@ -18,6 +18,7 @@ import com.afterglowtv.domain.model.EpgResolutionSummary
 import com.afterglowtv.domain.model.GroupedChannelLabelMode
 import com.afterglowtv.domain.model.LiveChannelGroupingMode
 import com.afterglowtv.domain.model.LiveVariantPreferenceMode
+import com.afterglowtv.domain.model.LocalMediaLibrary
 import com.afterglowtv.domain.model.PlayerSurfaceMode
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.RecordingItem
@@ -83,6 +84,8 @@ data class SettingsUiState(
     val backupImportPlan: BackupImportPlan = BackupImportPlan(),
     val recordingItems: List<RecordingItem> = emptyList(),
     val recordingStorageState: RecordingStorageState = RecordingStorageState(),
+    val localMediaLibraries: List<LocalMediaLibrary> = emptyList(),
+    val isScanningLocalMedia: Boolean = false,
     val wifiOnlyRecording: Boolean = false,
     val recordingPaddingBeforeMinutes: Int = 0,
     val recordingPaddingAfterMinutes: Int = 0,

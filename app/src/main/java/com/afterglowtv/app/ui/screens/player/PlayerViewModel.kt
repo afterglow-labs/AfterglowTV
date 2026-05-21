@@ -1245,6 +1245,7 @@ class PlayerViewModel @Inject constructor(
         seasonNumber: Int? = null,
         episodeNumber: Int? = null,
         episodeId: Long? = null,
+        startPositionMs: Long? = null,
         showResumePrompt: Boolean = true
     ) {
         val hasArchiveRequest = hasArchivePlaybackIdentity(
@@ -1345,11 +1346,14 @@ class PlayerViewModel @Inject constructor(
                 currentContentId = playbackContentId
                 if (!isActivePlaybackSession(requestVersion, playbackLogicalUrl)) return@launch
                 if (!preparePlayer(streamInfo, requestVersion)) return@launch
+                startPositionMs
+                    ?.takeIf { it > 0L }
+                    ?.let(playerEngine::seekTo)
 
                 // Check for resume position after the player is fully prepared (VOD only).
                 // Doing this after preparePlayer ensures pause() acts on the live player instance,
                 // not a stale one that may have already been replaced by prepareInternal().
-                if (showResumePrompt && currentContentType != ContentType.LIVE && currentContentId != -1L && currentProviderId != -1L) {
+                if (showResumePrompt && startPositionMs == null && currentContentType != ContentType.LIVE && currentContentId != -1L && currentProviderId != -1L) {
                     val history = playbackHistoryRepository.getPlaybackHistory(
                         contentId = currentContentId,
                         contentType = currentContentType,

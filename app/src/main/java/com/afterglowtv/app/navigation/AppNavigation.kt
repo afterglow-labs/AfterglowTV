@@ -53,7 +53,8 @@ data class PlayerNavigationRequest(
     val seriesId: Long? = null,
     val seasonNumber: Int? = null,
     val episodeNumber: Int? = null,
-    val episodeId: Long? = null
+    val episodeId: Long? = null,
+    val startPositionMs: Long? = null
 ) : Serializable
 
 object Routes {
@@ -169,7 +170,8 @@ object Routes {
         seriesId: Long? = null,
         seasonNumber: Int? = null,
         episodeNumber: Int? = null,
-        episodeId: Long? = null
+        episodeId: Long? = null,
+        startPositionMs: Long? = null
     ): PlayerNavigationRequest {
         return PlayerNavigationRequest(
             streamUrl = streamUrl,
@@ -190,7 +192,8 @@ object Routes {
             seriesId = seriesId,
             seasonNumber = seasonNumber,
             episodeNumber = episodeNumber,
-            episodeId = episodeId
+            episodeId = episodeId,
+            startPositionMs = startPositionMs
         )
     }
 
@@ -644,6 +647,7 @@ fun AppNavigation(mainActivity: MainActivity) {
                 seasonNumber = playerRequest?.seasonNumber,
                 episodeNumber = playerRequest?.episodeNumber,
                 episodeId = playerRequest?.episodeId,
+                startPositionMs = playerRequest?.startPositionMs,
                 onBack = {
                     val route = playerRequest?.returnRoute
                     if (!route.isNullOrBlank() && navController.popBackStack(route, false)) {

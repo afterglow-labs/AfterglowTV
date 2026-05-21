@@ -123,6 +123,21 @@ fun SettingsScreen(
         }
     }
 
+    val localMediaFolderLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    it,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+            val displayName = DocumentFile.fromTreeUri(context, it)?.name
+            viewModel.addLocalMediaLibrary(it.toString(), displayName)
+        }
+    }
+
     val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(uiState.userMessage) {
@@ -145,7 +160,7 @@ fun SettingsScreen(
         val uri = initialBackupImportUri?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
         if (handledInitialBackupImportUri == uri) return@LaunchedEffect
         handledInitialBackupImportUri = uri
-        dialogState.selectedCategory = 5
+        dialogState.selectedCategory = 6
         viewModel.inspectBackup(uri)
     }
 
@@ -196,6 +211,7 @@ fun SettingsScreen(
                         onEditProvider = onEditProvider,
                         onNavigateToParentalControl = onNavigateToParentalControl,
                         onChooseRecordingFolder = { recordingFolderLauncher.launch(null) },
+                        onChooseLocalMediaLibrary = { localMediaFolderLauncher.launch(null) },
                         onCreateBackup = ::exportBackupToDownloads,
                         onShareBackup = ::shareBackup,
                         onViewCrashReport = viewModel::viewCrashReport,

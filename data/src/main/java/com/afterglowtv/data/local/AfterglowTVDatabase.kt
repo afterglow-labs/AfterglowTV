@@ -47,9 +47,13 @@ import com.afterglowtv.data.local.entity.*
         PlaybackCompatibilityRecordEntity::class,
         XtreamContentIndexEntity::class,
         XtreamIndexJobEntity::class,
-        XtreamLiveOnboardingStateEntity::class
+        XtreamLiveOnboardingStateEntity::class,
+        LocalMediaLibraryEntity::class,
+        LocalMediaItemEntity::class,
+        LocalMediaChannelEntity::class,
+        LocalMediaProgramEntity::class
     ],
-    version = 53,
+    version = 54,
     exportSchema = true   // ← was false; schema JSON now tracked in version control
 )
 @TypeConverters(RoomEnumConverters::class)
@@ -87,6 +91,10 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
     abstract fun xtreamContentIndexDao(): XtreamContentIndexDao
     abstract fun xtreamIndexJobDao(): XtreamIndexJobDao
     abstract fun xtreamLiveOnboardingDao(): XtreamLiveOnboardingDao
+    abstract fun localMediaLibraryDao(): LocalMediaLibraryDao
+    abstract fun localMediaItemDao(): LocalMediaItemDao
+    abstract fun localMediaChannelDao(): LocalMediaChannelDao
+    abstract fun localMediaProgramDao(): LocalMediaProgramDao
 
     companion object {
         /**
@@ -2532,6 +2540,104 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                 database.execSQL("ALTER TABLE programs ADD COLUMN subtitle TEXT")
                 database.execSQL("ALTER TABLE programs ADD COLUMN episode_info TEXT")
                 validateForeignKeys(database, "programs")
+            }
+        }
+
+        val MIGRATION_53_54 = object : Migration(53, 54) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS local_media_libraries (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        root_uri TEXT NOT NULL,
+                        display_name TEXT,
+                        enabled INTEGER NOT NULL,
+                        item_count INTEGER NOT NULL,
+                        added_at_ms INTEGER NOT NULL,
+                        updated_at_ms INTEGER NOT NULL,
+                        last_scanned_at_ms INTEGER
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_local_media_libraries_root_uri ON local_media_libraries(root_uri)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_libraries_enabled ON local_media_libraries(enabled)")
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS local_media_items (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        library_id INTEGER NOT NULL,
+                        uri TEXT NOT NULL,
+                        display_name TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        sort_title TEXT NOT NULL,
+                        media_kind TEXT NOT NULL,
+                        mime_type TEXT,
+                        duration_ms INTEGER,
+                        size_bytes INTEGER,
+                        date_modified_ms INTEGER,
+                        poster_uri TEXT,
+                        backdrop_uri TEXT,
+                        description TEXT,
+                        genre TEXT,
+                        release_year INTEGER,
+                        series_title TEXT,
+                        season_number INTEGER,
+                        episode_number INTEGER,
+                        added_at_ms INTEGER NOT NULL,
+                        updated_at_ms INTEGER NOT NULL,
+                        last_scanned_at_ms INTEGER,
+                        FOREIGN KEY(library_id) REFERENCES local_media_libraries(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_library_id ON local_media_items(library_id)")
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_local_media_items_uri ON local_media_items(uri)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_media_kind ON local_media_items(media_kind)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_series_title_season_number_episode_number ON local_media_items(series_title, season_number, episode_number)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_sort_title ON local_media_items(sort_title)")
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS local_media_channels (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        library_id INTEGER,
+                        enabled INTEGER NOT NULL,
+                        sort_order INTEGER NOT NULL,
+                        created_at_ms INTEGER NOT NULL,
+                        updated_at_ms INTEGER NOT NULL,
+                        FOREIGN KEY(library_id) REFERENCES local_media_libraries(id) ON UPDATE NO ACTION ON DELETE SET NULL
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_channels_library_id ON local_media_channels(library_id)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_channels_enabled_sort_order ON local_media_channels(enabled, sort_order)")
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS local_media_programs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        channel_id INTEGER NOT NULL,
+                        media_item_id INTEGER NOT NULL,
+                        title TEXT NOT NULL,
+                        description TEXT,
+                        start_time_ms INTEGER NOT NULL,
+                        end_time_ms INTEGER NOT NULL,
+                        media_duration_ms INTEGER,
+                        artwork_uri TEXT,
+                        FOREIGN KEY(channel_id) REFERENCES local_media_channels(id) ON UPDATE NO ACTION ON DELETE CASCADE,
+                        FOREIGN KEY(media_item_id) REFERENCES local_media_items(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_programs_channel_id_start_time_ms ON local_media_programs(channel_id, start_time_ms)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_programs_media_item_id ON local_media_programs(media_item_id)")
+                validateForeignKeys(
+                    database,
+                    "local_media_libraries",
+                    "local_media_items",
+                    "local_media_channels",
+                    "local_media_programs"
+                )
             }
         }
     }

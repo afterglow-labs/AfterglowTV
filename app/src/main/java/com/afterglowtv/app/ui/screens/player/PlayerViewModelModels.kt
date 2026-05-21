@@ -117,7 +117,8 @@ data class PlayerPrepareIdentity(
     val combinedSourceFilterProviderId: Long?,
     val contentType: String,
     val archiveStartMs: Long?,
-    val archiveEndMs: Long?
+    val archiveEndMs: Long?,
+    val startPositionMs: Long?
 )
 
 internal fun buildPlayerPrepareIdentity(
@@ -131,7 +132,8 @@ internal fun buildPlayerPrepareIdentity(
     combinedSourceFilterProviderId: Long?,
     contentType: String,
     archiveStartMs: Long?,
-    archiveEndMs: Long?
+    archiveEndMs: Long?,
+    startPositionMs: Long? = null
 ): PlayerPrepareIdentity = PlayerPrepareIdentity(
     streamUrl = streamUrl,
     epgChannelId = epgChannelId,
@@ -143,7 +145,8 @@ internal fun buildPlayerPrepareIdentity(
     combinedSourceFilterProviderId = combinedSourceFilterProviderId?.takeIf { it > 0L },
     contentType = contentType,
     archiveStartMs = archiveStartMs,
-    archiveEndMs = archiveEndMs
+    archiveEndMs = archiveEndMs,
+    startPositionMs = startPositionMs?.coerceAtLeast(0L)
 )
 
 internal fun hasArchivePlaybackIdentity(

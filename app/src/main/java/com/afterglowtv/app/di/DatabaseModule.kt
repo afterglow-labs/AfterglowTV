@@ -91,7 +91,8 @@ object DatabaseModule {
                 AfterglowTVDatabase.MIGRATION_49_50,
                 AfterglowTVDatabase.MIGRATION_50_51,
                 AfterglowTVDatabase.MIGRATION_51_52,
-                AfterglowTVDatabase.MIGRATION_52_53
+                AfterglowTVDatabase.MIGRATION_52_53,
+                AfterglowTVDatabase.MIGRATION_53_54
             )
             // NOTE: fallbackToDestructiveMigration() intentionally removed.
             // All future schema changes MUST add a corresponding Migration in AfterglowTVDatabase.
@@ -130,4 +131,8 @@ object DatabaseModule {
     @Provides fun provideXtreamContentIndexDao(db: AfterglowTVDatabase): XtreamContentIndexDao = db.xtreamContentIndexDao()
     @Provides fun provideXtreamIndexJobDao(db: AfterglowTVDatabase): XtreamIndexJobDao = db.xtreamIndexJobDao()
     @Provides fun provideXtreamLiveOnboardingDao(db: AfterglowTVDatabase): XtreamLiveOnboardingDao = db.xtreamLiveOnboardingDao()
+    @Provides fun provideLocalMediaLibraryDao(db: AfterglowTVDatabase): LocalMediaLibraryDao = db.localMediaLibraryDao()
+    @Provides fun provideLocalMediaItemDao(db: AfterglowTVDatabase): LocalMediaItemDao = db.localMediaItemDao()
+    @Provides fun provideLocalMediaChannelDao(db: AfterglowTVDatabase): LocalMediaChannelDao = db.localMediaChannelDao()
+    @Provides fun provideLocalMediaProgramDao(db: AfterglowTVDatabase): LocalMediaProgramDao = db.localMediaProgramDao()
 }

@@ -60,6 +60,7 @@ import com.afterglowtv.domain.repository.CombinedM3uRepository
 import com.afterglowtv.domain.repository.CategoryRepository
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.domain.repository.MovieRepository
+import com.afterglowtv.domain.repository.LocalMediaRepository
 import com.afterglowtv.domain.repository.SeriesRepository
 import com.afterglowtv.domain.repository.SyncMetadataRepository
 import com.afterglowtv.domain.usecase.GetCustomCategories
@@ -85,6 +86,7 @@ class SettingsViewModel @Inject constructor(
     private val channelRepository: ChannelRepository,
     private val movieRepository: MovieRepository,
     private val seriesRepository: SeriesRepository,
+    private val localMediaRepository: LocalMediaRepository,
     private val preferencesRepository: PreferencesRepository,
     private val internetSpeedTestRunner: InternetSpeedTestRunner,
     private val backupManager: BackupManager,
@@ -195,6 +197,15 @@ class SettingsViewModel @Inject constructor(
             epgSourceRepository = epgSourceRepository,
             uiState = _uiState
         )
+        registerLocalMediaObservers()
+    }
+
+    private fun registerLocalMediaObservers() {
+        viewModelScope.launch {
+            localMediaRepository.observeLibraries().collect { libraries ->
+                _uiState.update { it.copy(localMediaLibraries = libraries) }
+            }
+        }
     }
 
     fun refreshCrashReport() {
@@ -1002,6 +1013,71 @@ class SettingsViewModel @Inject constructor(
 
     fun updateRecordingMaxSimultaneous(maxSimultaneousRecordings: Int) {
         recordingActions.updateRecordingMaxSimultaneous(viewModelScope, maxSimultaneousRecordings)
+    }
+
+    fun addLocalMediaLibrary(treeUri: String, displayName: String?) {
+        if (treeUri.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isScanningLocalMedia = true) }
+            when (val result = localMediaRepository.addLibrary(treeUri, displayName)) {
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            userMessage = "Added ${result.data.importedCount} local media files."
+                        )
+                    }
+                }
+                is Result.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            userMessage = result.message
+                        )
+                    }
+                }
+                Result.Loading -> {
+                    _uiState.update { it.copy(isScanningLocalMedia = true) }
+                }
+            }
+        }
+    }
+
+    fun rescanLocalMediaLibrary(libraryId: Long) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isScanningLocalMedia = true) }
+            when (val result = localMediaRepository.rescanLibrary(libraryId)) {
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            userMessage = "Rescanned ${result.data.importedCount} local media files."
+                        )
+                    }
+                }
+                is Result.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            userMessage = result.message
+                        )
+                    }
+                }
+                Result.Loading -> {
+                    _uiState.update { it.copy(isScanningLocalMedia = true) }
+                }
+            }
+        }
+    }
+
+    fun deleteLocalMediaLibrary(libraryId: Long) {
+        viewModelScope.launch {
+            when (val result = localMediaRepository.deleteLibrary(libraryId)) {
+                is Result.Success -> _uiState.update { it.copy(userMessage = "Local media library removed.") }
+                is Result.Error -> _uiState.update { it.copy(userMessage = result.message) }
+                Result.Loading -> Unit
+            }
+        }
     }
 
     // ── EPG Source Management ────────────────────────────────────────

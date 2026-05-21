@@ -128,6 +128,7 @@ fun PlayerScreen(
     seasonNumber: Int? = null,
     episodeNumber: Int? = null,
     episodeId: Long? = null,
+    startPositionMs: Long? = null,
     returnRoute: String? = null,
     onBack: () -> Unit,
     onNavigate: ((String) -> Unit)? = null,
@@ -430,7 +431,8 @@ fun PlayerScreen(
         combinedSourceFilterProviderId = combinedSourceFilterProviderId,
         contentType = contentType,
         archiveStartMs = archiveStartMs,
-        archiveEndMs = archiveEndMs
+        archiveEndMs = archiveEndMs,
+        startPositionMs = startPositionMs
     )
 
     LaunchedEffect(prepareIdentity) {
@@ -452,7 +454,8 @@ fun PlayerScreen(
             seriesId = seriesId,
             seasonNumber = seasonNumber,
             episodeNumber = episodeNumber,
-            episodeId = episodeId
+            episodeId = episodeId,
+            startPositionMs = startPositionMs
         )
     }
 

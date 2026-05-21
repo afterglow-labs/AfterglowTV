@@ -70,6 +70,9 @@ abstract class RepositoryModule {
     abstract fun bindPlaybackCompatibilityRepository(impl: PlaybackCompatibilityRepositoryImpl): PlaybackCompatibilityRepository
 
     @Binds @Singleton
+    abstract fun bindLocalMediaRepository(impl: LocalMediaRepositoryImpl): LocalMediaRepository
+
+    @Binds @Singleton
     abstract fun bindDatabaseTransactionRunner(impl: RoomDatabaseTransactionRunner): DatabaseTransactionRunner
 
     @Binds @Singleton

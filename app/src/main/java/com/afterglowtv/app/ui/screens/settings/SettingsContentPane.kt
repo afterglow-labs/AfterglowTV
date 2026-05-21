@@ -23,6 +23,7 @@ internal fun SettingsContentPane(
     onEditProvider: (Provider) -> Unit,
     onNavigateToParentalControl: (Long) -> Unit,
     onChooseRecordingFolder: () -> Unit,
+    onChooseLocalMediaLibrary: () -> Unit,
     onCreateBackup: () -> Unit,
     onShareBackup: () -> Unit,
     onViewCrashReport: () -> Unit,
@@ -138,17 +139,23 @@ internal fun SettingsContentPane(
                 onShowRecordingBrowserDialogChange = { dialogState.showRecordingBrowserDialog = it }
             )
         } else if (dialogState.selectedCategory == 5) {
+            settingsLocalMediaSection(
+                uiState = uiState,
+                viewModel = viewModel,
+                onChooseLibrary = onChooseLocalMediaLibrary
+            )
+        } else if (dialogState.selectedCategory == 6) {
             settingsBackupSection(
                 onCreateBackup = onCreateBackup,
                 onShareBackup = onShareBackup,
                 onRestoreBackup = onRestoreBackup
             )
-        } else if (dialogState.selectedCategory == 6) {
+        } else if (dialogState.selectedCategory == 7) {
             epgSourcesSection(
                 uiState = uiState,
                 viewModel = viewModel
             )
-        } else if (dialogState.selectedCategory == 7) {
+        } else if (dialogState.selectedCategory == 8) {
             settingsAboutSection(
                 uiState = uiState,
                 context = context,

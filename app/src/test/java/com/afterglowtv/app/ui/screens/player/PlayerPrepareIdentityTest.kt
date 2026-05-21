@@ -74,6 +74,41 @@ class PlayerPrepareIdentityTest {
     }
 
     @Test
+    fun `buildPlayerPrepareIdentity changes when explicit start position changes`() {
+        val baseline = buildPlayerPrepareIdentity(
+            streamUrl = "content://media/local-episode",
+            epgChannelId = null,
+            internalChannelId = 300L,
+            categoryId = null,
+            providerId = null,
+            isVirtual = false,
+            combinedProfileId = null,
+            combinedSourceFilterProviderId = null,
+            contentType = "MOVIE",
+            archiveStartMs = null,
+            archiveEndMs = null,
+            startPositionMs = 0L
+        )
+
+        val changedPosition = buildPlayerPrepareIdentity(
+            streamUrl = "content://media/local-episode",
+            epgChannelId = null,
+            internalChannelId = 300L,
+            categoryId = null,
+            providerId = null,
+            isVirtual = false,
+            combinedProfileId = null,
+            combinedSourceFilterProviderId = null,
+            contentType = "MOVIE",
+            archiveStartMs = null,
+            archiveEndMs = null,
+            startPositionMs = 37 * 60_000L
+        )
+
+        assertThat(changedPosition).isNotEqualTo(baseline)
+    }
+
+    @Test
     fun `resolveRouteDisplayTitle prefers archive title for live archive playback`() {
         assertThat(
             resolveRouteDisplayTitle(
