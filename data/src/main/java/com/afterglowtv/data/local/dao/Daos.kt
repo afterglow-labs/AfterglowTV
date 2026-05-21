@@ -1416,7 +1416,10 @@ interface MovieDao {
           AND (
               cache_state = 'SUMMARY_ONLY'
               OR detail_hydrated_at <= 0
-              OR COALESCE(poster_url, '') = ''
+              OR detail_hydrated_at < :staleBefore
+          )
+          AND (
+              COALESCE(poster_url, '') = ''
               OR COALESCE(backdrop_url, '') = ''
               OR COALESCE(genre, '') = ''
               OR COALESCE(year, '') = ''
@@ -1426,7 +1429,7 @@ interface MovieDao {
         LIMIT :limit
         """
     )
-    suspend fun getVodEnrichmentCandidates(providerId: Long, limit: Int): List<MovieEntity>
+    suspend fun getVodEnrichmentCandidates(providerId: Long, limit: Int, staleBefore: Long): List<MovieEntity>
 
     @Query("SELECT tmdb_id FROM movies WHERE provider_id = :providerId AND tmdb_id IS NOT NULL")
     suspend fun getTmdbIdsByProvider(providerId: Long): List<TmdbIdMapping>
@@ -2400,7 +2403,10 @@ interface SeriesDao {
           AND (
               cache_state = 'SUMMARY_ONLY'
               OR detail_hydrated_at <= 0
-              OR COALESCE(poster_url, '') = ''
+              OR detail_hydrated_at < :staleBefore
+          )
+          AND (
+              COALESCE(poster_url, '') = ''
               OR COALESCE(backdrop_url, '') = ''
               OR COALESCE(genre, '') = ''
               OR COALESCE(release_date, '') = ''
@@ -2410,7 +2416,7 @@ interface SeriesDao {
         LIMIT :limit
         """
     )
-    suspend fun getVodEnrichmentCandidates(providerId: Long, limit: Int): List<SeriesEntity>
+    suspend fun getVodEnrichmentCandidates(providerId: Long, limit: Int, staleBefore: Long): List<SeriesEntity>
 
     @Query("SELECT tmdb_id FROM series WHERE provider_id = :providerId AND tmdb_id IS NOT NULL")
     suspend fun getTmdbIdsByProvider(providerId: Long): List<TmdbIdMapping>

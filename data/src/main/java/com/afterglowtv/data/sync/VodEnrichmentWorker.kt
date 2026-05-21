@@ -70,6 +70,7 @@ class VodEnrichmentWorker(
         fun seriesDao(): SeriesDao
         fun movieRepository(): MovieRepository
         fun seriesRepository(): SeriesRepository
+        fun vodOnlineMetadataClient(): VodOnlineMetadataClient
     }
 
     override suspend fun doWork(): Result {
@@ -113,11 +114,17 @@ class VodEnrichmentWorker(
         entryPoint: VodEnrichmentWorkerEntryPoint,
         providerId: Long
     ) {
+        val staleBefore = System.currentTimeMillis() - ENRICHMENT_RETRY_COOLDOWN_MILLIS
         entryPoint.movieDao()
-            .getVodEnrichmentCandidates(providerId, CANDIDATES_PER_SECTION)
+            .getVodEnrichmentCandidates(providerId, CANDIDATES_PER_SECTION, staleBefore)
             .forEach { movie ->
                 entryPoint.movieRepository().getMovieDetails(providerId, movie.id)
-                val refreshedMovie = entryPoint.movieDao().getById(movie.id) ?: movie
+                var refreshedMovie = entryPoint.movieDao().getById(movie.id) ?: movie
+                entryPoint.vodOnlineMetadataClient().findMovieMetadata(refreshedMovie)?.let { metadata ->
+                    val enrichedMovie = mergeMovieOnlineMetadata(refreshedMovie, metadata)
+                    entryPoint.movieDao().update(enrichedMovie)
+                    refreshedMovie = enrichedMovie
+                }
                 if (shouldAttemptVodFrameArtwork(refreshedMovie.posterUrl, refreshedMovie.streamUrl)) {
                     VodFrameArtworkExtractor.extract(
                         context = applicationContext,
@@ -127,12 +134,35 @@ class VodEnrichmentWorker(
                         entryPoint.movieDao().update(refreshedMovie.copy(posterUrl = posterUri))
                     }
                 }
+                val latestMovie = entryPoint.movieDao().getById(movie.id) ?: refreshedMovie
+                if (latestMovie.detailHydratedAt <= 0L || latestMovie.cacheState == CACHE_STATE_SUMMARY_ONLY) {
+                    entryPoint.movieDao().update(
+                        latestMovie.copy(
+                            cacheState = VOD_CACHE_STATE_DETAIL_HYDRATED,
+                            detailHydratedAt = System.currentTimeMillis()
+                        )
+                    )
+                }
             }
 
         entryPoint.seriesDao()
-            .getVodEnrichmentCandidates(providerId, CANDIDATES_PER_SECTION)
+            .getVodEnrichmentCandidates(providerId, CANDIDATES_PER_SECTION, staleBefore)
             .forEach { series ->
                 entryPoint.seriesRepository().getSeriesDetails(providerId, series.id)
+                var refreshedSeries = entryPoint.seriesDao().getById(series.id) ?: series
+                entryPoint.vodOnlineMetadataClient().findSeriesMetadata(refreshedSeries)?.let { metadata ->
+                    val enrichedSeries = mergeSeriesOnlineMetadata(refreshedSeries, metadata)
+                    entryPoint.seriesDao().update(enrichedSeries)
+                    refreshedSeries = enrichedSeries
+                }
+                if (refreshedSeries.detailHydratedAt <= 0L || refreshedSeries.cacheState == CACHE_STATE_SUMMARY_ONLY) {
+                    entryPoint.seriesDao().update(
+                        refreshedSeries.copy(
+                            cacheState = VOD_CACHE_STATE_DETAIL_HYDRATED,
+                            detailHydratedAt = System.currentTimeMillis()
+                        )
+                    )
+                }
             }
     }
 
@@ -150,6 +180,8 @@ class VodEnrichmentWorker(
         private const val KEY_PROVIDER_ID = "provider_id"
         private const val INVALID_PROVIDER_ID = -1L
         private const val CANDIDATES_PER_SECTION = 12
+        private const val CACHE_STATE_SUMMARY_ONLY = "SUMMARY_ONLY"
+        private const val ENRICHMENT_RETRY_COOLDOWN_MILLIS = 24L * 60L * 60L * 1000L
         private const val UNIQUE_WORK_NAME = "vod-enrichment-worker"
         private const val UNIQUE_LAUNCH_WORK_NAME = "vod-enrichment-launch-worker"
         private const val UNIQUE_PROVIDER_WORK_PREFIX = "vod-enrichment-provider-"
