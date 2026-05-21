@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">שמור על מספר הערוץ המקורי שסופק על ידי ספק הפלייליסט, כאשר הוא קיים.</string>
     <string name="settings_vod_view_mode">פריסת VOD</string>
     <string name="settings_vod_view_mode_subtitle">בחרו בין תצוגת המדפים המודרנית לבין פריסה קלאסית מפוצלת.</string>
-    <string name="settings_vod_view_mode_modern">מודרני</string>
-    <string name="settings_vod_view_mode_modern_desc">גלישה מבוססת מדפים עם שורות מומלצות ותצוגות מקדימות של קטגוריות.</string>
-    <string name="settings_vod_view_mode_classic">קלאסי</string>
-    <string name="settings_vod_view_mode_classic_desc">רשימת קטגוריות משמאל וגריד פוסטרים מוערם מימין.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">קטגוריות</string>
     <string name="vod_classic_category_search">חיפוש בקטגוריות</string>
     <string name="vod_classic_all">הכול</string>

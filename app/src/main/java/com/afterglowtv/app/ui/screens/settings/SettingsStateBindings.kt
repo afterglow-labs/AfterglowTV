@@ -76,7 +76,7 @@ internal fun observeSettingsPreferenceSnapshot(
             liveChannelGroupingMode = LiveChannelGroupingMode.RAW_VARIANTS,
             groupedChannelLabelMode = GroupedChannelLabelMode.HYBRID,
             liveVariantPreferenceMode = LiveVariantPreferenceMode.BALANCED,
-            vodViewMode = VodViewMode.MODERN,
+            vodViewMode = VodViewMode.SHELVES,
             vodInfiniteScroll = true,
             guideDefaultCategoryId = VirtualCategoryIds.FAVORITES,
             guideDefaultCategoryOptions = emptyList(),

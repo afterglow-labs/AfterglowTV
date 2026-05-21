@@ -139,7 +139,11 @@ class ProviderSyncWorker(
                             sawRetryableFailure = true
                         }
                     }
-                    else -> Unit
+                    else -> VodEnrichmentWorker.enqueueProvider(
+                        context = applicationContext,
+                        providerId = provider.id,
+                        initialDelaySeconds = VOD_ENRICHMENT_AFTER_SYNC_DELAY_SECONDS
+                    )
                 }
             }
 
@@ -168,6 +172,7 @@ class ProviderSyncWorker(
         private const val INVALID_PROVIDER_ID = -1L
         private const val PERIODIC_INITIAL_DELAY_MINUTES = 15L
         private const val LAUNCH_STALE_CHECK_DELAY_MINUTES = 3L
+        private const val VOD_ENRICHMENT_AFTER_SYNC_DELAY_SECONDS = 90L
 
         fun enqueuePeriodic(context: Context) {
             val request = createPeriodicRequest()

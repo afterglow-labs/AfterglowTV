@@ -67,6 +67,7 @@ import com.afterglowtv.app.ui.design.AppMotion
 import com.afterglowtv.app.ui.design.FocusSpec
 import com.afterglowtv.app.ui.interaction.mouseClickable
 import com.afterglowtv.app.ui.interaction.rememberTvInteractionSounds
+import com.afterglowtv.app.ui.model.VodTitleFormatter
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Episode
 import com.afterglowtv.domain.model.Movie
@@ -357,20 +358,26 @@ fun LiveChannelRowSurface(
 
 @Composable
 fun MoviePosterCard(movie: Movie, modifier: Modifier = Modifier) {
+    val displayTitle = remember(movie.name, movie.year) {
+        VodTitleFormatter.format(movie.name, movie.year)
+    }
     PosterCard(
         imageUrl = movie.posterUrl,
-        title = movie.name,
-        subtitle = movie.year,
+        title = displayTitle.title,
+        subtitle = displayTitle.year ?: movie.year,
         modifier = modifier
     )
 }
 
 @Composable
 fun SeriesPosterCard(series: Series, modifier: Modifier = Modifier) {
+    val displayTitle = remember(series.name, series.releaseDate) {
+        VodTitleFormatter.format(series.name, series.releaseDate?.take(4))
+    }
     PosterCard(
         imageUrl = series.posterUrl,
-        title = series.name,
-        subtitle = series.releaseDate ?: series.genre,
+        title = displayTitle.title,
+        subtitle = displayTitle.year ?: series.releaseDate ?: series.genre,
         modifier = modifier
     )
 }
@@ -468,16 +475,38 @@ private fun PosterCard(
             .clip(posterShape)
             .background(AppColors.SurfaceEmphasis)
     ) {
-        // Fallback letter: only shown while no URL, still loading, or load failed
         if (showFallback) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            val palette = remember(title) { vodPosterFallbackPalette(title) }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(palette.first, palette.second, AppColors.TiviSurfaceDeep)
+                        )
+                    )
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .background(palette.accent, RoundedCornerShape(999.dp))
+                )
                 Text(
-                    text = title.take(1).uppercase(),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = AppColors.TextSecondary
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = AppColors.TextPrimary,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = subtitle?.takeIf { it.isNotBlank() } ?: "VOD",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = AppColors.TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -494,40 +523,59 @@ private fun PosterCard(
             )
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.52f)
-                .align(Alignment.BottomCenter)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, AppColors.HeroBottom)
+        if (!showFallback) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.52f)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, AppColors.HeroBottom)
+                        )
                     )
-                )
-        )
-
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = AppColors.TextPrimary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
             )
-            subtitle?.takeIf { it.isNotBlank() }?.let {
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
                 Text(
-                    text = it,
+                    text = title,
                     style = MaterialTheme.typography.labelSmall,
-                    color = AppColors.TextSecondary,
-                    maxLines = 1,
+                    color = AppColors.TextPrimary,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+                subtitle?.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = AppColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
+}
+
+private data class VodPosterFallbackPalette(
+    val first: Color,
+    val second: Color,
+    val accent: Color
+)
+
+private fun vodPosterFallbackPalette(title: String): VodPosterFallbackPalette {
+    val palettes = listOf(
+        VodPosterFallbackPalette(Color(0xFF18324A), Color(0xFF2E5847), Color(0xFF4FD1C5)),
+        VodPosterFallbackPalette(Color(0xFF3A233F), Color(0xFF5B2C3B), Color(0xFFFF7A90)),
+        VodPosterFallbackPalette(Color(0xFF1C2F4D), Color(0xFF3D405B), Color(0xFFFFD166)),
+        VodPosterFallbackPalette(Color(0xFF223A2F), Color(0xFF4C3A28), Color(0xFFA7F3D0)),
+        VodPosterFallbackPalette(Color(0xFF2E2F45), Color(0xFF594A3D), Color(0xFF93C5FD))
+    )
+    return palettes[(title.hashCode() and Int.MAX_VALUE) % palettes.size]
 }

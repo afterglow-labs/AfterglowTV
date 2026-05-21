@@ -1409,6 +1409,25 @@ interface MovieDao {
     @Query("SELECT * FROM movies WHERE provider_id = :providerId")
     suspend fun getByProviderSync(providerId: Long): List<MovieEntity>
 
+    @Query(
+        """
+        SELECT * FROM movies
+        WHERE provider_id = :providerId
+          AND (
+              cache_state = 'SUMMARY_ONLY'
+              OR detail_hydrated_at <= 0
+              OR COALESCE(poster_url, '') = ''
+              OR COALESCE(backdrop_url, '') = ''
+              OR COALESCE(genre, '') = ''
+              OR COALESCE(year, '') = ''
+              OR COALESCE(rating, 0) <= 0
+          )
+        ORDER BY last_watched_at DESC, added_at DESC, name ASC, id ASC
+        LIMIT :limit
+        """
+    )
+    suspend fun getVodEnrichmentCandidates(providerId: Long, limit: Int): List<MovieEntity>
+
     @Query("SELECT tmdb_id FROM movies WHERE provider_id = :providerId AND tmdb_id IS NOT NULL")
     suspend fun getTmdbIdsByProvider(providerId: Long): List<TmdbIdMapping>
 
@@ -2373,6 +2392,25 @@ interface SeriesDao {
 
     @Query("SELECT * FROM series WHERE provider_id = :providerId")
     suspend fun getByProviderSync(providerId: Long): List<SeriesEntity>
+
+    @Query(
+        """
+        SELECT * FROM series
+        WHERE provider_id = :providerId
+          AND (
+              cache_state = 'SUMMARY_ONLY'
+              OR detail_hydrated_at <= 0
+              OR COALESCE(poster_url, '') = ''
+              OR COALESCE(backdrop_url, '') = ''
+              OR COALESCE(genre, '') = ''
+              OR COALESCE(release_date, '') = ''
+              OR COALESCE(rating, 0) <= 0
+          )
+        ORDER BY last_modified DESC, name ASC, id ASC
+        LIMIT :limit
+        """
+    )
+    suspend fun getVodEnrichmentCandidates(providerId: Long, limit: Int): List<SeriesEntity>
 
     @Query("SELECT tmdb_id FROM series WHERE provider_id = :providerId AND tmdb_id IS NOT NULL")
     suspend fun getTmdbIdsByProvider(providerId: Long): List<TmdbIdMapping>

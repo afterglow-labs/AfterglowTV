@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">재생목록 제공자가 제공한 원래 채널 번호가 있으면 그대로 유지합니다.</string>
     <string name="settings_vod_view_mode">VOD 레이아웃</string>
     <string name="settings_vod_view_mode_subtitle">모던 선반 보기와 클래식 분할 레이아웃 중에서 선택하세요.</string>
-    <string name="settings_vod_view_mode_modern">모던</string>
-    <string name="settings_vod_view_mode_modern_desc">추천 행과 카테고리 미리보기가 있는 선반형 탐색입니다.</string>
-    <string name="settings_vod_view_mode_classic">클래식</string>
-    <string name="settings_vod_view_mode_classic_desc">왼쪽에 카테고리 목록, 오른쪽에 포스터 그리드가 있는 구성입니다.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">카테고리</string>
     <string name="vod_classic_category_search">카테고리 검색</string>
     <string name="vod_classic_all">전체</string>

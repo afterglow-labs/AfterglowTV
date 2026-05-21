@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">Behåll det ursprungliga kanalnumret från spellisteleverantören när det finns.</string>
     <string name="settings_vod_view_mode">VOD-layout</string>
     <string name="settings_vod_view_mode_subtitle">Välj mellan den moderna hyllvyn och en klassisk delad layout.</string>
-    <string name="settings_vod_view_mode_modern">Modern</string>
-    <string name="settings_vod_view_mode_modern_desc">Hyllbaserad bläddring med utvalda rader och kategoriförhandsvisningar.</string>
-    <string name="settings_vod_view_mode_classic">Klassisk</string>
-    <string name="settings_vod_view_mode_classic_desc">Kategorilista till vänster med ett staplat postergrids till höger.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategorier</string>
     <string name="vod_classic_category_search">Sök i kategorier</string>
     <string name="vod_classic_all">Alla</string>

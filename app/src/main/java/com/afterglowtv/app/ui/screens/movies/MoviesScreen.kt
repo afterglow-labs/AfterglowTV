@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -82,10 +83,15 @@ import com.afterglowtv.app.ui.components.shell.VodBrowseOptionsDialog
 import com.afterglowtv.app.ui.components.shell.VodClassicCategoryOption
 import com.afterglowtv.app.ui.components.shell.VodClassicContentHeader
 import com.afterglowtv.app.ui.components.shell.VodClassicSplitLayout
+import com.afterglowtv.app.ui.components.shell.VodGuideLane
+import com.afterglowtv.app.ui.components.shell.VodGuideProgramCard
 import com.afterglowtv.app.ui.components.shell.VodHeroStrip
 import com.afterglowtv.app.ui.components.shell.VodSectionHeader
 import com.afterglowtv.app.ui.design.FocusRestoreHost
 import com.afterglowtv.app.ui.design.requestFocusSafely
+import com.afterglowtv.app.ui.model.VodGuideItem
+import com.afterglowtv.app.ui.model.VodGuideRowBuilder
+import com.afterglowtv.app.ui.model.VodTitleFormatter
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.screens.vod.HandleVodUserMessage
 import com.afterglowtv.app.ui.screens.vod.ProtectedVodPinDialog
@@ -120,8 +126,16 @@ fun MoviesScreen(
         onShown = viewModel::userMessageShown
     )
 
-    BackHandler(enabled = uiState.selectedCategory != null && !uiState.isReorderMode) {
-        viewModel.selectCategory(null)
+    BackHandler(
+        enabled = uiState.selectedCategory != null &&
+            !uiState.isReorderMode &&
+            (uiState.vodViewMode == VodViewMode.SHELVES || uiState.selectedCategory != uiState.fullLibraryCategoryName)
+    ) {
+        if (uiState.vodViewMode == VodViewMode.SHELVES) {
+            viewModel.selectCategory(null)
+        } else {
+            viewModel.selectFullLibraryBrowse()
+        }
     }
 
     ProtectedVodPinDialog(
@@ -473,8 +487,8 @@ private fun MoviesVodContent(
         )
     }
 
-    if (uiState.vodViewMode == VodViewMode.CLASSIC) {
-        MoviesVodClassicContent(
+    if (uiState.vodViewMode == VodViewMode.GUIDE) {
+        MoviesVodGuideContent(
             uiState = uiState,
             selectedFilterType = selectedFilterType,
             onSelectedFilterTypeChange = onSelectedFilterTypeChange,
@@ -484,17 +498,24 @@ private fun MoviesVodContent(
             onSearchQueryChange = onSearchQueryChange,
             onMovieClick = onMovieClick,
             onProtectedMovieClick = onProtectedMovieClick,
-            onProtectedCategoryClick = onProtectedCategoryClick,
             onShowDialog = onShowDialog,
-            onShowCategoryOptions = onShowCategoryOptions,
-            onSelectCategory = onSelectCategory,
             onSelectFullLibraryBrowse = onSelectFullLibraryBrowse,
-            onOpenContinueWatching = onOpenContinueWatching,
-            onOpenFresh = onOpenFresh,
             onLoadMore = onLoadMore,
-            onDismissReorder = onDismissReorder,
             initialFocusRequester = initialFocusRequester
         )
+        return
+    }
+
+    LaunchedEffect(uiState.vodViewMode, uiState.selectedCategory, uiState.isReorderMode) {
+        if (uiState.vodViewMode == VodViewMode.GRID && uiState.selectedCategory == null && !uiState.isReorderMode) {
+            onSelectFullLibraryBrowse()
+        }
+    }
+
+    if (uiState.vodViewMode == VodViewMode.GRID && uiState.selectedCategory == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = Color.White)
+        }
         return
     }
 
@@ -906,6 +927,209 @@ private fun MoviesVodContent(
 }
 
 @Composable
+private fun MoviesVodGuideContent(
+    uiState: MoviesUiState,
+    selectedFilterType: LibraryFilterType,
+    onSelectedFilterTypeChange: (LibraryFilterType) -> Unit,
+    selectedSortBy: LibrarySortBy,
+    onSelectedSortByChange: (LibrarySortBy) -> Unit,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onMovieClick: (Movie) -> Unit,
+    onProtectedMovieClick: (Movie) -> Unit,
+    onShowDialog: (Movie) -> Unit,
+    onSelectFullLibraryBrowse: () -> Unit,
+    onLoadMore: () -> Unit,
+    initialFocusRequester: FocusRequester
+) {
+    var showBrowseOptions by rememberSaveable { mutableStateOf(false) }
+    var showSearchBar by rememberSaveable { mutableStateOf(searchQuery.isNotBlank()) }
+    val categoryById = remember(uiState.providerCategories) {
+        uiState.providerCategories.associate { kotlin.math.abs(it.id) to it.name }
+    }
+    val isMovieLocked = remember(uiState.parentalControlLevel, uiState.unlockedCategoryIds) {
+        { movie: Movie ->
+            val categoryId = movie.categoryId
+            movie.isUserProtected &&
+                uiState.parentalControlLevel in 1..2 &&
+                (categoryId == null || kotlin.math.abs(categoryId) !in uiState.unlockedCategoryIds)
+        }
+    }
+
+    LaunchedEffect(uiState.vodViewMode, uiState.selectedCategory, uiState.isReorderMode) {
+        if (
+            uiState.vodViewMode == VodViewMode.GUIDE &&
+            uiState.selectedCategory != uiState.fullLibraryCategoryName &&
+            !uiState.isReorderMode
+        ) {
+            onSelectFullLibraryBrowse()
+        }
+    }
+
+    if (showBrowseOptions) {
+        VodBrowseOptionsDialog(
+            title = stringResource(R.string.settings_vod_view_mode_guide),
+            filterTitle = stringResource(R.string.library_filter_title),
+            filterChips = movieFilterChips(),
+            selectedFilterKey = selectedFilterType.name,
+            onFilterSelected = { key ->
+                LibraryFilterType.entries.firstOrNull { it.name == key }?.let(onSelectedFilterTypeChange)
+            },
+            sortTitle = stringResource(R.string.library_sort_title),
+            sortChips = movieSortChips(),
+            selectedSortKey = selectedSortBy.name,
+            onSortSelected = { key ->
+                LibrarySortBy.entries.firstOrNull { it.name == key }?.let(onSelectedSortByChange)
+            },
+            onDismiss = { showBrowseOptions = false }
+        )
+    }
+
+    val guideMovies = uiState.selectedCategoryItems
+    val guideRows = remember(guideMovies, categoryById) {
+        VodGuideRowBuilder.build(
+            items = guideMovies.map { movie ->
+                val displayTitle = VodTitleFormatter.format(movie.name, movie.year)
+                VodGuideItem(
+                    id = movie.id.toString(),
+                    title = displayTitle.title,
+                    providerCategory = movie.categoryName
+                        ?: movie.categoryId?.let { categoryById[kotlin.math.abs(it)] }
+                )
+            },
+            uncategorizedTitle = "Other"
+        )
+    }
+    val moviesById = remember(guideMovies) {
+        guideMovies.associateBy { it.id.toString() }
+    }
+    val waitingForFullLibrary = uiState.selectedCategory != uiState.fullLibraryCategoryName
+    val guideListState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+    InfiniteScrollEffect(
+        listState = guideListState,
+        enabled = !waitingForFullLibrary,
+        canLoadMore = uiState.canLoadMoreSelectedCategory,
+        isLoading = uiState.isLoadingSelectedCategory,
+        onLoadMore = onLoadMore
+    )
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        val hasActiveFilterSort = selectedFilterType != LibraryFilterType.ALL || selectedSortBy != LibrarySortBy.LIBRARY
+        VodClassicContentHeader(
+            title = stringResource(R.string.settings_vod_view_mode_guide),
+            subtitle = stringResource(R.string.vod_classic_results_count, uiState.selectedCategoryTotalCount),
+            actions = buildList {
+                add(
+                    VodActionChip(
+                        key = "search_toggle",
+                        label = stringResource(
+                            if (showSearchBar) R.string.library_action_hide_search else R.string.search_title
+                        ),
+                        onClick = { showSearchBar = !showSearchBar }
+                    )
+                )
+                add(
+                    VodActionChip(
+                        key = "browse_options",
+                        label = stringResource(R.string.library_action_filters_sort),
+                        detail = vodActiveFilterSortDetail(selectedFilterType, selectedSortBy),
+                        onClick = { showBrowseOptions = true }
+                    )
+                )
+            },
+            selectedActionKey = if (hasActiveFilterSort) "browse_options" else null,
+            modifier = Modifier.padding(horizontal = 20.dp)
+        )
+
+        if (showSearchBar) {
+            SearchInput(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                placeholder = stringResource(R.string.movies_search_placeholder),
+                onSearch = {},
+                focusRequester = initialFocusRequester,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+        }
+
+        LazyColumn(
+            state = guideListState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            when {
+                waitingForFullLibrary || uiState.isLoadingSelectedCategory -> {
+                    item(key = "guide_loading") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(320.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color.White)
+                        }
+                    }
+                }
+                guideRows.isEmpty() -> {
+                    item(key = "guide_empty") {
+                        AppMessageState(
+                            title = stringResource(R.string.movies_no_found),
+                            subtitle = stringResource(R.string.movies_no_found_subtitle)
+                        )
+                    }
+                }
+                else -> {
+                    itemsIndexed(guideRows, key = { _, row -> row.title }) { rowIndex, row ->
+                        val programs = row.items.mapNotNull { guideItem ->
+                            val movie = moviesById[guideItem.id] ?: return@mapNotNull null
+                            val displayTitle = VodTitleFormatter.format(movie.name, movie.year)
+                            VodGuideProgramCard(
+                                key = movie.id.toString(),
+                                title = displayTitle.title,
+                                subtitle = vodMetadata(displayTitle.year ?: movie.year, movie.duration),
+                                imageUrl = movie.backdropUrl ?: movie.posterUrl,
+                                badge = movie.genre?.substringBefore(",")?.trim()?.takeIf(String::isNotBlank)
+                                    ?: movie.containerExtension?.uppercase(),
+                                isLocked = isMovieLocked(movie),
+                                onClick = {
+                                    if (isMovieLocked(movie)) onProtectedMovieClick(movie) else onMovieClick(movie)
+                                },
+                                onLongClick = { onShowDialog(movie) }
+                            )
+                        }
+                        VodGuideLane(
+                            title = row.title,
+                            subtitle = "${programs.size} titles",
+                            programs = programs,
+                            initialFocusRequester = if (!showSearchBar && rowIndex == 0) initialFocusRequester else null,
+                            modifier = Modifier.padding(start = 20.dp)
+                        )
+                    }
+                    if (uiState.canLoadMoreSelectedCategory && !uiState.isLoadingSelectedCategory) {
+                        item(key = "guide_load_more") {
+                            LoadMoreCard(
+                                label = stringResource(
+                                    R.string.library_load_more,
+                                    uiState.selectedCategoryLoadedCount,
+                                    uiState.selectedCategoryTotalCount
+                                ),
+                                onClick = onLoadMore,
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun MoviesVodClassicContent(
     uiState: MoviesUiState,
     selectedFilterType: LibraryFilterType,
@@ -995,8 +1219,8 @@ private fun MoviesVodClassicContent(
     val initialGridMovieId = filteredGridMovies.firstOrNull()?.id
 
     LaunchedEffect(uiState.vodViewMode, uiState.selectedCategory, uiState.isReorderMode) {
-        if (uiState.vodViewMode == VodViewMode.CLASSIC && uiState.selectedCategory == null && !uiState.isReorderMode) {
-            onSelectCategory(uiState.favoriteCategoryName)
+        if (uiState.vodViewMode == VodViewMode.GUIDE && uiState.selectedCategory == null && !uiState.isReorderMode) {
+            onSelectFullLibraryBrowse()
         }
     }
 
@@ -1273,4 +1497,11 @@ private fun movieSortChips(): List<SelectionChip> {
             }
         )
     }
+}
+
+private fun vodMetadata(vararg values: String?): String? {
+    return values
+        .mapNotNull { it?.takeIf(String::isNotBlank) }
+        .joinToString(" | ")
+        .takeIf(String::isNotBlank)
 }

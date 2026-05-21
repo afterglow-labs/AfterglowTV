@@ -192,7 +192,7 @@ internal fun LazyListScope.settingsBrowsingSection(
             ),
             checked = uiState.vodInfiniteScroll,
             onCheckedChange = { viewModel.setVodInfiniteScroll(it) },
-            enabled = uiState.vodViewMode == VodViewMode.MODERN,
+            enabled = uiState.vodViewMode == VodViewMode.SHELVES,
             indent = 24.dp
         )
         HorizontalDivider(color = Color.White.copy(alpha = 0.07f), modifier = Modifier.padding(vertical = 4.dp))

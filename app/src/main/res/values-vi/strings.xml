@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">Giữ nguyên số kênh gốc do nhà cung cấp playlist cung cấp nếu có.</string>
     <string name="settings_vod_view_mode">Bố cục VOD</string>
     <string name="settings_vod_view_mode_subtitle">Chọn giữa giao diện kệ hiện đại và bố cục chia đôi cổ điển.</string>
-    <string name="settings_vod_view_mode_modern">Hiện đại</string>
-    <string name="settings_vod_view_mode_modern_desc">Duyệt theo kệ với các hàng nổi bật và xem trước danh mục.</string>
-    <string name="settings_vod_view_mode_classic">Cổ điển</string>
-    <string name="settings_vod_view_mode_classic_desc">Danh sách danh mục bên trái, lưới poster xếp chồng bên phải.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Danh mục</string>
     <string name="vod_classic_category_search">Tìm trong danh mục</string>
     <string name="vod_classic_all">Tất cả</string>

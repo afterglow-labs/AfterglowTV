@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">Zachovat původní číslo kanálu od poskytovatele playlistu, pokud existuje.</string>
     <string name="settings_vod_view_mode">Rozložení VOD</string>
     <string name="settings_vod_view_mode_subtitle">Vyberte mezi moderním zobrazením polic a klasickým rozděleným rozložením.</string>
-    <string name="settings_vod_view_mode_modern">Moderní</string>
-    <string name="settings_vod_view_mode_modern_desc">Procházení po policích s vybranými řádky a náhledy kategorií.</string>
-    <string name="settings_vod_view_mode_classic">Klasické</string>
-    <string name="settings_vod_view_mode_classic_desc">Seznam kategorií vlevo a mřížka plakátů vpravo.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategorie</string>
     <string name="vod_classic_category_search">Hledat v kategoriích</string>
     <string name="vod_classic_all">Vše</string>

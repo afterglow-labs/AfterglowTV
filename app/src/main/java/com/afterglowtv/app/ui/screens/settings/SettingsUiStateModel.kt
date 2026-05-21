@@ -99,7 +99,7 @@ data class SettingsUiState(
     val liveChannelGroupingMode: LiveChannelGroupingMode = LiveChannelGroupingMode.RAW_VARIANTS,
     val groupedChannelLabelMode: GroupedChannelLabelMode = GroupedChannelLabelMode.HYBRID,
     val liveVariantPreferenceMode: LiveVariantPreferenceMode = LiveVariantPreferenceMode.BALANCED,
-    val vodViewMode: VodViewMode = VodViewMode.MODERN,
+    val vodViewMode: VodViewMode = VodViewMode.SHELVES,
     val vodInfiniteScroll: Boolean = true,
     val guideDefaultCategoryId: Long = com.afterglowtv.domain.model.VirtualCategoryIds.FAVORITES,
     val guideDefaultCategoryOptions: List<Category> = emptyList(),

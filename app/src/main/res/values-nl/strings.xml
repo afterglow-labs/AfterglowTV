@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">Behoud het originele kanaalnummer van de afspeellijstprovider wanneer dit bestaat.</string>
     <string name="settings_vod_view_mode">VOD-indeling</string>
     <string name="settings_vod_view_mode_subtitle">Kies tussen de moderne schappenweergave en een klassieke gesplitste indeling.</string>
-    <string name="settings_vod_view_mode_modern">Modern</string>
-    <string name="settings_vod_view_mode_modern_desc">Bladeren op basis van schappen met uitgelichte rijen en categorievoorbeelden.</string>
-    <string name="settings_vod_view_mode_classic">Klassiek</string>
-    <string name="settings_vod_view_mode_classic_desc">Categorielijst links met een raster van posters rechts.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Categorieën</string>
     <string name="vod_classic_category_search">Zoeken in categorieën</string>
     <string name="vod_classic_all">Alles</string>

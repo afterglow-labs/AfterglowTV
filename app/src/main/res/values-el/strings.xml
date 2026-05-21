@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">Διατηρήστε τον αρχικό αριθμό καναλιού που παρέχει ο πάροχος της playlist, όταν υπάρχει.</string>
     <string name="settings_vod_view_mode">Διάταξη VOD</string>
     <string name="settings_vod_view_mode_subtitle">Επιλέξτε ανάμεσα στη σύγχρονη προβολή ραφιών και σε μια κλασική διάταξη δύο στηλών.</string>
-    <string name="settings_vod_view_mode_modern">Σύγχρονο</string>
-    <string name="settings_vod_view_mode_modern_desc">Περιήγηση με ράφια, προτεινόμενες σειρές και προεπισκοπήσεις κατηγοριών.</string>
-    <string name="settings_vod_view_mode_classic">Κλασικό</string>
-    <string name="settings_vod_view_mode_classic_desc">Λίστα κατηγοριών αριστερά με πλέγμα αφισών σε στοίβα δεξιά.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Κατηγορίες</string>
     <string name="vod_classic_category_search">Αναζήτηση στις κατηγορίες</string>
     <string name="vod_classic_all">Όλα</string>

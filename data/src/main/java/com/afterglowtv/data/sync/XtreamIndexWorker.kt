@@ -94,7 +94,11 @@ class XtreamIndexWorker(
                                 sawRetryableFailure = true
                             }
                         }
-                        else -> Unit
+                        else -> VodEnrichmentWorker.enqueueProvider(
+                            context = applicationContext,
+                            providerId = provider.id,
+                            initialDelaySeconds = VOD_ENRICHMENT_AFTER_INDEX_DELAY_SECONDS
+                        )
                     }
                 }
 
@@ -121,6 +125,7 @@ class XtreamIndexWorker(
         private const val KEY_FORCE = "force"
         private const val INVALID_PROVIDER_ID = -1L
         private const val CATEGORY_SLICE_SIZE = 2
+        private const val VOD_ENRICHMENT_AFTER_INDEX_DELAY_SECONDS = 45L
         private const val UNIQUE_WORK_PREFIX = "xtream-index-worker-"
         private const val UNIQUE_PERIODIC_WORK_NAME = "xtream-index-periodic-worker"
         private const val PERIODIC_INITIAL_DELAY_MINUTES = 15L

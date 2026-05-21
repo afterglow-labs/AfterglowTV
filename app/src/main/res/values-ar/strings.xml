@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">الاحتفاظ برقم القناة الأصلي الذي يوفّره مزوّد قائمة التشغيل كلما كان متاحًا.</string>
     <string name="settings_vod_view_mode">تخطيط VOD</string>
     <string name="settings_vod_view_mode_subtitle">اختر بين عرض الرفوف العصري والتخطيط الكلاسيكي المقسّم.</string>
-    <string name="settings_vod_view_mode_modern">عصري</string>
-    <string name="settings_vod_view_mode_modern_desc">تصفح قائم على الرفوف مع صفوف مميزة ومعاينات للفئات.</string>
-    <string name="settings_vod_view_mode_classic">كلاسيكي</string>
-    <string name="settings_vod_view_mode_classic_desc">قائمة الفئات على اليسار مع شبكة ملصقات متراصة على اليمين.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">الفئات</string>
     <string name="vod_classic_category_search">البحث في الفئات</string>
     <string name="vod_classic_all">الكل</string>

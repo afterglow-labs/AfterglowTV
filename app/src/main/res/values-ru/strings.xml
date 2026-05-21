@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">Сохранять исходный номер канала, если он указан провайдером плейлиста.</string>
     <string name="settings_vod_view_mode">Макет VOD</string>
     <string name="settings_vod_view_mode_subtitle">Выберите между современным видом с полками и классическим разделённым макетом.</string>
-    <string name="settings_vod_view_mode_modern">Современный</string>
-    <string name="settings_vod_view_mode_modern_desc">Просмотр с полками, избранными рядами и превью категорий.</string>
-    <string name="settings_vod_view_mode_classic">Классический</string>
-    <string name="settings_vod_view_mode_classic_desc">Список категорий слева и сетка постеров справа.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Категории</string>
     <string name="vod_classic_category_search">Поиск по категориям</string>
     <string name="vod_classic_all">Все</string>

@@ -40,6 +40,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.afterglowtv.data.manager.recording.RecordingReconcileWorker
 import com.afterglowtv.data.sync.ProviderSyncWorker
+import com.afterglowtv.data.sync.VodEnrichmentWorker
 import com.afterglowtv.data.sync.XtreamIndexWorker
 import com.afterglowtv.player.timeshift.TimeshiftDiskManager
 import java.util.concurrent.TimeUnit
@@ -148,6 +149,8 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         ProviderSyncWorker.enqueueLaunchStaleCheck(this)
         XtreamIndexWorker.enqueuePeriodic(this)
         XtreamIndexWorker.enqueueLaunchStaleCheck(this)
+        VodEnrichmentWorker.enqueuePeriodic(this)
+        VodEnrichmentWorker.enqueueLaunchScan(this)
         RecordingReconcileWorker.enqueuePeriodic(this)
         RecordingReconcileWorker.enqueueOneShot(this)
     }
@@ -157,6 +160,7 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
             add(WorkManager.getInstance(this@AfterglowTVApp).cancelUniqueWork(DATA_MAINTENANCE_WORK_NAME))
             addAll(ProviderSyncWorker.cancelStartupMaintenance(this@AfterglowTVApp))
             addAll(XtreamIndexWorker.cancelStartupMaintenance(this@AfterglowTVApp))
+            addAll(VodEnrichmentWorker.cancelStartupMaintenance(this@AfterglowTVApp))
             addAll(RecordingReconcileWorker.cancelStartupMaintenance(this@AfterglowTVApp))
         }
         operations.awaitStartupMaintenance()

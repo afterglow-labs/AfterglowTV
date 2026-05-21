@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">Păstrează numărul original al canalului furnizat de playlist, atunci când există.</string>
     <string name="settings_vod_view_mode">Aspect VOD</string>
     <string name="settings_vod_view_mode_subtitle">Alege între vizualizarea modernă cu rafturi și un aspect clasic împărțit.</string>
-    <string name="settings_vod_view_mode_modern">Modern</string>
-    <string name="settings_vod_view_mode_modern_desc">Navigare pe rafturi, cu rânduri recomandate și previzualizări de categorii.</string>
-    <string name="settings_vod_view_mode_classic">Clasic</string>
-    <string name="settings_vod_view_mode_classic_desc">Listă de categorii în stânga, cu o grilă de postere suprapusă în dreapta.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Categorii</string>
     <string name="vod_classic_category_search">Caută în categorii</string>
     <string name="vod_classic_all">Toate</string>

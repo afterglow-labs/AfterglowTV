@@ -378,10 +378,12 @@
     <string name="settings_live_channel_numbering_provider_desc">Zachowaj oryginalny numer kanału podany przez dostawcę playlisty, jeśli istnieje.</string>
     <string name="settings_vod_view_mode">Układ VOD</string>
     <string name="settings_vod_view_mode_subtitle">Wybierz między nowoczesnym widokiem półek a klasycznym układem dzielonym.</string>
-    <string name="settings_vod_view_mode_modern">Nowoczesny</string>
-    <string name="settings_vod_view_mode_modern_desc">Przeglądanie oparte na półkach z wyróżnionymi wierszami i podglądem kategorii.</string>
-    <string name="settings_vod_view_mode_classic">Klasyczny</string>
-    <string name="settings_vod_view_mode_classic_desc">Lista kategorii po lewej i siatka plakatów po prawej.</string>
+    <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
+    <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
+    <string name="settings_vod_view_mode_grid">Poster Grid</string>
+    <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategorie</string>
     <string name="vod_classic_category_search">Szukaj w kategoriach</string>
     <string name="vod_classic_all">Wszystkie</string>
