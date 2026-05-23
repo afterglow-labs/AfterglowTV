@@ -1726,21 +1726,11 @@ class EpgViewModel @Inject constructor(
         } else {
             buildSearchGuideSnapshot(baseSnapshot, normalizedQuery)
         }
-        val candidateProgramsWithPlaceholders = candidateProgramsByChannel.withChannelGuidePlaceholders(
-            channels = candidateChannels,
-            windowStart = baseSnapshot.guideWindowStart,
-            windowEnd = baseSnapshot.guideWindowEnd,
-            blockMinutes = baseSnapshot.noDataBlockMinutes,
-            textMode = baseSnapshot.noDataTextMode,
-            customText = baseSnapshot.noDataCustomText,
-            providerName = baseSnapshot.currentProviderName
-        )
-
         val displayChannels = candidateChannels.filter { channel ->
             val programs = channel.guideLookupKey()
-                ?.let { lookupKey -> candidateProgramsWithPlaceholders[lookupKey].orEmpty() }
+                ?.let { lookupKey -> candidateProgramsByChannel[lookupKey].orEmpty() }
                 .orEmpty()
-            val matchesScheduled = !scheduledOnly || programs.hasDisplayGuidePrograms()
+            val matchesScheduled = !scheduledOnly || programs.hasRealGuidePrograms()
             val matchesMode = when (channelMode) {
                 GuideChannelMode.ALL -> true
                 GuideChannelMode.ANCHORED -> programs.any { program ->
@@ -1763,7 +1753,7 @@ class EpgViewModel @Inject constructor(
 
         return GuideDisplaySnapshot(
             channels = displayChannels,
-            programsByChannel = candidateProgramsWithPlaceholders,
+            programsByChannel = candidateProgramsByChannel,
             totalChannelCount = candidateChannels.size,
             channelsWithSchedule = channelsWithSchedule,
             isGuideStale = candidateChannels.isNotEmpty() && (channelsWithSchedule == 0 || !hasUpcomingData)
