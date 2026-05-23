@@ -17,11 +17,13 @@ import androidx.navigation.navArgument
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Episode
+import com.afterglowtv.domain.model.LocalMediaItem
 import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.app.ui.screens.dashboard.DashboardScreen
 import com.afterglowtv.app.ui.screens.multiview.MultiViewScreen
 import com.afterglowtv.app.ui.screens.home.HomeScreen
+import com.afterglowtv.app.ui.screens.local.LocalMediaScreen
 import com.afterglowtv.app.ui.screens.movies.MoviesScreen
 import com.afterglowtv.app.ui.screens.player.PlayerScreen
 import com.afterglowtv.app.ui.screens.provider.ProviderSetupScreen
@@ -64,6 +66,7 @@ object Routes {
     const val LIVE_TV_DESTINATION = "live_tv?categoryId={categoryId}"
     const val MOVIES = "movies"
     const val SERIES = "series"
+    const val LOCAL_MEDIA = "local_media"
     const val EPG = "epg"
     const val EPG_DESTINATION = "epg?categoryId={categoryId}&anchorTime={anchorTime}&favoritesOnly={favoritesOnly}"
     const val SETTINGS = "settings"
@@ -142,6 +145,23 @@ object Routes {
             seasonNumber = episode.seasonNumber,
             episodeNumber = episode.episodeNumber,
             episodeId = episode.episodeId.takeIf { it > 0L }
+        )
+    }
+
+    fun localMediaPlayer(item: LocalMediaItem): PlayerNavigationRequest {
+        val isEpisode = item.mediaKind == com.afterglowtv.domain.model.LocalMediaKind.EPISODE
+        return player(
+            streamUrl = item.uri,
+            title = item.title.ifBlank { item.displayName },
+            internalId = item.id,
+            providerId = 0L,
+            contentType = if (isEpisode) "SERIES_EPISODE" else "MOVIE",
+            artworkUrl = item.posterUri ?: item.backdropUri,
+            returnRoute = LOCAL_MEDIA,
+            seriesId = null,
+            seasonNumber = item.seasonNumber,
+            episodeNumber = item.episodeNumber,
+            startPositionMs = 0L
         )
     }
 
@@ -473,6 +493,16 @@ fun AppNavigation(mainActivity: MainActivity) {
                 },
                 onNavigate = { route -> tabNavigate(route) },
                 currentRoute = Routes.SERIES
+            )
+        }
+
+        composable(Routes.LOCAL_MEDIA) {
+            LocalMediaScreen(
+                onPlayItem = { item ->
+                    navController.navigateToPlayer(Routes.localMediaPlayer(item))
+                },
+                onNavigate = { route -> tabNavigate(route) },
+                currentRoute = Routes.LOCAL_MEDIA
             )
         }
 

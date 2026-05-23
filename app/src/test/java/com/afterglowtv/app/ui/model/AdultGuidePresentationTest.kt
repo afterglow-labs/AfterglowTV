@@ -53,21 +53,22 @@ class AdultGuidePresentationTest {
     }
 
     @Test
-    fun `unmatched adult channels remain browsable under other`() {
+    fun `unmatched adult channels use provider category before other`() {
         val channel = Channel(
             id = 3L,
             name = "Channel 888",
             providerId = 7L,
+            categoryId = 30L,
             categoryName = "XXX",
             isAdult = true
         )
 
         val categories = AdultGuideCategoryBuilder.build(
             channels = listOf(channel),
-            providerCategories = emptyList()
+            providerCategories = listOf(Category(id = 30L, name = "Adult Premium", isAdult = true))
         )
 
-        assertThat(categories.category("Other").channels).containsExactly(channel)
+        assertThat(categories.category("Adult Premium").channels).containsExactly(channel)
     }
 
     private fun List<AdultGuideCategory>.category(title: String): AdultGuideCategory =

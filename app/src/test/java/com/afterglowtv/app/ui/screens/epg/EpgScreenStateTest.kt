@@ -2,6 +2,7 @@ package com.afterglowtv.app.ui.screens.epg
 
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.Channel
+import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -61,10 +62,10 @@ class EpgScreenStateTest {
     }
 
     @Test
-    fun `selected adult category uses xxx guide`() {
+    fun `explicit xxx guide category uses xxx guide`() {
         val state = EpgUiState(
-            selectedCategoryId = 10L,
-            categories = listOf(Category(id = 10L, name = "XXX", isAdult = true)),
+            selectedCategoryId = VirtualCategoryIds.ADULT_GUIDE,
+            categories = listOf(Category(id = VirtualCategoryIds.ADULT_GUIDE, name = "XXX Guide", isAdult = true, isVirtual = true)),
             channels = listOf(Channel(id = 1L, name = "MILF TV", providerId = 1L, categoryId = 10L))
         )
 
@@ -72,7 +73,18 @@ class EpgScreenStateTest {
     }
 
     @Test
-    fun `all-adult provider lineup uses xxx guide from all channels`() {
+    fun `selected provider adult category does not replace normal epg`() {
+        val state = EpgUiState(
+            selectedCategoryId = 10L,
+            categories = listOf(Category(id = 10L, name = "XXX", isAdult = true)),
+            channels = listOf(Channel(id = 1L, name = "MILF TV", providerId = 1L, categoryId = 10L))
+        )
+
+        assertThat(shouldUseAdultGuide(state)).isFalse()
+    }
+
+    @Test
+    fun `all-adult provider lineup does not replace normal epg`() {
         val state = EpgUiState(
             selectedCategoryId = ChannelRepository.ALL_CHANNELS_ID,
             categories = listOf(Category(id = 10L, name = "XXX", isAdult = true)),
@@ -82,11 +94,11 @@ class EpgScreenStateTest {
             )
         )
 
-        assertThat(shouldUseAdultGuide(state)).isTrue()
+        assertThat(shouldUseAdultGuide(state)).isFalse()
     }
 
     @Test
-    fun `adult title keyword lineup can use xxx guide even before categories are marked adult`() {
+    fun `adult title keyword lineup does not replace normal epg`() {
         val state = EpgUiState(
             selectedCategoryId = ChannelRepository.ALL_CHANNELS_ID,
             categories = listOf(Category(id = 10L, name = "Live")),
@@ -96,7 +108,7 @@ class EpgScreenStateTest {
             )
         )
 
-        assertThat(shouldUseAdultGuide(state)).isTrue()
+        assertThat(shouldUseAdultGuide(state)).isFalse()
     }
 
     @Test

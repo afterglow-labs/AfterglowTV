@@ -1,5 +1,9 @@
 package com.afterglowtv.app.ui.model
 
+import com.afterglowtv.domain.model.Category
+import com.afterglowtv.domain.model.LocalMediaItem
+import com.afterglowtv.domain.model.Movie
+import com.afterglowtv.domain.model.Series
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -62,5 +66,38 @@ class VodPresentationTest {
 
         assertThat(rows.map { it.title }).containsExactly("Drama", "Action", "Other").inOrder()
         assertThat(rows.first().items.map { it.title }).containsExactly("Alpha", "Zulu").inOrder()
+    }
+
+    @Test
+    fun adultVodDetectionUsesItemAndProviderCategoryContext() {
+        val category = Category(id = 90L, name = "Adult Premium", isAdult = true)
+        val movie = Movie(id = 10L, name = "Provider Title", categoryId = 90L)
+        val series = Series(id = 11L, name = "Late Night XXX Series", categoryName = "Drama")
+
+        assertThat(isAdultVodMovie(movie, category)).isTrue()
+        assertThat(isAdultVodSeries(series, null)).isTrue()
+        assertThat(isAdultVodMovie(Movie(id = 12L, name = "News Documentary"), null)).isFalse()
+    }
+
+    @Test
+    fun adultLocalMediaDetectionUsesLocalFileMetadata() {
+        val adultItem = LocalMediaItem(
+            id = 1L,
+            libraryId = 2L,
+            uri = "content://media/video/1",
+            displayName = "Adult.Camera.Roll.mp4",
+            title = "Camera Roll",
+            genre = "Personal"
+        )
+        val familyItem = LocalMediaItem(
+            id = 2L,
+            libraryId = 2L,
+            uri = "content://media/video/2",
+            displayName = "Birthday.mp4",
+            title = "Birthday Party"
+        )
+
+        assertThat(isAdultLocalMediaItem(adultItem)).isTrue()
+        assertThat(isAdultLocalMediaItem(familyItem)).isFalse()
     }
 }

@@ -217,14 +217,34 @@ fun SeriesScreen(
                     subtitle = stringResource(R.string.home_add_first_provider_subtitle)
                 )
             }
-        } else if (!uiState.hasActiveProvider || (uiState.selectedCategory == null && uiState.seriesByCategory.isEmpty() && uiState.libraryCount == 0 && uiState.searchQuery.isBlank() && !uiState.isLoadingPreviewRows)) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                AppMessageState(
-                    title = stringResource(R.string.vod_sync_needed_title),
-                    subtitle = stringResource(R.string.vod_sync_needed_subtitle)
-                )
-            }
-        } else if (uiState.selectedCategory == null && uiState.searchQuery.isBlank() && uiState.seriesByCategory.isEmpty() && !uiState.isLoadingPreviewRows) {
+	        } else if (!uiState.hasActiveProvider || (uiState.selectedCategory == null && uiState.seriesByCategory.isEmpty() && uiState.libraryCount == 0 && uiState.searchQuery.isBlank() && !uiState.isLoadingPreviewRows)) {
+	            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+	                AppMessageState(
+	                    title = stringResource(R.string.vod_sync_needed_title),
+	                    subtitle = stringResource(R.string.vod_sync_needed_subtitle),
+	                    action = if (uiState.hasActiveProvider) {
+	                        {
+	                            Button(
+	                                onClick = viewModel::refreshProviderVodLibrary,
+	                                enabled = !uiState.isRefreshingProvider
+	                            ) {
+	                                Text(
+	                                    text = stringResource(
+	                                        if (uiState.isRefreshingProvider) {
+	                                            R.string.vod_syncing_provider
+	                                        } else {
+	                                            R.string.vod_sync_provider_action
+	                                        }
+	                                    )
+	                                )
+	                            }
+	                        }
+	                    } else {
+	                        null
+	                    }
+	                )
+	            }
+	        } else if (uiState.selectedCategory == null && uiState.searchQuery.isBlank() && uiState.seriesByCategory.isEmpty() && !uiState.isLoadingPreviewRows) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 AppMessageState(
                     title = stringResource(R.string.series_no_found),
@@ -265,12 +285,14 @@ fun SeriesScreen(
                     viewModel.setSelectedLibrarySortBy(LibrarySortBy.RATING)
                     viewModel.selectFullLibraryBrowse()
                 },
-                onOpenFresh = {
-                    viewModel.setSelectedLibraryFilterType(LibraryFilterType.RECENTLY_UPDATED)
-                    viewModel.setSelectedLibrarySortBy(LibrarySortBy.UPDATED)
-                    viewModel.selectFullLibraryBrowse()
-                },
-                onLoadMore = viewModel::loadMoreSelectedCategory,
+	                onOpenFresh = {
+	                    viewModel.setSelectedLibraryFilterType(LibraryFilterType.RECENTLY_UPDATED)
+	                    viewModel.setSelectedLibrarySortBy(LibrarySortBy.UPDATED)
+	                    viewModel.selectFullLibraryBrowse()
+	                },
+	                onOpenVodGuide = viewModel::openVodGuide,
+	                onOpenAdultVodGuide = viewModel::openAdultVodGuide,
+	                onLoadMore = viewModel::loadMoreSelectedCategory,
                 onLoadMorePreviewRows = viewModel::loadMorePreviewRows,
                 onDismissReorder = viewModel::exitCategoryReorderMode,
                 initialFocusRequester = initialContentFocusRequester
@@ -360,6 +382,8 @@ private fun SeriesVodContent(
     onOpenContinueWatching: () -> Unit,
     onOpenTopRated: () -> Unit,
     onOpenFresh: () -> Unit,
+    onOpenVodGuide: () -> Unit,
+    onOpenAdultVodGuide: () -> Unit,
     onLoadMore: () -> Unit,
     onLoadMorePreviewRows: () -> Unit,
     onDismissReorder: () -> Unit,
@@ -495,6 +519,8 @@ private fun SeriesVodContent(
             onProtectedSeriesClick = onProtectedSeriesClick,
             onShowDialog = onShowDialog,
             onSelectFullLibraryBrowse = onSelectFullLibraryBrowse,
+            onOpenVodGuide = onOpenVodGuide,
+            onOpenAdultVodGuide = onOpenAdultVodGuide,
             onLoadMore = onLoadMore,
             initialFocusRequester = initialFocusRequester
         )
@@ -549,17 +575,33 @@ private fun SeriesVodContent(
             item(key = "actions") {
             VodActionChipRow(
                     actions = buildList {
-                        add(
-                            VodActionChip(
-                                key = "browse_all",
-                                label = stringResource(R.string.library_full_browse_title_series),
-                                detail = stringResource(R.string.library_full_browse_subtitle, uiState.libraryCount),
-                                onClick = onSelectFullLibraryBrowse
-                            )
-                        )
-                        add(
-                            VodActionChip(
-                                key = "categories",
+	                        add(
+	                            VodActionChip(
+	                                key = "browse_all",
+	                                label = stringResource(R.string.library_full_browse_title_series),
+	                                detail = stringResource(R.string.library_full_browse_subtitle, uiState.libraryCount),
+	                                onClick = onSelectFullLibraryBrowse
+	                            )
+	                        )
+	                        add(
+	                            VodActionChip(
+	                                key = "vod_guide",
+	                                label = stringResource(R.string.vod_guide_title),
+	                                detail = stringResource(R.string.vod_guide_detail),
+	                                onClick = onOpenVodGuide
+	                            )
+	                        )
+	                        add(
+	                            VodActionChip(
+	                                key = "xxx_vod_guide",
+	                                label = stringResource(R.string.xxx_vod_guide_title),
+	                                detail = stringResource(R.string.xxx_vod_guide_detail),
+	                                onClick = onOpenAdultVodGuide
+	                            )
+	                        )
+	                        add(
+	                            VodActionChip(
+	                                key = "categories",
                                 label = stringResource(R.string.series_categories_title),
                                 detail = "${visibleCategoryNames.count { name -> categoryByName[name]?.id != VodBrowseDefaults.FAVORITES_SENTINEL_ID }} groups",
                                 onClick = { showCategoryPicker = true }
@@ -931,6 +973,8 @@ private fun SeriesVodGuideContent(
     onProtectedSeriesClick: (Long) -> Unit,
     onShowDialog: (Series) -> Unit,
     onSelectFullLibraryBrowse: () -> Unit,
+    onOpenVodGuide: () -> Unit,
+    onOpenAdultVodGuide: () -> Unit,
     onLoadMore: () -> Unit,
     initialFocusRequester: FocusRequester
 ) {
@@ -1010,14 +1054,25 @@ private fun SeriesVodGuideContent(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        val hasActiveFilterSort = selectedFilterType != LibraryFilterType.ALL || selectedSortBy != LibrarySortBy.LIBRARY
-        VodClassicContentHeader(
-            title = stringResource(R.string.settings_vod_view_mode_guide),
-            subtitle = stringResource(R.string.vod_classic_results_count, uiState.selectedCategoryTotalCount),
-            actions = buildList {
-                add(
-                    VodActionChip(
-                        key = "search_toggle",
+	        val hasActiveFilterSort = selectedFilterType != LibraryFilterType.ALL || selectedSortBy != LibrarySortBy.LIBRARY
+	        VodClassicContentHeader(
+	            title = stringResource(
+	                if (uiState.showAdultVodGuide) R.string.xxx_vod_guide_title else R.string.vod_guide_title
+	            ),
+	            subtitle = stringResource(R.string.vod_classic_results_count, uiState.selectedCategoryTotalCount),
+	            actions = buildList {
+	                add(
+	                    VodActionChip(
+	                        key = if (uiState.showAdultVodGuide) "vod_guide" else "xxx_vod_guide",
+	                        label = stringResource(
+	                            if (uiState.showAdultVodGuide) R.string.vod_guide_title else R.string.xxx_vod_guide_title
+	                        ),
+	                        onClick = if (uiState.showAdultVodGuide) onOpenVodGuide else onOpenAdultVodGuide
+	                    )
+	                )
+	                add(
+	                    VodActionChip(
+	                        key = "search_toggle",
                         label = stringResource(
                             if (showSearchBar) R.string.library_action_hide_search else R.string.search_title
                         ),

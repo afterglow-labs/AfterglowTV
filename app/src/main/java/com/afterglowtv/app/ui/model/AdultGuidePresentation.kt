@@ -2,6 +2,9 @@ package com.afterglowtv.app.ui.model
 
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.Channel
+import com.afterglowtv.domain.model.LocalMediaItem
+import com.afterglowtv.domain.model.Movie
+import com.afterglowtv.domain.model.Series
 import java.util.Locale
 
 data class AdultGuideCategory(
@@ -58,8 +61,20 @@ object AdultGuideCategoryBuilder {
             if (matches.isEmpty()) {
                 val sourceCategory = channel.categoryId?.let(providerCategoryById::get)
                 if (isAdultGuideChannel(channel, sourceCategory)) {
-                    grouped.getOrPut(OTHER_CATEGORY_KEY) {
-                        AdultGuideMutableCategory(OTHER_CATEGORY_KEY, "Other", mutableListOf())
+                    val fallbackCategory = sourceCategory?.takeIf(::isAdultGuideCategory)
+                        ?: channel.categoryName
+                            ?.takeIf(::isAdultGuideText)
+                            ?.let { Category(id = Long.MIN_VALUE, name = it, isAdult = true) }
+                    val key = fallbackCategory?.name
+                        ?.let(::adultGuideCategoryKey)
+                        ?.takeIf(String::isNotBlank)
+                        ?: OTHER_CATEGORY_KEY
+                    val title = fallbackCategory?.name
+                        ?.trim()
+                        ?.takeIf(String::isNotBlank)
+                        ?: "Other"
+                    grouped.getOrPut(key) {
+                        AdultGuideMutableCategory(key, title, mutableListOf())
                     }.channels.add(channel)
                 }
             } else {
@@ -103,6 +118,36 @@ internal fun isAdultGuideChannel(channel: Channel, category: Category? = null): 
         AdultGuideCategoryBuilder.matchesGeneratedCategory(channel.groupTitle) ||
         AdultGuideCategoryBuilder.matchesGeneratedCategory(channel.name)
 }
+
+internal fun isAdultVodMovie(movie: Movie, category: Category? = null): Boolean =
+    movie.isAdult ||
+        isAdultGuideCategory(category) ||
+        isAdultGuideText(movie.categoryName) ||
+        isAdultGuideText(movie.genre) ||
+        isAdultGuideText(movie.name) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(movie.categoryName) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(movie.genre) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(movie.name)
+
+internal fun isAdultVodSeries(series: Series, category: Category? = null): Boolean =
+    series.isAdult ||
+        isAdultGuideCategory(category) ||
+        isAdultGuideText(series.categoryName) ||
+        isAdultGuideText(series.genre) ||
+        isAdultGuideText(series.name) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(series.categoryName) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(series.genre) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(series.name)
+
+internal fun isAdultLocalMediaItem(item: LocalMediaItem): Boolean =
+    isAdultGuideText(item.title) ||
+        isAdultGuideText(item.displayName) ||
+        isAdultGuideText(item.genre) ||
+        isAdultGuideText(item.description) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(item.title) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(item.displayName) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(item.genre) ||
+        AdultGuideCategoryBuilder.matchesGeneratedCategory(item.description)
 
 private data class AdultGuideMutableCategory(
     val key: String,
@@ -153,3 +198,6 @@ private fun normalizeAdultGuideText(value: String?): String =
         .replace(Regex("""[^a-z0-9]+"""), " ")
         .replace(Regex("""\s+"""), " ")
         .trim()
+
+private fun adultGuideCategoryKey(value: String): String =
+    normalizeAdultGuideText(value).replace(" ", "_")

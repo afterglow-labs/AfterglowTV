@@ -2,6 +2,8 @@ package com.afterglowtv.app.ui.screens.epg
 
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.app.ui.model.guideLookupKey
+import com.afterglowtv.app.ui.model.isAdultGuideCategory
+import com.afterglowtv.app.ui.model.isAdultGuideChannel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
@@ -331,6 +333,12 @@ class EpgViewModel @Inject constructor(
 
     fun selectCategory(categoryId: Long) {
         startupCategoryId.value = null
+        if (categoryId != VirtualCategoryIds.FAVORITES && showFavoritesOnly.value) {
+            showFavoritesOnly.value = false
+            viewModelScope.launch {
+                preferencesRepository.setGuideFavoritesOnly(false)
+            }
+        }
         if (selectedCategoryId.value == categoryId) return
         baseGuideSnapshot.value?.providerId?.takeIf { it > 0L }?.let { providerId ->
             parentalControlManager.retainUnlockedCategory(
@@ -964,13 +972,17 @@ class EpgViewModel @Inject constructor(
                         favoriteChannelIds = favoriteIds
                     )
                 }.collectLatest { channelSelection ->
-                    val visibleChannels = channelSelection.channels.take(MAX_CHANNELS)
-                    val guideResult = loadGuidePrograms(
-                        providerId = provider.id,
-                        channels = visibleChannels,
-                        windowStart = request.windowStart,
-                        windowEnd = request.windowEnd
-                    )
+                    val visibleChannels = request.visibleInitialChannels(channelSelection.channels)
+                    val guideResult = if (request.isAdultGuideRequest()) {
+                        GuideProgramsResult(emptyMap(), failedCount = 0)
+                    } else {
+                        loadGuidePrograms(
+                            providerId = provider.id,
+                            channels = visibleChannels,
+                            windowStart = request.windowStart,
+                            windowEnd = request.windowEnd
+                        )
+                    }
                     publishGuideSnapshot(
                         providerId = provider.id,
                         providerName = provider.name,
@@ -981,18 +993,20 @@ class EpgViewModel @Inject constructor(
                         channelSelection = channelSelection,
                         guideResult = guideResult
                     )
-                    scheduleGuideFallbackEnrichment(
-                        snapshotContext = GuideFallbackContext(
-                            providerId = provider.id,
-                            selectedCategoryId = request.resolvedCategoryId,
-                            guideAnchorTime = request.anchorTime,
-                            guideWindowStart = request.windowStart,
-                            guideWindowEnd = request.windowEnd,
-                            visibleChannelIds = visibleChannels.map(Channel::id)
-                        ),
-                        channels = visibleChannels,
-                        existingProgramsByChannel = guideResult.programsByChannel
-                    )
+                    if (!request.isAdultGuideRequest()) {
+                        scheduleGuideFallbackEnrichment(
+                            snapshotContext = GuideFallbackContext(
+                                providerId = provider.id,
+                                selectedCategoryId = request.resolvedCategoryId,
+                                guideAnchorTime = request.anchorTime,
+                                guideWindowStart = request.windowStart,
+                                guideWindowEnd = request.windowEnd,
+                                visibleChannelIds = visibleChannels.map(Channel::id)
+                            ),
+                            channels = visibleChannels,
+                            existingProgramsByChannel = guideResult.programsByChannel
+                        )
+                    }
                     baseGuideSnapshot.value?.let { schedulePrefetchNextPage(it) }
                     finalizeStartupCategory(request.resolvedCategoryId)
                 }
@@ -1081,12 +1095,16 @@ class EpgViewModel @Inject constructor(
                     favoriteChannelIds = favoriteIds
                 )
             }.collectLatest { channelSelection ->
-                val visibleChannels = channelSelection.channels.take(MAX_CHANNELS)
-                val guideResult = loadCombinedGuidePrograms(
-                    channels = visibleChannels,
-                    windowStart = request.windowStart,
-                    windowEnd = request.windowEnd
-                )
+                val visibleChannels = request.visibleInitialChannels(channelSelection.channels)
+                val guideResult = if (request.isAdultGuideRequest()) {
+                    GuideProgramsResult(emptyMap(), failedCount = 0)
+                } else {
+                    loadCombinedGuidePrograms(
+                        channels = visibleChannels,
+                        windowStart = request.windowStart,
+                        windowEnd = request.windowEnd
+                    )
+                }
                 publishGuideSnapshot(
                     providerId = 0L,
                     providerName = profileName,
@@ -1097,18 +1115,20 @@ class EpgViewModel @Inject constructor(
                     channelSelection = channelSelection,
                     guideResult = guideResult
                 )
-                scheduleGuideFallbackEnrichment(
-                    snapshotContext = GuideFallbackContext(
-                        providerId = 0L,
-                        selectedCategoryId = request.resolvedCategoryId,
-                        guideAnchorTime = request.anchorTime,
-                        guideWindowStart = request.windowStart,
-                        guideWindowEnd = request.windowEnd,
-                        visibleChannelIds = visibleChannels.map(Channel::id)
-                    ),
-                    channels = visibleChannels,
-                    existingProgramsByChannel = guideResult.programsByChannel
-                )
+                if (!request.isAdultGuideRequest()) {
+                    scheduleGuideFallbackEnrichment(
+                        snapshotContext = GuideFallbackContext(
+                            providerId = 0L,
+                            selectedCategoryId = request.resolvedCategoryId,
+                            guideAnchorTime = request.anchorTime,
+                            guideWindowStart = request.windowStart,
+                            guideWindowEnd = request.windowEnd,
+                            visibleChannelIds = visibleChannels.map(Channel::id)
+                        ),
+                        channels = visibleChannels,
+                        existingProgramsByChannel = guideResult.programsByChannel
+                    )
+                }
                 finalizeStartupCategory(request.resolvedCategoryId)
             }
         }
@@ -1125,6 +1145,23 @@ class EpgViewModel @Inject constructor(
                 kotlinx.coroutines.flow.flowOf(emptyList<Channel>())
             } else {
                 combine(flows) { arrays: Array<List<Channel>> -> arrays.toList().flatMap { it } }
+            }
+        } else if (categoryId == VirtualCategoryIds.ADULT_GUIDE) {
+            val providerCategoriesById = combinedCategoriesById.values.associate { combined ->
+                combined.category.id to combined.category
+            }
+            val flows = combinedCategoriesById.values.map { combinedM3uRepository.getCombinedChannels(profileId, it) }
+            if (flows.isEmpty()) {
+                kotlinx.coroutines.flow.flowOf(emptyList<Channel>())
+            } else {
+                combine(flows) { arrays: Array<List<Channel>> ->
+                    arrays.toList()
+                        .flatMap { it }
+                        .distinctBy(Channel::id)
+                        .filter { channel ->
+                            isAdultGuideChannel(channel, channel.categoryId?.let(providerCategoriesById::get))
+                        }
+                }
             }
         } else if (categoryId == VirtualCategoryIds.FAVORITES) {
             observeLiveFavorites(providerIds)
@@ -1199,7 +1236,7 @@ class EpgViewModel @Inject constructor(
     ) {
         prefetchJob?.cancel()
         prefetchJob = null
-        val visibleChannels = channelSelection.channels.take(MAX_CHANNELS)
+        val visibleChannels = request.visibleInitialChannels(channelSelection.channels)
         val supportsOffsetPaging = providerId > 0L &&
             (request.resolvedCategoryId == ChannelRepository.ALL_CHANNELS_ID ||
                 (request.resolvedCategoryId != VirtualCategoryIds.FAVORITES && request.resolvedCategoryId >= 0L))
@@ -1239,6 +1276,8 @@ class EpgViewModel @Inject constructor(
             nextRawChannelOffset = MAX_CHANNELS,
             hasMoreChannels = if (supportsOffsetPaging) {
                 channelSelection.channels.size >= MAX_CHANNELS
+            } else if (request.isAdultGuideRequest()) {
+                false
             } else {
                 channelSelection.channels.size > visibleChannels.size
             }
@@ -1404,11 +1443,24 @@ class EpgViewModel @Inject constructor(
         showAllChannels: Boolean = true
     ): List<Category> {
         val favoritesCategory = customCategories.find { it.id == VirtualCategoryIds.FAVORITES }
+        val adultGuideCount = providerCategories
+            .filter(::isAdultGuideCategory)
+            .sumOf(Category::count)
         return buildList {
             if (favoritesCategory != null) {
                 add(favoritesCategory)
             }
             addAll(customCategories.filter { it.id != VirtualCategoryIds.FAVORITES })
+            add(
+                Category(
+                    id = VirtualCategoryIds.ADULT_GUIDE,
+                    name = "XXX Guide",
+                    type = ContentType.LIVE,
+                    isVirtual = true,
+                    count = adultGuideCount,
+                    isAdult = true
+                )
+            )
             if (showAllChannels) {
                 add(
                     Category(
@@ -1436,6 +1488,16 @@ class EpgViewModel @Inject constructor(
         VirtualCategoryIds.FAVORITES -> favoriteRepository.getFavorites(providerId, ContentType.LIVE)
             .map { favorites -> favorites.sortedBy { it.position }.map { it.contentId } }
             .flatMapLatest { ids -> loadGuideChannelsByOrderedIds(ids, providerId) }
+
+        VirtualCategoryIds.ADULT_GUIDE -> {
+            val categoriesById = request.categories.associateBy(Category::id)
+            channelRepository.getChannels(providerId)
+                .map { channels ->
+                    channels.filter { channel ->
+                        isAdultGuideChannel(channel, channel.categoryId?.let(categoriesById::get))
+                    }
+                }
+        }
 
         in Long.MIN_VALUE..<0L -> favoriteRepository.getFavoritesByGroup(-request.resolvedCategoryId)
             .map { favorites -> favorites.sortedBy { it.position }.map { it.contentId } }
@@ -1478,6 +1540,12 @@ class EpgViewModel @Inject constructor(
             healthyChannels.ifEmpty { channelsByNumber }
         }
     }
+
+    private fun GuideBaseRequest.isAdultGuideRequest(): Boolean =
+        resolvedCategoryId == VirtualCategoryIds.ADULT_GUIDE
+
+    private fun GuideBaseRequest.visibleInitialChannels(channels: List<Channel>): List<Channel> =
+        if (isAdultGuideRequest()) channels else channels.take(MAX_CHANNELS)
 
     private fun combinedProviderIdsFlow(profileId: Long): kotlinx.coroutines.flow.Flow<List<Long>> = kotlinx.coroutines.flow.flow {
         emit(combinedM3uRepository.getProfile(profileId)?.members.orEmpty())
@@ -1726,11 +1794,20 @@ class EpgViewModel @Inject constructor(
         } else {
             buildSearchGuideSnapshot(baseSnapshot, normalizedQuery)
         }
+        val candidateProgramsWithPlaceholders = candidateProgramsByChannel.withChannelGuidePlaceholders(
+            channels = candidateChannels,
+            windowStart = baseSnapshot.guideWindowStart,
+            windowEnd = baseSnapshot.guideWindowEnd,
+            blockMinutes = baseSnapshot.noDataBlockMinutes,
+            textMode = baseSnapshot.noDataTextMode,
+            customText = baseSnapshot.noDataCustomText,
+            providerName = baseSnapshot.currentProviderName
+        )
         val displayChannels = candidateChannels.filter { channel ->
             val programs = channel.guideLookupKey()
-                ?.let { lookupKey -> candidateProgramsByChannel[lookupKey].orEmpty() }
+                ?.let { lookupKey -> candidateProgramsWithPlaceholders[lookupKey].orEmpty() }
                 .orEmpty()
-            val matchesScheduled = !scheduledOnly || programs.hasRealGuidePrograms()
+            val matchesScheduled = !scheduledOnly || programs.hasDisplayGuidePrograms()
             val matchesMode = when (channelMode) {
                 GuideChannelMode.ALL -> true
                 GuideChannelMode.ANCHORED -> programs.any { program ->
@@ -1753,7 +1830,7 @@ class EpgViewModel @Inject constructor(
 
         return GuideDisplaySnapshot(
             channels = displayChannels,
-            programsByChannel = candidateProgramsByChannel,
+            programsByChannel = candidateProgramsWithPlaceholders,
             totalChannelCount = candidateChannels.size,
             channelsWithSchedule = channelsWithSchedule,
             isGuideStale = candidateChannels.isNotEmpty() && (channelsWithSchedule == 0 || !hasUpcomingData)

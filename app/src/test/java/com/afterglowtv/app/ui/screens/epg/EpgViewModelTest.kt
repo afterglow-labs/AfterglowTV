@@ -200,7 +200,7 @@ class EpgViewModelTest {
     }
 
     @Test
-    fun `guide keeps no-data channels visible without fake programs when schedule data is missing`() = runTest {
+    fun `guide keeps no-data channels visible with placeholders when schedule data is missing`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider",
@@ -243,12 +243,15 @@ class EpgViewModelTest {
 
         val state = viewModel.uiState.value
         assertThat(state.channels.map(Channel::name)).containsExactly("Adult Asian")
-        assertThat(state.programsByChannel["Adult Asian"].orEmpty()).isEmpty()
+        val programs = state.programsByChannel["Adult Asian"].orEmpty()
+        assertThat(programs).isNotEmpty()
+        assertThat(programs.all { it.isPlaceholder }).isTrue()
+        assertThat(programs.first().title).isEqualTo("Adult Asian")
         assertThat(state.channelsWithSchedule).isEqualTo(0)
     }
 
     @Test
-    fun `guide hides no-data channels in scheduled current browse mode without placeholders`() = runTest {
+    fun `guide keeps no-data channels in scheduled current browse mode through placeholders`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider",
@@ -290,12 +293,14 @@ class EpgViewModelTest {
         }
 
         val state = viewModel.uiState.value
-        assertThat(state.channels).isEmpty()
-        assertThat(state.programsByChannel["VOD Catalog Item"].orEmpty()).isEmpty()
+        assertThat(state.channels.map(Channel::name)).containsExactly("VOD Catalog Item")
+        val programs = state.programsByChannel["VOD Catalog Item"].orEmpty()
+        assertThat(programs).isNotEmpty()
+        assertThat(programs.all { it.isPlaceholder }).isTrue()
     }
 
     @Test
-    fun `vod-like no-data channels do not create full-day placeholder blocks`() = runTest {
+    fun `vod-like no-data channels create one catalog placeholder block`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider VOD",
@@ -340,11 +345,14 @@ class EpgViewModelTest {
 
         val state = viewModel.uiState.value
         assertThat(state.channels.map(Channel::name)).containsExactly("Catalog Movie")
-        assertThat(state.programsByChannel["Catalog Movie"].orEmpty()).isEmpty()
+        val programs = state.programsByChannel["Catalog Movie"].orEmpty()
+        assertThat(programs).hasSize(1)
+        assertThat(programs.first().isPlaceholder).isTrue()
+        assertThat(programs.first().endTime - programs.first().startTime).isGreaterThan(EpgViewModel.LOOKAHEAD_MS)
     }
 
     @Test
-    fun `guide no-data text settings do not synthesize blank placeholder chunks`() = runTest {
+    fun `guide no-data blank text setting keeps blank placeholder chunks`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider",
@@ -391,7 +399,11 @@ class EpgViewModelTest {
 
         val state = viewModel.uiState.value
         assertThat(state.channels.map(Channel::name)).containsExactly("Channel Without Data")
-        assertThat(state.programsByChannel["Channel Without Data"].orEmpty()).isEmpty()
+        val programs = state.programsByChannel["Channel Without Data"].orEmpty()
+        assertThat(programs).isNotEmpty()
+        assertThat(programs.all { it.isPlaceholder }).isTrue()
+        assertThat(programs.map { it.title }.distinct()).containsExactly("")
+        assertThat(programs.map { it.description }.distinct()).containsExactly("")
     }
 
     @Test

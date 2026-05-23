@@ -3,6 +3,7 @@ package com.afterglowtv.app.ui.screens.series
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
+import com.afterglowtv.app.ui.model.isAdultVodSeries
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.domain.manager.ParentalControlManager
@@ -131,7 +132,8 @@ class SeriesViewModel @Inject constructor(
                         hasActiveProvider = provider != null,
                         isLoading = if (provider == null) false else it.isLoading,
                         isLoadingSelectedCategory = if (provider == null) false else it.isLoadingSelectedCategory,
-                        isLoadingPreviewRows = if (provider == null) false else it.isLoadingPreviewRows
+                        isLoadingPreviewRows = if (provider == null) false else it.isLoadingPreviewRows,
+                        isRefreshingProvider = if (provider == null) false else it.isRefreshingProvider
                     )
                 }
             }
@@ -289,7 +291,13 @@ class SeriesViewModel @Inject constructor(
 
         viewModelScope.launch {
             preferencesRepository.vodViewMode.collectLatest { mode ->
-                _uiState.update { it.copy(vodViewMode = VodViewMode.fromStorage(mode)) }
+                val viewMode = VodViewMode.fromStorage(mode)
+                _uiState.update {
+                    it.copy(
+                        vodViewMode = viewMode,
+                        showAdultVodGuide = if (viewMode == VodViewMode.GUIDE) it.showAdultVodGuide else false
+                    )
+                }
             }
         }
 
@@ -330,14 +338,15 @@ class SeriesViewModel @Inject constructor(
                         )
                     }.combine(
                         combine(
-                            _uiState.map { it.selectedCategory }.distinctUntilChanged(),
+                            _uiState.map { it.selectedCategory to it.showAdultVodGuide }.distinctUntilChanged(),
                             _selectedCategoryLoadLimit,
                             searchQueryForBrowse,
                             _selectedLibraryFilterType,
                             _selectedLibrarySortBy
-                        ) { selectedCategory, loadLimit, query, filterType, sortBy ->
+                        ) { selectedCategoryState, loadLimit, query, filterType, sortBy ->
                             SelectedSeriesBrowseSelection(
-                                selectedCategory = selectedCategory,
+                                selectedCategory = selectedCategoryState.first,
+                                adultOnly = selectedCategoryState.second,
                                 loadLimit = loadLimit,
                                 query = query,
                                 filterType = filterType,
@@ -348,6 +357,7 @@ class SeriesViewModel @Inject constructor(
                         SelectedSeriesCategoryRequest(
                             providerId = provider.id,
                             selectedCategory = selection.selectedCategory,
+                            adultOnly = selection.adultOnly,
                             loadLimit = selection.loadLimit,
                             query = selection.query,
                             filterType = selection.filterType,
@@ -531,13 +541,68 @@ class SeriesViewModel @Inject constructor(
                 selectedCategoryLoadedCount = 0,
                 selectedCategoryTotalCount = 0,
                 canLoadMoreSelectedCategory = false,
-                isLoadingSelectedCategory = isLoadingSelectedCategory
+                isLoadingSelectedCategory = isLoadingSelectedCategory,
+                showAdultVodGuide = false
             )
         }
     }
 
     fun selectFullLibraryBrowse() {
         selectCategory(VodBrowseDefaults.FULL_LIBRARY_CATEGORY)
+    }
+
+    fun openVodGuide() {
+        openVodGuide(adultOnly = false)
+    }
+
+    fun openAdultVodGuide() {
+        openVodGuide(adultOnly = true)
+    }
+
+    private fun openVodGuide(adultOnly: Boolean) {
+        selectCategory(VodBrowseDefaults.FULL_LIBRARY_CATEGORY)
+        _uiState.update {
+            it.copy(
+                vodViewMode = VodViewMode.GUIDE,
+                showAdultVodGuide = adultOnly,
+                isLoadingSelectedCategory = true
+            )
+        }
+        viewModelScope.launch {
+            preferencesRepository.setVodViewMode(VodViewMode.GUIDE.storageValue)
+        }
+    }
+
+    fun refreshProviderVodLibrary() {
+        val providerId = activeProviderId ?: return
+        if (_uiState.value.isRefreshingProvider) return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isRefreshingProvider = true,
+                    userMessage = "Syncing provider movies and series..."
+                )
+            }
+            when (val result = providerRepository.refreshProviderData(
+                providerId = providerId,
+                force = true,
+                movieFastSyncOverride = false
+            )) {
+                is Result.Error -> _uiState.update {
+                    it.copy(
+                        isRefreshingProvider = false,
+                        userMessage = result.message
+                    )
+                }
+                Result.Loading -> Unit
+                is Result.Success -> _uiState.update {
+                    it.copy(
+                        isRefreshingProvider = false,
+                        userMessage = "Provider VOD sync complete."
+                    )
+                }
+            }
+        }
     }
 
     fun loadMoreSelectedCategory() {
@@ -1020,23 +1085,48 @@ class SeriesViewModel @Inject constructor(
 
         val (selectedItems, totalCount, hasMoreRemote) = when (request.selectedCategory) {
             VodBrowseDefaults.FULL_LIBRARY_CATEGORY -> {
-                val result = seriesRepository
-                    .browseSeries(
-                        LibraryBrowseQuery(
-                            providerId = request.providerId,
-                            sortBy = request.sortBy,
-                            filterBy = LibraryFilterBy(type = request.filterType),
-                            searchQuery = effectiveQuery,
-                            limit = request.loadLimit,
-                            offset = 0
-                        )
+                if (request.adultOnly) {
+                    val providerCategoriesById = request.providerCategories.associateBy { kotlin.math.abs(it.id) }
+                    val filteredItems = seriesRepository.getSeries(request.providerId).first()
+                        .asSequence()
+                        .filterNot { item -> item.categoryId in request.hiddenCategoryIds }
+                        .filter { item ->
+                            isAdultVodSeries(item, item.categoryId?.let { providerCategoriesById[kotlin.math.abs(it)] })
+                        }
+                        .toList()
+                        .let { items ->
+                            applyLocalBrowseToSeries(
+                                items,
+                                request.history,
+                                request.filterType,
+                                request.sortBy,
+                                effectiveQuery
+                            )
+                        }
+                    Triple(
+                        filteredItems.take(request.loadLimit),
+                        filteredItems.size,
+                        false
                     )
-                    .first()
-                Triple(
-                    result.items.filterNot { item -> item.categoryId in request.hiddenCategoryIds },
-                    result.totalCount,
-                    result.hasMoreRemote
-                )
+                } else {
+                    val result = seriesRepository
+                        .browseSeries(
+                            LibraryBrowseQuery(
+                                providerId = request.providerId,
+                                sortBy = request.sortBy,
+                                filterBy = LibraryFilterBy(type = request.filterType),
+                                searchQuery = effectiveQuery,
+                                limit = request.loadLimit,
+                                offset = 0
+                            )
+                        )
+                        .first()
+                    Triple(
+                        result.items.filterNot { item -> item.categoryId in request.hiddenCategoryIds },
+                        result.totalCount,
+                        result.hasMoreRemote
+                    )
+                }
             }
             VodBrowseDefaults.FAVORITES_CATEGORY -> {
                 val ids = request.allFavorites
@@ -1257,6 +1347,7 @@ private data class SeriesCategorySelectionDependencies(
 private data class SelectedSeriesCategoryRequest(
     val providerId: Long,
     val selectedCategory: String?,
+    val adultOnly: Boolean,
     val loadLimit: Int,
     val query: String,
     val filterType: LibraryFilterType,
@@ -1270,6 +1361,7 @@ private data class SelectedSeriesCategoryRequest(
 
 private data class SelectedSeriesBrowseSelection(
     val selectedCategory: String?,
+    val adultOnly: Boolean,
     val loadLimit: Int,
     val query: String,
     val filterType: LibraryFilterType,
@@ -1301,10 +1393,12 @@ data class SeriesUiState(
     val selectedLibraryFilterType: LibraryFilterType = LibraryFilterType.ALL,
     val selectedLibrarySortBy: LibrarySortBy = LibrarySortBy.LIBRARY,
     val vodViewMode: VodViewMode = VodViewMode.SHELVES,
+    val showAdultVodGuide: Boolean = false,
     val vodInfiniteScroll: Boolean = true,
     val continueWatching: List<PlaybackHistory> = emptyList(),
     val hasProviders: Boolean = false,
     val hasActiveProvider: Boolean = false,
+    val isRefreshingProvider: Boolean = false,
     val isLoading: Boolean = true,
     val isLoadingPreviewRows: Boolean = false,
     val hasMorePreviewRows: Boolean = false,

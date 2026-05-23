@@ -33,6 +33,7 @@ val DefaultTopTabs: List<TopTab> = listOf(
     TopTab("live_tv", "Live TV"),
     TopTab("movies", "Movies"),
     TopTab("series", "Series"),
+    TopTab("local_media", "Local Media"),
     TopTab("epg", "TV Guide"),
     TopTab("favorites", "Favorites"),
     TopTab("search", "Search"),

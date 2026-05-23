@@ -3,6 +3,8 @@ package com.afterglowtv.app.navigation
 import com.google.common.truth.Truth.assertThat
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Episode
+import com.afterglowtv.domain.model.LocalMediaItem
+import com.afterglowtv.domain.model.LocalMediaKind
 import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.repository.ChannelRepository
 import org.junit.Test
@@ -90,6 +92,27 @@ class RoutesTest {
         assertThat(request.internalId).isEqualTo(33L)
         assertThat(request.providerId).isEqualTo(11L)
         assertThat(request.contentType).isEqualTo("SERIES_EPISODE")
+    }
+
+    @Test
+    fun `localMediaPlayer preserves local file playback context`() {
+        val request = Routes.localMediaPlayer(
+            LocalMediaItem(
+                id = 44L,
+                libraryId = 2L,
+                uri = "content://media/video/44",
+                displayName = "Family.Video.mp4",
+                title = "Family Video",
+                mediaKind = LocalMediaKind.MOVIE,
+                posterUri = "content://media/poster/44"
+            )
+        )
+
+        assertThat(request.streamUrl).isEqualTo("content://media/video/44")
+        assertThat(request.internalId).isEqualTo(44L)
+        assertThat(request.providerId).isEqualTo(0L)
+        assertThat(request.contentType).isEqualTo("MOVIE")
+        assertThat(request.returnRoute).isEqualTo(Routes.LOCAL_MEDIA)
     }
 
     @Test

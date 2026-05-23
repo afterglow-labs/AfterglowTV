@@ -7,6 +7,7 @@
     <string name="nav_live_tv">Live TV</string>
     <string name="nav_movies">Movies</string>
     <string name="nav_series">Series</string>
+    <string name="nav_local_media">Local Media</string>
     <string name="nav_epg">Guide</string>
     <string name="nav_settings">Settings</string>
 
@@ -214,6 +215,8 @@
     <string name="movies_loading">Loading movies...</string>
     <string name="vod_sync_needed_title">Sync needed</string>
     <string name="vod_sync_needed_subtitle">Refresh this provider to import movies and series into the library.</string>
+    <string name="vod_sync_provider_action">Sync provider</string>
+    <string name="vod_syncing_provider">Syncing...</string>
     <string name="movies_no_found">No movies found</string>
     <string name="movies_no_found_subtitle">Try a different category or return to the full library shelves to surface more titles.</string>
     <string name="movies_categories_title">Categories</string>
@@ -235,6 +238,10 @@
     <string name="movies_reorder_subtitle">Use the remote to move posters, then save the shelf order for this group.</string>
     <string name="library_full_browse_title_movies">Browse Full Movie Library</string>
     <string name="library_full_browse_subtitle">%1$d titles available in the current provider</string>
+    <string name="vod_guide_title">VOD Guide</string>
+    <string name="vod_guide_detail">Guide-style VOD browsing</string>
+    <string name="xxx_vod_guide_title">XXX VOD Guide</string>
+    <string name="xxx_vod_guide_detail">Adult VOD only</string>
 
     
     <string name="series_incorrect_pin">Incorrect PIN</string>
@@ -259,6 +266,21 @@
     <string name="series_reorder_title">Reordering %1$s</string>
     <string name="series_reorder_subtitle">Use the remote to move posters, then save the shelf order for this group.</string>
     <string name="library_full_browse_title_series">Browse Full Series Library</string>
+
+    <string name="local_media_subtitle">Your own videos, kept separate from IPTV providers.</string>
+    <string name="local_media_loading">Loading local media...</string>
+    <string name="local_media_filter_all">All</string>
+    <string name="local_media_filter_movies">Movies</string>
+    <string name="local_media_filter_tv">TV Shows</string>
+    <string name="local_media_filter_other">Other</string>
+    <string name="local_media_filter_xxx">XXX</string>
+    <string name="local_media_empty_title">Add a local media folder</string>
+    <string name="local_media_empty_subtitle">Use Settings to add folders for personal movies, shows, and other videos.</string>
+    <string name="local_media_open_settings">Open Settings</string>
+    <string name="local_media_no_videos_title">No videos imported yet</string>
+    <string name="local_media_no_videos_subtitle">Rescan your local media folders from Settings after adding video files.</string>
+    <string name="local_media_no_results_title">No videos in this section</string>
+    <string name="local_media_no_results_subtitle">Choose another local media section or add more files from Settings.</string>
 
     <string name="library_saved_title">Saved</string>
     <string name="library_saved_subtitle">Favorites and custom groups</string>

@@ -4,8 +4,6 @@ import android.view.inputmethod.InputMethodManager
 import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.app.ui.model.guideLookupKey
-import com.afterglowtv.app.ui.model.isAdultGuideCategory
-import com.afterglowtv.app.ui.model.isAdultGuideChannel
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -170,19 +168,7 @@ internal fun resolveGuideEmptyAction(state: EpgUiState): GuideEmptyAction {
 }
 
 internal fun shouldUseAdultGuide(state: EpgUiState): Boolean {
-    if (state.channels.isEmpty()) return false
-    val categoriesById = state.categories.associateBy { it.id }
-    val selectedCategory = categoriesById[state.selectedCategoryId]
-    if (
-        state.selectedCategoryId != ChannelRepository.ALL_CHANNELS_ID &&
-        isAdultGuideCategory(selectedCategory)
-    ) {
-        return true
-    }
-    val adultChannelCount = state.channels.count { channel ->
-        isAdultGuideChannel(channel, channel.categoryId?.let(categoriesById::get))
-    }
-    return adultChannelCount > 0 && adultChannelCount == state.channels.size
+    return state.selectedCategoryId == VirtualCategoryIds.ADULT_GUIDE && state.channels.isNotEmpty()
 }
 
 private fun hasRestrictiveGuideView(state: EpgUiState): Boolean =
