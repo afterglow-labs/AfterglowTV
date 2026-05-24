@@ -1169,8 +1169,8 @@
     <string name="player_no_guide_data">No guide data</string>
     <string name="epg_loading">Loading TV guide...</string>
     <string name="epg_loading_named">Loading %1$s...</string>
-    <string name="epg_loading_channels">Loading channels...</string>
-    <string name="epg_loading_channel_progress">Loaded channel %1$d / %2$d</string>
+    <string name="epg_loading_channels">0/0 channels</string>
+    <string name="epg_loading_channel_progress">%1$d/%2$d channels</string>
     <string name="epg_error">Unable to load the TV guide right now.</string>
     <string name="epg_no_provider">Add or activate a provider to view the TV guide.</string>
     <string name="epg_no_schedule">No schedule data available</string>

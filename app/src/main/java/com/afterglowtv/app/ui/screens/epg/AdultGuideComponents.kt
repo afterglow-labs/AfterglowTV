@@ -45,6 +45,7 @@ import com.afterglowtv.app.ui.components.ChannelLogoBadge
 import com.afterglowtv.app.ui.design.FocusSpec
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.model.AdultGuideCategory
+import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.theme.FocusBorder
 import com.afterglowtv.app.ui.theme.OnSurface
 import com.afterglowtv.app.ui.theme.OnSurfaceDim
@@ -70,7 +71,9 @@ internal fun AdultGuideSurface(
     onRequestMoreChannels: () -> Unit
 ) {
     if (categories.isEmpty()) return
-    val selectedCategory = categories.firstOrNull { it.key == selectedCategoryKey } ?: categories.first()
+    val selectedCategory = categories.firstOrNull { it.key == selectedCategoryKey }
+        ?: categories.firstOrNull { it.key != AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }
+        ?: categories.first()
 
     Row(
         modifier = modifier

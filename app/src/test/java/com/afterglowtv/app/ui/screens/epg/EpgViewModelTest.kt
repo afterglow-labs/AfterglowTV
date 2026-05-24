@@ -84,6 +84,11 @@ class EpgViewModelTest {
         whenever(preferencesRepository.showAllChannelsCategory).thenReturn(flowOf(true))
         whenever(combinedM3uRepository.getActiveLiveSource()).thenReturn(flowOf(null))
         whenever(preferencesRepository.guideDefaultCategoryId).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideDensity).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideChannelMode).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideFavoritesOnly).thenReturn(flowOf(false))
+        whenever(preferencesRepository.guideScheduledOnly).thenReturn(flowOf(false))
+        whenever(preferencesRepository.guideAnchorTime).thenReturn(flowOf(null))
         whenever(preferencesRepository.guideNoDataBlockMinutes).thenReturn(flowOf(60))
         whenever(preferencesRepository.guideNoDataShowChannelText).thenReturn(flowOf(true))
         whenever(preferencesRepository.guideNoDataTextMode).thenReturn(flowOf(GuideNoDataTextMode.CHANNEL_NAME))
@@ -93,6 +98,11 @@ class EpgViewModelTest {
             whenever(epgRepository.getProgramsForChannelsSnapshot(any(), any(), any(), any())).thenReturn(emptyMap())
             whenever(epgRepository.getProgramsForChannels(any(), any(), any(), any())).thenReturn(flowOf(emptyMap()))
             whenever(epgRepository.searchPrograms(any(), any(), any(), any(), anyOrNull(), any())).thenReturn(flowOf(emptyList()))
+            whenever(preferencesRepository.setShowAllChannelsCategory(any())).thenReturn(Unit)
+            whenever(preferencesRepository.setGuideDefaultCategoryId(any())).thenReturn(Unit)
+            whenever(preferencesRepository.setGuideScheduledOnly(any())).thenReturn(Unit)
+            whenever(preferencesRepository.setGuideChannelMode(any())).thenReturn(Unit)
+            whenever(preferencesRepository.setGuideFavoritesOnly(any())).thenReturn(Unit)
         }
         whenever(favoriteRepository.getGroups(any<Long>(), eq(ContentType.LIVE))).thenReturn(flowOf(emptyList()))
         whenever(favoriteRepository.getGroups(any<List<Long>>(), eq(ContentType.LIVE))).thenReturn(flowOf(emptyList()))
@@ -255,6 +265,114 @@ class EpgViewModelTest {
 
         assertThat(viewModel.uiState.value.channels.map(Channel::id)).containsExactlyElementsIn(channels.map(Channel::id)).inOrder()
         verify(channelRepository, atLeastOnce()).getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)
+    }
+
+    @Test
+    fun `guide keeps full category list when healthy source is shorter than full source`() = runTest {
+        val provider = Provider(
+            id = 1L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://provider.example.com"
+        )
+        val channels = (1L..65L).map { id ->
+            Channel(
+                id = id,
+                name = "Channel $id",
+                providerId = provider.id,
+                epgChannelId = "channel-$id",
+                number = id.toInt()
+            )
+        }
+        val cappedHealthyChannels = channels.take(OLD_GUIDE_PAGE_SIZE)
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
+        whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
+        whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(flowOf(listOf(Category(id = 10L, name = "Live", count = channels.size))))
+        whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(cappedHealthyChannels))
+        whenever(channelRepository.getChannelsByCategoryPage(provider.id, ChannelRepository.ALL_CHANNELS_ID, OLD_GUIDE_PAGE_SIZE)).thenReturn(flowOf(cappedHealthyChannels))
+        whenever(channelRepository.getChannelsWithoutErrorsPage(provider.id, ChannelRepository.ALL_CHANNELS_ID, OLD_GUIDE_PAGE_SIZE)).thenReturn(flowOf(cappedHealthyChannels))
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+        whenever(preferencesRepository.guideDensity).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideChannelMode).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideDefaultCategoryId).thenReturn(flowOf(ChannelRepository.ALL_CHANNELS_ID))
+        whenever(preferencesRepository.guideFavoritesOnly).thenReturn(flowOf(false))
+        whenever(preferencesRepository.guideScheduledOnly).thenReturn(flowOf(false))
+        whenever(preferencesRepository.guideAnchorTime).thenReturn(flowOf(null))
+        whenever(epgRepository.getResolvedProgramsForChannels(eq(provider.id), any(), any(), any())).thenReturn(emptyMap())
+        whenever(epgRepository.getProgramsForChannelsSnapshot(eq(provider.id), any(), any(), any())).thenReturn(emptyMap())
+
+        val viewModel = createViewModel()
+
+        advanceUntilIdle()
+        waitForUiState {
+            viewModel.uiState.value.totalChannelCount == channels.size &&
+                viewModel.uiState.value.channels.size == channels.size
+        }
+
+        assertThat(viewModel.uiState.value.channels.map(Channel::id))
+            .containsExactlyElementsIn(channels.map(Channel::id))
+            .inOrder()
+    }
+
+    @Test
+    fun `standard guide keeps broad sorting category labels visible`() = runTest {
+        val provider = Provider(
+            id = 1L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://provider.example.com"
+        )
+        val categories = listOf(
+            Category(id = 10L, name = "Family", count = 1),
+            Category(id = 11L, name = "Asian", count = 1),
+            Category(id = 12L, name = "Reality", count = 1),
+            Category(id = 13L, name = "4K", count = 1)
+        )
+        val channels = categories.mapIndexed { index, category ->
+            Channel(
+                id = index + 1L,
+                name = "${category.name} Channel",
+                providerId = provider.id,
+                epgChannelId = "channel-${index + 1}",
+                categoryId = category.id,
+                categoryName = category.name
+            )
+        }
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
+        whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
+        whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(flowOf(categories))
+        whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+        whenever(preferencesRepository.guideDensity).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideChannelMode).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideDefaultCategoryId).thenReturn(flowOf(ChannelRepository.ALL_CHANNELS_ID))
+        whenever(preferencesRepository.guideFavoritesOnly).thenReturn(flowOf(false))
+        whenever(preferencesRepository.guideScheduledOnly).thenReturn(flowOf(false))
+        whenever(preferencesRepository.guideAnchorTime).thenReturn(flowOf(null))
+        whenever(epgRepository.getResolvedProgramsForChannels(eq(provider.id), any(), any(), any())).thenReturn(emptyMap())
+        whenever(epgRepository.getProgramsForChannelsSnapshot(eq(provider.id), any(), any(), any())).thenReturn(emptyMap())
+
+        val viewModel = createViewModel()
+
+        advanceUntilIdle()
+        waitForUiState {
+            viewModel.uiState.value.totalChannelCount == channels.size &&
+                viewModel.uiState.value.channels.size == channels.size
+        }
+
+        assertThat(viewModel.uiState.value.channels.map(Channel::name))
+            .containsExactlyElementsIn(channels.map(Channel::name))
+            .inOrder()
+        assertThat(viewModel.uiState.value.categories.map(Category::name)).contains("XXX Guide")
+        assertThat(viewModel.uiState.value.categories.map(Category::name)).containsAtLeast("Family", "Asian", "Reality", "4K")
     }
 
     @Test
@@ -1080,6 +1198,18 @@ class EpgViewModelTest {
         advanceUntilIdle()
         waitForUiState { viewModel.uiState.value.selectedCategoryId == ChannelRepository.ALL_CHANNELS_ID }
 
+        assertThat(viewModel.uiState.value.selectedCategoryId).isEqualTo(ChannelRepository.ALL_CHANNELS_ID)
+    }
+
+    @Test
+    fun `reset guide filters restores all channels category`() = runTest {
+        val viewModel = createViewModel()
+
+        viewModel.resetGuideFilters()
+        advanceUntilIdle()
+
+        verify(preferencesRepository).setShowAllChannelsCategory(true)
+        verify(preferencesRepository).setGuideDefaultCategoryId(ChannelRepository.ALL_CHANNELS_ID)
         assertThat(viewModel.uiState.value.selectedCategoryId).isEqualTo(ChannelRepository.ALL_CHANNELS_ID)
     }
 

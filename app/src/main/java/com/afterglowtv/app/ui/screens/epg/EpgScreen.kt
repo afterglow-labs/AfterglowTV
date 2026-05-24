@@ -121,7 +121,6 @@ import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.max
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.interaction.TvButton
 import com.afterglowtv.app.ui.interaction.TvIconButton
@@ -415,17 +414,13 @@ fun FullEpgScreen(
                                 stringResource(R.string.epg_loading_named, stringResource(titleRes)),
                                 color = OnBackground
                             )
-                            val expectedChannels = max(uiState.totalChannelCount, uiState.channels.size)
+                            val expectedChannels = maxOf(uiState.totalChannelCount, uiState.channels.size, uiState.loadedChannelCount)
                             Text(
-                                text = if (expectedChannels > 0) {
-                                    stringResource(
-                                        R.string.epg_loading_channel_progress,
-                                        uiState.channels.size,
-                                        expectedChannels
-                                    )
-                                } else {
-                                    stringResource(R.string.epg_loading_channels)
-                                },
+                                text = stringResource(
+                                    R.string.epg_loading_channel_progress,
+                                    uiState.loadedChannelCount,
+                                    expectedChannels
+                                ),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = OnSurfaceDim
                             )
@@ -527,17 +522,13 @@ fun FullEpgScreen(
                                 color = Primary,
                                 trackColor = SurfaceHighlight
                             )
-                            val expectedChannels = max(uiState.totalChannelCount, uiState.channels.size)
+                            val expectedChannels = maxOf(uiState.totalChannelCount, uiState.channels.size, uiState.loadedChannelCount)
                             Text(
-                                text = if (expectedChannels > 0) {
-                                    stringResource(
-                                        R.string.epg_loading_channel_progress,
-                                        uiState.channels.size,
-                                        expectedChannels
-                                    )
-                                } else {
-                                    stringResource(R.string.epg_loading_channels)
-                                },
+                                text = stringResource(
+                                    R.string.epg_loading_channel_progress,
+                                    uiState.loadedChannelCount,
+                                    expectedChannels
+                                ),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = OnSurfaceDim
                             )
@@ -577,11 +568,21 @@ fun FullEpgScreen(
                         )
                     } else {
                         val useAdultGuide = shouldUseAdultGuide(uiState)
-                        val adultGuideCategories = remember(uiState.channels, uiState.categories, useAdultGuide) {
+                        val adultGuideLoadComplete = !uiState.isInitialLoading &&
+                            !uiState.isRefreshing &&
+                            uiState.totalChannelCount > 0 &&
+                            uiState.loadedChannelCount >= uiState.totalChannelCount
+                        val adultGuideCategories = remember(
+                            uiState.channels,
+                            uiState.categories,
+                            useAdultGuide,
+                            adultGuideLoadComplete
+                        ) {
                             if (useAdultGuide) {
                                 AdultGuideCategoryBuilder.build(
                                     channels = uiState.channels,
-                                    providerCategories = uiState.categories
+                                    providerCategories = uiState.categories,
+                                    includeAllCategory = adultGuideLoadComplete
                                 )
                             } else {
                                 emptyList()
@@ -592,14 +593,19 @@ fun FullEpgScreen(
                             uiState.selectedCategoryId,
                             uiState.showFavoritesOnly
                         ) {
-                            mutableStateOf(AdultGuideCategoryBuilder.ALL_CATEGORY_KEY)
+                            mutableStateOf("")
                         }
                         LaunchedEffect(adultGuideCategories, selectedAdultGuideCategoryKey) {
                             if (
-                                adultGuideCategories.isNotEmpty() &&
-                                adultGuideCategories.none { it.key == selectedAdultGuideCategoryKey }
+                                adultGuideCategories.isNotEmpty() && (
+                                    selectedAdultGuideCategoryKey.isBlank() ||
+                                        adultGuideCategories.none { it.key == selectedAdultGuideCategoryKey }
+                                    )
                             ) {
-                                selectedAdultGuideCategoryKey = adultGuideCategories.first().key
+                                selectedAdultGuideCategoryKey = adultGuideCategories
+                                    .firstOrNull { it.key != AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }
+                                    ?.key
+                                    ?: adultGuideCategories.first().key
                             }
                         }
                         GuideNowProvider {

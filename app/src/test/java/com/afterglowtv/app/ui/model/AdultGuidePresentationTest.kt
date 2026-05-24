@@ -35,6 +35,34 @@ class AdultGuidePresentationTest {
     }
 
     @Test
+    fun `adult category builder can omit all bucket until full guide load is complete`() {
+        val channel = Channel(
+            id = 1L,
+            name = "Blonde Trans MILF Cousin 24-7",
+            providerId = 7L,
+            categoryName = "XXX"
+        )
+
+        val categories = AdultGuideCategoryBuilder.build(
+            channels = listOf(channel),
+            providerCategories = emptyList(),
+            includeAllCategory = false
+        )
+
+        assertThat(categories.map { it.title }).doesNotContain("All")
+        assertThat(categories.category("MILF").channels).containsExactly(channel)
+    }
+
+    @Test
+    fun `broad adult sorting labels are not automatically explicit adult categories`() {
+        assertThat(isLikelyAdultGuideCategory(Category(id = 1L, name = "MILF"))).isTrue()
+        assertThat(isLikelyAdultGuideCategory(Category(id = 2L, name = "Family"))).isFalse()
+        assertThat(isLikelyAdultGuideCategory(Category(id = 3L, name = "Asian"))).isFalse()
+        assertThat(isLikelyAdultGuideCategory(Category(id = 4L, name = "Reality"))).isFalse()
+        assertThat(isLikelyAdultGuideCategory(Category(id = 5L, name = "4K"))).isFalse()
+    }
+
+    @Test
     fun `adult category builder uses provider category context when title is generic`() {
         val channel = Channel(
             id = 2L,

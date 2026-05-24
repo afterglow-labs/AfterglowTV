@@ -17,6 +17,33 @@ object AdultGuideCategoryBuilder {
     const val ALL_CATEGORY_KEY = "all"
 
     private const val OTHER_CATEGORY_KEY = "other"
+    private val explicitAdultSignals = listOf(
+        "milf",
+        "milfs",
+        "step",
+        "stepmom",
+        "step mom",
+        "stepdad",
+        "step dad",
+        "stepsister",
+        "step sister",
+        "stepbrother",
+        "step brother",
+        "taboo",
+        "trans",
+        "transgender",
+        "tg",
+        "ts",
+        "lesbian",
+        "bbw",
+        "cougar",
+        "cougars",
+        "fetish",
+        "bdsm",
+        "bondage",
+        "threesome",
+        "orgy"
+    )
     private val categoryRules = listOf(
         AdultGuideRule("milf", "MILF", listOf("milf", "milfs", "stepmom", "step mom")),
         AdultGuideRule(
@@ -61,13 +88,16 @@ object AdultGuideCategoryBuilder {
 
     fun build(
         channels: List<Channel>,
-        providerCategories: List<Category>
+        providerCategories: List<Category>,
+        includeAllCategory: Boolean = true
     ): List<AdultGuideCategory> {
         if (channels.isEmpty()) return emptyList()
 
         val providerCategoryById = providerCategories.associateBy { it.id }
         val grouped = linkedMapOf<String, AdultGuideMutableCategory>()
-        grouped[ALL_CATEGORY_KEY] = AdultGuideMutableCategory(ALL_CATEGORY_KEY, "All", channels.toMutableList())
+        if (includeAllCategory) {
+            grouped[ALL_CATEGORY_KEY] = AdultGuideMutableCategory(ALL_CATEGORY_KEY, "All", channels.toMutableList())
+        }
 
         channels.forEach { channel ->
             val titleMatches = categoryRules.filter { rule ->
@@ -119,24 +149,49 @@ object AdultGuideCategoryBuilder {
 
     fun matchesGeneratedCategory(value: String?): Boolean =
         categoryRules.any { it.matches(value) }
+
+    fun matchesExplicitAdultSignal(value: String?): Boolean {
+        val normalized = normalizeAdultGuideText(value)
+        if (normalized.isBlank()) return false
+        return explicitAdultSignals.any { signal ->
+            val normalizedSignal = normalizeAdultGuideText(signal)
+            normalized == normalizedSignal ||
+                normalized.startsWith("$normalizedSignal ") ||
+                normalized.endsWith(" $normalizedSignal") ||
+                normalized.contains(" $normalizedSignal ")
+        }
+    }
 }
 
 internal fun isAdultGuideCategory(category: Category?): Boolean {
     if (category == null) return false
-    return category.isAdult ||
-        isAdultGuideText(category.name) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(category.name)
+    return category.isAdult || isAdultGuideText(category.name)
+}
+
+internal fun isLikelyAdultGuideCategory(category: Category?): Boolean {
+    if (category == null) return false
+    return isAdultGuideCategory(category) || AdultGuideCategoryBuilder.matchesExplicitAdultSignal(category.name)
 }
 
 internal fun isAdultGuideChannel(channel: Channel, category: Category? = null): Boolean {
     return channel.isAdult ||
-        isAdultGuideCategory(category) ||
+        isLikelyAdultGuideCategory(category) ||
         isAdultGuideText(channel.categoryName) ||
         isAdultGuideText(channel.groupTitle) ||
         isAdultGuideText(channel.name) ||
         AdultGuideCategoryBuilder.matchesGeneratedCategory(channel.categoryName) ||
         AdultGuideCategoryBuilder.matchesGeneratedCategory(channel.groupTitle) ||
         AdultGuideCategoryBuilder.matchesGeneratedCategory(channel.name)
+}
+
+internal fun isExplicitAdultGuideChannel(channel: Channel): Boolean {
+    return channel.isAdult ||
+        isAdultGuideText(channel.categoryName) ||
+        isAdultGuideText(channel.groupTitle) ||
+        isAdultGuideText(channel.name) ||
+        AdultGuideCategoryBuilder.matchesExplicitAdultSignal(channel.categoryName) ||
+        AdultGuideCategoryBuilder.matchesExplicitAdultSignal(channel.groupTitle) ||
+        AdultGuideCategoryBuilder.matchesExplicitAdultSignal(channel.name)
 }
 
 internal fun isAdultVodMovie(movie: Movie, category: Category? = null): Boolean =
