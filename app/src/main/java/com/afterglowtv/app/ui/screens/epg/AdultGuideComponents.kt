@@ -240,8 +240,8 @@ private fun AdultGuideChannelList(
             items = category.channels,
             key = { index, channel -> "adult-row:${category.key}:$index:${channel.id}" }
         ) { rowIndex, channel ->
-            if (hasMoreChannels && rowIndex >= category.channels.lastIndex - 8) {
-                LaunchedEffect(category.channels.size, rowIndex) {
+            if (hasMoreChannels && rowIndex == category.channels.lastIndex) {
+                LaunchedEffect(category.key, category.channels.size) {
                     onRequestMoreChannels()
                 }
             }

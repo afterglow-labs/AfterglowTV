@@ -507,6 +507,103 @@ class EpgViewModelTest {
     }
 
     @Test
+    fun `locked xxx guide loads the full adult lineup but only renders the first page`() = runTest {
+        val provider = Provider(
+            id = 1L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://provider.example.com"
+        )
+        val channels = (1L..650L).map { id ->
+            Channel(
+                id = id,
+                name = "MILF Channel $id",
+                providerId = provider.id,
+                epgChannelId = "adult-$id",
+                categoryId = 10L,
+                categoryName = "XXX"
+            )
+        }
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
+        whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
+        whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(
+            flowOf(listOf(Category(id = 10L, name = "XXX", isAdult = true, count = channels.size)))
+        )
+        whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+        whenever(preferencesRepository.guideDefaultCategoryId).thenReturn(flowOf(ChannelRepository.ALL_CHANNELS_ID))
+
+        val viewModel = createViewModel()
+        viewModel.applyNavigationContext(
+            categoryId = com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE,
+            anchorTime = null,
+            favoritesOnly = false,
+            lockCategory = true
+        )
+
+        advanceUntilIdle()
+        waitForUiState {
+            val state = viewModel.uiState.value
+            state.selectedCategoryId == com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE &&
+                state.totalChannelCount == channels.size &&
+                !state.isInitialLoading &&
+                !state.isRefreshing
+        }
+
+        val firstState = viewModel.uiState.value
+        assertThat(firstState.loadedChannelCount).isEqualTo(channels.size)
+        assertThat(firstState.channels.size).isLessThan(channels.size)
+        assertThat(firstState.channels.map(Channel::id)).containsExactlyElementsIn(channels.take(firstState.channels.size).map(Channel::id)).inOrder()
+        assertThat(firstState.hasMoreChannels).isTrue()
+
+        viewModel.requestMoreChannels()
+        advanceUntilIdle()
+
+        val expandedState = viewModel.uiState.value
+        assertThat(expandedState.channels.size).isGreaterThan(firstState.channels.size)
+        assertThat(expandedState.totalChannelCount).isEqualTo(channels.size)
+    }
+
+    @Test
+    fun `standard guide skips channel scan when the playlist only has adult categories`() = runTest {
+        val provider = Provider(
+            id = 1L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://provider.example.com"
+        )
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
+        whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
+        whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(
+            flowOf(listOf(Category(id = 10L, name = "XXX", isAdult = true, count = 2243)))
+        )
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+        whenever(preferencesRepository.guideDefaultCategoryId).thenReturn(flowOf(ChannelRepository.ALL_CHANNELS_ID))
+
+        val viewModel = createViewModel()
+
+        advanceUntilIdle()
+        waitForUiState {
+            val state = viewModel.uiState.value
+            state.selectedCategoryId == ChannelRepository.ALL_CHANNELS_ID &&
+                !state.isInitialLoading &&
+                !state.isRefreshing
+        }
+
+        val state = viewModel.uiState.value
+        assertThat(state.totalChannelCount).isEqualTo(0)
+        assertThat(state.channels).isEmpty()
+        verify(channelRepository, never()).getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)
+        verify(channelRepository, never()).getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)
+    }
+
+    @Test
     fun `guide keeps no-data channels visible with blank schedule when schedule data is missing`() = runTest {
         val provider = Provider(
             id = 1L,
