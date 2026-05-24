@@ -20,7 +20,7 @@ class TopTabsChromeTest {
         assertThat(guideTabs.map { it.label }).containsExactly(
             "IPTV Guide",
             "VOD Guide",
-            "Adult Guide",
+            "XXX Guide",
             "Personal Guide"
         ).inOrder()
     }

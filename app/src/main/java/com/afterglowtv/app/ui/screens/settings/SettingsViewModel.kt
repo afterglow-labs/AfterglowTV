@@ -9,6 +9,7 @@ import com.afterglowtv.app.diagnostics.CrashReportStore
 import com.afterglowtv.app.tv.LauncherRecommendationsManager
 import com.afterglowtv.app.tv.WatchNextManager
 import com.afterglowtv.app.tvinput.TvInputChannelSyncManager
+import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.ui.model.LiveTvChannelMode
 import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.app.ui.model.VodViewMode
@@ -414,6 +415,12 @@ class SettingsViewModel @Inject constructor(
     fun setLiveTvChannelMode(mode: LiveTvChannelMode) {
         viewModelScope.launch {
             preferencesRepository.setLiveTvChannelMode(mode.name)
+        }
+    }
+
+    fun setStartupDestination(destination: StartupDestination) {
+        viewModelScope.launch {
+            preferencesRepository.setStartupDestination(destination.storageValue)
         }
     }
 

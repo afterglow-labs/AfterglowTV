@@ -18,7 +18,6 @@ import com.afterglowtv.domain.model.CombinedCategory
 import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.EpgOverrideCandidate
 import com.afterglowtv.domain.model.Favorite
-import com.afterglowtv.domain.model.GuideNoDataTextMode
 import com.afterglowtv.domain.model.Program
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
@@ -45,6 +44,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -152,18 +152,22 @@ private data class GuideChannelSelection(
     val favoriteChannelIds: Set<Long>
 )
 
+private enum class GuideSurface {
+    STANDARD_EPG,
+    ADULT_GUIDE
+}
+
 private data class GuideBaseRequest(
     val categories: List<Category>,
     val hiddenCategoryIds: Set<Long>,
+    val adultCategoryIds: Set<Long>,
+    val surface: GuideSurface,
     val resolvedCategoryId: Long,
     val parentalControlLevel: Int,
     val anchorTime: Long,
     val favoritesOnly: Boolean,
     val windowStart: Long,
-    val windowEnd: Long,
-    val noDataBlockMinutes: Int,
-    val noDataTextMode: GuideNoDataTextMode,
-    val noDataCustomText: String
+    val windowEnd: Long
 )
 
 private data class GuideBaseSnapshot(
@@ -186,9 +190,6 @@ private data class GuideBaseSnapshot(
     val guideAnchorTime: Long,
     val guideWindowStart: Long,
     val guideWindowEnd: Long,
-    val noDataBlockMinutes: Int,
-    val noDataTextMode: GuideNoDataTextMode,
-    val noDataCustomText: String,
     val hiddenCategoryIds: Set<Long> = emptySet(),
     val hasMoreChannels: Boolean = false
 )
@@ -201,29 +202,13 @@ private data class GuideDisplaySnapshot(
     val isGuideStale: Boolean
 )
 
-private data class GuideBaseComputation(
-    val guideResult: GuideProgramsResult,
-    val now: Long,
-    val channelsWithSchedule: Int,
-    val hasUpcomingData: Boolean
-)
-
 private data class GuideSelectionRequest(
     val requestedCategoryId: Long,
     val anchorTime: Long,
     val favoritesOnly: Boolean,
-    val noDataBlockMinutes: Int,
-    val noDataTextMode: GuideNoDataTextMode,
-    val noDataCustomText: String,
     val parentalControlLevel: Int,
     val unlockedCategoryIds: Set<Long>,
     val isStartupSelection: Boolean
-)
-
-private data class GuideNoDataPreferences(
-    val blockMinutes: Int,
-    val textMode: GuideNoDataTextMode,
-    val customText: String
 )
 
 private data class CombinedGuideDependencies(
@@ -284,10 +269,7 @@ class EpgViewModel @Inject constructor(
         const val DAY_SHIFT_MS = 24 * 60 * 60 * 1000L
         const val PRIME_TIME_HOUR = 20
         const val NO_ACTIVE_PROVIDER = "NO_ACTIVE_PROVIDER"
-        private const val NO_GUIDE_DATA_CATEGORY = "No guide data"
-        private const val DEFAULT_NO_DATA_BLOCK_MINUTES = 60
         private const val MINUTE_MS = 60 * 1000L
-        private const val DAY_MS = 24L * 60L * MINUTE_MS
         private const val MIN_PLACEHOLDER_RECORDING_MS = 60 * MINUTE_MS
     }
 
@@ -302,6 +284,7 @@ class EpgViewModel @Inject constructor(
     private val showFavoritesOnly = MutableStateFlow(false)
     private val programSearchQuery = MutableStateFlow("")
     private val startupCategoryId = MutableStateFlow<Long?>(null)
+    private val fixedCategoryId = MutableStateFlow<Long?>(null)
     private val refreshNonce = MutableStateFlow(0)
     private val baseGuideSnapshot = MutableStateFlow<GuideBaseSnapshot?>(null)
     private val _overrideUiState = MutableStateFlow(EpgOverrideUiState())
@@ -319,6 +302,9 @@ class EpgViewModel @Inject constructor(
     }
 
     fun selectCategory(categoryId: Long) {
+        fixedCategoryId.value?.let { lockedCategoryId ->
+            if (categoryId != lockedCategoryId) return
+        }
         startupCategoryId.value = null
         if (categoryId != VirtualCategoryIds.FAVORITES && showFavoritesOnly.value) {
             showFavoritesOnly.value = false
@@ -662,7 +648,7 @@ class EpgViewModel @Inject constructor(
 
     fun resetGuideFilters() {
         startupCategoryId.value = null
-        selectedCategoryId.value = ChannelRepository.ALL_CHANNELS_ID
+        selectedCategoryId.value = fixedCategoryId.value ?: ChannelRepository.ALL_CHANNELS_ID
         programSearchQuery.value = ""
         showScheduledOnly.value = false
         selectedChannelMode.value = GuideChannelMode.ALL
@@ -678,8 +664,10 @@ class EpgViewModel @Inject constructor(
     fun applyNavigationContext(
         categoryId: Long?,
         anchorTime: Long?,
-        favoritesOnly: Boolean?
+        favoritesOnly: Boolean?,
+        lockCategory: Boolean = false
     ) {
+        fixedCategoryId.value = if (lockCategory) categoryId else null
         categoryId?.let { requested ->
             startupCategoryId.value = null
             selectedCategoryId.value = requested
@@ -687,8 +675,14 @@ class EpgViewModel @Inject constructor(
         anchorTime?.takeIf { it > 0L }?.let { requested ->
             guideAnchorTime.value = requested
         }
-        favoritesOnly?.let { requested ->
-            showFavoritesOnly.value = requested
+        if (lockCategory) {
+            showFavoritesOnly.value = false
+            showScheduledOnly.value = false
+            selectedChannelMode.value = GuideChannelMode.ALL
+        } else {
+            favoritesOnly?.let { requested ->
+                showFavoritesOnly.value = requested
+            }
         }
     }
 
@@ -770,9 +764,6 @@ class EpgViewModel @Inject constructor(
                         requestedCategoryId = selection.requestedCategoryId,
                         anchorTime = selection.anchorTime,
                         favoritesOnly = selection.favoritesOnly,
-                        noDataBlockMinutes = selection.noDataBlockMinutes,
-                        noDataTextMode = selection.noDataTextMode,
-                        noDataCustomText = selection.noDataCustomText,
                         parentalControlLevel = parentalControlLevel,
                         unlockedCategoryIds = unlockedCategoryIds,
                         isStartupSelection = selection.isStartupSelection
@@ -784,6 +775,10 @@ class EpgViewModel @Inject constructor(
                     hiddenCategoryIds = categoryData.hiddenCategoryIds,
                     sortMode = categoryData.sortMode
                 )
+                val adultCategoryIds = visibleProviderCategories
+                    .filter(::isAdultGuideCategory)
+                    .map(Category::id)
+                    .toSet()
                 val orderedCategories = buildGuideCategoryList(
                     providerCategories = visibleProviderCategories,
                     customCategories = categoryData.customCategories,
@@ -799,15 +794,14 @@ class EpgViewModel @Inject constructor(
                 GuideBaseRequest(
                     categories = orderedCategories,
                     hiddenCategoryIds = categoryData.hiddenCategoryIds,
+                    adultCategoryIds = adultCategoryIds,
+                    surface = resolvedCategoryId.toGuideSurface(),
                     resolvedCategoryId = resolvedCategoryId,
                     parentalControlLevel = selection.parentalControlLevel,
                     anchorTime = selection.anchorTime,
                     favoritesOnly = selection.favoritesOnly,
                     windowStart = selection.anchorTime - LOOKBACK_MS,
-                    windowEnd = selection.anchorTime + LOOKAHEAD_MS,
-                    noDataBlockMinutes = selection.noDataBlockMinutes,
-                    noDataTextMode = selection.noDataTextMode,
-                    noDataCustomText = selection.noDataCustomText
+                    windowEnd = selection.anchorTime + LOOKAHEAD_MS
                 )
             }.collectLatest { request ->
                 val categories = request.categories
@@ -834,8 +828,14 @@ class EpgViewModel @Inject constructor(
 
                 combine(loadGuideChannelsForProvider(provider.id, request), favoriteRepository.getFavorites(provider.id, ContentType.LIVE)) { preferredChannels, favorites ->
                     val favoriteIds = favorites.map { it.contentId }.toSet()
+                    val visibleChannels = preferredChannels.filterNot { channel -> channel.categoryId in request.hiddenCategoryIds }
+                    val guideChannels = if (request.isAdultGuideRequest()) {
+                        visibleChannels
+                    } else {
+                        visibleChannels.filterNot { channel -> channel.isAdultForStandardGuide(request) }
+                    }
                     GuideChannelSelection(
-                        channels = preferredChannels.filterNot { channel -> channel.categoryId in request.hiddenCategoryIds },
+                        channels = guideChannels,
                         favoriteChannelIds = favoriteIds
                     )
                 }.collectLatest { channelSelection ->
@@ -906,8 +906,13 @@ class EpgViewModel @Inject constructor(
                 selection = selection
             )
         }.combine(preferencesRepository.showAllChannelsCategory) { data, showAllChannels ->
+            val providerCategories = data.combinedCategories.map { it.category }
+            val adultCategoryIds = providerCategories
+                .filter(::isAdultGuideCategory)
+                .map(Category::id)
+                .toSet()
             val categories = buildGuideCategoryList(
-                providerCategories = data.combinedCategories.map { it.category },
+                providerCategories = providerCategories,
                 customCategories = data.customCategories,
                 showAllChannels = showAllChannels
             )
@@ -922,15 +927,14 @@ class EpgViewModel @Inject constructor(
                 request = GuideBaseRequest(
                     categories = categories,
                     hiddenCategoryIds = emptySet(),
+                    adultCategoryIds = adultCategoryIds,
+                    surface = resolvedCategoryId.toGuideSurface(),
                     resolvedCategoryId = resolvedCategoryId,
                     parentalControlLevel = data.selection.second,
                     anchorTime = data.selection.first.anchorTime,
                     favoritesOnly = data.selection.first.favoritesOnly,
                     windowStart = data.selection.first.anchorTime - LOOKBACK_MS,
-                    windowEnd = data.selection.first.anchorTime + LOOKAHEAD_MS,
-                    noDataBlockMinutes = data.selection.first.noDataBlockMinutes,
-                    noDataTextMode = data.selection.first.noDataTextMode,
-                    noDataCustomText = data.selection.first.noDataCustomText
+                    windowEnd = data.selection.first.anchorTime + LOOKAHEAD_MS
                 ),
                 providerIds = data.providerIds
             )
@@ -964,7 +968,16 @@ class EpgViewModel @Inject constructor(
                 observeLiveFavorites(providerIds)
             ) { channels, favorites ->
                 val favoriteIds = favorites.map { it.contentId }.toSet()
-                val preferredChannels = if (request.favoritesOnly) channels.filter { it.id in favoriteIds } else channels
+                val standardFilteredChannels = if (request.isAdultGuideRequest()) {
+                    channels
+                } else {
+                    channels.filterNot { channel -> channel.isAdultForStandardGuide(request) }
+                }
+                val preferredChannels = if (request.favoritesOnly) {
+                    standardFilteredChannels.filter { it.id in favoriteIds }
+                } else {
+                    standardFilteredChannels
+                }
                 GuideChannelSelection(
                     channels = preferredChannels,
                     favoriteChannelIds = favoriteIds
@@ -1065,42 +1078,26 @@ class EpgViewModel @Inject constructor(
         }
     }
 
-    private fun guideNoDataPreferencesFlow(): Flow<GuideNoDataPreferences> =
-        preferencesRepository.guideNoDataBlockMinutes
-            .combine(preferencesRepository.guideNoDataTextMode) { blockMinutes, textMode ->
-                normalizeGuideNoDataBlockMinutes(blockMinutes) to textMode
-            }
-            .combine(preferencesRepository.guideNoDataCustomText) { (blockMinutes, textMode), customText ->
-                GuideNoDataPreferences(
-                    blockMinutes = blockMinutes,
-                    textMode = textMode,
-                    customText = customText
-                )
-            }
-
     private fun guideSelectionSeedFlow(): Flow<GuideSelectionSeed> =
         combine(
             selectedCategoryId,
             startupCategoryId,
+            fixedCategoryId,
             guideAnchorTime,
-            showFavoritesOnly,
-            refreshNonce
-        ) { requestedCategoryId, startupSelectionId, anchorTime, favoritesOnly, _ ->
+            showFavoritesOnly
+        ) { requestedCategoryId, startupSelectionId, fixedSelectionId, anchorTime, favoritesOnly ->
+            val effectiveCategoryId = fixedSelectionId ?: startupSelectionId ?: requestedCategoryId
+            val lockedGuide = fixedSelectionId != null
             GuideSelectionSeed(
-                requestedCategoryId = startupSelectionId ?: requestedCategoryId,
+                requestedCategoryId = effectiveCategoryId,
                 anchorTime = anchorTime,
-                favoritesOnly = favoritesOnly,
-                noDataBlockMinutes = DEFAULT_NO_DATA_BLOCK_MINUTES,
-                noDataTextMode = GuideNoDataTextMode.CHANNEL_NAME,
-                noDataCustomText = "",
-                isStartupSelection = startupSelectionId != null
+                favoritesOnly = if (lockedGuide) false else favoritesOnly,
+                isStartupSelection = !lockedGuide && startupSelectionId != null
             )
-        }.combine(guideNoDataPreferencesFlow()) { seed, noDataPreferences ->
-            seed.copy(
-                noDataBlockMinutes = noDataPreferences.blockMinutes,
-                noDataTextMode = noDataPreferences.textMode,
-                noDataCustomText = noDataPreferences.customText
-            )
+        }.combine(
+            refreshNonce
+        ) { seed, _ ->
+            seed
         }
 
     private fun guideSelectionStateFlow(): Flow<Pair<GuideSelectionSeed, Int>> =
@@ -1148,15 +1145,65 @@ class EpgViewModel @Inject constructor(
             guideAnchorTime = request.anchorTime,
             guideWindowStart = request.windowStart,
             guideWindowEnd = request.windowEnd,
-            noDataBlockMinutes = request.noDataBlockMinutes,
-            noDataTextMode = request.noDataTextMode,
-            noDataCustomText = request.noDataCustomText,
             hiddenCategoryIds = request.hiddenCategoryIds,
             hasMoreChannels = false
         )
     }
 
-    private fun publishGuideChannelLoadProgress(
+    private suspend fun publishGuideChannelLoadProgress(
+        providerName: String,
+        providerSourceLabel: String,
+        providerArchiveSummary: String,
+        categories: List<Category>,
+        request: GuideBaseRequest,
+        channelSelection: GuideChannelSelection,
+        visibleChannels: List<Channel>
+    ) {
+        val total = visibleChannels.size
+        if (total <= 0) {
+            publishGuideChannelLoadState(
+                providerName = providerName,
+                providerSourceLabel = providerSourceLabel,
+                providerArchiveSummary = providerArchiveSummary,
+                categories = categories,
+                request = request,
+                channelSelection = channelSelection,
+                visibleChannels = emptyList()
+            )
+            return
+        }
+        val chunkSize = when {
+            total <= 80 -> 10
+            total <= 400 -> 25
+            total <= 1_000 -> 50
+            else -> 100
+        }
+        var loaded = chunkSize.coerceAtMost(total)
+        while (loaded < total) {
+            publishGuideChannelLoadState(
+                providerName = providerName,
+                providerSourceLabel = providerSourceLabel,
+                providerArchiveSummary = providerArchiveSummary,
+                categories = categories,
+                request = request,
+                channelSelection = channelSelection,
+                visibleChannels = visibleChannels.take(loaded)
+            )
+            delay(20L)
+            loaded = (loaded + chunkSize).coerceAtMost(total)
+        }
+        publishGuideChannelLoadState(
+            providerName = providerName,
+            providerSourceLabel = providerSourceLabel,
+            providerArchiveSummary = providerArchiveSummary,
+            categories = categories,
+            request = request,
+            channelSelection = channelSelection,
+            visibleChannels = visibleChannels
+        )
+    }
+
+    private fun publishGuideChannelLoadState(
         providerName: String,
         providerSourceLabel: String,
         providerArchiveSummary: String,
@@ -1301,12 +1348,19 @@ class EpgViewModel @Inject constructor(
                         selectedChannelMode.value = mode
                     }
                 }
-            startupCategoryId.value = preferencesRepository.guideDefaultCategoryId.first() ?: VirtualCategoryIds.FAVORITES
-            showFavoritesOnly.value = preferencesRepository.guideFavoritesOnly.first()
-            showScheduledOnly.value = preferencesRepository.guideScheduledOnly.first()
-            preferencesRepository.guideAnchorTime.first()
-                ?.takeIf { it > 0L }
-                ?.let { guideAnchorTime.value = it }
+            if (fixedCategoryId.value == null) {
+                startupCategoryId.value = preferencesRepository.guideDefaultCategoryId.first() ?: VirtualCategoryIds.FAVORITES
+                showFavoritesOnly.value = preferencesRepository.guideFavoritesOnly.first()
+                showScheduledOnly.value = preferencesRepository.guideScheduledOnly.first()
+                preferencesRepository.guideAnchorTime.first()
+                    ?.takeIf { it > 0L }
+                    ?.let { guideAnchorTime.value = it }
+            } else {
+                startupCategoryId.value = null
+                showFavoritesOnly.value = false
+                showScheduledOnly.value = false
+                selectedChannelMode.value = GuideChannelMode.ALL
+            }
         }
     }
 
@@ -1353,6 +1407,7 @@ class EpgViewModel @Inject constructor(
         val adultGuideCount = providerCategories
             .filter(::isAdultGuideCategory)
             .sumOf(Category::count)
+        val standardProviderCategories = providerCategories.filterNot(::isAdultGuideCategory)
         return buildList {
             if (favoritesCategory != null) {
                 add(favoritesCategory)
@@ -1374,11 +1429,11 @@ class EpgViewModel @Inject constructor(
                         id = ChannelRepository.ALL_CHANNELS_ID,
                         name = "All Channels",
                         type = ContentType.LIVE,
-                        count = providerCategories.sumOf(Category::count)
+                        count = standardProviderCategories.sumOf(Category::count)
                     )
                 )
             }
-            addAll(providerCategories)
+            addAll(standardProviderCategories)
         }
     }
 
@@ -1401,7 +1456,8 @@ class EpgViewModel @Inject constructor(
             channelRepository.getChannels(providerId)
                 .map { channels ->
                     channels.filter { channel ->
-                        isAdultGuideChannel(channel, channel.categoryId?.let(categoriesById::get))
+                        channel.categoryId in request.adultCategoryIds ||
+                            isAdultGuideChannel(channel, channel.categoryId?.let(categoriesById::get))
                     }
                 }
         }
@@ -1449,7 +1505,13 @@ class EpgViewModel @Inject constructor(
     }
 
     private fun GuideBaseRequest.isAdultGuideRequest(): Boolean =
-        resolvedCategoryId == VirtualCategoryIds.ADULT_GUIDE
+        surface == GuideSurface.ADULT_GUIDE
+
+    private fun Long.toGuideSurface(): GuideSurface =
+        if (this == VirtualCategoryIds.ADULT_GUIDE) GuideSurface.ADULT_GUIDE else GuideSurface.STANDARD_EPG
+
+    private fun Channel.isAdultForStandardGuide(request: GuideBaseRequest): Boolean =
+        categoryId in request.adultCategoryIds || isAdultGuideChannel(this)
 
     private fun GuideBaseRequest.visibleInitialChannels(channels: List<Channel>): List<Channel> =
         channels
@@ -1479,6 +1541,11 @@ class EpgViewModel @Inject constructor(
         }
 
     private fun finalizeStartupCategory(resolvedCategoryId: Long) {
+        fixedCategoryId.value?.let { lockedCategoryId ->
+            startupCategoryId.value = null
+            selectedCategoryId.value = lockedCategoryId
+            return
+        }
         if (startupCategoryId.value == null) return
         startupCategoryId.value = null
         selectedCategoryId.value = resolvedCategoryId
@@ -1701,20 +1768,11 @@ class EpgViewModel @Inject constructor(
         } else {
             buildSearchGuideSnapshot(baseSnapshot, normalizedQuery)
         }
-        val candidateProgramsWithPlaceholders = candidateProgramsByChannel.withChannelGuidePlaceholders(
-            channels = candidateChannels,
-            windowStart = baseSnapshot.guideWindowStart,
-            windowEnd = baseSnapshot.guideWindowEnd,
-            blockMinutes = baseSnapshot.noDataBlockMinutes,
-            textMode = baseSnapshot.noDataTextMode,
-            customText = baseSnapshot.noDataCustomText,
-            providerName = baseSnapshot.currentProviderName
-        )
         val displayChannels = candidateChannels.filter { channel ->
             val programs = channel.guideLookupKey()
-                ?.let { lookupKey -> candidateProgramsWithPlaceholders[lookupKey].orEmpty() }
+                ?.let { lookupKey -> candidateProgramsByChannel[lookupKey].orEmpty() }
                 .orEmpty()
-            val matchesScheduled = !scheduledOnly || programs.hasDisplayGuidePrograms()
+            val matchesScheduled = !scheduledOnly || programs.hasRealGuidePrograms()
             val matchesMode = when (channelMode) {
                 GuideChannelMode.ALL -> true
                 GuideChannelMode.ANCHORED -> programs.any { program ->
@@ -1737,145 +1795,15 @@ class EpgViewModel @Inject constructor(
 
         return GuideDisplaySnapshot(
             channels = displayChannels,
-            programsByChannel = candidateProgramsWithPlaceholders,
+            programsByChannel = candidateProgramsByChannel,
             totalChannelCount = candidateChannels.size,
             channelsWithSchedule = channelsWithSchedule,
             isGuideStale = candidateChannels.isNotEmpty() && (channelsWithSchedule == 0 || !hasUpcomingData)
         )
     }
 
-    private fun Map<String, List<Program>>.withChannelGuidePlaceholders(
-        channels: List<Channel>,
-        windowStart: Long,
-        windowEnd: Long,
-        blockMinutes: Int,
-        textMode: GuideNoDataTextMode,
-        customText: String,
-        providerName: String
-    ): Map<String, List<Program>> {
-        if (channels.isEmpty()) return this
-        val slotMs = normalizeGuideNoDataBlockMinutes(blockMinutes) * MINUTE_MS
-        val normalizedCustomText = customText.trim().take(160)
-        val placeholders = channels.mapNotNull { channel ->
-            val lookupKey = channel.guideLookupKey() ?: return@mapNotNull null
-            if (this[lookupKey].orEmpty().hasRealGuidePrograms()) return@mapNotNull null
-            val useCatalogBlock = channel.shouldUseCatalogGuidePlaceholder(providerName)
-            val useFullSlotDuration = useCatalogBlock || slotMs >= DAY_MS
-            lookupKey to channel.toGuidePlaceholderPrograms(
-                lookupKey = lookupKey,
-                windowStart = windowStart,
-                windowEnd = windowEnd,
-                slotMs = if (useCatalogBlock) {
-                    DAY_MS
-                } else {
-                    slotMs
-                },
-                useFullSlotDuration = useFullSlotDuration,
-                textMode = textMode,
-                customText = normalizedCustomText
-            )
-        }
-        if (placeholders.isEmpty()) return this
-        return this + placeholders
-    }
-
-    private fun Channel.toGuidePlaceholderPrograms(
-        lookupKey: String,
-        windowStart: Long,
-        windowEnd: Long,
-        slotMs: Long,
-        useFullSlotDuration: Boolean,
-        textMode: GuideNoDataTextMode,
-        customText: String
-    ): List<Program> {
-        if (windowEnd <= windowStart) return emptyList()
-        val placeholderText = customText.ifBlank { name }
-        val (title, description, category) = when (textMode) {
-            GuideNoDataTextMode.CHANNEL_NAME -> Triple(name, buildGuidePlaceholderDescription(), NO_GUIDE_DATA_CATEGORY)
-            GuideNoDataTextMode.GENERIC -> Triple(NO_GUIDE_DATA_CATEGORY, buildGuidePlaceholderDescription(), NO_GUIDE_DATA_CATEGORY)
-            GuideNoDataTextMode.CUSTOM -> Triple(placeholderText, placeholderText, NO_GUIDE_DATA_CATEGORY)
-            GuideNoDataTextMode.BLANK -> Triple("", "", null)
-        }
-        return buildList {
-            var slotStart = windowStart
-            while (slotStart < windowEnd) {
-                val slotEnd = if (useFullSlotDuration) slotStart + slotMs else minOf(slotStart + slotMs, windowEnd)
-                add(
-                    Program(
-                        channelId = lookupKey,
-                        title = title,
-                        description = description,
-                        startTime = slotStart,
-                        endTime = slotEnd,
-                        category = category,
-                        providerId = providerId,
-                        isPlaceholder = true
-                    )
-                )
-                slotStart = slotEnd
-            }
-        }
-    }
-
-    private fun Channel.buildGuidePlaceholderDescription(): String {
-        val categoryLabel = categoryName
-            ?.trim()
-            ?.takeIf(String::isNotEmpty)
-            ?: groupTitle?.trim()?.takeIf(String::isNotEmpty)
-        return buildString {
-            append("No guide data is available for this channel.")
-            categoryLabel?.let {
-                append(" Category: ")
-                append(it)
-                append('.')
-            }
-        }
-    }
-
-    private fun Channel.shouldUseCatalogGuidePlaceholder(providerName: String): Boolean {
-        val path = streamUrl
-            .lowercase()
-            .substringBefore('?')
-            .substringBefore('#')
-        val provider = providerName.lowercase()
-        val category = categoryName.orEmpty().lowercase()
-        val group = groupTitle.orEmpty().lowercase()
-        val liveHint = path.contains("/live/") ||
-            path.contains("/live.php") ||
-            path.contains("/live-tv/") ||
-            path.contains("/livetv/") ||
-            category.contains("live tv") ||
-            category.contains("live channel") ||
-            group.contains("live tv") ||
-            group.contains("live channel")
-        if (liveHint) return false
-
-        val vodPathHint = path.endsWith(".mp4") ||
-            path.endsWith(".mkv") ||
-            path.endsWith(".avi") ||
-            path.endsWith(".mov") ||
-            path.endsWith(".m4v") ||
-            path.endsWith(".webm") ||
-            path.contains("/movie/") ||
-            path.contains("/movies/") ||
-            path.contains("/vod/") ||
-            path.contains("/series/")
-        val textHint = listOf(provider, category, group).any { value ->
-            value.contains("vod") ||
-                value.contains("movie") ||
-                value.contains("movies") ||
-                value.contains("film") ||
-                value.contains("series") ||
-                value.contains("season")
-        }
-        return vodPathHint || textHint
-    }
-
     private fun List<Program>.hasRealGuidePrograms(): Boolean =
         any { !it.isPlaceholder }
-
-    private fun List<Program>.hasDisplayGuidePrograms(): Boolean =
-        isNotEmpty()
 
     private suspend fun buildSearchGuideSnapshot(
         baseSnapshot: GuideBaseSnapshot,
@@ -2026,9 +1954,6 @@ private data class GuideSelectionSeed(
     val requestedCategoryId: Long,
     val anchorTime: Long,
     val favoritesOnly: Boolean,
-    val noDataBlockMinutes: Int,
-    val noDataTextMode: GuideNoDataTextMode,
-    val noDataCustomText: String,
     val isStartupSelection: Boolean
 )
 
@@ -2039,9 +1964,3 @@ private data class GuideCategoryData(
     val sortMode: com.afterglowtv.domain.model.CategorySortMode,
     val showAllChannels: Boolean = true
 )
-
-private fun normalizeGuideNoDataBlockMinutes(minutes: Int): Int = when (minutes) {
-    120 -> 120
-    1_440 -> 1_440
-    else -> 60
-}

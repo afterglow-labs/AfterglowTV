@@ -4,6 +4,7 @@ import com.afterglowtv.app.ui.model.LiveTvChannelMode
 import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.app.ui.model.RemoteChannelButtonAction
 import com.afterglowtv.app.ui.model.VodViewMode
+import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.domain.manager.BackupImportPlan
 import com.afterglowtv.domain.manager.BackupPreview
 import com.afterglowtv.domain.model.ActiveLiveSource
@@ -93,6 +94,7 @@ data class SettingsUiState(
     val useXtreamTextClassification: Boolean = true,
     val xtreamBase64TextCompatibility: Boolean = false,
     val liveTvChannelMode: LiveTvChannelMode = LiveTvChannelMode.PRO,
+    val startupDestination: StartupDestination = StartupDestination.default,
     val showLiveSourceSwitcher: Boolean = false,
     val showAllChannelsCategory: Boolean = true,
     val showRecentChannelsCategory: Boolean = true,

@@ -43,6 +43,7 @@ internal fun SettingsUiState.applyPreferenceSnapshot(snapshot: SettingsPreferenc
         useXtreamTextClassification = snapshot.useXtreamTextClassification,
         xtreamBase64TextCompatibility = snapshot.xtreamBase64TextCompatibility,
         liveTvChannelMode = snapshot.liveTvChannelMode,
+        startupDestination = snapshot.startupDestination,
         showLiveSourceSwitcher = snapshot.showLiveSourceSwitcher,
         showAllChannelsCategory = snapshot.showAllChannelsCategory,
         showRecentChannelsCategory = snapshot.showRecentChannelsCategory,

@@ -258,7 +258,138 @@ class EpgViewModelTest {
     }
 
     @Test
-    fun `guide keeps no-data channels visible with placeholders when schedule data is missing`() = runTest {
+    fun `standard guide excludes adult category channels`() = runTest {
+        val provider = Provider(
+            id = 1L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://provider.example.com"
+        )
+        val adultChannel = Channel(
+            id = 1L,
+            name = "Channel 1",
+            providerId = provider.id,
+            epgChannelId = "adult-1",
+            categoryId = 10L
+        )
+        val newsChannel = Channel(
+            id = 2L,
+            name = "News 24",
+            providerId = provider.id,
+            epgChannelId = "news-24",
+            categoryId = 20L,
+            categoryName = "News"
+        )
+        val channels = listOf(adultChannel, newsChannel)
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
+        whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
+        whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(
+            flowOf(
+                listOf(
+                    Category(id = 10L, name = "XXX", isAdult = true, count = 1),
+                    Category(id = 20L, name = "News", count = 1)
+                )
+            )
+        )
+        whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+        whenever(preferencesRepository.guideDensity).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideChannelMode).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideDefaultCategoryId).thenReturn(flowOf(ChannelRepository.ALL_CHANNELS_ID))
+        whenever(preferencesRepository.guideFavoritesOnly).thenReturn(flowOf(false))
+        whenever(preferencesRepository.guideScheduledOnly).thenReturn(flowOf(false))
+        whenever(preferencesRepository.guideAnchorTime).thenReturn(flowOf(null))
+
+        val viewModel = createViewModel()
+
+        advanceUntilIdle()
+        waitForUiState {
+            viewModel.uiState.value.totalChannelCount == 1 &&
+                !viewModel.uiState.value.isInitialLoading
+        }
+
+        val state = viewModel.uiState.value
+        assertThat(state.selectedCategoryId).isEqualTo(ChannelRepository.ALL_CHANNELS_ID)
+        assertThat(state.channels.map(Channel::name)).containsExactly("News 24")
+        assertThat(state.categories.map(Category::name)).contains("XXX Guide")
+        assertThat(state.categories.map(Category::name)).doesNotContain("XXX")
+    }
+
+    @Test
+    fun `locked xxx guide ignores saved epg category and favorites`() = runTest {
+        val provider = Provider(
+            id = 1L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://provider.example.com"
+        )
+        val adultChannel = Channel(
+            id = 1L,
+            name = "Channel 1",
+            providerId = provider.id,
+            epgChannelId = "adult-1",
+            categoryId = 10L
+        )
+        val newsChannel = Channel(
+            id = 2L,
+            name = "News 24",
+            providerId = provider.id,
+            epgChannelId = "news-24",
+            categoryId = 20L,
+            categoryName = "News"
+        )
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
+        whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
+        whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(
+            flowOf(
+                listOf(
+                    Category(id = 10L, name = "XXX", isAdult = true, count = 1),
+                    Category(id = 20L, name = "News", count = 1)
+                )
+            )
+        )
+        whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(listOf(adultChannel, newsChannel)))
+        whenever(channelRepository.getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(listOf(adultChannel, newsChannel)))
+        whenever(channelRepository.getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(listOf(adultChannel, newsChannel)))
+        whenever(channelRepository.getChannelsByCategory(provider.id, 20L)).thenReturn(flowOf(listOf(newsChannel)))
+        whenever(channelRepository.getChannelsWithoutErrors(provider.id, 20L)).thenReturn(flowOf(listOf(newsChannel)))
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+        whenever(preferencesRepository.guideDensity).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideChannelMode).thenReturn(flowOf(null))
+        whenever(preferencesRepository.guideDefaultCategoryId).thenReturn(flowOf(20L))
+        whenever(preferencesRepository.guideFavoritesOnly).thenReturn(flowOf(true))
+        whenever(preferencesRepository.guideScheduledOnly).thenReturn(flowOf(false))
+        whenever(preferencesRepository.guideAnchorTime).thenReturn(flowOf(null))
+
+        val viewModel = createViewModel()
+        viewModel.applyNavigationContext(
+            categoryId = com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE,
+            anchorTime = null,
+            favoritesOnly = false,
+            lockCategory = true
+        )
+
+        advanceUntilIdle()
+        waitForUiState {
+            viewModel.uiState.value.selectedCategoryId == com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE &&
+                viewModel.uiState.value.totalChannelCount == 1 &&
+                !viewModel.uiState.value.isInitialLoading
+        }
+
+        val state = viewModel.uiState.value
+        assertThat(state.showFavoritesOnly).isFalse()
+        assertThat(state.channels.map(Channel::name)).containsExactly("Channel 1")
+        assertThat(state.programsByChannel).isEmpty()
+    }
+
+    @Test
+    fun `guide keeps no-data channels visible with blank schedule when schedule data is missing`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider",
@@ -267,17 +398,17 @@ class EpgViewModelTest {
         )
         val channel = Channel(
             id = 1L,
-            name = "Adult Asian",
+            name = "Channel Without Data",
             providerId = provider.id,
-            epgChannelId = "Adult Asian",
+            epgChannelId = "Channel Without Data",
             categoryId = 10L,
-            categoryName = "XXX"
+            categoryName = "Live"
         )
         whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
         whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
         whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
         whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
-        whenever(channelRepository.getCategories(provider.id)).thenReturn(flowOf(listOf(Category(id = 10L, name = "XXX"))))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(flowOf(listOf(Category(id = 10L, name = "Live"))))
         whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(listOf(channel)))
         whenever(channelRepository.getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(listOf(channel)))
         whenever(channelRepository.getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(listOf(channel)))
@@ -291,7 +422,7 @@ class EpgViewModelTest {
         whenever(preferencesRepository.guideScheduledOnly).thenReturn(flowOf(false))
         whenever(preferencesRepository.guideAnchorTime).thenReturn(flowOf(null))
         whenever(epgRepository.getResolvedProgramsForChannels(eq(provider.id), any(), any(), any())).thenReturn(emptyMap())
-        whenever(epgRepository.getProgramsForChannelsSnapshot(eq(provider.id), eq(listOf("Adult Asian")), any(), any())).thenReturn(emptyMap())
+        whenever(epgRepository.getProgramsForChannelsSnapshot(eq(provider.id), eq(listOf("Channel Without Data")), any(), any())).thenReturn(emptyMap())
 
         val viewModel = createViewModel()
 
@@ -302,16 +433,13 @@ class EpgViewModelTest {
         }
 
         val state = viewModel.uiState.value
-        assertThat(state.channels.map(Channel::name)).containsExactly("Adult Asian")
-        val programs = state.programsByChannel["Adult Asian"].orEmpty()
-        assertThat(programs).isNotEmpty()
-        assertThat(programs.all { it.isPlaceholder }).isTrue()
-        assertThat(programs.first().title).isEqualTo("Adult Asian")
+        assertThat(state.channels.map(Channel::name)).containsExactly("Channel Without Data")
+        assertThat(state.programsByChannel["Channel Without Data"].orEmpty()).isEmpty()
         assertThat(state.channelsWithSchedule).isEqualTo(0)
     }
 
     @Test
-    fun `guide keeps no-data channels in scheduled current browse mode through placeholders`() = runTest {
+    fun `scheduled current browse mode hides no-data channels without placeholders`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider",
@@ -324,13 +452,13 @@ class EpgViewModelTest {
             providerId = provider.id,
             epgChannelId = "VOD Catalog Item",
             categoryId = 10L,
-            categoryName = "XXX"
+            categoryName = "Live"
         )
         whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
         whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
         whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
         whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
-        whenever(channelRepository.getCategories(provider.id)).thenReturn(flowOf(listOf(Category(id = 10L, name = "XXX"))))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(flowOf(listOf(Category(id = 10L, name = "Live"))))
         whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(listOf(channel)))
         whenever(channelRepository.getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(listOf(channel)))
         whenever(channelRepository.getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(listOf(channel)))
@@ -355,14 +483,12 @@ class EpgViewModelTest {
         }
 
         val state = viewModel.uiState.value
-        assertThat(state.channels.map(Channel::name)).containsExactly("VOD Catalog Item")
-        val programs = state.programsByChannel["VOD Catalog Item"].orEmpty()
-        assertThat(programs).isNotEmpty()
-        assertThat(programs.all { it.isPlaceholder }).isTrue()
+        assertThat(state.channels).isEmpty()
+        assertThat(state.programsByChannel["VOD Catalog Item"].orEmpty()).isEmpty()
     }
 
     @Test
-    fun `vod-like no-data channels create one catalog placeholder block`() = runTest {
+    fun `vod-like no-data channels keep blank guide cells instead of catalog placeholder block`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider VOD",
@@ -409,14 +535,11 @@ class EpgViewModelTest {
 
         val state = viewModel.uiState.value
         assertThat(state.channels.map(Channel::name)).containsExactly("Catalog Movie")
-        val programs = state.programsByChannel["Catalog Movie"].orEmpty()
-        assertThat(programs).hasSize(1)
-        assertThat(programs.first().isPlaceholder).isTrue()
-        assertThat(programs.first().endTime - programs.first().startTime).isGreaterThan(EpgViewModel.LOOKAHEAD_MS)
+        assertThat(state.programsByChannel["Catalog Movie"].orEmpty()).isEmpty()
     }
 
     @Test
-    fun `guide no-data blank text setting keeps blank placeholder chunks`() = runTest {
+    fun `guide no-data blank text setting does not create placeholder chunks`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider",
@@ -465,11 +588,7 @@ class EpgViewModelTest {
 
         val state = viewModel.uiState.value
         assertThat(state.channels.map(Channel::name)).containsExactly("Channel Without Data")
-        val programs = state.programsByChannel["Channel Without Data"].orEmpty()
-        assertThat(programs).isNotEmpty()
-        assertThat(programs.all { it.isPlaceholder }).isTrue()
-        assertThat(programs.map { it.title }.distinct()).containsExactly("")
-        assertThat(programs.map { it.description }.distinct()).containsExactly("")
+        assertThat(state.programsByChannel["Channel Without Data"].orEmpty()).isEmpty()
     }
 
     @Test

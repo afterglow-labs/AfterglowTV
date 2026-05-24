@@ -2,6 +2,7 @@ package com.afterglowtv.app.ui.screens.settings
 
 import android.app.Application
 import com.afterglowtv.app.R
+import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.ui.model.LiveTvChannelMode
 import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.app.ui.model.RemoteChannelButtonAction
@@ -68,6 +69,7 @@ internal data class SettingsPreferenceSnapshot(
     val useXtreamTextClassification: Boolean,
     val xtreamBase64TextCompatibility: Boolean,
     val liveTvChannelMode: LiveTvChannelMode,
+    val startupDestination: StartupDestination,
     val showLiveSourceSwitcher: Boolean,
     val showAllChannelsCategory: Boolean,
     val showRecentChannelsCategory: Boolean,

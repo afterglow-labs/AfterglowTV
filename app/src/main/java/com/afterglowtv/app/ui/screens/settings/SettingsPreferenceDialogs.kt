@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import com.afterglowtv.app.R
+import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.domain.model.AppTimeFormat
 import com.afterglowtv.domain.model.CategorySortMode
 import com.afterglowtv.domain.model.ContentType
@@ -20,6 +21,8 @@ internal fun SettingsPreferenceDialogs(
     onShowGuideDefaultCategoryDialogChange: (Boolean) -> Unit,
     showGuideNoDataBlockDialog: Boolean,
     onShowGuideNoDataBlockDialogChange: (Boolean) -> Unit,
+    showStartupDestinationDialog: Boolean,
+    onShowStartupDestinationDialogChange: (Boolean) -> Unit,
     showPlaybackSpeedDialog: Boolean,
     onShowPlaybackSpeedDialogChange: (Boolean) -> Unit,
     showTimeFormatDialog: Boolean,
@@ -135,6 +138,25 @@ internal fun SettingsPreferenceDialogs(
                     onSelect = {
                         viewModel.setGuideNoDataBlockMinutes(minutes)
                         onShowGuideNoDataBlockDialogChange(false)
+                    }
+                )
+            }
+        }
+    }
+
+    if (showStartupDestinationDialog) {
+        PremiumSelectionDialog(
+            title = stringResource(R.string.settings_select_startup_destination),
+            onDismiss = { onShowStartupDestinationDialogChange(false) }
+        ) {
+            StartupDestination.entries.forEachIndexed { index, destination ->
+                LevelOption(
+                    level = index,
+                    text = stringResource(destination.labelResId),
+                    currentLevel = if (uiState.startupDestination == destination) index else -1,
+                    onSelect = {
+                        viewModel.setStartupDestination(destination)
+                        onShowStartupDestinationDialogChange(false)
                     }
                 )
             }

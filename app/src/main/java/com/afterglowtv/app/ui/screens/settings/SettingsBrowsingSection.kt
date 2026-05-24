@@ -32,10 +32,10 @@ internal fun LazyListScope.settingsBrowsingSection(
     viewModel: SettingsViewModel,
     context: android.content.Context,
     guideDefaultCategoryLabel: String,
-    guideNoDataBlockLabel: String,
     timeFormatLabel: String,
     appLanguageLabel: String,
     onShowLiveTvModeDialogChange: (Boolean) -> Unit,
+    onShowStartupDestinationDialogChange: (Boolean) -> Unit,
     onShowLiveTvFiltersDialogChange: (Boolean) -> Unit,
     onShowLiveTvQuickFilterVisibilityDialogChange: (Boolean) -> Unit,
     onShowLiveChannelNumberingDialogChange: (Boolean) -> Unit,
@@ -43,7 +43,6 @@ internal fun LazyListScope.settingsBrowsingSection(
     onShowGroupedChannelLabelDialogChange: (Boolean) -> Unit,
     onShowLiveVariantPreferenceDialogChange: (Boolean) -> Unit,
     onShowGuideDefaultCategoryDialogChange: (Boolean) -> Unit,
-    onShowGuideNoDataBlockDialogChange: (Boolean) -> Unit,
     onShowTimeFormatDialogChange: (Boolean) -> Unit,
     onShowVodViewModeDialogChange: (Boolean) -> Unit,
     onCategorySortDialogTypeChange: (String?) -> Unit,
@@ -54,6 +53,11 @@ internal fun LazyListScope.settingsBrowsingSection(
             label = stringResource(R.string.settings_live_tv_channel_mode),
             value = stringResource(uiState.liveTvChannelMode.labelResId()),
             onClick = { onShowLiveTvModeDialogChange(true) }
+        )
+        ClickableSettingsRow(
+            label = stringResource(R.string.settings_startup_destination),
+            value = stringResource(uiState.startupDestination.labelResId),
+            onClick = { onShowStartupDestinationDialogChange(true) }
         )
         TvClickableSurface(
             onClick = { viewModel.setShowLiveSourceSwitcher(!uiState.showLiveSourceSwitcher) },
@@ -159,20 +163,6 @@ internal fun LazyListScope.settingsBrowsingSection(
             label = stringResource(R.string.settings_guide_default_category),
             value = guideDefaultCategoryLabel,
             onClick = { onShowGuideDefaultCategoryDialogChange(true) }
-        )
-        ClickableSettingsRow(
-            label = stringResource(R.string.settings_guide_no_data_block_size),
-            value = guideNoDataBlockLabel,
-            onClick = { onShowGuideNoDataBlockDialogChange(true) }
-        )
-        SwitchSettingsRow(
-            label = stringResource(R.string.settings_guide_no_data_show_channel_text),
-            value = stringResource(
-                if (uiState.guideNoDataShowChannelText) R.string.settings_guide_no_data_show_channel_text_on
-                else R.string.settings_guide_no_data_show_channel_text_off
-            ),
-            checked = uiState.guideNoDataShowChannelText,
-            onCheckedChange = viewModel::setGuideNoDataShowChannelText
         )
         SwitchSettingsRow(
             label = stringResource(R.string.settings_show_adult_guide_tab),

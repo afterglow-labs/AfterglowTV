@@ -279,7 +279,8 @@ fun FullEpgScreen(
         viewModel.applyNavigationContext(
             categoryId = fixedCategoryId ?: initialCategoryId,
             anchorTime = initialAnchorTime,
-            favoritesOnly = initialFavoritesOnly
+            favoritesOnly = initialFavoritesOnly,
+            lockCategory = fixedCategoryId != null
         )
     }
 
@@ -410,7 +411,10 @@ fun FullEpgScreen(
                                 color = Primary,
                                 trackColor = SurfaceHighlight
                             )
-                            Text(stringResource(R.string.epg_loading), color = OnBackground)
+                            Text(
+                                stringResource(R.string.epg_loading_named, stringResource(titleRes)),
+                                color = OnBackground
+                            )
                             val expectedChannels = max(uiState.totalChannelCount, uiState.channels.size)
                             Text(
                                 text = if (expectedChannels > 0) {

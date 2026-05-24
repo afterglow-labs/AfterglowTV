@@ -198,7 +198,6 @@ private fun isAdultGuideText(value: String?): Boolean {
     if (normalized.isBlank()) return false
     return normalized.containsWholeAdultGuideTerm("xxx") ||
         normalized.containsWholeAdultGuideTerm("adult") ||
-        normalized.containsWholeAdultGuideTerm("18") ||
         normalized.containsWholeAdultGuideTerm("18 plus") ||
         normalized.containsWholeAdultGuideTerm("x rated") ||
         normalized.containsWholeAdultGuideTerm("porn")

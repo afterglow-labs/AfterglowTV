@@ -139,6 +139,8 @@ internal fun SettingsScreenDialogs(
         onShowGuideDefaultCategoryDialogChange = { dialogState.showGuideDefaultCategoryDialog = it },
         showGuideNoDataBlockDialog = dialogState.showGuideNoDataBlockDialog,
         onShowGuideNoDataBlockDialogChange = { dialogState.showGuideNoDataBlockDialog = it },
+        showStartupDestinationDialog = dialogState.showStartupDestinationDialog,
+        onShowStartupDestinationDialogChange = { dialogState.showStartupDestinationDialog = it },
         showPlaybackSpeedDialog = dialogState.showPlaybackSpeedDialog,
         onShowPlaybackSpeedDialogChange = { dialogState.showPlaybackSpeedDialog = it },
         showTimeFormatDialog = dialogState.showTimeFormatDialog,

@@ -6,6 +6,7 @@ import com.afterglowtv.app.ui.model.LiveTvChannelMode
 import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.app.ui.model.RemoteChannelButtonAction
 import com.afterglowtv.app.ui.model.VodViewMode
+import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.domain.model.AppTimeFormat
 import com.afterglowtv.domain.model.ChannelNumberingMode
@@ -67,6 +68,7 @@ internal fun observeSettingsPreferenceSnapshot(
             useXtreamTextClassification = true,
             xtreamBase64TextCompatibility = false,
             liveTvChannelMode = LiveTvChannelMode.PRO,
+            startupDestination = StartupDestination.default,
             showLiveSourceSwitcher = false,
             showAllChannelsCategory = true,
             showRecentChannelsCategory = true,
@@ -165,6 +167,8 @@ internal fun observeSettingsPreferenceSnapshot(
         snapshot.copy(xtreamBase64TextCompatibility = compatibilityEnabled)
     }.combine(preferencesRepository.liveTvChannelMode) { snapshot, liveTvChannelMode ->
         snapshot.copy(liveTvChannelMode = LiveTvChannelMode.fromStorage(liveTvChannelMode))
+    }.combine(preferencesRepository.startupDestination) { snapshot, startupDestination ->
+        snapshot.copy(startupDestination = StartupDestination.fromStorage(startupDestination))
     }.combine(preferencesRepository.showLiveSourceSwitcher) { snapshot, showLiveSourceSwitcher ->
         snapshot.copy(showLiveSourceSwitcher = showLiveSourceSwitcher)
     }.combine(preferencesRepository.showAllChannelsCategory) { snapshot, showAllChannelsCategory ->

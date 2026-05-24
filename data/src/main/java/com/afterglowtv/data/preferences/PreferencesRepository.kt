@@ -105,6 +105,7 @@ class PreferencesRepository @Inject constructor(
         val ACTIVE_LIVE_SOURCE_TYPE = stringPreferencesKey("active_live_source_type")
         val ACTIVE_LIVE_SOURCE_ID = longPreferencesKey("active_live_source_id")
         val DEFAULT_VIEW_MODE = stringPreferencesKey("default_view_mode")
+        val STARTUP_DESTINATION = stringPreferencesKey("startup_destination")
         val PARENTAL_CONTROL_LEVEL = intPreferencesKey("parental_control_level")
         val PARENTAL_V2_MIGRATED = booleanPreferencesKey("parental_v2_migrated")
         val LEGACY_PARENTAL_PIN = stringPreferencesKey("parental_pin")
@@ -291,6 +292,10 @@ class PreferencesRepository @Inject constructor(
         preferences[PreferencesKeys.DEFAULT_VIEW_MODE]
     }
 
+    val startupDestination: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.STARTUP_DESTINATION]
+    }
+
     val isIncognitoMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.IS_INCOGNITO_MODE] ?: false
     }
@@ -473,6 +478,12 @@ class PreferencesRepository @Inject constructor(
     suspend fun setDefaultViewMode(viewMode: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.DEFAULT_VIEW_MODE] = viewMode
+        }
+    }
+
+    suspend fun setStartupDestination(destination: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.STARTUP_DESTINATION] = destination
         }
     }
 

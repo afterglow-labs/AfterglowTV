@@ -3,9 +3,12 @@ package com.afterglowtv.app.navigation
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.NavType
@@ -33,7 +36,14 @@ import com.afterglowtv.app.ui.screens.series.SeriesScreen
 import com.afterglowtv.app.ui.screens.settings.SettingsScreen
 import com.afterglowtv.app.ui.screens.welcome.WelcomeScreen
 import com.afterglowtv.app.MainActivity
+import com.afterglowtv.data.preferences.PreferencesRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.Serializable
+import javax.inject.Inject
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 
 private const val PLAYER_REQUEST_KEY = "player_request"
@@ -256,9 +266,24 @@ private fun NavHostController.navigateToExternalPlayer(request: PlayerNavigation
     return true
 }
 
+@HiltViewModel
+class AppStartupDestinationViewModel @Inject constructor(
+    preferencesRepository: PreferencesRepository
+) : ViewModel() {
+    val startupDestination: StateFlow<StartupDestination> = preferencesRepository.startupDestination
+        .map(StartupDestination::fromStorage)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = StartupDestination.default
+        )
+}
+
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
     val navController = rememberNavController()
+    val startupDestinationViewModel: AppStartupDestinationViewModel = hiltViewModel()
+    val startupDestination = startupDestinationViewModel.startupDestination.collectAsStateWithLifecycle().value
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val externalNavigationRequest = mainActivity.externalNavigationRequestFlow.collectAsStateWithLifecycle().value
 
@@ -322,11 +347,7 @@ fun AppNavigation(mainActivity: MainActivity) {
         composable(Routes.WELCOME) {
             WelcomeScreen(
                 onNavigateToHome = dropUnlessResumed {
-                    // AfterglowTV default landing view = Guide (EPG). The route is
-                    // still named HOME on the welcome callback for back-compat;
-                    // we just navigate to EPG. A Settings option can later let
-                    // users pick a different default.
-                    navController.navigate(Routes.epg()) {
+                    navController.navigate(startupDestination.route) {
                         popUpTo(Routes.WELCOME) { inclusive = true }
                     }
                 },
@@ -353,8 +374,7 @@ fun AppNavigation(mainActivity: MainActivity) {
                 initialImportUri = importUri,
                 onBack = { navController.popBackStack() },
                 onProviderAdded = dropUnlessResumed {
-                    // Land on Guide after provider setup completes (AfterglowTV default).
-                    navController.navigate(Routes.epg()) {
+                    navController.navigate(startupDestination.route) {
                         popUpTo(Routes.PROVIDER_SETUP) { inclusive = true }
                     }
                 }

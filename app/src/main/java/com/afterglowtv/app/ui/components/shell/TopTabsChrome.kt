@@ -34,7 +34,7 @@ fun defaultTopTabs(showAdultGuideTab: Boolean = true): List<TopTab> = buildList 
     add(TopTab("epg", "IPTV Guide"))
     add(TopTab("vod_guide", "VOD Guide"))
     if (showAdultGuideTab) {
-        add(TopTab("adult_guide", "Adult Guide"))
+        add(TopTab("adult_guide", "XXX Guide"))
     }
     add(TopTab("movies", "Movies"))
     add(TopTab("series", "Series"))
