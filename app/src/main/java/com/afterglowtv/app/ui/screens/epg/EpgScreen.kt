@@ -2,7 +2,6 @@ package com.afterglowtv.app.ui.screens.epg
 
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.StringRes
-import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.app.ui.model.guideLookupKey
 import androidx.compose.foundation.BorderStroke
@@ -568,25 +567,10 @@ fun FullEpgScreen(
                         )
                     } else {
                         val useAdultGuide = shouldUseAdultGuide(uiState)
-                        val adultGuideLoadComplete = !uiState.isInitialLoading &&
-                            !uiState.isRefreshing &&
-                            uiState.totalChannelCount > 0 &&
-                            uiState.loadedChannelCount >= uiState.totalChannelCount
-                        val adultGuideCategories = remember(
-                            uiState.channels,
-                            uiState.categories,
-                            useAdultGuide,
-                            adultGuideLoadComplete
-                        ) {
-                            if (useAdultGuide) {
-                                AdultGuideCategoryBuilder.build(
-                                    channels = uiState.channels,
-                                    providerCategories = uiState.categories,
-                                    includeAllCategory = adultGuideLoadComplete
-                                )
-                            } else {
-                                emptyList()
-                            }
+                        val adultGuideCategories = if (useAdultGuide) {
+                            uiState.adultGuideCategories
+                        } else {
+                            emptyList()
                         }
                         var selectedAdultGuideCategoryKey by rememberSaveable(
                             uiState.currentProviderName,
@@ -603,7 +587,7 @@ fun FullEpgScreen(
                                     )
                             ) {
                                 selectedAdultGuideCategoryKey = adultGuideCategories
-                                    .firstOrNull { it.key != AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }
+                                    .firstOrNull { it.key != com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }
                                     ?.key
                                     ?: adultGuideCategories.first().key
                             }
@@ -617,7 +601,7 @@ fun FullEpgScreen(
                                     categories = adultGuideCategories,
                                     selectedCategoryKey = selectedAdultGuideCategoryKey,
                                     favoriteChannelIds = uiState.favoriteChannelIds,
-                                    hasMoreChannels = uiState.hasMoreChannels,
+                                    hasMoreChannels = uiState.isAdultGuideCategorizing,
                                     isChannelLocked = { channel ->
                                         isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)
                                     },

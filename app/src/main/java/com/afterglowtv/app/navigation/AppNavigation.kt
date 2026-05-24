@@ -37,11 +37,13 @@ import com.afterglowtv.app.ui.screens.settings.SettingsScreen
 import com.afterglowtv.app.ui.screens.welcome.WelcomeScreen
 import com.afterglowtv.app.MainActivity
 import com.afterglowtv.data.preferences.PreferencesRepository
+import com.afterglowtv.domain.repository.ProviderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.Serializable
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -268,7 +270,8 @@ private fun NavHostController.navigateToExternalPlayer(request: PlayerNavigation
 
 @HiltViewModel
 class AppStartupDestinationViewModel @Inject constructor(
-    preferencesRepository: PreferencesRepository
+    preferencesRepository: PreferencesRepository,
+    providerRepository: ProviderRepository
 ) : ViewModel() {
     val startupDestination: StateFlow<StartupDestination> = preferencesRepository.startupDestination
         .map(StartupDestination::fromStorage)
@@ -277,6 +280,17 @@ class AppStartupDestinationViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000L),
             initialValue = StartupDestination.default
         )
+
+    val startupRoute: StateFlow<String?> = combine(
+        startupDestination,
+        providerRepository.getProviders().map { providers -> providers.isNotEmpty() }
+    ) { destination, hasProviders ->
+        if (hasProviders) destination.route else Routes.PROVIDER_SETUP
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000L),
+        initialValue = null
+    )
 }
 
 @Composable
@@ -284,6 +298,7 @@ fun AppNavigation(mainActivity: MainActivity) {
     val navController = rememberNavController()
     val startupDestinationViewModel: AppStartupDestinationViewModel = hiltViewModel()
     val startupDestination = startupDestinationViewModel.startupDestination.collectAsStateWithLifecycle().value
+    val startupRoute = startupDestinationViewModel.startupRoute.collectAsStateWithLifecycle().value
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val externalNavigationRequest = mainActivity.externalNavigationRequestFlow.collectAsStateWithLifecycle().value
 
@@ -340,9 +355,17 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
     }
 
+    if (startupRoute == null) {
+        WelcomeScreen(
+            onNavigateToHome = {},
+            onNavigateToSetup = {}
+        )
+        return
+    }
+
     NavHost(
         navController = navController,
-        startDestination = Routes.WELCOME
+        startDestination = startupRoute
     ) {
         composable(Routes.WELCOME) {
             WelcomeScreen(

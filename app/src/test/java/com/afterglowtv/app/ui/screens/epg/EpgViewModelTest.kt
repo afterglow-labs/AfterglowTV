@@ -507,7 +507,7 @@ class EpgViewModelTest {
     }
 
     @Test
-    fun `locked xxx guide loads the full adult lineup but only renders the first page`() = runTest {
+    fun `locked xxx guide loads the full adult lineup and categorizes it off the rendered page`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider",
@@ -550,22 +550,20 @@ class EpgViewModelTest {
             val state = viewModel.uiState.value
             state.selectedCategoryId == com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE &&
                 state.totalChannelCount == channels.size &&
+                state.adultGuideCategorizedChannelCount == channels.size &&
                 !state.isInitialLoading &&
-                !state.isRefreshing
+                !state.isRefreshing &&
+                !state.isAdultGuideCategorizing
         }
 
         val firstState = viewModel.uiState.value
         assertThat(firstState.loadedChannelCount).isEqualTo(channels.size)
         assertThat(firstState.channels.size).isLessThan(channels.size)
         assertThat(firstState.channels.map(Channel::id)).containsExactlyElementsIn(channels.take(firstState.channels.size).map(Channel::id)).inOrder()
-        assertThat(firstState.hasMoreChannels).isTrue()
-
-        viewModel.requestMoreChannels()
-        advanceUntilIdle()
-
-        val expandedState = viewModel.uiState.value
-        assertThat(expandedState.channels.size).isGreaterThan(firstState.channels.size)
-        assertThat(expandedState.totalChannelCount).isEqualTo(channels.size)
+        assertThat(firstState.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.size)
+            .isEqualTo(channels.size)
+        assertThat(firstState.adultGuideCategories.firstOrNull { it.key == com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }?.channels?.size)
+            .isEqualTo(channels.size)
     }
 
     @Test

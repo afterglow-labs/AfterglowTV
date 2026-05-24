@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -240,11 +239,6 @@ private fun AdultGuideChannelList(
             items = category.channels,
             key = { index, channel -> "adult-row:${category.key}:$index:${channel.id}" }
         ) { rowIndex, channel ->
-            if (hasMoreChannels && rowIndex == category.channels.lastIndex) {
-                LaunchedEffect(category.key, category.channels.size) {
-                    onRequestMoreChannels()
-                }
-            }
             AdultGuideChannelCard(
                 channel = channel,
                 isFavorite = channel.id in favoriteChannelIds,
@@ -258,9 +252,6 @@ private fun AdultGuideChannelList(
         }
         if (hasMoreChannels) {
             item(key = "adult-guide-load-more:${category.key}") {
-                LaunchedEffect(category.channels.size) {
-                    onRequestMoreChannels()
-                }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
