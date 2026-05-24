@@ -65,6 +65,8 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.afterglowtv.app.R
 import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.ui.design.AppColors
@@ -254,9 +256,11 @@ fun AppScreenHeader(
 private fun TopNavigationBar(
     currentRoute: String,
     onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: AppShellViewModel = hiltViewModel()
 ) {
-    val items = remember { buildDestinationItems() }
+    val showAdultGuideTab by viewModel.showAdultGuideTab.collectAsStateWithLifecycle()
+    val items = remember(showAdultGuideTab) { buildDestinationItems(showAdultGuideTab) }
     val scrollState = rememberScrollState()
 
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
@@ -666,10 +670,12 @@ fun ContentMetadataStrip(
 private fun DestinationRail(
     currentRoute: String,
     onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: AppShellViewModel = hiltViewModel()
 ) {
     val spacing = LocalAppSpacing.current
-    val items = remember { buildDestinationItems() }
+    val showAdultGuideTab by viewModel.showAdultGuideTab.collectAsStateWithLifecycle()
+    val items = remember(showAdultGuideTab) { buildDestinationItems(showAdultGuideTab) }
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
 
     Box(
@@ -807,13 +813,17 @@ private fun findActiveDestinationItem(
         .maxByOrNull { it.route.length }
         ?: items.firstOrNull { it.route == currentRoute }
 
-private fun buildDestinationItems(): List<DestinationItem> = listOf(
-    DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home),
-    DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow),
-    DestinationItem(Routes.MOVIES, R.string.nav_movies, Icons.Default.Star),
-    DestinationItem(Routes.SERIES, R.string.nav_series, Icons.Default.Menu),
-    DestinationItem(Routes.LOCAL_MEDIA, R.string.nav_local_media, Icons.Default.Menu),
-    DestinationItem(Routes.EPG, R.string.nav_epg, Icons.Default.Info),
-    DestinationItem(Routes.SEARCH, R.string.search_title, Icons.Default.Search),
-    DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings)
-)
+private fun buildDestinationItems(showAdultGuideTab: Boolean = true): List<DestinationItem> = buildList {
+    add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))
+    add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
+    add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
+    add(DestinationItem(Routes.VOD_GUIDE, R.string.nav_vod_guide, Icons.Default.Star))
+    if (showAdultGuideTab) {
+        add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info))
+    }
+    add(DestinationItem(Routes.MOVIES, R.string.nav_movies, Icons.Default.Star))
+    add(DestinationItem(Routes.SERIES, R.string.nav_series, Icons.Default.Menu))
+    add(DestinationItem(Routes.LOCAL_MEDIA, R.string.nav_personal_guide, Icons.Default.Menu))
+    add(DestinationItem(Routes.SEARCH, R.string.search_title, Icons.Default.Search))
+    add(DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings))
+}

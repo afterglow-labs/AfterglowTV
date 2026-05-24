@@ -441,6 +441,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setShowAdultGuideTab(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setShowAdultGuideTab(enabled)
+        }
+    }
+
     fun addLiveTvCategoryFilter(filter: String) {
         viewModelScope.launch {
             val normalized = filter.trim()

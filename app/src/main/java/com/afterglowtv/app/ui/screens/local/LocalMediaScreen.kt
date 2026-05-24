@@ -103,14 +103,14 @@ fun LocalMediaScreen(
     AppScreenScaffold(
         currentRoute = currentRoute,
         onNavigate = onNavigate,
-        title = stringResource(R.string.nav_local_media),
+        title = stringResource(R.string.nav_personal_guide),
         subtitle = null,
         navigationChrome = AppNavigationChrome.TopBar,
         compactHeader = true,
         showScreenHeader = false
     ) {
         AfterglowBrandStrip(
-            wordmark = stringResource(R.string.nav_local_media),
+            wordmark = stringResource(R.string.nav_personal_guide),
             tagline = stringResource(R.string.local_media_subtitle),
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp)
         )

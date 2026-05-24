@@ -1,6 +1,7 @@
 package com.afterglowtv.app.ui.screens.epg
 
 import android.view.inputmethod.InputMethodManager
+import androidx.annotation.StringRes
 import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.app.ui.model.guideLookupKey
@@ -184,6 +185,9 @@ fun FullEpgScreen(
     initialCategoryId: Long? = null,
     initialAnchorTime: Long? = null,
     initialFavoritesOnly: Boolean = false,
+    fixedCategoryId: Long? = null,
+    returnRouteOverride: String? = null,
+    @StringRes titleRes: Int = R.string.nav_epg,
     onPlayChannel: (Channel, Long, Boolean, Long?, String) -> Unit,
     onPlayArchive: (Channel, Program, Long, Boolean, Long?, String) -> Unit,
     onNavigate: (String) -> Unit,
@@ -220,8 +224,8 @@ fun FullEpgScreen(
         recordingBlockedMessage = stringResource(R.string.notification_permission_recording_alert_required)
     )
     val guideToolbarFocusRequester = remember { FocusRequester() }
-    val returnRoute = remember(uiState.selectedCategoryId, uiState.guideAnchorTime, uiState.showFavoritesOnly) {
-        Routes.epg(
+    val returnRoute = remember(returnRouteOverride, uiState.selectedCategoryId, uiState.guideAnchorTime, uiState.showFavoritesOnly) {
+        returnRouteOverride ?: Routes.epg(
             categoryId = uiState.selectedCategoryId.takeIf { it != ChannelRepository.ALL_CHANNELS_ID },
             anchorTime = uiState.guideAnchorTime,
             favoritesOnly = uiState.showFavoritesOnly
@@ -271,9 +275,9 @@ fun FullEpgScreen(
         showPinDialog = true
     }
 
-    LaunchedEffect(initialCategoryId, initialAnchorTime, initialFavoritesOnly) {
+    LaunchedEffect(fixedCategoryId, initialCategoryId, initialAnchorTime, initialFavoritesOnly) {
         viewModel.applyNavigationContext(
-            categoryId = initialCategoryId,
+            categoryId = fixedCategoryId ?: initialCategoryId,
             anchorTime = initialAnchorTime,
             favoritesOnly = initialFavoritesOnly
         )
@@ -374,7 +378,7 @@ fun FullEpgScreen(
     AppScreenScaffold(
         currentRoute = currentRoute,
         onNavigate = onNavigate,
-        title = stringResource(R.string.nav_epg),
+        title = stringResource(titleRes),
         subtitle = stringResource(R.string.guide_shell_subtitle),
         navigationChrome = AppNavigationChrome.TopBar,
         topBarVisible = topNavVisible || (!isTelevisionDevice && uiState.channels.isEmpty()),
@@ -396,7 +400,32 @@ fun FullEpgScreen(
                             .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(stringResource(R.string.epg_loading), color = OnBackground)
+                        Column(
+                            modifier = Modifier.widthIn(max = 320.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            LinearProgressIndicator(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = Primary,
+                                trackColor = SurfaceHighlight
+                            )
+                            Text(stringResource(R.string.epg_loading), color = OnBackground)
+                            val expectedChannels = max(uiState.totalChannelCount, uiState.channels.size)
+                            Text(
+                                text = if (expectedChannels > 0) {
+                                    stringResource(
+                                        R.string.epg_loading_channel_progress,
+                                        uiState.channels.size,
+                                        expectedChannels
+                                    )
+                                } else {
+                                    stringResource(R.string.epg_loading_channels)
+                                },
+                                style = MaterialTheme.typography.labelMedium,
+                                color = OnSurfaceDim
+                            )
+                        }
                     }
                 }
 
@@ -459,10 +488,12 @@ fun FullEpgScreen(
                         selectedCategoryName = uiState.categories
                             .firstOrNull { it.id == uiState.selectedCategoryId }
                             ?.name
-                            ?: stringResource(R.string.epg_filter_short),
+                            ?: stringResource(if (fixedCategoryId == VirtualCategoryIds.ADULT_GUIDE) titleRes else R.string.epg_filter_short),
                         firstButtonFocusRequester = guideToolbarFocusRequester,
                         onOpenCategoryPicker = {
-                            showCategoryPicker = true
+                            if (fixedCategoryId == null) {
+                                showCategoryPicker = true
+                            }
                         },
                         onJumpToNow = {
                             viewModel.jumpToNow()
@@ -479,14 +510,34 @@ fun FullEpgScreen(
                             .padding(horizontal = 14.dp)
                     )
                     if (uiState.isRefreshing) {
-                        LinearProgressIndicator(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 4.dp)
-                                .height(3.dp),
-                            color = Primary,
-                            trackColor = SurfaceHighlight
-                        )
+                                .padding(horizontal = 14.dp, vertical = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            LinearProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(3.dp),
+                                color = Primary,
+                                trackColor = SurfaceHighlight
+                            )
+                            val expectedChannels = max(uiState.totalChannelCount, uiState.channels.size)
+                            Text(
+                                text = if (expectedChannels > 0) {
+                                    stringResource(
+                                        R.string.epg_loading_channel_progress,
+                                        uiState.channels.size,
+                                        expectedChannels
+                                    )
+                                } else {
+                                    stringResource(R.string.epg_loading_channels)
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = OnSurfaceDim
+                            )
+                        }
                     }
                     if (uiState.channels.isEmpty()) {
                         val emptyAction = resolveGuideEmptyAction(uiState)

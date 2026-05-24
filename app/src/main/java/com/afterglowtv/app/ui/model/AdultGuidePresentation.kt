@@ -19,6 +19,26 @@ object AdultGuideCategoryBuilder {
     private const val OTHER_CATEGORY_KEY = "other"
     private val categoryRules = listOf(
         AdultGuideRule("milf", "MILF", listOf("milf", "milfs", "stepmom", "step mom")),
+        AdultGuideRule(
+            "taboo",
+            "Taboo",
+            listOf(
+                "taboo",
+                "family",
+                "step",
+                "stepmom",
+                "step mom",
+                "stepdad",
+                "step dad",
+                "stepsister",
+                "step sister",
+                "stepbrother",
+                "step brother",
+                "cousin",
+                "aunt",
+                "uncle"
+            )
+        ),
         AdultGuideRule("interracial", "Interracial", listOf("interracial", "ir")),
         AdultGuideRule("blondes", "Blondes", listOf("blonde", "blondes")),
         AdultGuideRule("brunettes", "Brunettes", listOf("brunette", "brunettes")),

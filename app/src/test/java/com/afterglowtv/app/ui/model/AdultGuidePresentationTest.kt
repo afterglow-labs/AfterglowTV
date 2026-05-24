@@ -11,7 +11,7 @@ class AdultGuidePresentationTest {
     fun `generated adult categories include every title keyword match`() {
         val channel = Channel(
             id = 1L,
-            name = "MILF Interracial Blondes Trans 24-7",
+            name = "Blonde Trans MILF Cousin 24-7",
             providerId = 7L,
             categoryName = "XXX"
         )
@@ -24,14 +24,14 @@ class AdultGuidePresentationTest {
         assertThat(categories.map { it.title }).containsAtLeast(
             "All",
             "MILF",
-            "Interracial",
             "Blondes",
-            "Trans"
+            "Trans",
+            "Taboo"
         )
         assertThat(categories.category("MILF").channels).containsExactly(channel)
-        assertThat(categories.category("Interracial").channels).containsExactly(channel)
         assertThat(categories.category("Blondes").channels).containsExactly(channel)
         assertThat(categories.category("Trans").channels).containsExactly(channel)
+        assertThat(categories.category("Taboo").channels).containsExactly(channel)
     }
 
     @Test

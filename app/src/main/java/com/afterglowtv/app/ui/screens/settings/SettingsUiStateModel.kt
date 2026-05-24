@@ -98,6 +98,7 @@ data class SettingsUiState(
     val showRecentChannelsCategory: Boolean = true,
     val liveTvCategoryFilters: List<String> = emptyList(),
     val liveTvQuickFilterVisibilityMode: LiveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.ALWAYS_VISIBLE,
+    val showAdultGuideTab: Boolean = true,
     val liveChannelNumberingMode: ChannelNumberingMode = ChannelNumberingMode.GROUP,
     val liveChannelGroupingMode: LiveChannelGroupingMode = LiveChannelGroupingMode.RAW_VARIANTS,
     val groupedChannelLabelMode: GroupedChannelLabelMode = GroupedChannelLabelMode.HYBRID,

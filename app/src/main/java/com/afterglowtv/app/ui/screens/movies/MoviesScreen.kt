@@ -106,6 +106,9 @@ fun MoviesScreen(
     onContinueWatchingPlay: (PlaybackHistory) -> Unit,
     onNavigate: (String) -> Unit,
     currentRoute: String,
+    initialGuideMode: Boolean = false,
+    wordmark: String? = null,
+    tagline: String? = null,
     viewModel: MoviesViewModel = hiltViewModel()
 ) {
     remember(viewModel) {
@@ -119,6 +122,12 @@ fun MoviesScreen(
     var pendingMovie by remember { mutableStateOf<Movie?>(null) }
     var pendingCategory by remember { mutableStateOf<Category?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    LaunchedEffect(initialGuideMode) {
+        if (initialGuideMode) {
+            viewModel.openVodGuide()
+        }
+    }
 
     HandleVodUserMessage(
         userMessage = uiState.userMessage,
@@ -178,8 +187,8 @@ fun MoviesScreen(
             showScreenHeader = false
         ) {
         AfterglowBrandStrip(
-            wordmark = "Movies",
-            tagline = "Your VOD library, sorted and ready.",
+            wordmark = wordmark ?: "Movies",
+            tagline = tagline ?: "Your VOD library, sorted and ready.",
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
         )
         if (uiState.isReorderMode && uiState.reorderCategory != null) {

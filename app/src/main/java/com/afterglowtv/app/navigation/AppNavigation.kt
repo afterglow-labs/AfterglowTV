@@ -14,11 +14,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Episode
 import com.afterglowtv.domain.model.LocalMediaItem
 import com.afterglowtv.domain.model.Movie
+import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.app.ui.screens.dashboard.DashboardScreen
 import com.afterglowtv.app.ui.screens.multiview.MultiViewScreen
@@ -67,6 +69,8 @@ object Routes {
     const val MOVIES = "movies"
     const val SERIES = "series"
     const val LOCAL_MEDIA = "local_media"
+    const val VOD_GUIDE = "vod_guide"
+    const val ADULT_GUIDE = "adult_guide"
     const val EPG = "epg"
     const val EPG_DESTINATION = "epg?categoryId={categoryId}&anchorTime={anchorTime}&favoritesOnly={favoritesOnly}"
     const val SETTINGS = "settings"
@@ -503,6 +507,59 @@ fun AppNavigation(mainActivity: MainActivity) {
                 },
                 onNavigate = { route -> tabNavigate(route) },
                 currentRoute = Routes.LOCAL_MEDIA
+            )
+        }
+
+        composable(Routes.VOD_GUIDE) {
+            MoviesScreen(
+                onMovieClick = { movie ->
+                    navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.VOD_GUIDE))
+                },
+                onContinueWatchingPlay = { history ->
+                    navController.navigateToPlayer(
+                        history.toPlayerNavigationRequest().copy(returnRoute = Routes.VOD_GUIDE)
+                    )
+                },
+                onNavigate = { route -> tabNavigate(route) },
+                currentRoute = Routes.VOD_GUIDE,
+                initialGuideMode = true,
+                wordmark = "VOD Guide",
+                tagline = "Provider VOD in guide-style rows."
+            )
+        }
+
+        composable(Routes.ADULT_GUIDE) {
+            com.afterglowtv.app.ui.screens.epg.FullEpgScreen(
+                currentRoute = Routes.ADULT_GUIDE,
+                initialCategoryId = VirtualCategoryIds.ADULT_GUIDE,
+                fixedCategoryId = VirtualCategoryIds.ADULT_GUIDE,
+                returnRouteOverride = Routes.ADULT_GUIDE,
+                titleRes = R.string.nav_adult_guide,
+                onPlayChannel = { channel, categoryId, isVirtual, combinedProfileId, returnRoute ->
+                    navController.navigateToPlayer(
+                        Routes.livePlayer(
+                            channel = channel,
+                            categoryId = categoryId,
+                            providerId = channel.providerId,
+                            isVirtual = isVirtual,
+                            combinedProfileId = combinedProfileId,
+                            returnRoute = returnRoute
+                        )
+                    )
+                },
+                onPlayArchive = { channel, _, categoryId, isVirtual, combinedProfileId, returnRoute ->
+                    navController.navigateToPlayer(
+                        Routes.livePlayer(
+                            channel = channel,
+                            categoryId = categoryId,
+                            providerId = channel.providerId,
+                            isVirtual = isVirtual,
+                            combinedProfileId = combinedProfileId,
+                            returnRoute = returnRoute
+                        )
+                    )
+                },
+                onNavigate = { route -> tabNavigate(route) }
             )
         }
 

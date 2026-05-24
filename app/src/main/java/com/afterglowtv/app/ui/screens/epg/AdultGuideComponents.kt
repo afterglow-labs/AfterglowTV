@@ -5,11 +5,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -88,7 +86,7 @@ internal fun AdultGuideSurface(
                 .width(220.dp)
                 .fillMaxHeight()
         )
-        AdultGuideChannelGrid(
+        AdultGuideChannelList(
             category = selectedCategory,
             favoriteChannelIds = favoriteChannelIds,
             hasMoreChannels = hasMoreChannels,
@@ -185,7 +183,7 @@ private fun AdultGuideCategoryButton(
 }
 
 @Composable
-private fun AdultGuideChannelGrid(
+private fun AdultGuideChannelList(
     category: AdultGuideCategory,
     favoriteChannelIds: Set<Long>,
     hasMoreChannels: Boolean,
@@ -209,89 +207,69 @@ private fun AdultGuideChannelGrid(
         return true
     }
 
-    BoxWithConstraints(modifier = modifier) {
-        val columns = when {
-            maxWidth < 620.dp -> 2
-            maxWidth < 900.dp -> 3
-            maxWidth < 1180.dp -> 4
-            else -> 5
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .onPreviewKeyEvent { event ->
+                val nativeEvent = event.nativeKeyEvent
+                if (nativeEvent.action != KeyEvent.ACTION_DOWN) {
+                    return@onPreviewKeyEvent false
+                }
+                when (nativeEvent.keyCode) {
+                    KeyEvent.KEYCODE_MOVE_HOME,
+                    KeyEvent.KEYCODE_PAGE_UP -> jumpToGuideToolbar()
+                    KeyEvent.KEYCODE_DPAD_UP -> {
+                        nativeEvent.repeatCount >= 6 &&
+                            listState.firstVisibleItemIndex > 0 &&
+                            jumpToGuideToolbar()
+                    }
+                    else -> false
+                }
+            },
+        state = listState,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 18.dp)
+    ) {
+        item(key = "adult-guide-header:${category.key}") {
+            AdultGuideGridHeader(category = category)
         }
-        val rows = remember(category.channels, columns) { category.channels.chunked(columns) }
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .onPreviewKeyEvent { event ->
-                    val nativeEvent = event.nativeKeyEvent
-                    if (nativeEvent.action != KeyEvent.ACTION_DOWN) {
-                        return@onPreviewKeyEvent false
-                    }
-                    when (nativeEvent.keyCode) {
-                        KeyEvent.KEYCODE_MOVE_HOME,
-                        KeyEvent.KEYCODE_PAGE_UP -> jumpToGuideToolbar()
-                        KeyEvent.KEYCODE_DPAD_UP -> {
-                            nativeEvent.repeatCount >= 6 &&
-                                listState.firstVisibleItemIndex > 0 &&
-                                jumpToGuideToolbar()
-                        }
-                        else -> false
-                    }
-                },
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(bottom = 18.dp)
-        ) {
-            item(key = "adult-guide-header:${category.key}") {
-                AdultGuideGridHeader(category = category)
-            }
-            itemsIndexed(rows, key = { index, row -> "adult-row:${category.key}:$index:${row.firstOrNull()?.id ?: 0L}" }) { rowIndex, row ->
-                if (hasMoreChannels && rowIndex >= rows.lastIndex - 2) {
-                    LaunchedEffect(category.channels.size, rowIndex) {
-                        onRequestMoreChannels()
-                    }
+        itemsIndexed(
+            items = category.channels,
+            key = { index, channel -> "adult-row:${category.key}:$index:${channel.id}" }
+        ) { rowIndex, channel ->
+            if (hasMoreChannels && rowIndex >= category.channels.lastIndex - 8) {
+                LaunchedEffect(category.channels.size, rowIndex) {
+                    onRequestMoreChannels()
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+            }
+            AdultGuideChannelCard(
+                channel = channel,
+                isFavorite = channel.id in favoriteChannelIds,
+                isLocked = isChannelLocked(channel),
+                onClick = { onChannelClick(channel) },
+                onFocused = { onChannelFocused(channel, rowIndex == 0) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(78.dp)
+            )
+        }
+        if (hasMoreChannels) {
+            item(key = "adult-guide-load-more:${category.key}") {
+                LaunchedEffect(category.channels.size) {
+                    onRequestMoreChannels()
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                        .background(SurfaceElevated, RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    row.forEach { channel ->
-                        AdultGuideChannelCard(
-                            channel = channel,
-                            isFavorite = channel.id in favoriteChannelIds,
-                            isLocked = isChannelLocked(channel),
-                            onClick = { onChannelClick(channel) },
-                            onFocused = { onChannelFocused(channel, rowIndex == 0) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(112.dp)
-                        )
-                    }
-                    repeat(columns - row.size) {
-                        Spacer(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(112.dp)
-                        )
-                    }
-                }
-            }
-            if (hasMoreChannels) {
-                item(key = "adult-guide-load-more:${category.key}") {
-                    LaunchedEffect(category.channels.size) {
-                        onRequestMoreChannels()
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp)
-                            .background(SurfaceElevated, RoundedCornerShape(8.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Loading more channels...",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = OnSurfaceDim
-                        )
-                    }
+                    Text(
+                        text = "Loading more channels...",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = OnSurfaceDim
+                    )
                 }
             }
         }
@@ -368,7 +346,7 @@ private fun AdultGuideChannelCard(
                 channelName = channel.name,
                 logoUrl = channel.logoUrl,
                 modifier = Modifier
-                    .width(76.dp)
+                    .width(64.dp)
                     .fillMaxHeight(),
                 shape = RoundedCornerShape(7.dp)
             )

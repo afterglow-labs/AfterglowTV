@@ -8,7 +8,11 @@
     <string name="nav_movies">Movies</string>
     <string name="nav_series">Series</string>
     <string name="nav_local_media">Local Media</string>
+    <string name="nav_personal_guide">Personal Guide</string>
     <string name="nav_epg">Guide</string>
+    <string name="nav_iptv_guide">IPTV Guide</string>
+    <string name="nav_vod_guide">VOD Guide</string>
+    <string name="nav_adult_guide">Adult Guide</string>
     <string name="nav_settings">Settings</string>
 
     
@@ -403,6 +407,9 @@
     <string name="settings_guide_no_data_show_channel_text">Show Text In Empty Guide Blocks</string>
     <string name="settings_guide_no_data_show_channel_text_on">Show channel name and a no-guide description.</string>
     <string name="settings_guide_no_data_show_channel_text_off">Leave empty guide blocks blank for faster browsing.</string>
+    <string name="settings_show_adult_guide_tab">Show Adult Guide Tab</string>
+    <string name="settings_show_adult_guide_tab_on">Adult Guide appears in the main navigation.</string>
+    <string name="settings_show_adult_guide_tab_off">Adult Guide is hidden from the main navigation.</string>
     <string name="settings_time_format">Time Format</string>
     <string name="settings_select_time_format">Select time format</string>
     <string name="settings_time_format_system">System Default</string>
@@ -1159,6 +1166,8 @@
     <string name="player_diagnostics_section_recovery">Recovery</string>
     <string name="player_no_guide_data">No guide data</string>
     <string name="epg_loading">Loading TV guide...</string>
+    <string name="epg_loading_channels">Loading channels...</string>
+    <string name="epg_loading_channel_progress">Loaded %1$d / %2$d channels</string>
     <string name="epg_error">Unable to load the TV guide right now.</string>
     <string name="epg_no_provider">Add or activate a provider to view the TV guide.</string>
     <string name="epg_no_schedule">No schedule data available</string>
