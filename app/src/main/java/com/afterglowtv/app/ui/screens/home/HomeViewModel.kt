@@ -7,6 +7,8 @@ import com.afterglowtv.app.player.LivePreviewHandoffManager
 import com.afterglowtv.app.tvinput.TvInputChannelSyncManager
 import com.afterglowtv.app.ui.model.AdultGuideCategory
 import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
+import com.afterglowtv.app.ui.model.adultGuideCategoryId
+import com.afterglowtv.app.ui.model.adultGuidePlaylistFingerprint
 import com.afterglowtv.app.ui.screens.multiview.MultiViewManager
 import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
@@ -137,7 +139,6 @@ class HomeViewModel @Inject constructor(
         const val CHANNEL_PAGE_SIZE = 200
         const val CHANNEL_SEARCH_PAGE_SIZE = 300
         const val LOAD_MORE_THRESHOLD = 5
-        const val ADULT_GUIDE_CATEGORY_ID_BASE = -10_000_000L
     }
 
     private val appContext = application
@@ -2062,16 +2063,6 @@ class HomeViewModel @Inject constructor(
             )
         }
     }
-
-    private fun adultGuidePlaylistFingerprint(providerId: Long, lastSyncedAt: Long, channelCount: Int): String =
-        "provider:$providerId:live:${lastSyncedAt.coerceAtLeast(0L)}:${channelCount.coerceAtLeast(0)}"
-
-    private fun adultGuideCategoryId(key: String): Long =
-        if (key == AdultGuideCategoryBuilder.ALL_CATEGORY_KEY) {
-            VirtualCategoryIds.ADULT_GUIDE
-        } else {
-            ADULT_GUIDE_CATEGORY_ID_BASE - (key.hashCode().toLong() and 0x7fffffffL)
-        }
 
     private fun currentCombinedProviderIds(): List<Long> =
         _uiState.value.currentCombinedProfileMembers

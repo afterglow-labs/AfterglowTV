@@ -3,7 +3,12 @@
 package com.afterglowtv.app.ui.screens.player
 
 import androidx.lifecycle.viewModelScope
+import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
+import com.afterglowtv.app.ui.model.adultGuideCachedChannelIdsForCategory
+import com.afterglowtv.app.ui.model.adultGuideCategoryId
+import com.afterglowtv.app.ui.model.adultGuidePlaylistFingerprint
 import com.afterglowtv.app.ui.model.isAdultGuideChannel
+import com.afterglowtv.app.ui.model.isAdultGuideGeneratedCategoryId
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.Channel
@@ -15,6 +20,7 @@ import com.afterglowtv.domain.repository.ChannelRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -53,7 +59,7 @@ internal fun PlayerViewModel.observeCombinedLivePlaylist(
             .flatMapLatest { ids -> loadLiveChannelsByOrderedIds(ids, currentCombinedSourceFilterProviderId) }
     }
 
-    categoryId == VirtualCategoryIds.ADULT_GUIDE -> {
+    categoryId == VirtualCategoryIds.ADULT_GUIDE || isAdultGuideGeneratedCategoryId(categoryId) -> {
         combinedM3uRepository.getCombinedCategories(profileId).flatMapLatest { combinedCategories ->
             combinedCategoriesById = combinedCategories.associateBy { it.category.id }
             val categoriesById = combinedCategories.associate { it.category.id to it.category }
@@ -62,10 +68,15 @@ internal fun PlayerViewModel.observeCombinedLivePlaylist(
                 flowOf(emptyList())
             } else {
                 combine(flows) { arrays ->
-                    arrays.toList()
+                    val adultChannels = arrays.toList()
                         .flatMap { it }
                         .distinctBy { channel -> channel.providerId to channel.id }
                         .filter { channel -> isAdultGuideChannel(channel, channel.categoryId?.let(categoriesById::get)) }
+                    adultGuideChannelsForPlaybackCategory(
+                        channels = adultChannels,
+                        providerCategories = combinedCategories.map { it.category },
+                        categoryId = categoryId
+                    )
                 }.map(::applyCombinedSourceProviderFilter)
             }
         }
@@ -98,6 +109,63 @@ internal fun PlayerViewModel.observeCombinedLivePlaylist(
             }
         }
     }
+}
+
+internal fun adultGuideChannelsForPlaybackCategory(
+    channels: List<Channel>,
+    providerCategories: List<Category>,
+    categoryId: Long
+): List<Channel> {
+    val categoriesById = providerCategories.associateBy(Category::id)
+    val adultChannels = channels
+        .filter { channel -> isAdultGuideChannel(channel, channel.categoryId?.let(categoriesById::get)) }
+        .distinctBy(Channel::id)
+    if (categoryId == VirtualCategoryIds.ADULT_GUIDE) return adultChannels
+    if (!isAdultGuideGeneratedCategoryId(categoryId)) return emptyList()
+
+    return AdultGuideCategoryBuilder.build(
+        channels = adultChannels,
+        providerCategories = providerCategories,
+        includeAllCategory = false
+    ).firstOrNull { category -> adultGuideCategoryId(category.key) == categoryId }
+        ?.channels
+        .orEmpty()
+}
+
+internal fun PlayerViewModel.observeAdultGuideCachedPlaylist(
+    providerId: Long,
+    categoryId: Long
+): Flow<List<Channel>> {
+    if (categoryId != VirtualCategoryIds.ADULT_GUIDE && !isAdultGuideGeneratedCategoryId(categoryId)) {
+        return flowOf(emptyList())
+    }
+
+    val fingerprintFlow = combine(
+        providerRepository.getProviders(),
+        channelRepository.getChannelCount(providerId)
+    ) { providers, channelCount ->
+        val provider = providers.firstOrNull { it.id == providerId }
+        adultGuidePlaylistFingerprint(
+            providerId = providerId,
+            lastSyncedAt = provider?.lastSyncedAt ?: 0L,
+            channelCount = channelCount
+        )
+    }.distinctUntilChanged()
+
+    return fingerprintFlow
+        .flatMapLatest { playlistFingerprint ->
+            adultGuideCacheRepository.observeProviderCache(providerId, playlistFingerprint)
+        }
+        .flatMapLatest { cache ->
+            val ids = adultGuideCachedChannelIdsForCategory(cache, categoryId)
+            if (ids.isNullOrEmpty()) {
+                flowOf(emptyList())
+            } else {
+                channelRepository.getChannelsByIds(ids).map { channels ->
+                    channels.orderedByRequestedRawIds(ids)
+                }
+            }
+        }
 }
 
 internal fun PlayerViewModel.observeRecentChannels() {
@@ -247,16 +315,8 @@ internal fun PlayerViewModel.loadPlaylist(
                             unsorted.orderedByRequestedRawIds(ids)
                         }
                     }
-            } else if (categoryId == VirtualCategoryIds.ADULT_GUIDE) {
-                combine(
-                    channelRepository.getChannels(providerId),
-                    channelRepository.getCategories(providerId)
-                ) { channels, categories ->
-                    val categoriesById = categories.associateBy(Category::id)
-                    channels.filter { channel ->
-                        isAdultGuideChannel(channel, channel.categoryId?.let(categoriesById::get))
-                    }
-                }
+            } else if (categoryId == VirtualCategoryIds.ADULT_GUIDE || isAdultGuideGeneratedCategoryId(categoryId)) {
+                observeAdultGuideCachedPlaylist(providerId, categoryId)
             } else {
                 val groupId = if (categoryId < 0) -categoryId else categoryId
                 favoriteRepository.getFavoritesByGroup(groupId)
