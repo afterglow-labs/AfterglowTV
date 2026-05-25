@@ -560,37 +560,24 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
 
         composable(Routes.ADULT_GUIDE) {
-            com.afterglowtv.app.ui.screens.epg.FullEpgScreen(
+            HomeScreen(
+                onChannelClick = { channel, _, provider, combinedProfileId, combinedSourceFilterProviderId ->
+                    navController.navigateToPlayer(
+                        Routes.livePlayer(
+                            channel = channel,
+                            categoryId = VirtualCategoryIds.ADULT_GUIDE,
+                            providerId = provider?.id ?: channel.providerId,
+                            isVirtual = true,
+                            combinedProfileId = combinedProfileId,
+                            combinedSourceFilterProviderId = combinedSourceFilterProviderId,
+                            returnRoute = Routes.ADULT_GUIDE
+                        )
+                    )
+                },
+                onNavigate = { route -> tabNavigate(route) },
                 currentRoute = Routes.ADULT_GUIDE,
-                initialCategoryId = VirtualCategoryIds.ADULT_GUIDE,
-                fixedCategoryId = VirtualCategoryIds.ADULT_GUIDE,
-                returnRouteOverride = Routes.ADULT_GUIDE,
-                titleRes = R.string.nav_adult_guide,
-                onPlayChannel = { channel, categoryId, isVirtual, combinedProfileId, returnRoute ->
-                    navController.navigateToPlayer(
-                        Routes.livePlayer(
-                            channel = channel,
-                            categoryId = categoryId,
-                            providerId = channel.providerId,
-                            isVirtual = isVirtual,
-                            combinedProfileId = combinedProfileId,
-                            returnRoute = returnRoute
-                        )
-                    )
-                },
-                onPlayArchive = { channel, _, categoryId, isVirtual, combinedProfileId, returnRoute ->
-                    navController.navigateToPlayer(
-                        Routes.livePlayer(
-                            channel = channel,
-                            categoryId = categoryId,
-                            providerId = channel.providerId,
-                            isVirtual = isVirtual,
-                            combinedProfileId = combinedProfileId,
-                            returnRoute = returnRoute
-                        )
-                    )
-                },
-                onNavigate = { route -> tabNavigate(route) }
+                adultGuideMode = true,
+                titleRes = R.string.nav_adult_guide
             )
         }
 

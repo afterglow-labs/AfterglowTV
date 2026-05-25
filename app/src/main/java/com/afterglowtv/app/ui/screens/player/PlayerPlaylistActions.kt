@@ -3,6 +3,7 @@
 package com.afterglowtv.app.ui.screens.player
 
 import androidx.lifecycle.viewModelScope
+import com.afterglowtv.app.ui.model.isAdultGuideChannel
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.Channel
@@ -50,6 +51,24 @@ internal fun PlayerViewModel.observeCombinedLivePlaylist(
             .flatMapLatest { providerIds -> observeLiveFavorites(effectiveCombinedProviderIds(providerIds)) }
             .map { favorites -> favorites.sortedBy { it.position }.map { it.contentId } }
             .flatMapLatest { ids -> loadLiveChannelsByOrderedIds(ids, currentCombinedSourceFilterProviderId) }
+    }
+
+    categoryId == VirtualCategoryIds.ADULT_GUIDE -> {
+        combinedM3uRepository.getCombinedCategories(profileId).flatMapLatest { combinedCategories ->
+            combinedCategoriesById = combinedCategories.associateBy { it.category.id }
+            val categoriesById = combinedCategories.associate { it.category.id to it.category }
+            val flows = combinedCategories.map { combinedM3uRepository.getCombinedChannels(profileId, it) }
+            if (flows.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                combine(flows) { arrays ->
+                    arrays.toList()
+                        .flatMap { it }
+                        .distinctBy { channel -> channel.providerId to channel.id }
+                        .filter { channel -> isAdultGuideChannel(channel, channel.categoryId?.let(categoriesById::get)) }
+                }.map(::applyCombinedSourceProviderFilter)
+            }
+        }
     }
 
     categoryId < 0L -> {
@@ -228,6 +247,16 @@ internal fun PlayerViewModel.loadPlaylist(
                             unsorted.orderedByRequestedRawIds(ids)
                         }
                     }
+            } else if (categoryId == VirtualCategoryIds.ADULT_GUIDE) {
+                combine(
+                    channelRepository.getChannels(providerId),
+                    channelRepository.getCategories(providerId)
+                ) { channels, categories ->
+                    val categoriesById = categories.associateBy(Category::id)
+                    channels.filter { channel ->
+                        isAdultGuideChannel(channel, channel.categoryId?.let(categoriesById::get))
+                    }
+                }
             } else {
                 val groupId = if (categoryId < 0) -categoryId else categoryId
                 favoriteRepository.getFavoritesByGroup(groupId)

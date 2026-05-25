@@ -478,6 +478,7 @@ fun FullEpgScreen(
                     } else {
                         0
                     }
+                    val adultSortBatchSize = uiState.adultGuideSortBatchSize
                     GuideNowProvider {
                         GuideHeroSection(
                             uiState = uiState,
@@ -497,7 +498,7 @@ fun FullEpgScreen(
                         manualSortLabel = if (uiState.isAdultGuideCategorizing) {
                             "Sorting..."
                         } else if (adultSortRemaining > 0) {
-                            "Sort next ${adultSortRemaining.coerceAtMost(200)}"
+                            "Sort next ${adultSortRemaining.coerceAtMost(adultSortBatchSize)}"
                         } else {
                             null
                         },
@@ -610,11 +611,11 @@ fun FullEpgScreen(
                                 GuideMessageState(
                                     modifier = Modifier.weight(1f),
                                     title = "XXX Guide is ready",
-                                    subtitle = "Press Sort next 200 to categorize channels in small chunks.",
+                                    subtitle = "Press Sort next $adultSortBatchSize to categorize channels in small chunks.",
                                     actionLabel = if (uiState.isAdultGuideCategorizing) {
                                         "Sorting..."
                                     } else {
-                                        "Sort next ${adultSortRemaining.coerceAtMost(200)}"
+                                        "Sort next ${adultSortRemaining.coerceAtMost(adultSortBatchSize)}"
                                     },
                                     onAction = if (uiState.isAdultGuideCategorizing) {
                                         {}
