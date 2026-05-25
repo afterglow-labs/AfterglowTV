@@ -33,6 +33,8 @@
     <string name="home_incorrect_pin">Incorrect PIN</string>
     <string name="home_loading_categories">Loading categories...</string>
     <string name="home_loading_channels">Loading channels...</string>
+    <string name="home_adult_guide_resync">Resync</string>
+    <string name="home_adult_guide_syncing">Syncing...</string>
     <string name="home_categories_title">Categories</string>
     <string name="home_search_categories">Search categories...</string>
     <string name="home_quick_filters_title">Quick filters</string>

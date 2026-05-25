@@ -51,9 +51,12 @@ import com.afterglowtv.data.local.entity.*
         LocalMediaLibraryEntity::class,
         LocalMediaItemEntity::class,
         LocalMediaChannelEntity::class,
-        LocalMediaProgramEntity::class
+        LocalMediaProgramEntity::class,
+        AdultGuideCacheMetaEntity::class,
+        AdultGuideCacheCategoryEntity::class,
+        AdultGuideCacheCategoryChannelEntity::class
     ],
-    version = 54,
+    version = 55,
     exportSchema = true   // ← was false; schema JSON now tracked in version control
 )
 @TypeConverters(RoomEnumConverters::class)
@@ -95,6 +98,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
     abstract fun localMediaItemDao(): LocalMediaItemDao
     abstract fun localMediaChannelDao(): LocalMediaChannelDao
     abstract fun localMediaProgramDao(): LocalMediaProgramDao
+    abstract fun adultGuideCacheDao(): AdultGuideCacheDao
 
     companion object {
         /**
@@ -2637,6 +2641,63 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     "local_media_items",
                     "local_media_channels",
                     "local_media_programs"
+                )
+            }
+        }
+
+        val MIGRATION_54_55 = object : Migration(54, 55) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS adult_guide_cache_meta (
+                        provider_id INTEGER NOT NULL,
+                        playlist_fingerprint TEXT NOT NULL,
+                        categorized_channel_count INTEGER NOT NULL,
+                        updated_at INTEGER NOT NULL,
+                        PRIMARY KEY(provider_id),
+                        FOREIGN KEY(provider_id) REFERENCES providers(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_adult_guide_cache_meta_provider_id ON adult_guide_cache_meta(provider_id)")
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS adult_guide_cache_categories (
+                        provider_id INTEGER NOT NULL,
+                        playlist_fingerprint TEXT NOT NULL,
+                        category_key TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        position INTEGER NOT NULL,
+                        channel_count INTEGER NOT NULL,
+                        PRIMARY KEY(provider_id, playlist_fingerprint, category_key),
+                        FOREIGN KEY(provider_id) REFERENCES providers(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_categories_provider_id_playlist_fingerprint_position ON adult_guide_cache_categories(provider_id, playlist_fingerprint, position)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_categories_provider_id ON adult_guide_cache_categories(provider_id)")
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS adult_guide_cache_category_channels (
+                        provider_id INTEGER NOT NULL,
+                        playlist_fingerprint TEXT NOT NULL,
+                        category_key TEXT NOT NULL,
+                        channel_id INTEGER NOT NULL,
+                        position INTEGER NOT NULL,
+                        PRIMARY KEY(provider_id, playlist_fingerprint, category_key, channel_id),
+                        FOREIGN KEY(provider_id) REFERENCES providers(id) ON UPDATE NO ACTION ON DELETE CASCADE,
+                        FOREIGN KEY(channel_id) REFERENCES channels(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_category_channels_provider_id_playlist_fingerprint_category_key_position ON adult_guide_cache_category_channels(provider_id, playlist_fingerprint, category_key, position)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_category_channels_provider_id ON adult_guide_cache_category_channels(provider_id)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_category_channels_channel_id ON adult_guide_cache_category_channels(channel_id)")
+                validateForeignKeys(
+                    database,
+                    "adult_guide_cache_meta",
+                    "adult_guide_cache_categories",
+                    "adult_guide_cache_category_channels"
                 )
             }
         }

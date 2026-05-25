@@ -956,6 +956,24 @@ fun HomeScreen(
                                         color = OnSurfaceDim,
                                         maxLines = 1
                                     )
+                                    if (adultGuideMode) {
+                                        TvButton(
+                                            onClick = { viewModel.resyncAdultGuideCache() },
+                                            enabled = !uiState.isAdultGuideCacheRefreshing && !isReorderMode,
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(
+                                                    if (uiState.isAdultGuideCacheRefreshing) {
+                                                        R.string.home_adult_guide_syncing
+                                                    } else {
+                                                        R.string.home_adult_guide_resync
+                                                    }
+                                                ),
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
+                                        }
+                                    }
                                 }
                             } else {
                                 ContentMetadataStrip(
