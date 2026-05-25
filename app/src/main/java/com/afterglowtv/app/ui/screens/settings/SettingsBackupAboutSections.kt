@@ -38,6 +38,33 @@ import com.afterglowtv.app.ui.theme.OnSurfaceDim
 import com.afterglowtv.app.ui.theme.Primary
 import com.afterglowtv.app.ui.theme.Secondary
 
+private const val DEVELOPER_MODE_TAP_THRESHOLD = 7
+
+internal data class DeveloperModeTapResult(
+    val tapCount: Int,
+    val showPasswordDialog: Boolean,
+    val targetDeveloperModeEnabled: Boolean? = null
+)
+
+internal fun nextDeveloperModeTapResult(
+    developerModeEnabled: Boolean,
+    currentTapCount: Int
+): DeveloperModeTapResult {
+    val nextTapCount = currentTapCount + 1
+    return if (nextTapCount >= DEVELOPER_MODE_TAP_THRESHOLD) {
+        DeveloperModeTapResult(
+            tapCount = 0,
+            showPasswordDialog = true,
+            targetDeveloperModeEnabled = developerModeStateAfterValidPassword(developerModeEnabled)
+        )
+    } else {
+        DeveloperModeTapResult(tapCount = nextTapCount, showPasswordDialog = false)
+    }
+}
+
+internal fun developerModeStateAfterValidPassword(currentDeveloperModeEnabled: Boolean): Boolean =
+    !currentDeveloperModeEnabled
+
 internal fun LazyListScope.settingsBackupSection(
     onCreateBackup: () -> Unit,
     onShareBackup: () -> Unit,
@@ -131,6 +158,7 @@ internal fun LazyListScope.settingsAboutSection(
     item {
         var developerTapCount by rememberSaveable { mutableStateOf(0) }
         var showDeveloperPasswordDialog by rememberSaveable { mutableStateOf(false) }
+        var pendingDeveloperModeEnabled by rememberSaveable { mutableStateOf<Boolean?>(null) }
         var developerPassword by rememberSaveable { mutableStateOf("") }
         var developerPasswordError by rememberSaveable { mutableStateOf(false) }
         val downloadStatus = uiState.appUpdate.downloadStatus
@@ -144,9 +172,11 @@ internal fun LazyListScope.settingsAboutSection(
             }
         }
         if (showDeveloperPasswordDialog) {
+            val disablingDeveloperMode = pendingDeveloperModeEnabled == false
             AlertDialog(
                 onDismissRequest = {
                     showDeveloperPasswordDialog = false
+                    pendingDeveloperModeEnabled = null
                     developerPassword = ""
                     developerPasswordError = false
                 },
@@ -154,7 +184,11 @@ internal fun LazyListScope.settingsAboutSection(
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            text = "Enter the unlock code.",
+                            text = if (disablingDeveloperMode) {
+                                "Enter the unlock code to disable Developer Mode."
+                            } else {
+                                "Enter the unlock code."
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = OnSurfaceDim
                         )
@@ -185,8 +219,12 @@ internal fun LazyListScope.settingsAboutSection(
                     TextButton(
                         onClick = {
                             if (developerPassword == "1337") {
-                                onSetDeveloperModeEnabled(true)
+                                onSetDeveloperModeEnabled(
+                                    pendingDeveloperModeEnabled
+                                        ?: developerModeStateAfterValidPassword(uiState.developerModeEnabled)
+                                )
                                 showDeveloperPasswordDialog = false
+                                pendingDeveloperModeEnabled = null
                                 developerPassword = ""
                                 developerPasswordError = false
                                 developerTapCount = 0
@@ -195,13 +233,14 @@ internal fun LazyListScope.settingsAboutSection(
                             }
                         }
                     ) {
-                        Text(text = "Unlock")
+                        Text(text = if (disablingDeveloperMode) "Disable" else "Unlock")
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = {
                             showDeveloperPasswordDialog = false
+                            pendingDeveloperModeEnabled = null
                             developerPassword = ""
                             developerPasswordError = false
                         }
@@ -221,10 +260,13 @@ internal fun LazyListScope.settingsAboutSection(
             label = stringResource(R.string.settings_app_version),
             value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
             onClick = {
-                if (uiState.developerModeEnabled) return@ClickableSettingsRow
-                developerTapCount += 1
-                if (developerTapCount >= 7) {
-                    developerTapCount = 0
+                val result = nextDeveloperModeTapResult(
+                    developerModeEnabled = uiState.developerModeEnabled,
+                    currentTapCount = developerTapCount
+                )
+                developerTapCount = result.tapCount
+                if (result.showPasswordDialog) {
+                    pendingDeveloperModeEnabled = result.targetDeveloperModeEnabled
                     showDeveloperPasswordDialog = true
                 }
             }

@@ -25,4 +25,10 @@ class DeveloperModeAdultGuideRepairTest {
         assertThat(shouldRepairAdultGuideTabVisibility(developerModeEnabled = false, showAdultGuideTab = false))
             .isFalse()
     }
+
+    @Test
+    fun `developer mode state controls adult guide tab visibility`() {
+        assertThat(adultGuideTabVisibilityForDeveloperMode(enabled = true)).isTrue()
+        assertThat(adultGuideTabVisibilityForDeveloperMode(enabled = false)).isFalse()
+    }
 }

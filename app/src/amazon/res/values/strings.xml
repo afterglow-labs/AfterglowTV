@@ -2,7 +2,7 @@
 <resources>
     <string name="nav_iptv_guide">TV Guide</string>
     <string name="nav_vod_guide">Video Guide</string>
-    <string name="nav_adult_guide">Guide</string>
+    <string name="nav_adult_guide">XXX Guide</string>
     <string name="welcome_tagline">Live and on-demand video for the living room</string>
 
     <string name="dashboard_provider_xtream">Server Login</string>
@@ -22,9 +22,9 @@
     <string name="settings_parental_subtitle">Manage selected categories with TV-friendly controls.</string>
     <string name="settings_m3u_vod_classification_title">Video Classification</string>
     <string name="settings_m3u_vod_classification_summary">Uses playlist and group-title rules to move matching entries into Movies. Refresh after changing this to rearrange content.</string>
-    <string name="settings_show_adult_guide_tab">Show Guide Tab</string>
-    <string name="settings_show_adult_guide_tab_on">Guide appears in the main navigation.</string>
-    <string name="settings_show_adult_guide_tab_off">Guide is hidden from the main navigation.</string>
+    <string name="settings_show_adult_guide_tab">Show XXX Guide Tab</string>
+    <string name="settings_show_adult_guide_tab_on">XXX Guide appears in the main navigation.</string>
+    <string name="settings_show_adult_guide_tab_off">XXX Guide is hidden from the main navigation.</string>
     <string name="settings_select_level">Select Protection Level</string>
     <string name="settings_level_off_subtitle">All categories remain visible.</string>
     <string name="settings_level_locked_subtitle">Selected categories stay visible and require a PIN to open.</string>

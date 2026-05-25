@@ -75,6 +75,8 @@ internal fun shouldRepairAdultGuideTabVisibility(
     showAdultGuideTab: Boolean?
 ): Boolean = developerModeEnabled && showAdultGuideTab != true
 
+internal fun adultGuideTabVisibilityForDeveloperMode(enabled: Boolean): Boolean = enabled
+
 @Serializable
 data class AdultGuideCategoryCache(
     val categorizedChannelCount: Int,
@@ -1509,9 +1511,7 @@ class PreferencesRepository @Inject constructor(
     suspend fun setDeveloperModeEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] = enabled
-            if (enabled) {
-                preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = true
-            }
+            preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = adultGuideTabVisibilityForDeveloperMode(enabled)
         }
     }
 

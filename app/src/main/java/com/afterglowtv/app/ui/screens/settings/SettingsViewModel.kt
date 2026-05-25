@@ -448,6 +448,7 @@ class SettingsViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     developerModeEnabled = enabled,
+                    showAdultGuideTab = enabled,
                     userMessage = if (enabled) "Developer Mode unlocked" else "Developer Mode disabled"
                 )
             }
