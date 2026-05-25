@@ -34,6 +34,7 @@ import com.afterglowtv.app.ui.components.shell.AppScreenScaffold
 import com.afterglowtv.app.ui.components.shell.VodActionChip
 import com.afterglowtv.app.ui.components.shell.VodActionChipRow
 import com.afterglowtv.app.ui.model.isAdultLocalMediaItem
+import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.domain.model.LocalMediaItem
 import com.afterglowtv.domain.model.LocalMediaKind
 import com.afterglowtv.domain.model.LocalMediaLibrary
@@ -57,6 +58,7 @@ enum class LocalMediaSection {
 data class LocalMediaUiState(
     val libraries: List<LocalMediaLibrary> = emptyList(),
     val selectedSection: LocalMediaSection = LocalMediaSection.ALL,
+    val developerModeEnabled: Boolean = false,
     val items: List<LocalMediaItem> = emptyList(),
     val totalItemCount: Int = 0,
     val isLoading: Boolean = true
@@ -64,19 +66,24 @@ data class LocalMediaUiState(
 
 @HiltViewModel
 class LocalMediaViewModel @Inject constructor(
-    localMediaRepository: LocalMediaRepository
+    localMediaRepository: LocalMediaRepository,
+    preferencesRepository: PreferencesRepository
 ) : ViewModel() {
     private val selectedSection = MutableStateFlow(LocalMediaSection.ALL)
 
     val uiState: StateFlow<LocalMediaUiState> = combine(
         localMediaRepository.observeLibraries(),
         localMediaRepository.observeItems(),
-        selectedSection
-    ) { libraries, items, section ->
+        selectedSection,
+        preferencesRepository.developerModeEnabled
+    ) { libraries, items, selectedSection, developerModeEnabled ->
+        val section = selectedSection.takeIf { it != LocalMediaSection.XXX || developerModeEnabled }
+            ?: LocalMediaSection.ALL
         LocalMediaUiState(
             libraries = libraries,
             selectedSection = section,
-            items = items.filter { item -> item.matchesSection(section) },
+            developerModeEnabled = developerModeEnabled,
+            items = visibleLocalMediaItems(items, section, developerModeEnabled),
             totalItemCount = items.size,
             isLoading = false
         )
@@ -174,7 +181,7 @@ private fun LocalMediaLibraryContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         VodActionChipRow(
-            actions = LocalMediaSection.entries.map { section ->
+            actions = visibleLocalMediaSections(uiState.developerModeEnabled).map { section ->
                 VodActionChip(
                     key = section.name,
                     label = stringResource(section.labelResId()),
@@ -264,6 +271,19 @@ private fun LocalMediaItem.matchesSection(section: LocalMediaSection): Boolean {
         LocalMediaSection.XXX -> adult
     }
 }
+
+internal fun visibleLocalMediaSections(developerModeEnabled: Boolean): List<LocalMediaSection> =
+    LocalMediaSection.entries.filter { developerModeEnabled || it != LocalMediaSection.XXX }
+
+internal fun visibleLocalMediaItems(
+    items: List<LocalMediaItem>,
+    section: LocalMediaSection,
+    developerModeEnabled: Boolean
+): List<LocalMediaItem> =
+    items.filter { item ->
+        val adult = isAdultLocalMediaItem(item)
+        (developerModeEnabled || !adult) && item.matchesSection(section)
+    }
 
 private fun LocalMediaSection.labelResId(): Int = when (this) {
     LocalMediaSection.ALL -> R.string.local_media_filter_all

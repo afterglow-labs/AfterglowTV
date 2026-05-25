@@ -75,6 +75,7 @@ internal data class SettingsPreferenceSnapshot(
     val showRecentChannelsCategory: Boolean,
     val liveTvCategoryFilters: List<String>,
     val liveTvQuickFilterVisibilityMode: LiveTvQuickFilterVisibilityMode,
+    val developerModeEnabled: Boolean,
     val showAdultGuideTab: Boolean,
     val liveChannelNumberingMode: ChannelNumberingMode,
     val liveChannelGroupingMode: LiveChannelGroupingMode,

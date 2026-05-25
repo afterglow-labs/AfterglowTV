@@ -6,8 +6,45 @@ import org.junit.Test
 class StartupRouteResolverTest {
     @Test
     fun `startup route uses configured destination without provider setup redirect`() {
-        assertThat(resolveStartupRoute(StartupDestination.HOME)).isEqualTo(Routes.HOME)
-        assertThat(resolveStartupRoute(StartupDestination.IPTV_GUIDE)).isEqualTo(Routes.EPG)
-        assertThat(resolveStartupRoute(StartupDestination.XXX_GUIDE)).isEqualTo(Routes.ADULT_GUIDE)
+        assertThat(resolveStartupRoute(StartupDestination.HOME, developerModeEnabled = false)).isEqualTo(Routes.HOME)
+        assertThat(resolveStartupRoute(StartupDestination.IPTV_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.EPG)
+        assertThat(resolveStartupRoute(StartupDestination.VOD_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.VOD_GUIDE)
+        assertThat(resolveStartupRoute(StartupDestination.PERSONAL_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.LOCAL_MEDIA)
+        assertThat(resolveStartupRoute(StartupDestination.XXX_GUIDE, developerModeEnabled = true)).isEqualTo(Routes.ADULT_GUIDE)
+    }
+
+    @Test
+    fun `startup route falls back home for xxx guide when developer mode is locked`() {
+        assertThat(resolveStartupRoute(StartupDestination.XXX_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.HOME)
+    }
+
+    @Test
+    fun `startup destination list hides only xxx guide while developer mode is locked`() {
+        assertThat(StartupDestination.visibleEntries(developerModeEnabled = false)).doesNotContain(
+            StartupDestination.XXX_GUIDE
+        )
+        assertThat(StartupDestination.visibleEntries(developerModeEnabled = false)).containsAtLeast(
+            StartupDestination.VOD_GUIDE,
+            StartupDestination.PERSONAL_GUIDE
+        )
+        assertThat(StartupDestination.visibleEntries(developerModeEnabled = true)).contains(
+            StartupDestination.XXX_GUIDE
+        )
+    }
+
+    @Test
+    fun `hidden startup destination displays as home while developer mode is locked`() {
+        assertThat(
+            StartupDestination.visibleOrDefault(
+                destination = StartupDestination.XXX_GUIDE,
+                developerModeEnabled = false
+            )
+        ).isEqualTo(StartupDestination.HOME)
+        assertThat(
+            StartupDestination.visibleOrDefault(
+                destination = StartupDestination.XXX_GUIDE,
+                developerModeEnabled = true
+            )
+        ).isEqualTo(StartupDestination.XXX_GUIDE)
     }
 }

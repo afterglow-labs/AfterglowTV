@@ -308,6 +308,17 @@ class SeriesViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            preferencesRepository.developerModeEnabled.collectLatest { enabled ->
+                _uiState.update {
+                    it.copy(
+                        developerModeEnabled = enabled,
+                        showAdultVodGuide = if (enabled) it.showAdultVodGuide else false
+                    )
+                }
+            }
+        }
+
+        viewModelScope.launch {
             providerRepository.getActiveProvider()
                 .filterNotNull()
                 .flatMapLatest { provider ->
@@ -556,6 +567,7 @@ class SeriesViewModel @Inject constructor(
     }
 
     fun openAdultVodGuide() {
+        if (!_uiState.value.developerModeEnabled) return
         openVodGuide(adultOnly = true)
     }
 
@@ -1393,6 +1405,7 @@ data class SeriesUiState(
     val selectedLibraryFilterType: LibraryFilterType = LibraryFilterType.ALL,
     val selectedLibrarySortBy: LibrarySortBy = LibrarySortBy.LIBRARY,
     val vodViewMode: VodViewMode = VodViewMode.SHELVES,
+    val developerModeEnabled: Boolean = false,
     val showAdultVodGuide: Boolean = false,
     val vodInfiniteScroll: Boolean = true,
     val continueWatching: List<PlaybackHistory> = emptyList(),

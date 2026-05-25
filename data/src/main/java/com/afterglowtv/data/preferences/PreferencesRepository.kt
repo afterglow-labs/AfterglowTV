@@ -155,6 +155,7 @@ class PreferencesRepository @Inject constructor(
         val SHOW_RECENT_CHANNELS_CATEGORY = booleanPreferencesKey("show_recent_channels_category")
         val LIVE_TV_CATEGORY_FILTERS = stringPreferencesKey("live_tv_category_filters")
         val LIVE_TV_QUICK_FILTER_VISIBILITY = stringPreferencesKey("live_tv_quick_filter_visibility")
+        val DEVELOPER_MODE_ENABLED = booleanPreferencesKey("developer_mode_enabled")
         val SHOW_ADULT_GUIDE_TAB = booleanPreferencesKey("show_adult_guide_tab")
         val ADULT_GUIDE_SORT_BATCH_SIZE = intPreferencesKey("adult_guide_sort_batch_size")
         val LIVE_CHANNEL_NUMBERING_MODE = stringPreferencesKey("live_channel_numbering_mode")
@@ -1452,6 +1453,16 @@ class PreferencesRepository @Inject constructor(
 
     val showAdultGuideTab: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] ?: true
+    }
+
+    val developerModeEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] ?: false
+    }
+
+    suspend fun setDeveloperModeEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] = enabled
+        }
     }
 
     suspend fun setShowAdultGuideTab(enabled: Boolean) {

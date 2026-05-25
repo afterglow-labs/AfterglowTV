@@ -74,6 +74,7 @@ internal fun observeSettingsPreferenceSnapshot(
             showRecentChannelsCategory = true,
             liveTvCategoryFilters = emptyList(),
             liveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.ALWAYS_VISIBLE,
+            developerModeEnabled = false,
             showAdultGuideTab = true,
             liveChannelNumberingMode = ChannelNumberingMode.GROUP,
             liveChannelGroupingMode = LiveChannelGroupingMode.RAW_VARIANTS,
@@ -181,6 +182,8 @@ internal fun observeSettingsPreferenceSnapshot(
         snapshot.copy(
             liveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.fromStorage(visibilityMode)
         )
+    }.combine(preferencesRepository.developerModeEnabled) { snapshot, developerModeEnabled ->
+        snapshot.copy(developerModeEnabled = developerModeEnabled)
     }.combine(preferencesRepository.showAdultGuideTab) { snapshot, showAdultGuideTab ->
         snapshot.copy(showAdultGuideTab = showAdultGuideTab)
     }.combine(preferencesRepository.liveChannelNumberingMode) { snapshot, liveChannelNumberingMode ->

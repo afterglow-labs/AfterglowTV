@@ -165,6 +165,7 @@ internal fun SettingsContentPane(
                 onDownloadLatestUpdate = viewModel::downloadLatestUpdate,
                 onSetAutoCheckAppUpdates = viewModel::setAutoCheckAppUpdates,
                 onSetAutoDownloadAppUpdates = viewModel::setAutoDownloadAppUpdates,
+                onSetDeveloperModeEnabled = viewModel::setDeveloperModeEnabled,
                 onRefreshDownloadState = viewModel::refreshDownloadState,
                 onViewCrashReport = onViewCrashReport,
                 onShareCrashReport = onShareCrashReport,

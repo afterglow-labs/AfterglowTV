@@ -18,6 +18,7 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
+import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.theme.OnBackground
@@ -56,7 +57,12 @@ internal fun LazyListScope.settingsBrowsingSection(
         )
         ClickableSettingsRow(
             label = stringResource(R.string.settings_startup_destination),
-            value = stringResource(uiState.startupDestination.labelResId),
+            value = stringResource(
+                StartupDestination.visibleOrDefault(
+                    destination = uiState.startupDestination,
+                    developerModeEnabled = uiState.developerModeEnabled
+                ).labelResId
+            ),
             onClick = { onShowStartupDestinationDialogChange(true) }
         )
         TvClickableSurface(
@@ -164,15 +170,17 @@ internal fun LazyListScope.settingsBrowsingSection(
             value = guideDefaultCategoryLabel,
             onClick = { onShowGuideDefaultCategoryDialogChange(true) }
         )
-        SwitchSettingsRow(
-            label = stringResource(R.string.settings_show_adult_guide_tab),
-            value = stringResource(
-                if (uiState.showAdultGuideTab) R.string.settings_show_adult_guide_tab_on
-                else R.string.settings_show_adult_guide_tab_off
-            ),
-            checked = uiState.showAdultGuideTab,
-            onCheckedChange = viewModel::setShowAdultGuideTab
-        )
+        if (uiState.developerModeEnabled) {
+            SwitchSettingsRow(
+                label = stringResource(R.string.settings_show_adult_guide_tab),
+                value = stringResource(
+                    if (uiState.showAdultGuideTab) R.string.settings_show_adult_guide_tab_on
+                    else R.string.settings_show_adult_guide_tab_off
+                ),
+                checked = uiState.showAdultGuideTab,
+                onCheckedChange = viewModel::setShowAdultGuideTab
+            )
+        }
         ClickableSettingsRow(
             label = stringResource(R.string.settings_time_format),
             value = timeFormatLabel,

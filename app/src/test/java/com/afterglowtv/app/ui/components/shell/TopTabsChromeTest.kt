@@ -7,7 +7,10 @@ class TopTabsChromeTest {
 
     @Test
     fun `program guide destinations are separate top level tabs`() {
-        val guideTabs = DefaultTopTabs.filter { tab ->
+        val guideTabs = defaultTopTabs(
+            developerModeEnabled = true,
+            showAdultGuideTab = true
+        ).filter { tab ->
             tab.label.contains("Guide", ignoreCase = true)
         }
 
@@ -26,8 +29,27 @@ class TopTabsChromeTest {
     }
 
     @Test
-    fun `adult guide tab can be hidden`() {
-        val guideTabs = defaultTopTabs(showAdultGuideTab = false).filter { tab ->
+    fun `adult guide tab is hidden until developer mode is unlocked`() {
+        val guideTabs = defaultTopTabs(
+            developerModeEnabled = false,
+            showAdultGuideTab = true
+        ).filter { tab ->
+            tab.label.contains("Guide", ignoreCase = true)
+        }
+
+        assertThat(guideTabs.map { it.id }).containsExactly(
+            "epg",
+            "vod_guide",
+            "local_media"
+        ).inOrder()
+    }
+
+    @Test
+    fun `developer mode still respects adult guide visibility preference`() {
+        val guideTabs = defaultTopTabs(
+            developerModeEnabled = true,
+            showAdultGuideTab = false
+        ).filter { tab ->
             tab.label.contains("Guide", ignoreCase = true)
         }
 

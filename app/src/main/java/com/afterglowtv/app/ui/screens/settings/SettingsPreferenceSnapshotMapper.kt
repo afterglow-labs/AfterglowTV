@@ -49,6 +49,7 @@ internal fun SettingsUiState.applyPreferenceSnapshot(snapshot: SettingsPreferenc
         showRecentChannelsCategory = snapshot.showRecentChannelsCategory,
         liveTvCategoryFilters = snapshot.liveTvCategoryFilters,
         liveTvQuickFilterVisibilityMode = snapshot.liveTvQuickFilterVisibilityMode,
+        developerModeEnabled = snapshot.developerModeEnabled,
         showAdultGuideTab = snapshot.showAdultGuideTab,
         liveChannelNumberingMode = snapshot.liveChannelNumberingMode,
         liveChannelGroupingMode = snapshot.liveChannelGroupingMode,

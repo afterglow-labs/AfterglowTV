@@ -96,6 +96,7 @@ import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.screens.vod.HandleVodUserMessage
 import com.afterglowtv.app.ui.screens.vod.ProtectedVodPinDialog
 import com.afterglowtv.app.ui.screens.vod.VodBrowseDefaults
+import com.afterglowtv.app.ui.screens.vod.canShowAdultVodGuideEntry
 import com.afterglowtv.app.ui.screens.vod.vodActiveFilterSortDetail
 import kotlinx.coroutines.delay
 
@@ -591,14 +592,16 @@ private fun SeriesVodContent(
 	                                onClick = onOpenVodGuide
 	                            )
 	                        )
-	                        add(
-	                            VodActionChip(
-	                                key = "xxx_vod_guide",
-	                                label = stringResource(R.string.xxx_vod_guide_title),
-	                                detail = stringResource(R.string.xxx_vod_guide_detail),
-	                                onClick = onOpenAdultVodGuide
+	                        if (canShowAdultVodGuideEntry(uiState.developerModeEnabled)) {
+	                            add(
+	                                VodActionChip(
+	                                    key = "xxx_vod_guide",
+	                                    label = stringResource(R.string.xxx_vod_guide_title),
+	                                    detail = stringResource(R.string.xxx_vod_guide_detail),
+	                                    onClick = onOpenAdultVodGuide
+	                                )
 	                            )
-	                        )
+	                        }
 	                        add(
 	                            VodActionChip(
 	                                key = "categories",
@@ -1061,15 +1064,17 @@ private fun SeriesVodGuideContent(
 	            ),
 	            subtitle = stringResource(R.string.vod_classic_results_count, uiState.selectedCategoryTotalCount),
 	            actions = buildList {
-	                add(
-	                    VodActionChip(
-	                        key = if (uiState.showAdultVodGuide) "vod_guide" else "xxx_vod_guide",
-	                        label = stringResource(
-	                            if (uiState.showAdultVodGuide) R.string.vod_guide_title else R.string.xxx_vod_guide_title
-	                        ),
-	                        onClick = if (uiState.showAdultVodGuide) onOpenVodGuide else onOpenAdultVodGuide
+	                if (uiState.showAdultVodGuide || canShowAdultVodGuideEntry(uiState.developerModeEnabled)) {
+	                    add(
+	                        VodActionChip(
+	                            key = if (uiState.showAdultVodGuide) "vod_guide" else "xxx_vod_guide",
+	                            label = stringResource(
+	                                if (uiState.showAdultVodGuide) R.string.vod_guide_title else R.string.xxx_vod_guide_title
+	                            ),
+	                            onClick = if (uiState.showAdultVodGuide) onOpenVodGuide else onOpenAdultVodGuide
+	                        )
 	                    )
-	                )
+	                }
 	                add(
 	                    VodActionChip(
 	                        key = "search_toggle",

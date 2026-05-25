@@ -442,6 +442,18 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setDeveloperModeEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setDeveloperModeEnabled(enabled)
+            _uiState.update {
+                it.copy(
+                    developerModeEnabled = enabled,
+                    userMessage = if (enabled) "Developer Mode unlocked" else "Developer Mode disabled"
+                )
+            }
+        }
+    }
+
     fun setLiveTvQuickFilterVisibilityMode(mode: LiveTvQuickFilterVisibilityMode) {
         viewModelScope.launch {
             preferencesRepository.setLiveTvQuickFilterVisibility(mode.storageValue)

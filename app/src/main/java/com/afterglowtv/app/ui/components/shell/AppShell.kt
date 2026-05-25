@@ -813,7 +813,7 @@ private fun findActiveDestinationItem(
         .maxByOrNull { it.route.length }
         ?: items.firstOrNull { it.route == currentRoute }
 
-private fun buildDestinationItems(showAdultGuideTab: Boolean = true): List<DestinationItem> = buildList {
+private fun buildDestinationItems(showAdultGuideTab: Boolean = false): List<DestinationItem> = buildList {
     add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))
     add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
     add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
