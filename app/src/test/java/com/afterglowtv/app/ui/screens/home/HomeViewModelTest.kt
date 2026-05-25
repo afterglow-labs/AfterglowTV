@@ -77,6 +77,7 @@ class HomeViewModelTest {
         whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(null))
         whenever(combinedM3uRepository.getActiveLiveSource()).thenReturn(flowOf(null))
         whenever(combinedM3uRepository.getActiveLiveSourceOptions()).thenReturn(flowOf(emptyList()))
+        whenever(preferencesRepository.activeAdultLiveSource).thenReturn(flowOf(null))
         whenever(preferencesRepository.parentalControlLevel).thenReturn(flowOf(0))
         whenever(favoriteRepository.getFavorites(any<Long>(), eq(ContentType.LIVE))).thenReturn(flowOf(emptyList()))
         whenever(favoriteRepository.getFavorites(any<List<Long>>(), eq(ContentType.LIVE))).thenReturn(flowOf(emptyList()))

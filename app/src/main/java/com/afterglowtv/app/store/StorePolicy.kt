@@ -2,9 +2,15 @@ package com.afterglowtv.app.store
 
 import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderSourceSlot
 
-private const val AMAZON_FALLBACK_PLAYLIST_URL =
-    "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8"
+data class HiddenFallbackSourceSpec(
+    val assetPath: String,
+    val providerFileName: String,
+    val providerName: String,
+    val sourceSlot: ProviderSourceSlot,
+    val m3uVodClassificationEnabled: Boolean
+)
 
 data class StorePolicySnapshot(
     val amazonReviewBuild: Boolean,
@@ -12,14 +18,17 @@ data class StorePolicySnapshot(
     val showAdultSurfaces: Boolean,
     val showWelcomeRoute: Boolean,
     val enableHiddenFallbackSource: Boolean,
-    val hiddenFallbackPlaylistUrl: String?,
+    val hiddenFallbackSources: List<HiddenFallbackSourceSpec>,
     val allowXtreamPlaylistAutoDetection: Boolean,
     val enableSideloadUpdates: Boolean
 ) {
     fun isHiddenFallbackProvider(provider: Provider): Boolean {
-        val fallbackUrl = hiddenFallbackPlaylistUrl?.takeIf { it.isNotBlank() } ?: return false
         return enableHiddenFallbackSource &&
-            (provider.m3uUrl == fallbackUrl || provider.serverUrl == fallbackUrl)
+            hiddenFallbackSources.any { spec ->
+                val hiddenPathMarker = "/$HIDDEN_FALLBACK_DIRECTORY/${spec.providerFileName}"
+                provider.m3uUrl.isHiddenFallbackUrl(spec.providerFileName, hiddenPathMarker) ||
+                    provider.serverUrl.isHiddenFallbackUrl(spec.providerFileName, hiddenPathMarker)
+            }
     }
 
     fun isUserVisibleProvider(provider: Provider): Boolean =
@@ -27,17 +36,22 @@ data class StorePolicySnapshot(
 
     fun shouldEnsureHiddenFallback(providers: List<Provider>): Boolean =
         enableHiddenFallbackSource &&
-            !hiddenFallbackPlaylistUrl.isNullOrBlank() &&
+            hiddenFallbackSources.isNotEmpty() &&
             providers.none(::isUserVisibleProvider)
 
+    private fun String.isHiddenFallbackUrl(fileName: String, hiddenPathMarker: String): Boolean =
+        contains(hiddenPathMarker) || endsWith("/$fileName") || this == fileName
+
     companion object {
+        const val HIDDEN_FALLBACK_DIRECTORY = "hidden_fallback"
+
         val standard = StorePolicySnapshot(
             amazonReviewBuild = false,
             showAdvancedSourceTypes = true,
             showAdultSurfaces = true,
             showWelcomeRoute = true,
             enableHiddenFallbackSource = false,
-            hiddenFallbackPlaylistUrl = null,
+            hiddenFallbackSources = emptyList(),
             allowXtreamPlaylistAutoDetection = true,
             enableSideloadUpdates = true
         )
@@ -48,7 +62,22 @@ data class StorePolicySnapshot(
             showAdultSurfaces = false,
             showWelcomeRoute = false,
             enableHiddenFallbackSource = true,
-            hiddenFallbackPlaylistUrl = AMAZON_FALLBACK_PLAYLIST_URL,
+            hiddenFallbackSources = listOf(
+                HiddenFallbackSourceSpec(
+                    assetPath = "amazon_fallback/playlist_usa.m3u8",
+                    providerFileName = "afterglow_amazon_live.m3u8",
+                    providerName = "Afterglow TV",
+                    sourceSlot = ProviderSourceSlot.LIVE,
+                    m3uVodClassificationEnabled = false
+                ),
+                HiddenFallbackSourceSpec(
+                    assetPath = "amazon_fallback/playlist_usa_vod.m3u8",
+                    providerFileName = "afterglow_amazon_vod.m3u8",
+                    providerName = "Afterglow Videos",
+                    sourceSlot = ProviderSourceSlot.VOD,
+                    m3uVodClassificationEnabled = true
+                )
+            ),
             allowXtreamPlaylistAutoDetection = false,
             enableSideloadUpdates = false
         )
@@ -60,10 +89,26 @@ data class StorePolicySnapshot(
                 showAdultSurfaces = BuildConfig.SHOW_ADULT_SURFACES,
                 showWelcomeRoute = BuildConfig.SHOW_WELCOME_ROUTE,
                 enableHiddenFallbackSource = BuildConfig.ENABLE_HIDDEN_FALLBACK_SOURCE,
-                hiddenFallbackPlaylistUrl = BuildConfig.HIDDEN_FALLBACK_PLAYLIST_URL.takeIf { it.isNotBlank() },
+                hiddenFallbackSources = parseHiddenFallbackSourceSpecs(BuildConfig.HIDDEN_FALLBACK_SOURCE_SPECS),
                 allowXtreamPlaylistAutoDetection = BuildConfig.ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION,
                 enableSideloadUpdates = BuildConfig.ENABLE_SIDELOAD_UPDATES
             )
+
+        private fun parseHiddenFallbackSourceSpecs(rawSpecs: String): List<HiddenFallbackSourceSpec> =
+            rawSpecs.split('|')
+                .mapNotNull { rawSpec ->
+                    val parts = rawSpec.split("::")
+                    if (parts.size != 5) return@mapNotNull null
+                    val slot = runCatching { ProviderSourceSlot.valueOf(parts[3]) }.getOrNull()
+                        ?: return@mapNotNull null
+                    HiddenFallbackSourceSpec(
+                        assetPath = parts[0].trim(),
+                        providerFileName = parts[1].trim(),
+                        providerName = parts[2].trim().ifBlank { "Afterglow TV" },
+                        sourceSlot = slot,
+                        m3uVodClassificationEnabled = parts[4].trim().toBoolean()
+                    ).takeIf { it.assetPath.isNotBlank() && it.providerFileName.isNotBlank() }
+                }
     }
 }
 

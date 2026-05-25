@@ -45,6 +45,7 @@ import com.afterglowtv.app.device.rememberIsTelevisionDevice
 import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.ui.components.CategoryRow
 import com.afterglowtv.app.ui.components.ContinueWatchingRow
+import com.afterglowtv.app.ui.components.LiveSourceSwitcher
 import com.afterglowtv.app.ui.components.SavedCategoryContextCard
 import com.afterglowtv.app.ui.components.SavedCategoryShortcut
 import com.afterglowtv.app.ui.components.SavedCategoryShortcutsRow
@@ -182,6 +183,21 @@ fun SeriesScreen(
             tagline = "Shows, seasons, and what's still on the queue.",
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
         )
+        if (uiState.vodSourceOptions.size > 1) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                LiveSourceSwitcher(
+                    currentSource = uiState.activeVodSource,
+                    options = uiState.vodSourceOptions,
+                    onSourceSelected = viewModel::switchVodSource,
+                    compact = true
+                )
+            }
+        }
         if (uiState.isReorderMode && uiState.reorderCategory != null) {
             ReorderTopBar(
                 categoryName = uiState.reorderCategory!!.name,

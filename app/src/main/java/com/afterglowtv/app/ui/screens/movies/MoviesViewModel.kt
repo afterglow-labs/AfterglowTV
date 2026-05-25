@@ -2,11 +2,14 @@ package com.afterglowtv.app.ui.screens.movies
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
 import com.afterglowtv.app.ui.model.isAdultVodMovie
 import com.afterglowtv.domain.manager.ParentalControlManager
+import com.afterglowtv.domain.model.ActiveLiveSource
+import com.afterglowtv.domain.model.ActiveLiveSourceOption
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.CategorySortMode
 import com.afterglowtv.domain.model.ContentType
@@ -16,6 +19,8 @@ import com.afterglowtv.domain.model.LibraryBrowseQuery
 import com.afterglowtv.domain.model.LibrarySortBy
 import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.model.PlaybackHistory
+import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.repository.FavoriteRepository
@@ -49,6 +54,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -107,6 +113,41 @@ class MoviesViewModel @Inject constructor(
     private val _previewBatchSize = MutableStateFlow(INITIAL_PREVIEW_BATCH_SIZE)
     private var activeProviderId: Long? = null
 
+    private fun activeVodSourceSlot(): ProviderSourceSlot =
+        if (_uiState.value.showAdultVodGuide) ProviderSourceSlot.ADULT_VOD else ProviderSourceSlot.VOD
+
+    private fun activeVodProviderFlow(): Flow<Provider?> =
+        _uiState.map { it.showAdultVodGuide }
+            .distinctUntilChanged()
+            .flatMapLatest { adultOnly ->
+                val selectedSourceFlow = if (adultOnly) {
+                    preferencesRepository.activeAdultVodSource
+                } else {
+                    preferencesRepository.activeVodSource
+                }
+                combine(
+                    selectedSourceFlow,
+                    providerRepository.getActiveProvider(),
+                    providerRepository.getProviders()
+                ) { selectedSource, activeProvider, providers ->
+                    val selectedProviderId = (selectedSource as? ActiveLiveSource.ProviderSource)?.providerId
+                    providers.firstOrNull { it.id == selectedProviderId }
+                        ?: activeProvider
+                        ?: providers.firstOrNull()
+                }
+            }
+            .distinctUntilChangedBy { it?.id }
+
+    private fun List<Provider>.toVodSourceOptions(): List<ActiveLiveSourceOption> =
+        map { provider ->
+            ActiveLiveSourceOption(
+                source = ActiveLiveSource.ProviderSource(provider.id),
+                title = provider.name,
+                subtitle = if (provider.epgUrl.isBlank()) "Playlist" else "Playlist + EPG",
+                isEnabled = true
+            )
+        }
+
     private data class PreviewLoadResult(
         val snapshot: MovieCatalogSnapshot,
         val isLoadingPreviewRows: Boolean,
@@ -116,9 +157,11 @@ class MoviesViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             providerRepository.getProviders().collectLatest { providers ->
+                val visibleProviders = providers.filter(StorePolicy.current::isUserVisibleProvider)
                 _uiState.update {
                     it.copy(
                         hasProviders = providers.isNotEmpty(),
+                        vodSourceOptions = visibleProviders.toVodSourceOptions(),
                         isLoading = if (providers.isEmpty()) false else it.isLoading
                     )
                 }
@@ -126,10 +169,12 @@ class MoviesViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            providerRepository.getActiveProvider().collectLatest { provider ->
+            activeVodProviderFlow().collectLatest { provider ->
                 activeProviderId = provider?.id
                 _uiState.update {
                     it.copy(
+                        activeVodSource = provider?.id?.let { id -> ActiveLiveSource.ProviderSource(id) },
+                        activeVodSourceTitle = provider?.name.orEmpty(),
                         hasActiveProvider = provider != null,
                         isLoading = if (provider == null) false else it.isLoading,
                         isLoadingSelectedCategory = if (provider == null) false else it.isLoadingSelectedCategory,
@@ -142,7 +187,7 @@ class MoviesViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-            providerRepository.getActiveProvider()
+            activeVodProviderFlow()
                 .filterNotNull()
                 .flatMapLatest { provider ->
                     activeProviderId = provider.id
@@ -320,7 +365,7 @@ class MoviesViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            providerRepository.getActiveProvider()
+            activeVodProviderFlow()
                 .filterNotNull()
                 .flatMapLatest { provider ->
                     combine(
@@ -397,7 +442,7 @@ class MoviesViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            providerRepository.getActiveProvider()
+            activeVodProviderFlow()
                 .filterNotNull()
                 .collectLatest { provider ->
                     launch {
@@ -421,7 +466,7 @@ class MoviesViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            providerRepository.getActiveProvider()
+            activeVodProviderFlow()
                 .filterNotNull()
                 .flatMapLatest { provider ->
                     combine(
@@ -504,7 +549,7 @@ class MoviesViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            providerRepository.getActiveProvider()
+            activeVodProviderFlow()
                 .filterNotNull()
                 .flatMapLatest { provider ->
                     parentalControlManager.unlockedCategoriesForProvider(provider.id)
@@ -515,7 +560,7 @@ class MoviesViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            providerRepository.getActiveProvider()
+            activeVodProviderFlow()
                 .filterNotNull()
                 .flatMapLatest { provider -> getCustomCategories(provider.id, ContentType.MOVIE) }
                 .collect { categories ->
@@ -564,6 +609,13 @@ class MoviesViewModel @Inject constructor(
     fun openAdultVodGuide() {
         if (!_uiState.value.developerModeEnabled) return
         openVodGuide(adultOnly = true)
+    }
+
+    fun switchVodSource(source: ActiveLiveSource) {
+        if (source !is ActiveLiveSource.ProviderSource) return
+        viewModelScope.launch {
+            preferencesRepository.setActiveSource(activeVodSourceSlot(), source)
+        }
     }
 
     private fun openVodGuide(adultOnly: Boolean) {
@@ -697,7 +749,7 @@ class MoviesViewModel @Inject constructor(
 
     fun unlockCategory(category: Category) {
         viewModelScope.launch {
-            val activeProviderId = providerRepository.getActiveProvider().first()?.id ?: return@launch
+            val activeProviderId = activeVodProviderFlow().first()?.id ?: return@launch
             parentalControlManager.unlockCategory(activeProviderId, kotlin.math.abs(category.id))
             if (_uiState.value.selectedCategory != category.name) {
                 selectCategory(category.name)
@@ -848,7 +900,7 @@ class MoviesViewModel @Inject constructor(
     fun hideCategory(category: Category) {
         if (category.isVirtual) return
         viewModelScope.launch {
-            val providerId = providerRepository.getActiveProvider().first()?.id ?: return@launch
+            val providerId = activeVodProviderFlow().first()?.id ?: return@launch
             preferencesRepository.setCategoryHidden(
                 providerId = providerId,
                 type = ContentType.MOVIE,
@@ -1391,6 +1443,9 @@ data class MoviesUiState(
     val vodViewMode: VodViewMode = VodViewMode.SHELVES,
     val developerModeEnabled: Boolean = false,
     val showAdultVodGuide: Boolean = false,
+    val activeVodSource: ActiveLiveSource? = null,
+    val activeVodSourceTitle: String = "",
+    val vodSourceOptions: List<ActiveLiveSourceOption> = emptyList(),
     val vodInfiniteScroll: Boolean = true,
     val continueWatching: List<PlaybackHistory> = emptyList(),
     val hasProviders: Boolean = false,

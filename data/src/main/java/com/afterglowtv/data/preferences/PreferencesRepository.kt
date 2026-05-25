@@ -27,6 +27,7 @@ import com.afterglowtv.domain.model.LiveChannelGroupingMode
 import com.afterglowtv.domain.model.LiveChannelObservedQuality
 import com.afterglowtv.domain.model.LiveVariantPreferenceMode
 import com.afterglowtv.domain.model.PlayerSurfaceMode
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.SearchHistoryScope
 import com.afterglowtv.domain.manager.ParentalPinVerifier
 import com.afterglowtv.domain.manager.ParentalControlSessionState
@@ -121,6 +122,12 @@ class PreferencesRepository @Inject constructor(
         val LAST_ACTIVE_PROVIDER_ID = longPreferencesKey("last_active_provider_id")
         val ACTIVE_LIVE_SOURCE_TYPE = stringPreferencesKey("active_live_source_type")
         val ACTIVE_LIVE_SOURCE_ID = longPreferencesKey("active_live_source_id")
+        val ACTIVE_ADULT_LIVE_SOURCE_TYPE = stringPreferencesKey("active_adult_live_source_type")
+        val ACTIVE_ADULT_LIVE_SOURCE_ID = longPreferencesKey("active_adult_live_source_id")
+        val ACTIVE_VOD_SOURCE_TYPE = stringPreferencesKey("active_vod_source_type")
+        val ACTIVE_VOD_SOURCE_ID = longPreferencesKey("active_vod_source_id")
+        val ACTIVE_ADULT_VOD_SOURCE_TYPE = stringPreferencesKey("active_adult_vod_source_type")
+        val ACTIVE_ADULT_VOD_SOURCE_ID = longPreferencesKey("active_adult_vod_source_id")
         val DEFAULT_VIEW_MODE = stringPreferencesKey("default_view_mode")
         val STARTUP_DESTINATION = stringPreferencesKey("startup_destination")
         val PARENTAL_CONTROL_LEVEL = intPreferencesKey("parental_control_level")
@@ -255,6 +262,31 @@ class PreferencesRepository @Inject constructor(
         val LAST_MAINTENANCE_FAVORITE_ROWS = longPreferencesKey("last_maintenance_favorite_rows")
     }
 
+    private fun Preferences.toActiveSource(slot: ProviderSourceSlot): ActiveLiveSource? {
+        val sourceId = this[activeSourceIdKey(slot)] ?: return null
+        return when (this[activeSourceTypeKey(slot)]) {
+            "provider" -> ActiveLiveSource.ProviderSource(sourceId)
+            "combined_m3u" -> ActiveLiveSource.CombinedM3uSource(sourceId)
+            else -> null
+        }
+    }
+
+    private fun activeSourceTypeKey(slot: ProviderSourceSlot): Preferences.Key<String> =
+        when (slot) {
+            ProviderSourceSlot.LIVE -> PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE
+            ProviderSourceSlot.ADULT_LIVE -> PreferencesKeys.ACTIVE_ADULT_LIVE_SOURCE_TYPE
+            ProviderSourceSlot.VOD -> PreferencesKeys.ACTIVE_VOD_SOURCE_TYPE
+            ProviderSourceSlot.ADULT_VOD -> PreferencesKeys.ACTIVE_ADULT_VOD_SOURCE_TYPE
+        }
+
+    private fun activeSourceIdKey(slot: ProviderSourceSlot): Preferences.Key<Long> =
+        when (slot) {
+            ProviderSourceSlot.LIVE -> PreferencesKeys.ACTIVE_LIVE_SOURCE_ID
+            ProviderSourceSlot.ADULT_LIVE -> PreferencesKeys.ACTIVE_ADULT_LIVE_SOURCE_ID
+            ProviderSourceSlot.VOD -> PreferencesKeys.ACTIVE_VOD_SOURCE_ID
+            ProviderSourceSlot.ADULT_VOD -> PreferencesKeys.ACTIVE_ADULT_VOD_SOURCE_ID
+        }
+
     private object ParentalSessionKeys {
         const val FILE_NAME = "parental_control_session"
         const val UNLOCK_ENTRIES = "unlock_entries"
@@ -304,13 +336,17 @@ class PreferencesRepository @Inject constructor(
     }
 
     val activeLiveSource: Flow<ActiveLiveSource?> = context.dataStore.data.map { preferences ->
-        val sourceId = preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_ID] ?: return@map null
-        when (preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE]) {
-            "provider" -> ActiveLiveSource.ProviderSource(sourceId)
-            "combined_m3u" -> ActiveLiveSource.CombinedM3uSource(sourceId)
-            else -> null
-        }
+        preferences.toActiveSource(ProviderSourceSlot.LIVE)
     }
+
+    val activeAdultLiveSource: Flow<ActiveLiveSource?> = activeSource(ProviderSourceSlot.ADULT_LIVE)
+
+    val activeVodSource: Flow<ActiveLiveSource?> = activeSource(ProviderSourceSlot.VOD)
+
+    val activeAdultVodSource: Flow<ActiveLiveSource?> = activeSource(ProviderSourceSlot.ADULT_VOD)
+
+    fun activeSource(slot: ProviderSourceSlot): Flow<ActiveLiveSource?> =
+        context.dataStore.data.map { preferences -> preferences.toActiveSource(slot) }
 
     val defaultViewMode: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.DEFAULT_VIEW_MODE]
@@ -480,20 +516,26 @@ class PreferencesRepository @Inject constructor(
     }
 
     suspend fun setActiveLiveSource(source: ActiveLiveSource?) {
+        setActiveSource(ProviderSourceSlot.LIVE, source)
+    }
+
+    suspend fun setActiveSource(slot: ProviderSourceSlot, source: ActiveLiveSource?) {
         context.dataStore.edit { preferences ->
+            val typeKey = activeSourceTypeKey(slot)
+            val idKey = activeSourceIdKey(slot)
             if (source == null) {
-                preferences.remove(PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE)
-                preferences.remove(PreferencesKeys.ACTIVE_LIVE_SOURCE_ID)
+                preferences.remove(typeKey)
+                preferences.remove(idKey)
                 return@edit
             }
             when (source) {
                 is ActiveLiveSource.ProviderSource -> {
-                    preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE] = "provider"
-                    preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_ID] = source.providerId
+                    preferences[typeKey] = "provider"
+                    preferences[idKey] = source.providerId
                 }
                 is ActiveLiveSource.CombinedM3uSource -> {
-                    preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE] = "combined_m3u"
-                    preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_ID] = source.profileId
+                    preferences[typeKey] = "combined_m3u"
+                    preferences[idKey] = source.profileId
                 }
             }
         }

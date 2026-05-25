@@ -65,7 +65,7 @@ android {
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
             buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "false")
-            buildConfigField("String", "HIDDEN_FALLBACK_PLAYLIST_URL", "\"\"")
+            buildConfigField("String", "HIDDEN_FALLBACK_SOURCE_SPECS", "\"\"")
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "true")
         }
@@ -77,7 +77,11 @@ android {
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "false")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
             buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "true")
-            buildConfigField("String", "HIDDEN_FALLBACK_PLAYLIST_URL", "\"https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8\"")
+            buildConfigField(
+                "String",
+                "HIDDEN_FALLBACK_SOURCE_SPECS",
+                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::Afterglow TV::LIVE::false|amazon_fallback/playlist_usa_vod.m3u8::afterglow_amazon_vod.m3u8::Afterglow Videos::VOD::true\""
+            )
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
             resourceConfigurations += listOf("en")

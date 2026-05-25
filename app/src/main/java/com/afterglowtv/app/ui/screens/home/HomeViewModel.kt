@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.di.AuxiliaryPlayerEngine
 import com.afterglowtv.app.player.LivePreviewHandoffManager
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.tvinput.TvInputChannelSyncManager
 import com.afterglowtv.app.ui.model.AdultGuideCategory
 import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
@@ -32,6 +33,7 @@ import com.afterglowtv.domain.model.Favorite
 import com.afterglowtv.domain.model.PlaybackHistory
 import com.afterglowtv.domain.model.Program
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.model.StreamInfo
@@ -184,14 +186,23 @@ class HomeViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            combine(
-                combinedM3uRepository.getActiveLiveSource(),
-                providerRepository.getActiveProvider()
-            ) { activeSource, activeProvider ->
-                Pair(
-                    activeSource ?: activeProvider?.id?.let { ActiveLiveSource.ProviderSource(it) },
-                    activeProvider
-                )
+            _adultGuideMode.flatMapLatest { adultGuideMode ->
+                val sourceFlow = if (adultGuideMode) {
+                    preferencesRepository.activeAdultLiveSource
+                } else {
+                    combinedM3uRepository.getActiveLiveSource()
+                }
+                combine(
+                    sourceFlow,
+                    providerRepository.getActiveProvider(),
+                    providerRepository.getProviders()
+                ) { activeSource, activeProvider, providers ->
+                    val fallbackProvider = activeProvider ?: providers.firstOrNull()
+                    Pair(
+                        activeSource ?: fallbackProvider?.id?.let { ActiveLiveSource.ProviderSource(it) },
+                        activeProvider
+                    )
+                }
             }.distinctUntilChanged { old, new ->
                 old.first == new.first && old.second?.id == new.second?.id
             }.collectLatest { (activeSource, activeProvider) ->
@@ -290,7 +301,9 @@ class HomeViewModel @Inject constructor(
                         liveSourceOptions = options.filter { option ->
                             when (val source = option.source) {
                                 is ActiveLiveSource.ProviderSource -> {
-                                    state.allProviders.firstOrNull { it.id == source.providerId }?.type == ProviderType.M3U
+                                    val provider = state.allProviders.firstOrNull { it.id == source.providerId }
+                                    provider?.type == ProviderType.M3U &&
+                                        StorePolicy.current.isUserVisibleProvider(provider)
                                 }
                                 is ActiveLiveSource.CombinedM3uSource -> true
                             }
@@ -454,13 +467,14 @@ class HomeViewModel @Inject constructor(
     private fun loadAllProviders() {
         viewModelScope.launch {
             providerRepository.getProviders().collect { providers ->
+                val visibleProviders = providers.filter(StorePolicy.current::isUserVisibleProvider)
                 _uiState.update { state ->
                     state.copy(
-                        allProviders = providers,
+                        allProviders = visibleProviders,
                         liveSourceOptions = state.liveSourceOptions.filter { option ->
                             when (val source = option.source) {
                                 is ActiveLiveSource.ProviderSource ->
-                                    providers.firstOrNull { it.id == source.providerId }?.type == ProviderType.M3U
+                                    visibleProviders.firstOrNull { it.id == source.providerId }?.type == ProviderType.M3U
                                 is ActiveLiveSource.CombinedM3uSource -> true
                             }
                         }
@@ -476,10 +490,14 @@ class HomeViewModel @Inject constructor(
 
     fun switchLiveSource(source: ActiveLiveSource) {
         viewModelScope.launch {
-            combinedM3uRepository.setActiveLiveSource(source)
-            when (source) {
-                is ActiveLiveSource.ProviderSource -> providerRepository.setActiveProvider(source.providerId)
-                is ActiveLiveSource.CombinedM3uSource -> Unit
+            if (_adultGuideMode.value) {
+                preferencesRepository.setActiveSource(ProviderSourceSlot.ADULT_LIVE, source)
+            } else {
+                combinedM3uRepository.setActiveLiveSource(source)
+                when (source) {
+                    is ActiveLiveSource.ProviderSource -> providerRepository.setActiveProvider(source.providerId)
+                    is ActiveLiveSource.CombinedM3uSource -> Unit
+                }
             }
         }
     }
