@@ -17,6 +17,7 @@
     <string name="settings_add_provider">Add Source</string>
     <string name="settings_providers_subtitle">Switch, sync, edit, and troubleshoot your TV sources.</string>
     <string name="settings_provider_selector_hint">Select a source to view details and actions.</string>
+    <string name="settings_build_desc">AfterglowTV for FireOS</string>
     <string name="settings_parental_control">Content Controls</string>
     <string name="settings_parental_subtitle">Manage selected categories with TV-friendly controls.</string>
     <string name="settings_m3u_vod_classification_title">Video Classification</string>
