@@ -2,6 +2,7 @@ package com.afterglowtv.app.navigation
 
 import androidx.annotation.StringRes
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
 
 enum class StartupDestination(
     val storageValue: String,
@@ -23,13 +24,23 @@ enum class StartupDestination(
         val default: StartupDestination = HOME
 
         fun visibleEntries(developerModeEnabled: Boolean): List<StartupDestination> =
-            entries.filter { developerModeEnabled || !it.requiresDeveloperMode }
+            entries.filter {
+                (developerModeEnabled || !it.requiresDeveloperMode) &&
+                    (StorePolicy.current.showAdultSurfaces || !it.requiresDeveloperMode)
+            }
 
         fun visibleOrDefault(
             destination: StartupDestination,
             developerModeEnabled: Boolean
         ): StartupDestination =
-            if (developerModeEnabled || !destination.requiresDeveloperMode) destination else default
+            if (
+                (developerModeEnabled || !destination.requiresDeveloperMode) &&
+                (StorePolicy.current.showAdultSurfaces || !destination.requiresDeveloperMode)
+            ) {
+                destination
+            } else {
+                default
+            }
 
         fun fromStorage(value: String?): StartupDestination =
             entries.firstOrNull { it.storageValue == value || it.route == value } ?: default

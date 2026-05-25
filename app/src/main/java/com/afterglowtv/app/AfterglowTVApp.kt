@@ -12,6 +12,8 @@ import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import com.afterglowtv.app.diagnostics.CrashReportStore
 import com.afterglowtv.app.diagnostics.RuntimeDiagnosticsManager
+import com.afterglowtv.app.store.HiddenFallbackSourceSeeder
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.update.GitHubReleaseChecker
 import com.afterglowtv.app.ui.accessibility.isReducedMotionEnabled
 import com.afterglowtv.app.ui.design.AppColors
@@ -55,6 +57,15 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         CrashReportStore.install(this)
         applySavedVisualPreferencesBeforeUi()
+        if (StorePolicy.current.enableHiddenFallbackSource) {
+            applicationScope.launch {
+                runCatching {
+                    startupEntryPoint().hiddenFallbackSourceSeeder().seedIfNeeded()
+                }.onFailure { error ->
+                    Log.w(TAG, "Unable to seed hidden fallback source", error)
+                }
+            }
+        }
         applicationScope.launch {
             cancelColdStartMaintenanceWork()
         }
@@ -227,6 +238,9 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         preferencesRepository: PreferencesRepository,
         gitHubReleaseChecker: GitHubReleaseChecker
     ) {
+        if (!StorePolicy.current.enableSideloadUpdates) {
+            return
+        }
         val autoCheckEnabled = preferencesRepository.autoCheckAppUpdates.first()
         if (!autoCheckEnabled) {
             return
@@ -294,5 +308,6 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
     interface StartupEntryPoint {
         fun preferencesRepository(): PreferencesRepository
         fun gitHubReleaseChecker(): GitHubReleaseChecker
+        fun hiddenFallbackSourceSeeder(): HiddenFallbackSourceSeeder
     }
 }

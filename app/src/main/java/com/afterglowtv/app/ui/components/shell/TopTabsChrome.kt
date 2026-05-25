@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.LocalAppSpacing
 import com.afterglowtv.app.ui.design.AfterglowFocusRole
@@ -34,9 +35,9 @@ fun defaultTopTabs(
 ): List<TopTab> = buildList {
     add(TopTab("home", "Home"))
     add(TopTab("live_tv", "Live TV"))
-    add(TopTab("epg", "IPTV Guide"))
-    add(TopTab("vod_guide", "VOD Guide"))
-    if (developerModeEnabled && showAdultGuideTab) {
+    add(TopTab("epg", if (StorePolicy.current.amazonReviewBuild) "TV Guide" else "IPTV Guide"))
+    add(TopTab("vod_guide", if (StorePolicy.current.amazonReviewBuild) "Video Guide" else "VOD Guide"))
+    if (StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultGuideTab) {
         add(TopTab("adult_guide", "XXX Guide"))
     }
     add(TopTab("movies", "Movies"))

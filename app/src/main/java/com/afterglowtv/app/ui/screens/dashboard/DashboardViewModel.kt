@@ -3,6 +3,7 @@ package com.afterglowtv.app.ui.screens.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.BuildConfig
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.data.sync.SyncManager
@@ -222,8 +223,11 @@ class DashboardViewModel @Inject constructor(
         }.combine(observeUpdateNotice().onStart { emit(null) }) { snapshot, updateNotice ->
             snapshot.copy(updateNotice = updateNotice)
         }.combine(syncManager.syncStateForProvider(provider.id).onStart { emit(SyncState.Idle) }) { snapshot, syncState ->
+            val visibleProvider = provider.takeUnless(StorePolicy.current::isHiddenFallbackProvider)
+            val providerDisplayName = visibleProvider?.name ?: appContext.getString(R.string.app_name)
             DashboardUiState(
                 provider = provider,
+                showProviderChrome = visibleProvider != null,
                 favoriteChannels = snapshot.shelves.favoriteChannels,
                 recentChannels = snapshot.shelves.recentChannels,
                 continueWatching = snapshot.shelves.continueWatching,
@@ -242,20 +246,22 @@ class DashboardViewModel @Inject constructor(
                     seriesLibraryCount = snapshot.seriesCount
                 ),
                 feature = buildFeature(
-                    providerName = provider.name,
+                    providerName = providerDisplayName,
                     recentChannels = snapshot.shelves.recentChannels,
                     continueWatching = snapshot.shelves.continueWatching,
                     continueWatchingDegraded = snapshot.shelves.continueWatchingDegraded,
                     recentMovies = snapshot.shelves.recentMovies,
                     recentSeries = snapshot.shelves.recentSeries
                 ),
-                providerHealth = DashboardProviderHealth(
-                    status = provider.status,
-                    type = provider.type,
-                    lastSyncedAt = provider.lastSyncedAt,
-                    expirationDate = provider.expirationDate,
-                    maxConnections = provider.maxConnections
-                ),
+                providerHealth = visibleProvider?.let {
+                    DashboardProviderHealth(
+                        status = it.status,
+                        type = it.type,
+                        lastSyncedAt = it.lastSyncedAt,
+                        expirationDate = it.expirationDate,
+                        maxConnections = it.maxConnections
+                    )
+                } ?: DashboardProviderHealth(),
                 providerWarnings = when (syncState) {
                     is SyncState.Partial -> syncState.warnings
                     is SyncState.Error -> listOf(syncState.message)
@@ -622,6 +628,7 @@ private data class DashboardSnapshot(
 
 data class DashboardUiState(
     val provider: Provider? = null,
+    val showProviderChrome: Boolean = true,
     val favoriteChannels: List<Channel> = emptyList(),
     val recentChannels: List<Channel> = emptyList(),
     val continueWatching: List<PlaybackHistory> = emptyList(),

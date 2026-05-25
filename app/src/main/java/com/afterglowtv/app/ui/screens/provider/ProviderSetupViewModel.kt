@@ -2,6 +2,7 @@ package com.afterglowtv.app.ui.screens.provider
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.data.remote.xtream.XtreamAuthenticationException
 import com.afterglowtv.data.remote.xtream.XtreamNetworkException
 import com.afterglowtv.data.remote.xtream.XtreamParsingException
@@ -334,7 +335,7 @@ class ProviderSetupViewModel @Inject constructor(
 
         if (url.isBlank()) {
             _uiState.update {
-                it.copy(validationError = if (_uiState.value.m3uTab == 0) "Please enter M3U URL" else "Please select a file")
+                it.copy(validationError = if (_uiState.value.m3uTab == 0) "Please enter playlist URL" else "Please select a file")
             }
             return
         }
@@ -352,7 +353,8 @@ class ProviderSetupViewModel @Inject constructor(
                     epgSyncMode = _uiState.value.epgSyncMode,
                     m3uVodClassificationEnabled = _uiState.value.m3uVodClassificationEnabled,
                     existingProviderId = existingId,
-                    epgUrl = epgUrl.takeIf { it.isNotBlank() }
+                    epgUrl = epgUrl.takeIf { it.isNotBlank() },
+                    allowXtreamPlaylistAutoDetection = StorePolicy.current.allowXtreamPlaylistAutoDetection
                 ),
                 onProgress = { msg -> _uiState.update { it.copy(syncProgress = msg) } }
             )) {

@@ -25,6 +25,7 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.components.TvEmptyState
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.theme.OnSurfaceDim
@@ -119,38 +120,40 @@ internal fun LazyListScope.providerSection(
             )
 
             Spacer(modifier = Modifier.height(18.dp))
-            CombinedM3uProfilesCard(
-                profiles = uiState.combinedProfiles,
-                availableProviders = uiState.availableM3uProviders,
-                selectedProfileId = providerState.selectedCombinedProfileId,
-                activeLiveSource = uiState.activeLiveSource,
-                onSelectProfile = { providerState.selectedCombinedProfileId = it },
-                onCreateProfile = { providerState.showCreateCombinedDialog = true },
-                onActivateProfile = { profileId -> viewModel.setActiveCombinedProfile(profileId) },
-                onDeleteProfile = { profileId ->
-                    if (providerState.selectedCombinedProfileId == profileId) {
-                        providerState.selectedCombinedProfileId = null
+            if (StorePolicy.current.showAdvancedSourceTypes) {
+                CombinedM3uProfilesCard(
+                    profiles = uiState.combinedProfiles,
+                    availableProviders = uiState.availableM3uProviders,
+                    selectedProfileId = providerState.selectedCombinedProfileId,
+                    activeLiveSource = uiState.activeLiveSource,
+                    onSelectProfile = { providerState.selectedCombinedProfileId = it },
+                    onCreateProfile = { providerState.showCreateCombinedDialog = true },
+                    onActivateProfile = { profileId -> viewModel.setActiveCombinedProfile(profileId) },
+                    onDeleteProfile = { profileId ->
+                        if (providerState.selectedCombinedProfileId == profileId) {
+                            providerState.selectedCombinedProfileId = null
+                        }
+                        viewModel.deleteCombinedProfile(profileId)
+                    },
+                    onRenameProfile = { profileId ->
+                        providerState.selectedCombinedProfileId = profileId
+                        providerState.showRenameCombinedDialog = true
+                    },
+                    onAddProvider = { profileId ->
+                        providerState.selectedCombinedProfileId = profileId
+                        providerState.showAddCombinedMemberDialog = true
+                    },
+                    onRemoveProvider = { profileId, providerId ->
+                        viewModel.removeProviderFromCombinedProfile(profileId, providerId)
+                    },
+                    onToggleProviderEnabled = { profileId, providerId, enabled ->
+                        viewModel.setCombinedProviderEnabled(profileId, providerId, enabled)
+                    },
+                    onMoveProvider = { profileId, providerId, moveUp ->
+                        viewModel.moveCombinedProvider(profileId, providerId, moveUp)
                     }
-                    viewModel.deleteCombinedProfile(profileId)
-                },
-                onRenameProfile = { profileId ->
-                    providerState.selectedCombinedProfileId = profileId
-                    providerState.showRenameCombinedDialog = true
-                },
-                onAddProvider = { profileId ->
-                    providerState.selectedCombinedProfileId = profileId
-                    providerState.showAddCombinedMemberDialog = true
-                },
-                onRemoveProvider = { profileId, providerId ->
-                    viewModel.removeProviderFromCombinedProfile(profileId, providerId)
-                },
-                onToggleProviderEnabled = { profileId, providerId, enabled ->
-                    viewModel.setCombinedProviderEnabled(profileId, providerId, enabled)
-                },
-                onMoveProvider = { profileId, providerId, moveUp ->
-                    viewModel.moveCombinedProvider(profileId, providerId, moveUp)
-                }
-            )
+                )
+            }
         }
     }
 

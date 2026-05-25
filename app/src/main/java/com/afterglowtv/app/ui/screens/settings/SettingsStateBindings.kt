@@ -7,6 +7,7 @@ import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.app.ui.model.RemoteChannelButtonAction
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.navigation.StartupDestination
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.domain.model.AppTimeFormat
 import com.afterglowtv.domain.model.ChannelNumberingMode
@@ -31,8 +32,9 @@ internal fun observeSettingsPreferenceSnapshot(
         preferencesRepository.parentalControlLevel,
         preferencesRepository.hasParentalPin
     ) { providers, activeId, level, hasParentalPin ->
+        val visibleProviders = providers.filter(StorePolicy.current::isUserVisibleProvider)
         SettingsPreferenceSnapshot(
-            providers = providers,
+            providers = visibleProviders,
             activeProviderId = activeId,
             parentalControlLevel = level,
             hasParentalPin = hasParentalPin,

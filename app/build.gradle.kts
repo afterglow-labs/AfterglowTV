@@ -55,6 +55,35 @@ android {
         buildConfigField("String", "OFFICIAL_SIGNING_CERT_SHA256", "\"$officialSigningCertSha256\"")
     }
 
+    flavorDimensions += "store"
+
+    productFlavors {
+        create("standard") {
+            dimension = "store"
+            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "false")
+            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
+            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
+            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
+            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "false")
+            buildConfigField("String", "HIDDEN_FALLBACK_PLAYLIST_URL", "\"\"")
+            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
+            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "true")
+        }
+
+        create("amazon") {
+            dimension = "store"
+            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
+            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
+            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "false")
+            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
+            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "true")
+            buildConfigField("String", "HIDDEN_FALLBACK_PLAYLIST_URL", "\"https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8\"")
+            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
+            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
+            resourceConfigurations += listOf("en")
+        }
+    }
+
     signingConfigs {
         if (keystorePropertiesFile.exists()) {
             create("release") {
@@ -104,7 +133,7 @@ kotlin {
 kover {
     currentProject {
         createVariant("ci") {
-            add("debug")
+            add("standardDebug")
         }
     }
 }
@@ -190,7 +219,7 @@ dependencies {
 }
 
 tasks.configureEach {
-    if (name == "hiltJavaCompileDebugUnitTest") {
+    if (name.startsWith("hiltJavaCompile") && name.endsWith("UnitTest")) {
         enabled = false
     }
 }

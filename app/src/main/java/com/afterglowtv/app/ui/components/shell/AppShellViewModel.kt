@@ -2,6 +2,7 @@ package com.afterglowtv.app.ui.components.shell
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.data.preferences.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -18,7 +19,7 @@ internal class AppShellViewModel @Inject constructor(
         preferencesRepository.developerModeEnabled,
         preferencesRepository.showAdultGuideTab
     ) { developerModeEnabled, showAdultGuideTab ->
-        developerModeEnabled && showAdultGuideTab
+        StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultGuideTab
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),

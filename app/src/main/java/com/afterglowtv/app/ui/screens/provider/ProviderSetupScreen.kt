@@ -64,6 +64,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.*
 import com.afterglowtv.app.R
 import com.afterglowtv.app.device.rememberIsTelevisionDevice
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.components.dialogs.PremiumDialog
 import com.afterglowtv.app.ui.components.dialogs.PremiumDialogFooterButton
 import com.afterglowtv.app.ui.components.shell.StatusPill
@@ -86,6 +88,35 @@ import android.widget.Toast
 // Source type
 
 private enum class SourceType { XTREAM, STALKER, M3U_URL, M3U_FILE }
+
+internal enum class ProviderSetupSourceType {
+    SERVER_LOGIN,
+    PORTAL_LOGIN,
+    PLAYLIST_URL,
+    PLAYLIST_FILE
+}
+
+internal fun visibleProviderSetupSourceTypes(policy: StorePolicySnapshot): List<ProviderSetupSourceType> =
+    if (policy.showAdvancedSourceTypes) {
+        listOf(
+            ProviderSetupSourceType.SERVER_LOGIN,
+            ProviderSetupSourceType.PORTAL_LOGIN,
+            ProviderSetupSourceType.PLAYLIST_URL,
+            ProviderSetupSourceType.PLAYLIST_FILE
+        )
+    } else {
+        listOf(
+            ProviderSetupSourceType.PLAYLIST_URL,
+            ProviderSetupSourceType.PLAYLIST_FILE
+        )
+    }
+
+private fun ProviderSetupSourceType.toUiSourceType(): SourceType = when (this) {
+    ProviderSetupSourceType.SERVER_LOGIN -> SourceType.XTREAM
+    ProviderSetupSourceType.PORTAL_LOGIN -> SourceType.STALKER
+    ProviderSetupSourceType.PLAYLIST_URL -> SourceType.M3U_URL
+    ProviderSetupSourceType.PLAYLIST_FILE -> SourceType.M3U_FILE
+}
 
 internal fun shouldInlineProviderSetupActions(
     isTelevisionDevice: Boolean,
@@ -111,11 +142,15 @@ fun ProviderSetupScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val knownLocalM3uUrls by viewModel.knownLocalM3uUrls.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val storePolicy = StorePolicy.current
+    val visibleSourceTypes = remember(storePolicy) {
+        visibleProviderSetupSourceTypes(storePolicy).map { it.toUiSourceType() }.toSet()
+    }
     val coroutineScope = rememberCoroutineScope()
     var appFilesDir by remember { mutableStateOf<java.io.File?>(null) }
 
     // Local form state
-    var selectedTab by rememberSaveable { mutableStateOf(0) }
+    var selectedTab by rememberSaveable { mutableStateOf(if (storePolicy.showAdvancedSourceTypes) 0 else 2) }
     var name by rememberSaveable { mutableStateOf("") }
     var m3uUrl by rememberSaveable { mutableStateOf("") }
     var m3uEpgUrl by rememberSaveable { mutableStateOf("") }
@@ -244,11 +279,16 @@ fun ProviderSetupScreen(
     }
 
     // Derived UI source type
-    val sourceType = when {
+    val rawSourceType = when {
         selectedTab == 0 -> SourceType.XTREAM
         selectedTab == 1 -> SourceType.STALKER
         uiState.m3uTab == 1 -> SourceType.M3U_FILE
         else -> SourceType.M3U_URL
+    }
+    val sourceType = if (uiState.isEditing || rawSourceType in visibleSourceTypes) {
+        rawSourceType
+    } else {
+        visibleSourceTypes.firstOrNull() ?: SourceType.M3U_URL
     }
 
     fun onSourceTypeSelected(type: SourceType) {
@@ -448,6 +488,7 @@ fun ProviderSetupScreen(
                 ) {
                     SourceTypeSelectorPanel(
                         sourceType = sourceType,
+                        visibleSourceTypes = visibleSourceTypes,
                         isEditing = uiState.isEditing,
                         isEditLabel = if (uiState.isEditing) androidx.compose.ui.res.stringResource(R.string.setup_edit_provider)
                                       else androidx.compose.ui.res.stringResource(R.string.setup_provider_title),
@@ -491,6 +532,7 @@ fun ProviderSetupScreen(
                 ) {
                     SourceTypeTabRow(
                         sourceType = sourceType,
+                        visibleSourceTypes = visibleSourceTypes,
                         isEditing = uiState.isEditing,
                         onSelect = ::onSourceTypeSelected,
                         modifier = Modifier.fillMaxWidth()
@@ -862,7 +904,7 @@ private fun ProviderFormContent(
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     com.afterglowtv.app.ui.components.ClipboardPasteButton(
                                         onPaste = { onM3uUrlChange(it) },
-                                        label = "Paste M3U URL",
+                                        label = stringResource(R.string.setup_paste_m3u_url),
                                     )
                                     com.afterglowtv.app.ui.components.ClipboardCopyButton(
                                         text = m3uUrl,
@@ -1596,6 +1638,7 @@ private fun FormErrors(validationError: String?, error: String?) {
 @Composable
 private fun SourceTypeSelectorPanel(
     sourceType: SourceType,
+    visibleSourceTypes: Set<SourceType>,
     isEditing: Boolean,
     isEditLabel: String,
     onSelect: (SourceType) -> Unit,
@@ -1626,7 +1669,7 @@ private fun SourceTypeSelectorPanel(
                 style = MaterialTheme.typography.labelSmall,
                 color = TextTertiary
             )
-            if (!isEditing || sourceType == SourceType.XTREAM) {
+            if (shouldShowProviderSetupSourceType(SourceType.XTREAM, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_xtream),
                     subtitle = androidx.compose.ui.res.stringResource(R.string.setup_info_xtream_body),
@@ -1635,7 +1678,7 @@ private fun SourceTypeSelectorPanel(
                     onClick = { onSelect(SourceType.XTREAM) }
                 )
             }
-            if (!isEditing || sourceType == SourceType.STALKER) {
+            if (shouldShowProviderSetupSourceType(SourceType.STALKER, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_stalker),
                     badge = androidx.compose.ui.res.stringResource(R.string.badge_beta),
@@ -1645,7 +1688,7 @@ private fun SourceTypeSelectorPanel(
                     onClick = { onSelect(SourceType.STALKER) }
                 )
             }
-            if (!isEditing || sourceType == SourceType.M3U_URL) {
+            if (shouldShowProviderSetupSourceType(SourceType.M3U_URL, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_tab_url),
                     subtitle = androidx.compose.ui.res.stringResource(R.string.setup_info_m3u_body),
@@ -1654,7 +1697,7 @@ private fun SourceTypeSelectorPanel(
                     onClick = { onSelect(SourceType.M3U_URL) }
                 )
             }
-            if (!isEditing || sourceType == SourceType.M3U_FILE) {
+            if (shouldShowProviderSetupSourceType(SourceType.M3U_FILE, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_tab_file),
                     subtitle = androidx.compose.ui.res.stringResource(R.string.setup_file_browse_hint),
@@ -1734,19 +1777,20 @@ private fun SourceTypeCard(
 @Composable
 private fun SourceTypeTabRow(
     sourceType: SourceType,
+    visibleSourceTypes: Set<SourceType>,
     isEditing: Boolean,
     onSelect: (SourceType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (!isEditing || sourceType == SourceType.XTREAM) {
+        if (shouldShowProviderSetupSourceType(SourceType.XTREAM, visibleSourceTypes, sourceType, isEditing)) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_xtream),
                 isSelected = sourceType == SourceType.XTREAM,
                 onClick = { if (!isEditing) onSelect(SourceType.XTREAM) }
             )
         }
-        if (!isEditing || sourceType == SourceType.STALKER) {
+        if (shouldShowProviderSetupSourceType(SourceType.STALKER, visibleSourceTypes, sourceType, isEditing)) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_stalker),
                 badge = androidx.compose.ui.res.stringResource(R.string.badge_beta),
@@ -1754,14 +1798,14 @@ private fun SourceTypeTabRow(
                 onClick = { if (!isEditing) onSelect(SourceType.STALKER) }
             )
         }
-        if (!isEditing || sourceType == SourceType.M3U_URL) {
+        if (shouldShowProviderSetupSourceType(SourceType.M3U_URL, visibleSourceTypes, sourceType, isEditing)) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_tab_url),
                 isSelected = sourceType == SourceType.M3U_URL,
                 onClick = { if (!isEditing) onSelect(SourceType.M3U_URL) }
             )
         }
-        if (!isEditing || sourceType == SourceType.M3U_FILE) {
+        if (shouldShowProviderSetupSourceType(SourceType.M3U_FILE, visibleSourceTypes, sourceType, isEditing)) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_tab_file),
                 isSelected = sourceType == SourceType.M3U_FILE,
@@ -1770,6 +1814,18 @@ private fun SourceTypeTabRow(
         }
     }
 }
+
+private fun shouldShowProviderSetupSourceType(
+    candidate: SourceType,
+    visibleSourceTypes: Set<SourceType>,
+    currentSourceType: SourceType,
+    isEditing: Boolean
+): Boolean =
+    if (isEditing) {
+        candidate == currentSourceType && candidate in visibleSourceTypes
+    } else {
+        candidate in visibleSourceTypes
+    }
 
 // ProviderTextField
 //

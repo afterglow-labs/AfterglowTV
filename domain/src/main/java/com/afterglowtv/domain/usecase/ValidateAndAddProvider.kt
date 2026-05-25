@@ -36,6 +36,7 @@ data class M3uProviderSetupCommand(
     val existingProviderId: Long? = null,
     /** Optional XMLTV / EPG URL to attach to the newly-created provider. */
     val epgUrl: String? = null,
+    val allowXtreamPlaylistAutoDetection: Boolean = true
 )
 
 data class StalkerProviderSetupCommand(
@@ -176,7 +177,12 @@ class ValidateAndAddProvider @Inject constructor(
         ) {
             is Result.Success -> {
                 val validatedInput = validated.data
-                when (val parsedXtream = parseXtreamPlaylistUrl(validatedInput.url)) {
+                val parsedXtream = if (command.allowXtreamPlaylistAutoDetection) {
+                    parseXtreamPlaylistUrl(validatedInput.url)
+                } else {
+                    ParsedXtreamPlaylistUrlResult.NotXtreamPlaylist
+                }
+                when (parsedXtream) {
                     is ParsedXtreamPlaylistUrlResult.ValidationError ->
                         ValidateAndAddProviderResult.ValidationError(parsedXtream.message)
 

@@ -19,6 +19,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
 import com.afterglowtv.app.navigation.StartupDestination
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.theme.OnBackground
@@ -170,7 +171,7 @@ internal fun LazyListScope.settingsBrowsingSection(
             value = guideDefaultCategoryLabel,
             onClick = { onShowGuideDefaultCategoryDialogChange(true) }
         )
-        if (uiState.developerModeEnabled) {
+        if (StorePolicy.current.showAdultSurfaces && uiState.developerModeEnabled) {
             SwitchSettingsRow(
                 label = stringResource(R.string.settings_show_adult_guide_tab),
                 value = stringResource(

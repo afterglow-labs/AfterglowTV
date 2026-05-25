@@ -32,6 +32,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.theme.OnSurfaceDim
 import com.afterglowtv.app.ui.theme.Primary
@@ -133,6 +134,7 @@ internal fun LazyListScope.settingsAboutSection(
         var developerPassword by rememberSaveable { mutableStateOf("") }
         var developerPasswordError by rememberSaveable { mutableStateOf(false) }
         val downloadStatus = uiState.appUpdate.downloadStatus
+        val showSideloadUpdates = StorePolicy.current.enableSideloadUpdates
         LaunchedEffect(downloadStatus) {
             if (downloadStatus == com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloading) {
                 while (true) {
@@ -209,10 +211,12 @@ internal fun LazyListScope.settingsAboutSection(
                 }
             )
         }
-        SettingsSectionHeader(
-            title = stringResource(R.string.settings_updates_title),
-            subtitle = stringResource(R.string.settings_updates_subtitle)
-        )
+        if (showSideloadUpdates) {
+            SettingsSectionHeader(
+                title = stringResource(R.string.settings_updates_title),
+                subtitle = stringResource(R.string.settings_updates_subtitle)
+            )
+        }
         ClickableSettingsRow(
             label = stringResource(R.string.settings_app_version),
             value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
@@ -225,72 +229,74 @@ internal fun LazyListScope.settingsAboutSection(
                 }
             }
         )
-        SwitchSettingsRow(
-            label = stringResource(R.string.settings_update_auto_check),
-            value = stringResource(
-                if (uiState.autoCheckAppUpdates) R.string.settings_enabled else R.string.settings_disabled
-            ),
-            checked = uiState.autoCheckAppUpdates,
-            onCheckedChange = onSetAutoCheckAppUpdates
-        )
-        if (uiState.autoCheckAppUpdates) {
+        if (showSideloadUpdates) {
             SwitchSettingsRow(
-                label = stringResource(R.string.settings_update_auto_download),
+                label = stringResource(R.string.settings_update_auto_check),
                 value = stringResource(
-                    if (uiState.autoDownloadAppUpdates) R.string.settings_enabled else R.string.settings_disabled
+                    if (uiState.autoCheckAppUpdates) R.string.settings_enabled else R.string.settings_disabled
                 ),
-                checked = uiState.autoDownloadAppUpdates,
-                onCheckedChange = onSetAutoDownloadAppUpdates
+                checked = uiState.autoCheckAppUpdates,
+                onCheckedChange = onSetAutoCheckAppUpdates
             )
-        }
-        SettingsRow(
-            label = stringResource(R.string.settings_update_latest_release),
-            value = formatLatestReleaseLabel(uiState.appUpdate, context)
-        )
-        SettingsRow(
-            label = stringResource(R.string.settings_update_status),
-            value = formatUpdateStatusLabel(uiState.appUpdate, context)
-        )
-        SettingsRow(
-            label = stringResource(R.string.settings_update_last_checked),
-            value = formatUpdateCheckTimeLabel(uiState.appUpdate.lastCheckedAt, context)
-        )
-        ClickableSettingsRow(
-            label = stringResource(R.string.settings_update_check_now),
-            value = stringResource(
-                if (uiState.isCheckingForUpdates) R.string.settings_update_checking else R.string.settings_update_check_action
-            ),
-            onClick = {
-                if (!uiState.isCheckingForUpdates) {
-                    onCheckForUpdates()
-                }
+            if (uiState.autoCheckAppUpdates) {
+                SwitchSettingsRow(
+                    label = stringResource(R.string.settings_update_auto_download),
+                    value = stringResource(
+                        if (uiState.autoDownloadAppUpdates) R.string.settings_enabled else R.string.settings_disabled
+                    ),
+                    checked = uiState.autoDownloadAppUpdates,
+                    onCheckedChange = onSetAutoDownloadAppUpdates
+                )
             }
-        )
-        if (shouldShowUpdateDownloadAction(uiState.appUpdate)) {
+            SettingsRow(
+                label = stringResource(R.string.settings_update_latest_release),
+                value = formatLatestReleaseLabel(uiState.appUpdate, context)
+            )
+            SettingsRow(
+                label = stringResource(R.string.settings_update_status),
+                value = formatUpdateStatusLabel(uiState.appUpdate, context)
+            )
+            SettingsRow(
+                label = stringResource(R.string.settings_update_last_checked),
+                value = formatUpdateCheckTimeLabel(uiState.appUpdate.lastCheckedAt, context)
+            )
             ClickableSettingsRow(
-                label = stringResource(R.string.settings_update_download),
-                value = formatUpdateDownloadLabel(uiState.appUpdate, context),
+                label = stringResource(R.string.settings_update_check_now),
+                value = stringResource(
+                    if (uiState.isCheckingForUpdates) R.string.settings_update_checking else R.string.settings_update_check_action
+                ),
                 onClick = {
-                    if (uiState.appUpdate.downloadStatus == com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloaded) {
-                        onInstallDownloadedUpdate()
-                    } else if (uiState.appUpdate.downloadStatus != com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloading) {
-                        onDownloadLatestUpdate()
+                    if (!uiState.isCheckingForUpdates) {
+                        onCheckForUpdates()
                     }
                 }
             )
-        }
-        if (!uiState.appUpdate.releaseUrl.isNullOrBlank()) {
-            ClickableSettingsRow(
-                label = stringResource(R.string.settings_update_view_release),
-                value = uiState.appUpdate.latestVersionName ?: stringResource(R.string.settings_update_release_notes),
-                onClick = { onOpenUri(uiState.appUpdate.releaseUrl.orEmpty()) }
-            )
-        }
-        if (!uiState.appUpdate.errorMessage.isNullOrBlank()) {
-            SettingsRow(
-                label = stringResource(R.string.settings_update_error),
-                value = uiState.appUpdate.errorMessage.orEmpty()
-            )
+            if (shouldShowUpdateDownloadAction(uiState.appUpdate)) {
+                ClickableSettingsRow(
+                    label = stringResource(R.string.settings_update_download),
+                    value = formatUpdateDownloadLabel(uiState.appUpdate, context),
+                    onClick = {
+                        if (uiState.appUpdate.downloadStatus == com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloaded) {
+                            onInstallDownloadedUpdate()
+                        } else if (uiState.appUpdate.downloadStatus != com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloading) {
+                            onDownloadLatestUpdate()
+                        }
+                    }
+                )
+            }
+            if (!uiState.appUpdate.releaseUrl.isNullOrBlank()) {
+                ClickableSettingsRow(
+                    label = stringResource(R.string.settings_update_view_release),
+                    value = uiState.appUpdate.latestVersionName ?: stringResource(R.string.settings_update_release_notes),
+                    onClick = { onOpenUri(uiState.appUpdate.releaseUrl.orEmpty()) }
+                )
+            }
+            if (!uiState.appUpdate.errorMessage.isNullOrBlank()) {
+                SettingsRow(
+                    label = stringResource(R.string.settings_update_error),
+                    value = uiState.appUpdate.errorMessage.orEmpty()
+                )
+            }
         }
     }
 

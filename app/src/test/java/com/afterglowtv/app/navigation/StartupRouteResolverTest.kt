@@ -1,5 +1,6 @@
 package com.afterglowtv.app.navigation
 
+import com.afterglowtv.app.store.StorePolicy
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -10,7 +11,9 @@ class StartupRouteResolverTest {
         assertThat(resolveStartupRoute(StartupDestination.IPTV_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.EPG)
         assertThat(resolveStartupRoute(StartupDestination.VOD_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.VOD_GUIDE)
         assertThat(resolveStartupRoute(StartupDestination.PERSONAL_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.LOCAL_MEDIA)
-        assertThat(resolveStartupRoute(StartupDestination.XXX_GUIDE, developerModeEnabled = true)).isEqualTo(Routes.ADULT_GUIDE)
+        assertThat(resolveStartupRoute(StartupDestination.XXX_GUIDE, developerModeEnabled = true)).isEqualTo(
+            if (StorePolicy.current.showAdultSurfaces) Routes.ADULT_GUIDE else Routes.HOME
+        )
     }
 
     @Test
@@ -27,9 +30,12 @@ class StartupRouteResolverTest {
             StartupDestination.VOD_GUIDE,
             StartupDestination.PERSONAL_GUIDE
         )
-        assertThat(StartupDestination.visibleEntries(developerModeEnabled = true)).contains(
-            StartupDestination.XXX_GUIDE
-        )
+        val developerModeEntries = StartupDestination.visibleEntries(developerModeEnabled = true)
+        if (StorePolicy.current.showAdultSurfaces) {
+            assertThat(developerModeEntries).contains(StartupDestination.XXX_GUIDE)
+        } else {
+            assertThat(developerModeEntries).doesNotContain(StartupDestination.XXX_GUIDE)
+        }
     }
 
     @Test
@@ -45,6 +51,8 @@ class StartupRouteResolverTest {
                 destination = StartupDestination.XXX_GUIDE,
                 developerModeEnabled = true
             )
-        ).isEqualTo(StartupDestination.XXX_GUIDE)
+        ).isEqualTo(
+            if (StorePolicy.current.showAdultSurfaces) StartupDestination.XXX_GUIDE else StartupDestination.HOME
+        )
     }
 }

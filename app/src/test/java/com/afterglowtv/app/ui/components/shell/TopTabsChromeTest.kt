@@ -1,5 +1,6 @@
 package com.afterglowtv.app.ui.components.shell
 
+import com.afterglowtv.app.store.StorePolicy
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -14,18 +15,21 @@ class TopTabsChromeTest {
             tab.label.contains("Guide", ignoreCase = true)
         }
 
-        assertThat(guideTabs.map { it.id }).containsExactly(
-            "epg",
-            "vod_guide",
-            "adult_guide",
-            "local_media"
-        ).inOrder()
-        assertThat(guideTabs.map { it.label }).containsExactly(
-            "IPTV Guide",
-            "VOD Guide",
-            "XXX Guide",
-            "Personal Guide"
-        ).inOrder()
+        val expectedIds = buildList {
+            add("epg")
+            add("vod_guide")
+            if (StorePolicy.current.showAdultSurfaces) add("adult_guide")
+            add("local_media")
+        }
+        val expectedLabels = buildList {
+            add(if (StorePolicy.current.amazonReviewBuild) "TV Guide" else "IPTV Guide")
+            add(if (StorePolicy.current.amazonReviewBuild) "Video Guide" else "VOD Guide")
+            if (StorePolicy.current.showAdultSurfaces) add("XXX Guide")
+            add("Personal Guide")
+        }
+
+        assertThat(guideTabs.map { it.id }).containsExactlyElementsIn(expectedIds).inOrder()
+        assertThat(guideTabs.map { it.label }).containsExactlyElementsIn(expectedLabels).inOrder()
     }
 
     @Test

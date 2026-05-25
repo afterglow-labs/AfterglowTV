@@ -990,6 +990,7 @@
     <string name="setup_stalker_epg_sync_mode_upfront_description">Download live channels and import the portal guide during setup. If XMLTV is configured and works, it is used first.</string>
     <string name="setup_stalker_epg_sync_mode_background_description">Finish setup first, then import the portal guide in the background. If XMLTV is configured and works, it is used first.</string>
     <string name="setup_stalker_epg_sync_mode_skip_description">Do not bulk import guide data automatically. Live guide data can still load on demand when you browse channels.</string>
+    <string name="setup_paste_m3u_url">Paste M3U URL</string>
     <string name="setup_m3u_hint">M3U URL</string>
     <string name="setup_epg_url_hint">EPG / XMLTV URL (optional)</string>
     <string name="setup_tab_url">URL</string>

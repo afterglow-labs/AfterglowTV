@@ -117,7 +117,7 @@ fun DashboardScreen(
             currentRoute = currentRoute,
             onNavigate = onNavigate,
             title = stringResource(R.string.nav_home),
-            subtitle = provider?.name,
+            subtitle = provider?.name?.takeIf { uiState.showProviderChrome },
             navigationChrome = AppNavigationChrome.TopBar,
             compactHeader = true,
             showScreenHeader = false
@@ -147,7 +147,7 @@ fun DashboardScreen(
                 item(key = "afterglow_brand_strip") {
                     AfterglowBrandStrip(
                         wordmark = "Home",
-                        tagline = provider?.name?.let { "Connected to $it." }
+                        tagline = provider?.name?.takeIf { uiState.showProviderChrome }?.let { "Connected to $it." }
                             ?: "Pick up where you left off.",
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                     )

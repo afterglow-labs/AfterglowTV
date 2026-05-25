@@ -18,6 +18,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Episode
@@ -297,10 +299,27 @@ class AppStartupDestinationViewModel @Inject constructor(
 }
 
 internal fun resolveStartupRoute(destination: StartupDestination, developerModeEnabled: Boolean): String =
-    if (destination.requiresDeveloperMode && !developerModeEnabled) Routes.HOME else destination.route
+    resolveStartupRoute(destination, developerModeEnabled, StorePolicy.current)
+
+internal fun resolveStartupRoute(
+    destination: StartupDestination,
+    developerModeEnabled: Boolean,
+    policy: StorePolicySnapshot
+): String =
+    if (
+        (destination.requiresDeveloperMode && (!developerModeEnabled || !policy.showAdultSurfaces)) ||
+        (destination.route == Routes.WELCOME && !policy.showWelcomeRoute)
+    ) {
+        Routes.HOME
+    } else {
+        destination.route
+    }
 
 private fun isDeveloperLockedRoute(route: String): Boolean =
     route == Routes.ADULT_GUIDE
+
+private fun isStoreLockedRoute(route: String): Boolean =
+    route == Routes.ADULT_GUIDE && !StorePolicy.current.showAdultSurfaces
 
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
@@ -321,7 +340,7 @@ fun AppNavigation(mainActivity: MainActivity) {
 
             is ExternalNavigationRequest.Destination -> {
                 val route = request.destination.toRoute()
-                if (isDeveloperLockedRoute(route) && !developerModeEnabled) {
+                if (isStoreLockedRoute(route) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
                     mainActivity.clearExternalNavigationRequest()
                 } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
@@ -353,7 +372,7 @@ fun AppNavigation(mainActivity: MainActivity) {
     // NAV-M02/NAV-H02: Single helper replacing repeated tab lambdas without serializing
     // each tab's full UI tree into saved state on every switch.
     fun tabNavigate(route: String) {
-        if (isDeveloperLockedRoute(route) && !developerModeEnabled) {
+        if (isStoreLockedRoute(route) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
             return
         }
         val entry = navController.currentBackStackEntry ?: return
@@ -573,13 +592,17 @@ fun AppNavigation(mainActivity: MainActivity) {
                 onNavigate = { route -> tabNavigate(route) },
                 currentRoute = Routes.VOD_GUIDE,
                 initialGuideMode = true,
-                wordmark = "VOD Guide",
-                tagline = "Provider VOD in guide-style rows."
+                wordmark = if (StorePolicy.current.amazonReviewBuild) "Video Guide" else "VOD Guide",
+                tagline = if (StorePolicy.current.amazonReviewBuild) {
+                    "On-demand videos in guide-style rows."
+                } else {
+                    "Provider VOD in guide-style rows."
+                }
             )
         }
 
         composable(Routes.ADULT_GUIDE) {
-            if (!developerModeEnabled) {
+            if (!developerModeEnabled || !StorePolicy.current.showAdultSurfaces) {
                 LaunchedEffect(Unit) {
                     navController.navigate(Routes.HOME) {
                         launchSingleTop = true
