@@ -56,6 +56,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -82,6 +83,7 @@ class DashboardViewModel @Inject constructor(
         const val MOVIE_SHELF_LIMIT = 12
         const val SERIES_SHELF_LIMIT = 12
         const val HOME_SHORTCUT_LIMIT = 4
+        const val PROVIDER_SETTLE_DELAY_MS = 750L
     }
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -117,6 +119,7 @@ class DashboardViewModel @Inject constructor(
                 .flatMapLatest { (activeSource, activeProvider) ->
                     flow {
                         if (activeSource == null && activeProvider == null) {
+                            delay(PROVIDER_SETTLE_DELAY_MS)
                             emit(DashboardUiState(isLoading = false))
                             return@flow
                         }

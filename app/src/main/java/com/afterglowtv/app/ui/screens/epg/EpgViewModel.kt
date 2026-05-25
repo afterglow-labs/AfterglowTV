@@ -42,6 +42,7 @@ import com.afterglowtv.domain.usecase.ScheduleRecordingCommand
 import com.afterglowtv.domain.util.AdultContentVisibilityPolicy
 import com.afterglowtv.data.preferences.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -61,6 +62,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
@@ -369,26 +371,41 @@ class EpgViewModel @Inject constructor(
     fun categorizeNextAdultGuideChunk() {
         val snapshot = baseGuideSnapshot.value ?: return
         if (snapshot.selectedCategoryId != VirtualCategoryIds.ADULT_GUIDE) return
+        if (adultGuideCategorizationJob?.isActive == true || _uiState.value.isAdultGuideCategorizing) return
         val channels = snapshot.allChannels
         if (channels.isEmpty()) return
 
         val nextCount = (_uiState.value.adultGuideCategorizedChannelCount + ADULT_GUIDE_CATEGORY_CHUNK_SIZE)
             .coerceAtMost(channels.size)
         val isComplete = nextCount >= channels.size
-        val categories = AdultGuideCategoryBuilder.build(
-            channels = channels.subList(0, nextCount),
-            providerCategories = snapshot.categories,
-            includeAllCategory = isComplete
-        )
-        _uiState.update { current ->
-            if (current.selectedCategoryId != VirtualCategoryIds.ADULT_GUIDE) {
-                current
-            } else {
-                current.copy(
-                    adultGuideCategories = categories,
-                    adultGuideCategorizedChannelCount = nextCount,
-                    isAdultGuideCategorizing = false
+        val chunkChannels = channels.subList(0, nextCount).toList()
+        val providerCategories = snapshot.categories
+        adultGuideCategorizationJob?.cancel()
+        adultGuideCategorizationJob = viewModelScope.launch {
+            _uiState.update { current ->
+                if (current.selectedCategoryId == VirtualCategoryIds.ADULT_GUIDE) {
+                    current.copy(isAdultGuideCategorizing = true)
+                } else {
+                    current
+                }
+            }
+            val categories = withContext(Dispatchers.Default) {
+                AdultGuideCategoryBuilder.build(
+                    channels = chunkChannels,
+                    providerCategories = providerCategories,
+                    includeAllCategory = isComplete
                 )
+            }
+            _uiState.update { current ->
+                if (current.selectedCategoryId != VirtualCategoryIds.ADULT_GUIDE) {
+                    current
+                } else {
+                    current.copy(
+                        adultGuideCategories = categories,
+                        adultGuideCategorizedChannelCount = nextCount,
+                        isAdultGuideCategorizing = false
+                    )
+                }
             }
         }
     }

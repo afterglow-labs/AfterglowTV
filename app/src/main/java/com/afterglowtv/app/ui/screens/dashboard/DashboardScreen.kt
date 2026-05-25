@@ -122,7 +122,16 @@ fun DashboardScreen(
             compactHeader = true,
             showScreenHeader = false
         ) {
-            if (provider == null) {
+            if (shouldShowDashboardLoadingState(uiState)) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Primary)
+                }
+                return@AppScreenScaffold
+            }
+            if (shouldShowDashboardEmptyState(uiState)) {
                 EmptyDashboard(
                     onAddProvider = onAddProvider,
                     onOpenSettings = { onNavigate(Routes.SETTINGS) }
@@ -250,6 +259,12 @@ fun DashboardScreen(
         )
     }
 }
+
+internal fun shouldShowDashboardLoadingState(uiState: DashboardUiState): Boolean =
+    uiState.provider == null && uiState.isLoading
+
+internal fun shouldShowDashboardEmptyState(uiState: DashboardUiState): Boolean =
+    uiState.provider == null && !uiState.isLoading
 
 @Composable
 private fun DashboardHero(

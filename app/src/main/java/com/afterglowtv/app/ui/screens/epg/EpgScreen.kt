@@ -494,7 +494,9 @@ fun FullEpgScreen(
                             ?.name
                             ?: stringResource(if (fixedCategoryId == VirtualCategoryIds.ADULT_GUIDE) titleRes else R.string.epg_filter_short),
                         firstButtonFocusRequester = guideToolbarFocusRequester,
-                        manualSortLabel = if (adultSortRemaining > 0) {
+                        manualSortLabel = if (uiState.isAdultGuideCategorizing) {
+                            "Sorting..."
+                        } else if (adultSortRemaining > 0) {
                             "Sort next ${adultSortRemaining.coerceAtMost(200)}"
                         } else {
                             null
@@ -609,8 +611,16 @@ fun FullEpgScreen(
                                     modifier = Modifier.weight(1f),
                                     title = "XXX Guide is ready",
                                     subtitle = "Press Sort next 200 to categorize channels in small chunks.",
-                                    actionLabel = "Sort next ${adultSortRemaining.coerceAtMost(200)}",
-                                    onAction = viewModel::categorizeNextAdultGuideChunk
+                                    actionLabel = if (uiState.isAdultGuideCategorizing) {
+                                        "Sorting..."
+                                    } else {
+                                        "Sort next ${adultSortRemaining.coerceAtMost(200)}"
+                                    },
+                                    onAction = if (uiState.isAdultGuideCategorizing) {
+                                        {}
+                                    } else {
+                                        viewModel::categorizeNextAdultGuideChunk
+                                    }
                                 )
                             } else if (useAdultGuide && adultGuideCategories.isNotEmpty()) {
                                 AdultGuideSurface(

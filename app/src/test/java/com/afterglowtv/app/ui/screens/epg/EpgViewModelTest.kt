@@ -134,6 +134,18 @@ class EpgViewModelTest {
         assertWithMessage(createdViewModels.lastOrNull()?.uiState?.value.toString()).that(condition()).isTrue()
     }
 
+    private fun waitForUiStateWithRealDispatcher(maxAttempts: Int = 200, condition: () -> Boolean) {
+        repeat(maxAttempts) {
+            Thread.sleep(10L)
+            testDispatcher.scheduler.advanceUntilIdle()
+            if (condition()) {
+                return
+            }
+        }
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertWithMessage(createdViewModels.lastOrNull()?.uiState?.value.toString()).that(condition()).isTrue()
+    }
+
     private fun createViewModel(providerRepository: ProviderRepository = this.providerRepository): EpgViewModel =
         EpgViewModel(
             providerRepository = providerRepository,
@@ -563,7 +575,7 @@ class EpgViewModelTest {
         assertThat(firstState.isAdultGuideCategorizing).isFalse()
 
         viewModel.categorizeNextAdultGuideChunk()
-        advanceUntilIdle()
+        waitForUiStateWithRealDispatcher { viewModel.uiState.value.adultGuideCategorizedChannelCount == 200 }
 
         val secondState = viewModel.uiState.value
         assertThat(secondState.adultGuideCategorizedChannelCount).isEqualTo(200)
@@ -572,14 +584,14 @@ class EpgViewModelTest {
             .doesNotContain(com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder.ALL_CATEGORY_KEY)
 
         viewModel.categorizeNextAdultGuideChunk()
-        advanceUntilIdle()
+        waitForUiStateWithRealDispatcher { viewModel.uiState.value.adultGuideCategorizedChannelCount == 400 }
 
         val thirdState = viewModel.uiState.value
         assertThat(thirdState.adultGuideCategorizedChannelCount).isEqualTo(400)
         assertThat(thirdState.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.size).isEqualTo(400)
 
         viewModel.categorizeNextAdultGuideChunk()
-        advanceUntilIdle()
+        waitForUiStateWithRealDispatcher { viewModel.uiState.value.adultGuideCategorizedChannelCount == channels.size }
 
         val finalState = viewModel.uiState.value
         assertThat(finalState.adultGuideCategorizedChannelCount).isEqualTo(channels.size)
