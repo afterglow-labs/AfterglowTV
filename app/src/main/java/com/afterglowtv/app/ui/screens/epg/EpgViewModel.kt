@@ -40,6 +40,8 @@ import com.afterglowtv.domain.usecase.GetCustomCategories
 import com.afterglowtv.domain.usecase.ScheduleRecording
 import com.afterglowtv.domain.usecase.ScheduleRecordingCommand
 import com.afterglowtv.domain.util.AdultContentVisibilityPolicy
+import com.afterglowtv.data.preferences.AdultGuideCategoryCache
+import com.afterglowtv.data.preferences.AdultGuideCategoryCacheEntry
 import com.afterglowtv.data.preferences.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +50,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -106,6 +107,7 @@ data class EpgUiState(
     val hasMoreChannels: Boolean = false,
     val adultGuideCategories: List<AdultGuideCategory> = emptyList(),
     val adultGuideCategorizedChannelCount: Int = 0,
+    val adultGuideSortBatchSize: Int = 200,
     val isAdultGuideCategorizing: Boolean = false
 ) {
     companion object {
@@ -281,7 +283,7 @@ class EpgViewModel @Inject constructor(
         private const val MINUTE_MS = 60 * 1000L
         private const val MIN_PLACEHOLDER_RECORDING_MS = 60 * MINUTE_MS
         private const val ADULT_GUIDE_RENDER_PAGE_SIZE = 240
-        private const val ADULT_GUIDE_CATEGORY_CHUNK_SIZE = 200
+        private const val DEFAULT_ADULT_GUIDE_SORT_BATCH_SIZE = 200
     }
 
     private val _uiState = MutableStateFlow(EpgUiState())
@@ -307,9 +309,11 @@ class EpgViewModel @Inject constructor(
     private var adultGuideCategorizationJob: Job? = null
     private var combinedCategoriesById: Map<Long, CombinedCategory> = emptyMap()
     private var adultGuideRenderLimit: Int = ADULT_GUIDE_RENDER_PAGE_SIZE
+    private val adultGuideSortBatchSize = MutableStateFlow(DEFAULT_ADULT_GUIDE_SORT_BATCH_SIZE)
 
     init {
         restoreGuidePreferences()
+        observeAdultGuideSortBatchSize()
         observeGuideBase()
         observeGuidePresentation()
     }
@@ -375,7 +379,7 @@ class EpgViewModel @Inject constructor(
         val channels = snapshot.allChannels
         if (channels.isEmpty()) return
 
-        val nextCount = (_uiState.value.adultGuideCategorizedChannelCount + ADULT_GUIDE_CATEGORY_CHUNK_SIZE)
+        val nextCount = (_uiState.value.adultGuideCategorizedChannelCount + adultGuideSortBatchSize.value)
             .coerceAtMost(channels.size)
         val isComplete = nextCount >= channels.size
         val chunkChannels = channels.subList(0, nextCount).toList()
@@ -403,11 +407,34 @@ class EpgViewModel @Inject constructor(
                     current.copy(
                         adultGuideCategories = categories,
                         adultGuideCategorizedChannelCount = nextCount,
+                        adultGuideSortBatchSize = adultGuideSortBatchSize.value,
                         isAdultGuideCategorizing = false
                     )
                 }
             }
             preferencesRepository.setAdultGuideCategorizedChannelCount(snapshot.providerId, nextCount)
+            preferencesRepository.setAdultGuideCategoryCache(
+                snapshot.providerId,
+                categories.toAdultGuideCategoryCache(nextCount)
+            )
+        }
+    }
+
+    fun setAdultGuideSortBatchSize(size: Int) {
+        val normalized = size.coerceIn(50, 2_000)
+        adultGuideSortBatchSize.value = normalized
+        _uiState.update { it.copy(adultGuideSortBatchSize = normalized) }
+        viewModelScope.launch {
+            preferencesRepository.setAdultGuideSortBatchSize(normalized)
+        }
+    }
+
+    private fun observeAdultGuideSortBatchSize() {
+        viewModelScope.launch {
+            preferencesRepository.adultGuideSortBatchSize.collectLatest { batchSize ->
+                adultGuideSortBatchSize.value = batchSize
+                _uiState.update { it.copy(adultGuideSortBatchSize = batchSize) }
+            }
         }
     }
 
@@ -884,6 +911,7 @@ class EpgViewModel @Inject constructor(
                 } else {
                     clearAdultGuideCategorization()
                 }
+                val isAdultGuideRequest = request.isAdultGuideRequest()
                 _uiState.update {
                     it.copy(
                         currentProviderName = provider.name,
@@ -896,9 +924,9 @@ class EpgViewModel @Inject constructor(
                         guideAnchorTime = request.anchorTime,
                         guideWindowStart = request.windowStart,
                         guideWindowEnd = request.windowEnd,
-                        isInitialLoading = !hasVisibleGuide,
-                        isRefreshing = hasVisibleGuide,
-                        loadedChannelCount = 0,
+                        isInitialLoading = !hasVisibleGuide && !isAdultGuideRequest,
+                        isRefreshing = hasVisibleGuide && !isAdultGuideRequest,
+                        loadedChannelCount = if (isAdultGuideRequest) request.estimatedChannelCount else 0,
                         totalChannelCount = request.estimatedChannelCount,
                         adultGuideCategories = it.adultGuideCategories,
                         adultGuideCategorizedChannelCount = it.adultGuideCategorizedChannelCount,
@@ -1063,6 +1091,7 @@ class EpgViewModel @Inject constructor(
             } else {
                 clearAdultGuideCategorization()
             }
+            val isAdultGuideRequest = request.isAdultGuideRequest()
             _uiState.update {
                 it.copy(
                     currentProviderName = profileName,
@@ -1075,9 +1104,9 @@ class EpgViewModel @Inject constructor(
                     guideAnchorTime = request.anchorTime,
                     guideWindowStart = request.windowStart,
                     guideWindowEnd = request.windowEnd,
-                    isInitialLoading = !hasVisibleGuide,
-                    isRefreshing = hasVisibleGuide,
-                    loadedChannelCount = 0,
+                    isInitialLoading = !hasVisibleGuide && !isAdultGuideRequest,
+                    isRefreshing = hasVisibleGuide && !isAdultGuideRequest,
+                    loadedChannelCount = if (isAdultGuideRequest) request.estimatedChannelCount else 0,
                     totalChannelCount = request.estimatedChannelCount,
                     adultGuideCategories = it.adultGuideCategories,
                     adultGuideCategorizedChannelCount = it.adultGuideCategorizedChannelCount,
@@ -1312,12 +1341,41 @@ class EpgViewModel @Inject constructor(
         if (adultGuideCategorizationJob?.isActive == true) return
 
         adultGuideCategorizationJob = viewModelScope.launch {
-            val savedCount = preferencesRepository
-                .adultGuideCategorizedChannelCount(snapshot.providerId)
+            val cached = preferencesRepository
+                .adultGuideCategoryCache(snapshot.providerId)
                 .first()
-                .coerceIn(0, snapshot.allChannels.size)
-            val currentCount = _uiState.value.adultGuideCategorizedChannelCount
-            if (savedCount <= currentCount) return@launch
+            val cachedCategories = cached
+                ?.toAdultGuideCategories(snapshot.allChannels)
+                .orEmpty()
+            if (cachedCategories.isNotEmpty()) {
+                _uiState.update { current ->
+                    if (current.selectedCategoryId != VirtualCategoryIds.ADULT_GUIDE) {
+                        current
+                    } else {
+                        current.copy(
+                            adultGuideCategories = cachedCategories,
+                            adultGuideCategorizedChannelCount = cached
+                                ?.categorizedChannelCount
+                                ?.coerceIn(0, snapshot.allChannels.size)
+                                ?: cachedCategories.maxOf { it.channels.size },
+                            isAdultGuideCategorizing = false
+                        )
+                    }
+                }
+                return@launch
+            }
+
+            val savedCount = (
+                cached?.categorizedChannelCount
+                    ?: preferencesRepository
+                        .adultGuideCategorizedChannelCount(snapshot.providerId)
+                        .first()
+                ).coerceIn(0, snapshot.allChannels.size)
+            val current = _uiState.value
+            if (savedCount <= 0) return@launch
+            if (savedCount <= current.adultGuideCategorizedChannelCount && current.adultGuideCategories.isNotEmpty()) {
+                return@launch
+            }
 
             _uiState.update { current ->
                 if (current.selectedCategoryId == VirtualCategoryIds.ADULT_GUIDE) {
@@ -1346,6 +1404,11 @@ class EpgViewModel @Inject constructor(
                     )
                 }
             }
+            preferencesRepository.setAdultGuideCategorizedChannelCount(snapshot.providerId, savedCount)
+            preferencesRepository.setAdultGuideCategoryCache(
+                snapshot.providerId,
+                categories.toAdultGuideCategoryCache(savedCount)
+            )
         }
     }
 
@@ -1370,40 +1433,6 @@ class EpgViewModel @Inject constructor(
         channelSelection: GuideChannelSelection,
         visibleChannels: List<Channel>
     ) {
-        val total = channelSelection.channels.size
-        if (total <= 0) {
-            publishGuideChannelLoadState(
-                providerName = providerName,
-                providerSourceLabel = providerSourceLabel,
-                providerArchiveSummary = providerArchiveSummary,
-                categories = categories,
-                request = request,
-                channelSelection = channelSelection,
-                visibleChannels = emptyList()
-            )
-            return
-        }
-        val chunkSize = when {
-            total <= 80 -> 10
-            total <= 400 -> 25
-            total <= 1_000 -> 50
-            else -> 100
-        }
-        var loaded = 0
-        while (loaded < total) {
-            loaded = (loaded + chunkSize).coerceAtMost(total)
-            publishGuideChannelProgressState(
-                providerName = providerName,
-                providerSourceLabel = providerSourceLabel,
-                providerArchiveSummary = providerArchiveSummary,
-                categories = categories,
-                request = request,
-                channelSelection = channelSelection,
-                loaded = loaded,
-                total = total
-            )
-            delay(20L)
-        }
         publishGuideChannelLoadState(
             providerName = providerName,
             providerSourceLabel = providerSourceLabel,
@@ -1472,7 +1501,7 @@ class EpgViewModel @Inject constructor(
                 channels = visibleChannels,
                 programsByChannel = emptyMap(),
                 isInitialLoading = false,
-                isRefreshing = true,
+                isRefreshing = !request.isAdultGuideRequest(),
                 error = null,
                 loadedChannelCount = channelSelection.channels.size,
                 totalChannelCount = channelSelection.channels.size,
@@ -1643,6 +1672,8 @@ class EpgViewModel @Inject constructor(
     }
 
     private fun updateGuideAnchorTime(anchorTimeMs: Long) {
+        val activeCategoryId = fixedCategoryId.value ?: selectedCategoryId.value
+        if (activeCategoryId == VirtualCategoryIds.ADULT_GUIDE) return
         guideAnchorTime.value = anchorTimeMs
         viewModelScope.launch {
             preferencesRepository.setGuideAnchorTime(anchorTimeMs)
@@ -2231,6 +2262,36 @@ class EpgViewModel @Inject constructor(
         if (!category.isUserProtected) return true
         return AdultContentVisibilityPolicy.showInAggregatedSurfaces(parentalControlLevel) ||
             unlockedCategoryIds.contains(category.id)
+    }
+
+    private fun List<AdultGuideCategory>.toAdultGuideCategoryCache(count: Int): AdultGuideCategoryCache =
+        AdultGuideCategoryCache(
+            categorizedChannelCount = count.coerceAtLeast(0),
+            categories = map { category ->
+                AdultGuideCategoryCacheEntry(
+                    key = category.key,
+                    title = category.title,
+                    channelIds = category.channels.map(Channel::id)
+                )
+            }
+        )
+
+    private fun AdultGuideCategoryCache.toAdultGuideCategories(channels: List<Channel>): List<AdultGuideCategory> {
+        val channelsById = channels.associateBy(Channel::id)
+        return categories.mapNotNull { entry ->
+            val resolvedChannels = entry.channelIds
+                .mapNotNull(channelsById::get)
+                .distinctBy(Channel::id)
+            if (resolvedChannels.isEmpty()) {
+                null
+            } else {
+                AdultGuideCategory(
+                    key = entry.key,
+                    title = entry.title,
+                    channels = resolvedChannels
+                )
+            }
+        }
     }
 }
 

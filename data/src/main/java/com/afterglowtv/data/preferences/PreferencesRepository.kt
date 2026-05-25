@@ -40,6 +40,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -64,6 +68,19 @@ private fun sanitizePlaybackTimerMinutes(minutes: Int): Int = when (minutes) {
     in 76..105 -> 90
     else -> 120
 }
+
+@Serializable
+data class AdultGuideCategoryCache(
+    val categorizedChannelCount: Int,
+    val categories: List<AdultGuideCategoryCacheEntry>
+)
+
+@Serializable
+data class AdultGuideCategoryCacheEntry(
+    val key: String,
+    val title: String,
+    val channelIds: List<Long>
+)
 
 data class VisualPreferencesSnapshot(
     val themePalette: String,
@@ -141,6 +158,7 @@ class PreferencesRepository @Inject constructor(
         val LIVE_TV_QUICK_FILTER_VISIBILITY = stringPreferencesKey("live_tv_quick_filter_visibility")
         val DEVELOPER_MODE_ENABLED = booleanPreferencesKey("developer_mode_enabled")
         val SHOW_ADULT_GUIDE_TAB = booleanPreferencesKey("show_adult_guide_tab")
+        val ADULT_GUIDE_SORT_BATCH_SIZE = intPreferencesKey("adult_guide_sort_batch_size")
         val LIVE_CHANNEL_NUMBERING_MODE = stringPreferencesKey("live_channel_numbering_mode")
         val LIVE_CHANNEL_GROUPING_MODE = stringPreferencesKey("live_channel_grouping_mode")
         val GROUPED_CHANNEL_LABEL_MODE = stringPreferencesKey("grouped_channel_label_mode")
@@ -275,6 +293,11 @@ class PreferencesRepository @Inject constructor(
                 Context.MODE_PRIVATE
             )
         }
+    }
+
+    private val adultGuideCacheJson = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
     }
 
     val lastActiveProviderId: Flow<Long?> = context.dataStore.data.map { preferences ->
@@ -719,9 +742,36 @@ class PreferencesRepository @Inject constructor(
                 ?: 0
         }
 
+    fun adultGuideCategoryCache(providerId: Long): Flow<AdultGuideCategoryCache?> =
+        context.dataStore.data.map { preferences ->
+            val raw = preferences[stringPreferencesKey(adultGuideCategoryCacheKey(providerId))]
+                ?: return@map null
+            runCatching {
+                adultGuideCacheJson.decodeFromString<AdultGuideCategoryCache>(raw)
+            }.getOrNull()
+        }
+
+    val adultGuideSortBatchSize: Flow<Int> = context.dataStore.data.map { preferences ->
+        normalizeAdultGuideSortBatchSize(preferences[PreferencesKeys.ADULT_GUIDE_SORT_BATCH_SIZE])
+    }
+
     suspend fun setAdultGuideCategorizedChannelCount(providerId: Long, count: Int) {
         context.dataStore.edit { preferences ->
             preferences[intPreferencesKey(adultGuideCategorizedChannelCountKey(providerId))] = count.coerceAtLeast(0)
+        }
+    }
+
+    suspend fun setAdultGuideCategoryCache(providerId: Long, cache: AdultGuideCategoryCache) {
+        context.dataStore.edit { preferences ->
+            preferences[stringPreferencesKey(adultGuideCategoryCacheKey(providerId))] = adultGuideCacheJson.encodeToString(cache)
+            preferences[intPreferencesKey(adultGuideCategorizedChannelCountKey(providerId))] =
+                cache.categorizedChannelCount.coerceAtLeast(0)
+        }
+    }
+
+    suspend fun setAdultGuideSortBatchSize(size: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.ADULT_GUIDE_SORT_BATCH_SIZE] = normalizeAdultGuideSortBatchSize(size)
         }
     }
 
@@ -2049,6 +2099,15 @@ class PreferencesRepository @Inject constructor(
 
     private fun adultGuideCategorizedChannelCountKey(providerId: Long): String =
         "adult_guide_categorized_channel_count_$providerId"
+
+    private fun adultGuideCategoryCacheKey(providerId: Long): String =
+        "adult_guide_category_cache_$providerId"
+}
+
+private fun normalizeAdultGuideSortBatchSize(size: Int?): Int = when (val value = size ?: 200) {
+    in Int.MIN_VALUE..49 -> 50
+    in 50..2_000 -> value
+    else -> 2_000
 }
 
 data class ParentalPinBackupData(

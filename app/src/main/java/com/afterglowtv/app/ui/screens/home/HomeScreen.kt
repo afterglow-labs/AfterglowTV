@@ -164,6 +164,8 @@ fun HomeScreen(
     onNavigate: (String) -> Unit,
     currentRoute: String,
     initialCategoryId: Long? = null,
+    adultGuideMode: Boolean = false,
+    titleRes: Int = R.string.nav_live_tv,
     viewModel: HomeViewModel = hiltViewModel(),
     multiViewViewModel: MultiViewViewModel = hiltViewModel()
 ) {
@@ -176,8 +178,8 @@ fun HomeScreen(
     }
     val shouldShowLiveSourceSwitcher = uiState.showLiveSourceSwitcher && uiState.liveSourceOptions.isNotEmpty()
     val isReorderMode = uiState.isChannelReorderMode
-    val isProMode = uiState.liveTvChannelMode == LiveTvChannelMode.PRO
-    val isDenseMode = uiState.liveTvChannelMode != LiveTvChannelMode.COMFORTABLE
+    val isProMode = adultGuideMode || uiState.liveTvChannelMode == LiveTvChannelMode.PRO
+    val isDenseMode = adultGuideMode || uiState.liveTvChannelMode != LiveTvChannelMode.COMFORTABLE
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val isTelevisionDevice = rememberIsTelevisionDevice()
     val sidebarWidth = if (screenWidth < 900.dp) {
@@ -198,12 +200,16 @@ fun HomeScreen(
     } else {
         340.dp
     }
-    val channelRowHeight = when (uiState.liveTvChannelMode) {
+    val channelRowHeight = if (adultGuideMode) {
+        52.dp
+    } else when (uiState.liveTvChannelMode) {
         LiveTvChannelMode.COMFORTABLE -> 92.dp
         LiveTvChannelMode.COMPACT -> 54.dp
         LiveTvChannelMode.PRO -> 52.dp
     }
-    val channelListSpacing = when (uiState.liveTvChannelMode) {
+    val channelListSpacing = if (adultGuideMode) {
+        2.dp
+    } else when (uiState.liveTvChannelMode) {
         LiveTvChannelMode.COMFORTABLE -> 8.dp
         LiveTvChannelMode.COMPACT -> 2.dp
         LiveTvChannelMode.PRO -> 2.dp
@@ -228,7 +234,11 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    LaunchedEffect(initialCategoryId) {
+    LaunchedEffect(adultGuideMode) {
+        viewModel.setAdultGuideMode(adultGuideMode)
+    }
+
+    LaunchedEffect(initialCategoryId, adultGuideMode) {
         viewModel.setPreferredInitialCategory(initialCategoryId)
     }
 
@@ -304,7 +314,7 @@ fun HomeScreen(
         AppScreenScaffold(
             currentRoute = currentRoute,
             onNavigate = onNavigate,
-            title = stringResource(R.string.nav_live_tv),
+            title = stringResource(titleRes),
             subtitle = uiState.activeLiveSourceTitle.ifBlank { uiState.provider?.name },
             navigationChrome = AppNavigationChrome.TopBar,
             compactHeader = true,

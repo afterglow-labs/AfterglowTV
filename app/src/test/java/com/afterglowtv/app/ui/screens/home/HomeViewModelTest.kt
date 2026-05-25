@@ -373,6 +373,63 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `adult guide mode reuses live tv browser with generated adult categories`() = runTest {
+        val provider = Provider(
+            id = 29L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://test"
+        )
+        val adultProviderCategory = Category(id = 90L, name = "XXX")
+        val channels = listOf(
+            Channel(
+                id = 1L,
+                name = "Trans MILF Channel",
+                providerId = provider.id,
+                streamUrl = "https://adult/1",
+                categoryId = adultProviderCategory.id
+            ),
+            Channel(
+                id = 2L,
+                name = "BBC News",
+                providerId = provider.id,
+                streamUrl = "https://news/1",
+                categoryId = 10L
+            )
+        )
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(
+            flowOf(listOf(adultProviderCategory, Category(id = 10L, name = "News")))
+        )
+        whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(channels))
+        whenever(preferencesRepository.adultGuideCategoryCache(provider.id)).thenReturn(flowOf(null))
+        runBlocking {
+            whenever(preferencesRepository.setAdultGuideCategoryCache(any(), any())).thenReturn(Unit)
+        }
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.setAdultGuideMode(true)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.isAdultGuideMode).isTrue()
+        assertThat(state.categories.map { it.name }).containsAtLeast("MILF", "Trans", "All XXX")
+        assertThat(state.filteredChannels.map(Channel::id)).containsExactly(1L)
+
+        val transCategory = state.categories.first { it.name == "Trans" }
+        viewModel.selectCategory(transCategory)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.filteredChannels.map(Channel::id)).containsExactly(1L)
+        verify(preferencesRepository, never()).setLastLiveCategoryId(eq(provider.id), any())
+        verify(preferencesRepository).setAdultGuideCategoryCache(
+            eq(provider.id),
+            argThat { categorizedChannelCount == 1 && categories.any { it.title == "Trans" } }
+        )
+    }
+
+    @Test
     fun `channel search delegates to repository for provider categories`() = runTest {
         val provider = Provider(
             id = 30L,

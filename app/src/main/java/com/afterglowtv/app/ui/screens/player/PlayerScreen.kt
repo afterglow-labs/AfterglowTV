@@ -625,17 +625,20 @@ fun PlayerScreen(
                 if (!isGuideZappablePlayback) {
                     return@onPreviewKeyEvent false
                 }
+                val keyCode = event.nativeKeyEvent.keyCode
+                val isDedicatedChannelKey = keyCode == KeyEvent.KEYCODE_CHANNEL_UP ||
+                    keyCode == KeyEvent.KEYCODE_CHANNEL_DOWN
                 if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay) {
                     return@onPreviewKeyEvent false
                 }
-                if (showControls || showChannelInfoOverlay || showDiagnostics) {
+                if ((showControls || showChannelInfoOverlay || showDiagnostics) && !isDedicatedChannelKey) {
                     return@onPreviewKeyEvent false
                 }
                 if (showTrackSelection != null || showVariantSelection || showSpeedSelection || showAudioVideoOffsetDialog || showStopPlaybackTimerDialog || showIdleStandbyTimerDialog || showProgramHistory || showSplitDialog || showEpisodePicker) {
                     return@onPreviewKeyEvent false
                 }
 
-                when (event.nativeKeyEvent.keyCode) {
+                when (keyCode) {
                     KeyEvent.KEYCODE_DPAD_UP,
                     KeyEvent.KEYCODE_DPAD_UP_RIGHT -> {
                         viewModel.playRemoteDpadChannel(RemoteDpadVerticalDirection.UP)
@@ -860,7 +863,7 @@ fun PlayerScreen(
                         KeyEvent.KEYCODE_CHANNEL_UP -> {
                             if (showChannelInfoOverlay && channelInfoSubPanelOpen) {
                                 true
-                            } else if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay || showChannelInfoOverlay || showDiagnostics || showControls) {
+                            } else if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay || showChannelInfoOverlay || showDiagnostics) {
                                 false
                             } else if (isGuideZappablePlayback) {
                                 handleRemoteChannelButton(viewModel.remoteChannelUpButtonAction, RemoteDpadVerticalDirection.UP)
@@ -881,7 +884,7 @@ fun PlayerScreen(
                         KeyEvent.KEYCODE_CHANNEL_DOWN -> {
                             if (showChannelInfoOverlay && channelInfoSubPanelOpen) {
                                 true
-                            } else if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay || showChannelInfoOverlay || showDiagnostics || showControls) {
+                            } else if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay || showChannelInfoOverlay || showDiagnostics) {
                                 false
                             } else if (isGuideZappablePlayback) {
                                 handleRemoteChannelButton(viewModel.remoteChannelDownButtonAction, RemoteDpadVerticalDirection.DOWN)

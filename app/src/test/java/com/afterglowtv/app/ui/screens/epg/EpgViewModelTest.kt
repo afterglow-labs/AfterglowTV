@@ -3,6 +3,8 @@ package com.afterglowtv.app.ui.screens.epg
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import androidx.lifecycle.ViewModel
+import com.afterglowtv.data.preferences.AdultGuideCategoryCache
+import com.afterglowtv.data.preferences.AdultGuideCategoryCacheEntry
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.domain.manager.ParentalControlManager
 import com.afterglowtv.domain.manager.ProgramReminderManager
@@ -49,6 +51,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.argThat
@@ -104,7 +107,11 @@ class EpgViewModelTest {
             whenever(preferencesRepository.setGuideChannelMode(any())).thenReturn(Unit)
             whenever(preferencesRepository.setGuideFavoritesOnly(any())).thenReturn(Unit)
             whenever(preferencesRepository.adultGuideCategorizedChannelCount(any())).thenReturn(flowOf(0))
+            whenever(preferencesRepository.adultGuideCategoryCache(any())).thenReturn(flowOf(null))
+            whenever(preferencesRepository.adultGuideSortBatchSize).thenReturn(flowOf(200))
             whenever(preferencesRepository.setAdultGuideCategorizedChannelCount(any(), any())).thenReturn(Unit)
+            whenever(preferencesRepository.setAdultGuideCategoryCache(any(), any())).thenReturn(Unit)
+            whenever(preferencesRepository.setAdultGuideSortBatchSize(any())).thenReturn(Unit)
         }
         whenever(favoriteRepository.getGroups(any<Long>(), eq(ContentType.LIVE))).thenReturn(flowOf(emptyList()))
         whenever(favoriteRepository.getGroups(any<List<Long>>(), eq(ContentType.LIVE))).thenReturn(flowOf(emptyList()))
@@ -585,6 +592,10 @@ class EpgViewModelTest {
         assertThat(secondState.adultGuideCategories.map { it.key })
             .doesNotContain(com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder.ALL_CATEGORY_KEY)
         verify(preferencesRepository).setAdultGuideCategorizedChannelCount(provider.id, 200)
+        verify(preferencesRepository).setAdultGuideCategoryCache(
+            eq(provider.id),
+            argThat { categorizedChannelCount == 200 && categories.any { it.title == "MILF" && it.channelIds.size == 200 } }
+        )
 
         viewModel.jumpForward()
         advanceUntilIdle()
@@ -614,6 +625,138 @@ class EpgViewModelTest {
         assertThat(finalState.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.size).isEqualTo(channels.size)
         assertThat(finalState.adultGuideCategories.firstOrNull { it.key == com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }?.channels?.size)
             .isEqualTo(channels.size)
+    }
+
+    @Test
+    fun `locked xxx guide restores saved category cache and time jumps do not reload channels`() = runTest {
+        val provider = Provider(
+            id = 1L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://provider.example.com"
+        )
+        val channels = (1L..450L).map { id ->
+            Channel(
+                id = id,
+                name = "MILF Channel $id",
+                providerId = provider.id,
+                epgChannelId = "adult-$id",
+                categoryId = 10L,
+                categoryName = "XXX"
+            )
+        }
+        val cachedIds = channels.take(200).map(Channel::id)
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
+        whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
+        whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(
+            flowOf(listOf(Category(id = 10L, name = "XXX", isAdult = true, count = channels.size)))
+        )
+        whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+        whenever(preferencesRepository.guideDefaultCategoryId).thenReturn(flowOf(ChannelRepository.ALL_CHANNELS_ID))
+        whenever(preferencesRepository.adultGuideCategoryCache(provider.id)).thenReturn(
+            flowOf(
+                AdultGuideCategoryCache(
+                    categorizedChannelCount = cachedIds.size,
+                    categories = listOf(
+                        AdultGuideCategoryCacheEntry(
+                            key = "milf",
+                            title = "MILF",
+                            channelIds = cachedIds
+                        )
+                    )
+                )
+            )
+        )
+
+        val viewModel = createViewModel()
+        viewModel.applyNavigationContext(
+            categoryId = com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE,
+            anchorTime = null,
+            favoritesOnly = false,
+            lockCategory = true
+        )
+
+        advanceUntilIdle()
+        waitForUiStateWithRealDispatcher {
+            val state = viewModel.uiState.value
+            state.selectedCategoryId == com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE &&
+                state.adultGuideCategorizedChannelCount == 200 &&
+                state.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.size == 200 &&
+                !state.isAdultGuideCategorizing &&
+                !state.isInitialLoading &&
+                !state.isRefreshing
+        }
+
+        viewModel.jumpToNow()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.adultGuideCategorizedChannelCount).isEqualTo(200)
+        assertThat(state.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.map(Channel::id))
+            .containsExactlyElementsIn(cachedIds)
+            .inOrder()
+        assertThat(state.isRefreshing).isFalse()
+        verify(channelRepository, times(1)).getChannels(provider.id)
+    }
+
+    @Test
+    fun `locked xxx guide uses configured manual sort batch size`() = runTest {
+        val provider = Provider(
+            id = 1L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://provider.example.com"
+        )
+        val channels = (1L..900L).map { id ->
+            Channel(
+                id = id,
+                name = "MILF Channel $id",
+                providerId = provider.id,
+                epgChannelId = "adult-$id",
+                categoryId = 10L,
+                categoryName = "XXX"
+            )
+        }
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptySet()))
+        whenever(preferencesRepository.getCategorySortMode(provider.id, ContentType.LIVE)).thenReturn(flowOf(CategorySortMode.DEFAULT))
+        whenever(parentalControlManager.unlockedCategoriesForProvider(provider.id)).thenReturn(flowOf(emptySet()))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(
+            flowOf(listOf(Category(id = 10L, name = "XXX", isAdult = true, count = channels.size)))
+        )
+        whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsByCategory(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(channelRepository.getChannelsWithoutErrors(provider.id, ChannelRepository.ALL_CHANNELS_ID)).thenReturn(flowOf(channels))
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+        whenever(preferencesRepository.guideDefaultCategoryId).thenReturn(flowOf(ChannelRepository.ALL_CHANNELS_ID))
+        whenever(preferencesRepository.adultGuideSortBatchSize).thenReturn(flowOf(400))
+
+        val viewModel = createViewModel()
+        viewModel.applyNavigationContext(
+            categoryId = com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE,
+            anchorTime = null,
+            favoritesOnly = false,
+            lockCategory = true
+        )
+
+        advanceUntilIdle()
+        waitForUiState {
+            viewModel.uiState.value.selectedCategoryId == com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE &&
+                !viewModel.uiState.value.isInitialLoading
+        }
+
+        viewModel.categorizeNextAdultGuideChunk()
+        waitForUiStateWithRealDispatcher { viewModel.uiState.value.adultGuideCategorizedChannelCount == 400 }
+
+        val state = viewModel.uiState.value
+        assertThat(state.adultGuideSortBatchSize).isEqualTo(400)
+        assertThat(state.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.size).isEqualTo(400)
+        verify(preferencesRepository).setAdultGuideCategorizedChannelCount(provider.id, 400)
     }
 
     @Test
