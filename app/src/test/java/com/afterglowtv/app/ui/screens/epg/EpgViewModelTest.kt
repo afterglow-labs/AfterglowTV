@@ -507,14 +507,14 @@ class EpgViewModelTest {
     }
 
     @Test
-    fun `locked xxx guide loads the full adult lineup and categorizes it off the rendered page`() = runTest {
+    fun `locked xxx guide waits for manual category chunks`() = runTest {
         val provider = Provider(
             id = 1L,
             name = "Provider",
             type = ProviderType.M3U,
             serverUrl = "https://provider.example.com"
         )
-        val channels = (1L..650L).map { id ->
+        val channels = (1L..450L).map { id ->
             Channel(
                 id = id,
                 name = "MILF Channel $id",
@@ -550,19 +550,41 @@ class EpgViewModelTest {
             val state = viewModel.uiState.value
             state.selectedCategoryId == com.afterglowtv.domain.model.VirtualCategoryIds.ADULT_GUIDE &&
                 state.totalChannelCount == channels.size &&
-                state.adultGuideCategorizedChannelCount == channels.size &&
                 !state.isInitialLoading &&
-                !state.isRefreshing &&
-                !state.isAdultGuideCategorizing
+                !state.isRefreshing
         }
 
         val firstState = viewModel.uiState.value
         assertThat(firstState.loadedChannelCount).isEqualTo(channels.size)
         assertThat(firstState.channels.size).isLessThan(channels.size)
         assertThat(firstState.channels.map(Channel::id)).containsExactlyElementsIn(channels.take(firstState.channels.size).map(Channel::id)).inOrder()
-        assertThat(firstState.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.size)
-            .isEqualTo(channels.size)
-        assertThat(firstState.adultGuideCategories.firstOrNull { it.key == com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }?.channels?.size)
+        assertThat(firstState.adultGuideCategorizedChannelCount).isEqualTo(0)
+        assertThat(firstState.adultGuideCategories).isEmpty()
+        assertThat(firstState.isAdultGuideCategorizing).isFalse()
+
+        viewModel.categorizeNextAdultGuideChunk()
+        advanceUntilIdle()
+
+        val secondState = viewModel.uiState.value
+        assertThat(secondState.adultGuideCategorizedChannelCount).isEqualTo(200)
+        assertThat(secondState.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.size).isEqualTo(200)
+        assertThat(secondState.adultGuideCategories.map { it.key })
+            .doesNotContain(com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder.ALL_CATEGORY_KEY)
+
+        viewModel.categorizeNextAdultGuideChunk()
+        advanceUntilIdle()
+
+        val thirdState = viewModel.uiState.value
+        assertThat(thirdState.adultGuideCategorizedChannelCount).isEqualTo(400)
+        assertThat(thirdState.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.size).isEqualTo(400)
+
+        viewModel.categorizeNextAdultGuideChunk()
+        advanceUntilIdle()
+
+        val finalState = viewModel.uiState.value
+        assertThat(finalState.adultGuideCategorizedChannelCount).isEqualTo(channels.size)
+        assertThat(finalState.adultGuideCategories.firstOrNull { it.title == "MILF" }?.channels?.size).isEqualTo(channels.size)
+        assertThat(finalState.adultGuideCategories.firstOrNull { it.key == com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }?.channels?.size)
             .isEqualTo(channels.size)
     }
 

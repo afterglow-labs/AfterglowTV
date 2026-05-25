@@ -472,6 +472,12 @@ fun FullEpgScreen(
                 }
 
                 else -> {
+                    val useAdultGuide = shouldUseAdultGuide(uiState)
+                    val adultSortRemaining = if (useAdultGuide) {
+                        (uiState.loadedChannelCount - uiState.adultGuideCategorizedChannelCount).coerceAtLeast(0)
+                    } else {
+                        0
+                    }
                     GuideNowProvider {
                         GuideHeroSection(
                             uiState = uiState,
@@ -488,6 +494,11 @@ fun FullEpgScreen(
                             ?.name
                             ?: stringResource(if (fixedCategoryId == VirtualCategoryIds.ADULT_GUIDE) titleRes else R.string.epg_filter_short),
                         firstButtonFocusRequester = guideToolbarFocusRequester,
+                        manualSortLabel = if (adultSortRemaining > 0) {
+                            "Sort next ${adultSortRemaining.coerceAtMost(200)}"
+                        } else {
+                            null
+                        },
                         onOpenCategoryPicker = {
                             if (fixedCategoryId == null) {
                                 showCategoryPicker = true
@@ -502,6 +513,7 @@ fun FullEpgScreen(
                         onOpenOptions = {
                             showGuideOptions = true
                         },
+                        onManualSort = viewModel::categorizeNextAdultGuideChunk,
                         onGuideInteract = { topNavVisible = true },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -566,7 +578,6 @@ fun FullEpgScreen(
                             }
                         )
                     } else {
-                        val useAdultGuide = shouldUseAdultGuide(uiState)
                         val adultGuideCategories = if (useAdultGuide) {
                             uiState.adultGuideCategories
                         } else {
@@ -593,7 +604,15 @@ fun FullEpgScreen(
                             }
                         }
                         GuideNowProvider {
-                            if (useAdultGuide && adultGuideCategories.isNotEmpty()) {
+                            if (useAdultGuide && adultGuideCategories.isEmpty()) {
+                                GuideMessageState(
+                                    modifier = Modifier.weight(1f),
+                                    title = "XXX Guide is ready",
+                                    subtitle = "Press Sort next 200 to categorize channels in small chunks.",
+                                    actionLabel = "Sort next ${adultSortRemaining.coerceAtMost(200)}",
+                                    onAction = viewModel::categorizeNextAdultGuideChunk
+                                )
+                            } else if (useAdultGuide && adultGuideCategories.isNotEmpty()) {
                                 AdultGuideSurface(
                                     modifier = Modifier
                                         .fillMaxWidth()

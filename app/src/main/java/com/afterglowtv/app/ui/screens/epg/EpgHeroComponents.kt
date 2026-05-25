@@ -301,10 +301,12 @@ internal fun GuideHeroBadge(
 internal fun GuideToolbarRow(
     selectedCategoryName: String,
     firstButtonFocusRequester: FocusRequester? = null,
+    manualSortLabel: String? = null,
     onOpenCategoryPicker: () -> Unit,
     onJumpToNow: () -> Unit,
     onOpenSearch: () -> Unit,
     onOpenOptions: () -> Unit,
+    onManualSort: () -> Unit = {},
     onGuideInteract: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -336,6 +338,13 @@ internal fun GuideToolbarRow(
             onClick = onOpenOptions,
             onFocused = onGuideInteract
         )
+        manualSortLabel?.let { label ->
+            GuideToolbarButton(
+                label = label,
+                onClick = onManualSort,
+                onFocused = onGuideInteract
+            )
+        }
     }
 }
 

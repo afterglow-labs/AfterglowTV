@@ -37,13 +37,11 @@ import com.afterglowtv.app.ui.screens.settings.SettingsScreen
 import com.afterglowtv.app.ui.screens.welcome.WelcomeScreen
 import com.afterglowtv.app.MainActivity
 import com.afterglowtv.data.preferences.PreferencesRepository
-import com.afterglowtv.domain.repository.ProviderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.Serializable
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -270,8 +268,7 @@ private fun NavHostController.navigateToExternalPlayer(request: PlayerNavigation
 
 @HiltViewModel
 class AppStartupDestinationViewModel @Inject constructor(
-    preferencesRepository: PreferencesRepository,
-    providerRepository: ProviderRepository
+    preferencesRepository: PreferencesRepository
 ) : ViewModel() {
     val startupDestination: StateFlow<StartupDestination> = preferencesRepository.startupDestination
         .map(StartupDestination::fromStorage)
@@ -281,17 +278,16 @@ class AppStartupDestinationViewModel @Inject constructor(
             initialValue = StartupDestination.default
         )
 
-    val startupRoute: StateFlow<String?> = combine(
-        startupDestination,
-        providerRepository.getProviders().map { providers -> providers.isNotEmpty() }
-    ) { destination, hasProviders ->
-        if (hasProviders) destination.route else Routes.PROVIDER_SETUP
-    }.stateIn(
+    val startupRoute: StateFlow<String> = startupDestination
+        .map(::resolveStartupRoute)
+        .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000L),
-        initialValue = null
+        initialValue = resolveStartupRoute(StartupDestination.default)
     )
 }
+
+internal fun resolveStartupRoute(destination: StartupDestination): String = destination.route
 
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
@@ -353,14 +349,6 @@ fun AppNavigation(mainActivity: MainActivity) {
             launchSingleTop = true
             restoreState = true
         }
-    }
-
-    if (startupRoute == null) {
-        WelcomeScreen(
-            onNavigateToHome = {},
-            onNavigateToSetup = {}
-        )
-        return
     }
 
     NavHost(
