@@ -710,6 +710,19 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
+    fun adultGuideCategorizedChannelCount(providerId: Long): Flow<Int> =
+        context.dataStore.data.map { preferences ->
+            preferences[intPreferencesKey(adultGuideCategorizedChannelCountKey(providerId))]
+                ?.coerceAtLeast(0)
+                ?: 0
+        }
+
+    suspend fun setAdultGuideCategorizedChannelCount(providerId: Long, count: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[intPreferencesKey(adultGuideCategorizedChannelCountKey(providerId))] = count.coerceAtLeast(0)
+        }
+    }
+
     suspend fun setPreventStandbyDuringPlayback(prevent: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.PREVENT_STANDBY_DURING_PLAYBACK] = prevent
@@ -2011,6 +2024,9 @@ class PreferencesRepository @Inject constructor(
 
     private fun xtreamTextImportAppliedGenerationKey(providerId: Long): String =
         "xtream_text_import_applied_generation_$providerId"
+
+    private fun adultGuideCategorizedChannelCountKey(providerId: Long): String =
+        "adult_guide_categorized_channel_count_$providerId"
 }
 
 data class ParentalPinBackupData(

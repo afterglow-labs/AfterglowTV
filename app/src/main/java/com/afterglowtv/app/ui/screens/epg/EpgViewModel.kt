@@ -407,6 +407,7 @@ class EpgViewModel @Inject constructor(
                     )
                 }
             }
+            preferencesRepository.setAdultGuideCategorizedChannelCount(snapshot.providerId, nextCount)
         }
     }
 
@@ -899,8 +900,8 @@ class EpgViewModel @Inject constructor(
                         isRefreshing = hasVisibleGuide,
                         loadedChannelCount = 0,
                         totalChannelCount = request.estimatedChannelCount,
-                        adultGuideCategories = if (request.isAdultGuideRequest()) emptyList() else it.adultGuideCategories,
-                        adultGuideCategorizedChannelCount = if (request.isAdultGuideRequest()) 0 else it.adultGuideCategorizedChannelCount,
+                        adultGuideCategories = it.adultGuideCategories,
+                        adultGuideCategorizedChannelCount = it.adultGuideCategorizedChannelCount,
                         isAdultGuideCategorizing = false,
                         error = null
                     )
@@ -1078,8 +1079,8 @@ class EpgViewModel @Inject constructor(
                     isRefreshing = hasVisibleGuide,
                     loadedChannelCount = 0,
                     totalChannelCount = request.estimatedChannelCount,
-                    adultGuideCategories = if (request.isAdultGuideRequest()) emptyList() else it.adultGuideCategories,
-                    adultGuideCategorizedChannelCount = if (request.isAdultGuideRequest()) 0 else it.adultGuideCategorizedChannelCount,
+                    adultGuideCategories = it.adultGuideCategories,
+                    adultGuideCategorizedChannelCount = it.adultGuideCategorizedChannelCount,
                     isAdultGuideCategorizing = false,
                     error = null
                 )
@@ -1275,7 +1276,7 @@ class EpgViewModel @Inject constructor(
         val computedHasUpcomingData = guideResult.programsByChannel.values.any { programs ->
             programs.any { program -> program.endTime > request.windowStart }
         }
-        baseGuideSnapshot.value = GuideBaseSnapshot(
+        val snapshot = GuideBaseSnapshot(
             providerId = providerId,
             currentProviderName = providerName,
             providerSourceLabel = providerSourceLabel,
@@ -1301,6 +1302,51 @@ class EpgViewModel @Inject constructor(
                 allChannels = channelSelection.channels
             )
         )
+        baseGuideSnapshot.value = snapshot
+        restoreAdultGuideCategorizationFromDisk(snapshot)
+    }
+
+    private fun restoreAdultGuideCategorizationFromDisk(snapshot: GuideBaseSnapshot) {
+        if (snapshot.selectedCategoryId != VirtualCategoryIds.ADULT_GUIDE) return
+        if (snapshot.allChannels.isEmpty()) return
+        if (adultGuideCategorizationJob?.isActive == true) return
+
+        adultGuideCategorizationJob = viewModelScope.launch {
+            val savedCount = preferencesRepository
+                .adultGuideCategorizedChannelCount(snapshot.providerId)
+                .first()
+                .coerceIn(0, snapshot.allChannels.size)
+            val currentCount = _uiState.value.adultGuideCategorizedChannelCount
+            if (savedCount <= currentCount) return@launch
+
+            _uiState.update { current ->
+                if (current.selectedCategoryId == VirtualCategoryIds.ADULT_GUIDE) {
+                    current.copy(isAdultGuideCategorizing = true)
+                } else {
+                    current
+                }
+            }
+
+            val categories = withContext(Dispatchers.Default) {
+                AdultGuideCategoryBuilder.build(
+                    channels = snapshot.allChannels.take(savedCount),
+                    providerCategories = snapshot.categories,
+                    includeAllCategory = savedCount >= snapshot.allChannels.size
+                )
+            }
+
+            _uiState.update { current ->
+                if (current.selectedCategoryId != VirtualCategoryIds.ADULT_GUIDE) {
+                    current
+                } else {
+                    current.copy(
+                        adultGuideCategories = categories,
+                        adultGuideCategorizedChannelCount = savedCount,
+                        isAdultGuideCategorizing = false
+                    )
+                }
+            }
+        }
     }
 
     private fun clearAdultGuideCategorization() {

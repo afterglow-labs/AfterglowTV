@@ -31,14 +31,14 @@ class PlayerZapActionsTest {
     }
 
     @Test
-    fun `linear live channel zapping is disabled during catch up playback`() {
+    fun `linear live channel zapping is allowed during catch up playback`() {
         assertThat(
             isLinearLiveChannelZapAllowed(
                 currentContentType = ContentType.LIVE,
                 isCatchUpPlayback = true,
                 hasChannels = true
             )
-        ).isFalse()
+        ).isTrue()
     }
 
     @Test

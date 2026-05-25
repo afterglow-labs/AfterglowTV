@@ -29,6 +29,7 @@ import com.afterglowtv.domain.model.DecoderMode
 import com.afterglowtv.domain.model.Episode
 import com.afterglowtv.domain.model.Favorite
 import com.afterglowtv.domain.model.LiveChannelObservedQuality
+import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.model.PlaybackHistory
 import com.afterglowtv.domain.model.RecordingItem
 import com.afterglowtv.domain.model.RecordingRecurrence
@@ -279,6 +280,7 @@ class PlayerViewModel @Inject constructor(
             field = value
             rebuildChannelNumberIndex()
         }
+    internal var movieList: List<Movie> = emptyList()
     internal var channelNumberIndex: Map<Int, com.afterglowtv.domain.model.Channel> = emptyMap()
         private set
 
@@ -289,6 +291,7 @@ class PlayerViewModel @Inject constructor(
     }
 
     internal var currentChannelIndex = -1
+    internal var currentMovieIndex = -1
     internal var previousChannelIndex = -1
     internal var currentCategoryId: Long = -1
     internal var currentProviderId: Long = -1L

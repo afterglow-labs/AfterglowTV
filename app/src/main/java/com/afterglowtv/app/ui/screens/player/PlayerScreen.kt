@@ -184,7 +184,8 @@ fun PlayerScreen(
         currentSeriesSeasons?.any { it.episodes.isNotEmpty() } == true
     
     val isCatchUpPlayback by viewModel.isCatchUpPlayback.collectAsStateWithLifecycle()
-    val isLinearLivePlayback = contentType == "LIVE" && !isCatchUpPlayback
+    val isLinearLivePlayback = contentType == "LIVE"
+    val isGuideZappablePlayback = isLinearLivePlayback || contentType == "MOVIE"
     val showChannelListOverlay by viewModel.showChannelListOverlay.collectAsStateWithLifecycle()
     val showCategoryListOverlay by viewModel.showCategoryListOverlay.collectAsStateWithLifecycle()
     val availableCategories by viewModel.availableCategories.collectAsStateWithLifecycle()
@@ -621,7 +622,7 @@ fun PlayerScreen(
                 if (nextEpisodeCountdownVisible) {
                     return@onPreviewKeyEvent false
                 }
-                if (!isLinearLivePlayback) {
+                if (!isGuideZappablePlayback) {
                     return@onPreviewKeyEvent false
                 }
                 if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay) {
@@ -818,7 +819,7 @@ fun PlayerScreen(
                             if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay) return@onKeyEvent false
                             if (showControls) return@onKeyEvent false
 
-                            if (isLinearLivePlayback) {
+                            if (isGuideZappablePlayback) {
                                 viewModel.playRemoteDpadChannel(RemoteDpadVerticalDirection.UP)
                             } else if (canOpenEpisodePicker) {
                                 showEpisodePicker = true
@@ -835,7 +836,7 @@ fun PlayerScreen(
                             if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay) return@onKeyEvent false
                             if (showControls) return@onKeyEvent false
 
-                            if (isLinearLivePlayback) {
+                            if (isGuideZappablePlayback) {
                                 viewModel.playRemoteDpadChannel(RemoteDpadVerticalDirection.DOWN)
                             } else {
                                 viewModel.toggleControls()
@@ -861,7 +862,7 @@ fun PlayerScreen(
                                 true
                             } else if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay || showChannelInfoOverlay || showDiagnostics || showControls) {
                                 false
-                            } else if (isLinearLivePlayback) {
+                            } else if (isGuideZappablePlayback) {
                                 handleRemoteChannelButton(viewModel.remoteChannelUpButtonAction, RemoteDpadVerticalDirection.UP)
                             } else {
                                 false
@@ -870,7 +871,7 @@ fun PlayerScreen(
                         KeyEvent.KEYCODE_DPAD_UP_RIGHT -> {
                             if (showChannelInfoOverlay || showDiagnostics || showControls) {
                                 false
-                            } else if (isLinearLivePlayback) {
+                            } else if (isGuideZappablePlayback) {
                                 viewModel.playRemoteDpadChannel(RemoteDpadVerticalDirection.UP)
                                 true
                             } else {
@@ -882,7 +883,7 @@ fun PlayerScreen(
                                 true
                             } else if (showChannelListOverlay || showCategoryListOverlay || showEpgOverlay || showChannelInfoOverlay || showDiagnostics || showControls) {
                                 false
-                            } else if (isLinearLivePlayback) {
+                            } else if (isGuideZappablePlayback) {
                                 handleRemoteChannelButton(viewModel.remoteChannelDownButtonAction, RemoteDpadVerticalDirection.DOWN)
                             } else {
                                 false
@@ -891,7 +892,7 @@ fun PlayerScreen(
                         KeyEvent.KEYCODE_DPAD_DOWN_LEFT -> {
                             if (showChannelInfoOverlay || showDiagnostics || showControls) {
                                 false
-                            } else if (isLinearLivePlayback) {
+                            } else if (isGuideZappablePlayback) {
                                 viewModel.playRemoteDpadChannel(RemoteDpadVerticalDirection.DOWN)
                                 true
                             } else {

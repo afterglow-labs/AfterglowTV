@@ -26,7 +26,7 @@ internal fun isLinearLiveChannelZapAllowed(
     currentContentType: ContentType,
     isCatchUpPlayback: Boolean,
     hasChannels: Boolean
-): Boolean = currentContentType == ContentType.LIVE && !isCatchUpPlayback && hasChannels
+): Boolean = currentContentType == ContentType.LIVE && hasChannels
 
 internal enum class RemoteDpadVerticalDirection {
     UP,
@@ -117,6 +117,7 @@ internal fun PlayerViewModel.playDedicatedChannelButton(direction: RemoteDpadVer
 
 internal fun PlayerViewModel.playChannelOffset(offset: Int): Boolean {
     clearNumericChannelInput()
+    if (currentContentType == ContentType.MOVIE) return playMovieOffset(offset)
     if (!isLinearLiveChannelZapAllowed(currentContentType, isCatchUpPlayback(), channelList.isNotEmpty())) return false
     val nextIndex = wrappedChannelIndex(offset)
     if (nextIndex == -1) return false

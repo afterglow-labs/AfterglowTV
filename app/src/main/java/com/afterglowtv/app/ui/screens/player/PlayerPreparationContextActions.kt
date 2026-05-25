@@ -24,9 +24,18 @@ internal fun PlayerViewModel.finalizePreparedPlaybackContext(
         currentCategoryId = categoryId
         activeCategoryIdFlow.value = categoryId
         isVirtualCategory = isVirtual
-        loadPlaylist(categoryId, providerId, isVirtual, internalChannelId)
+        if (currentContentType == ContentType.MOVIE) {
+            loadMoviePlaylist(categoryId, providerId, internalChannelId)
+        } else {
+            loadPlaylist(categoryId, providerId, isVirtual, internalChannelId)
+        }
     } else {
-        if (channelList.isNotEmpty() && internalChannelId != -1L) {
+        if (currentContentType == ContentType.MOVIE && movieList.isNotEmpty() && internalChannelId != -1L) {
+            currentMovieIndex = movieList.indexOfFirst { it.id == internalChannelId }
+            if (currentMovieIndex == -1) {
+                currentMovieIndex = movieList.indexOfFirst { it.streamUrl == streamUrl }
+            }
+        } else if (channelList.isNotEmpty() && internalChannelId != -1L) {
             currentChannelIndex = channelList.indexOfFirst { it.id == internalChannelId }
             if (currentChannelIndex == -1) {
                 currentChannelIndex = channelList.indexOfFirst { it.streamUrl == streamUrl }

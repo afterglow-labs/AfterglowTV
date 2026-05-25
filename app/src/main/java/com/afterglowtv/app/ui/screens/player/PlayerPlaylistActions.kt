@@ -11,6 +11,7 @@ import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.Favorite
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal fun PlayerViewModel.observeCombinedLivePlaylist(
     profileId: Long,
@@ -276,6 +278,87 @@ internal fun PlayerViewModel.loadPlaylist(
             }
         }
     }
+}
+
+internal fun PlayerViewModel.loadMoviePlaylist(
+    categoryId: Long,
+    providerId: Long,
+    initialMovieId: Long
+) {
+    playlistJob?.cancel()
+    playlistJob = viewModelScope.launch {
+        val moviesFlow = if (categoryId == ChannelRepository.ALL_CHANNELS_ID || categoryId <= 0L) {
+            movieRepository.getMovies(providerId)
+        } else {
+            movieRepository.getMoviesByCategory(providerId, categoryId)
+        }
+        moviesFlow.collect { movies ->
+            movieList = movies
+            val targetId = if (currentContentId != -1L) currentContentId else initialMovieId
+            currentMovieIndex = if (targetId != -1L) {
+                movieList.indexOfFirst { it.id == targetId }
+            } else {
+                -1
+            }
+            if (currentMovieIndex == -1) {
+                currentMovieIndex = movieList.indexOfFirst { it.streamUrl == currentStreamUrl }
+            }
+        }
+    }
+}
+
+internal fun PlayerViewModel.playMovieOffset(offset: Int): Boolean {
+    if (currentContentType != ContentType.MOVIE || movieList.isEmpty()) return false
+    val resolvedIndex = currentMovieIndex.takeIf { it in movieList.indices }
+        ?: movieList.indexOfFirst { it.id == currentContentId }
+            .takeIf { it in movieList.indices }
+        ?: movieList.indexOfFirst { it.streamUrl == currentStreamUrl }
+            .takeIf { it in movieList.indices }
+        ?: return false
+    val nextIndex = computeWrappedChannelIndex(
+        resolvedIndex = resolvedIndex,
+        channelCount = movieList.size,
+        offset = offset
+    )
+    if (nextIndex == -1) return false
+    changeMovie(nextIndex)
+    return true
+}
+
+internal fun PlayerViewModel.changeMovie(index: Int) {
+    check(index in movieList.indices) {
+        "changeMovie index=$index out of movieList bounds (size=${movieList.size})"
+    }
+    clearNumericChannelInput()
+    val requestVersion = beginPlaybackSession()
+    val movie = movieList[index]
+    currentMovieIndex = index
+    currentContentType = ContentType.MOVIE
+    currentContentId = movie.id
+    currentProviderId = movie.providerId
+    currentTitle = movie.name
+    playbackTitleFlow.value = currentTitle
+    currentStreamUrl = movie.streamUrl
+    currentArtworkUrl = movie.posterUrl ?: movie.backdropUrl
+    currentChannelFlow.value = null
+    displayChannelNumberFlow.value = index + 1
+    showControlsFlow.value = false
+
+    viewModelScope.launch {
+        val streamInfo = withContext(Dispatchers.Default) {
+            resolvePlaybackStreamInfo(movie.streamUrl, movie.id, movie.providerId, ContentType.MOVIE)
+        } ?: return@launch
+        if (!isActivePlaybackSession(requestVersion, movie.streamUrl)) return@launch
+        if (!preparePlayer(streamInfo, requestVersion)) return@launch
+        playerEngine.play()
+    }
+
+    showChannelInfoOverlayFlow.value = false
+    showChannelListOverlayFlow.value = false
+    showCategoryListOverlayFlow.value = false
+    showEpgOverlayFlow.value = false
+    showZapOverlayFlow.value = true
+    hideZapOverlayAfterDelay()
 }
 
 private fun PlayerViewModel.applyCombinedSourceProviderFilter(channels: List<Channel>): List<Channel> {
