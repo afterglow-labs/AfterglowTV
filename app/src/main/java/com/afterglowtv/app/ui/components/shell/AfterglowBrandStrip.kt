@@ -121,7 +121,7 @@ fun AfterglowBrandStrip(
     ) {
         Image(
             painter = painterResource(id = R.drawable.afterglow_logo),
-            contentDescription = "Afterglow TV",
+            contentDescription = "AfterglowTV",
             modifier = Modifier
                 .size(logoSize)
                 .afterglow(
@@ -158,11 +158,13 @@ fun AfterglowBrandStrip(
                         ),
                 )
             }
-            Text(
-                text = tagline,
-                style = MaterialTheme.typography.bodyMedium,
-                color = AppColors.TiviAccentLight,
-            )
+            if (tagline.isNotBlank()) {
+                Text(
+                    text = tagline,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppColors.TiviAccentLight,
+                )
+            }
         }
     }
 }
@@ -192,7 +194,7 @@ fun AfterglowHero(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.afterglow_logo),
-                contentDescription = "Afterglow TV",
+                contentDescription = "AfterglowTV",
                 modifier = Modifier
                     .size(logoSize)
                     .afterglow(

@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.Shape
 enum class AfterglowFocusRole { Row, Card, Pill }
 
 /**
- * Afterglow TV focus highlight in one place: a solid accent border at 4 dp corner radius,
+ * AfterglowTV focus highlight in one place: a solid accent border at 4 dp corner radius,
  * filled with a translucent accent over the dark surface. 150 ms crossfade.
  *
  *  - Row:  flat (no scale), full border + fill.

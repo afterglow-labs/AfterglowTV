@@ -339,7 +339,7 @@ fun ProviderSetupScreen(
     }
 
     // ── Layout ────────────────────────────────────────────────────────────────
-    // Afterglow TV hero treatment: bleed the active palette across the screen
+    // AfterglowTV hero treatment: bleed the active palette across the screen
     // (vertical gradient + warm radial in the top-right corner that echoes the
     // logo's melting-sun motif), drop the brand strip on top, then the form.
     BoxWithConstraints(
@@ -421,7 +421,7 @@ fun ProviderSetupScreen(
                     painter = androidx.compose.ui.res.painterResource(
                         id = com.afterglowtv.app.R.drawable.afterglow_logo
                     ),
-                    contentDescription = "Afterglow TV",
+                    contentDescription = "AfterglowTV",
                     modifier = Modifier
                         .size(
                             when {
@@ -448,7 +448,7 @@ fun ProviderSetupScreen(
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
                 )
                 Column {
-                    // Single-line "Afterglow TV" wordmark. Mixed weight + color so
+                    // Single-line "AfterglowTV" wordmark. Mixed weight + color so
                     // the "TV" reads as a sub-product mark without breaking the line.
                     Row(verticalAlignment = Alignment.Bottom) {
                         androidx.tv.material3.Text(

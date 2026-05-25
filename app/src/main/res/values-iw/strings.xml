@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Afterglow TV</string>
+    <string name="app_name">AfterglowTV</string>
     <string name="nav_home">בית</string>
     <string name="nav_live_tv">טלוויזיה בשידור חי</string>
     <string name="nav_movies">סרטים</string>
@@ -102,7 +102,7 @@
     <string name="dashboard_provider_no_expiry">לא דווח על תפוגה</string>
     <string name="dashboard_warning_title">ספק זקוק לתשומת לב</string>
     <string name="dashboard_warning_review">פתח את פרטי הספק</string>
-    <string name="dashboard_update_title">Afterglow TV %1$s זמין</string>
+    <string name="dashboard_update_title">AfterglowTV %1$s זמין</string>
     <string name="dashboard_update_available">גרסה חדשה יותר של האפליקציה נשמרה במטמון ומוכנה לבדיקה בהגדרות.</string>
     <string name="dashboard_update_install_ready">העדכון האחרון כבר הורד. פתח את ההגדרות כדי להתקין אותו.</string>
     <string name="dashboard_update_open_settings">פתח עדכונים</string>
@@ -402,7 +402,7 @@
     <string name="settings_about_subtitle">פרטי גרסה, בנייה ותמיכה עבור התקנה זו.</string>
     <string name="settings_app_version">גרסת האפליקציה</string>
     <string name="settings_build">בנה</string>
-    <string name="settings_build_desc">Afterglow TV עבור Android TV</string>
+    <string name="settings_build_desc">AfterglowTV עבור Android TV</string>
     <string name="settings_enabled">מופעל</string>
     <string name="settings_disabled">מושבת</string>
     <string name="settings_developed_by">פותח על ידי</string>
@@ -412,7 +412,7 @@
     <string name="settings_donate">תמיכה ב-Ko-Fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">עדכונים</string>
-    <string name="settings_updates_subtitle">בדקו את GitHub Releases לגרסאות חדשות יותר של Afterglow TV בלי לצאת מהאפליקציה.</string>
+    <string name="settings_updates_subtitle">בדקו את GitHub Releases לגרסאות חדשות יותר של AfterglowTV בלי לצאת מהאפליקציה.</string>
     <string name="settings_update_auto_check">בדיקה אוטומטית לעדכונים</string>
     <string name="settings_update_latest_release">הגרסה האחרונה</string>
     <string name="settings_update_status">מצב העדכון</string>
@@ -436,8 +436,8 @@
     <string name="settings_update_status_check_failed">הבדיקה האחרונה נכשלה</string>
     <string name="settings_update_status_downloading">מוריד עדכון</string>
     <string name="settings_update_status_ready_to_install">מוכן להתקנה</string>
-    <string name="settings_update_available_message">Afterglow TV %1$s זמין.</string>
-    <string name="settings_update_current_message">כבר מותקנת אצלכם הגרסה האחרונה של Afterglow TV.</string>
+    <string name="settings_update_available_message">AfterglowTV %1$s זמין.</string>
+    <string name="settings_update_current_message">כבר מותקנת אצלכם הגרסה האחרונה של AfterglowTV.</string>
     <string name="settings_syncing">מסנכרן נתונים, אנא המתן...</string>
     <string name="settings_syncing_title">מסנכרן נתונים...</string>
     <string name="settings_syncing_subtitle">המתן בזמן שהרשימה שלך מיובאת.</string>
@@ -700,7 +700,7 @@
     <string name="a11y_catch_up_available">השג זמין</string>
     <string name="a11y_now_playing">עכשיו משחק %1$s</string>
     <string name="a11y_channel_with_number">ערוץ %1$d, %2$s</string>
-    <string name="setup_title_afterglowtv">Afterglow TV</string>
+    <string name="setup_title_afterglowtv">AfterglowTV</string>
     <string name="setup_provider_title">הוסף ספק</string>
     <string name="setup_edit_provider">ערוך ספק</string>
     <string name="setup_update_desc">עדכן את פרטי ספק ה-IPTV שלך</string>
@@ -1165,21 +1165,21 @@
     <string name="settings_history_cleared">היסטוריית הצפייה והאחרונים נוקו</string>
     <string name="settings_pin_changed">PIN נשמר בהצלחה</string>
     <string name="home_reorder_channels">סדר מחדש את הערוצים</string>
-    <string name="tv_input_setup_scanning_title">סורק ערוצי Afterglow TV</string>
+    <string name="tv_input_setup_scanning_title">סורק ערוצי AfterglowTV</string>
     <string name="tv_input_setup_success_title">הטלוויזיה החיה מוכנה</string>
     <string name="tv_input_setup_no_provider_title">לא הוגדר ספק IPTV</string>
     <string name="tv_input_setup_error_title">הסריקה האוטומטית נכשלה</string>
     <string name="tv_input_setup_idle_title">מכין שילוב עם Live TV</string>
-    <string name="tv_input_setup_scanning_body">Afterglow TV מסנכרן את הספק הפעיל שלך אל Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">AfterglowTV מסנכרן את הספק הפעיל שלך אל Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">הערוצים שלך סונכרנו בהצלחה.</string>
-    <string name="tv_input_setup_no_provider_body">הוסף לפחות ספק IPTV אחד ב-Afterglow TV ואז חזור לכאן כדי לסרוק ערוצים אל Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">הוסף לפחות ספק IPTV אחד ב-AfterglowTV ואז חזור לכאן כדי לסרוק ערוצים אל Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">סנכרון קלט הטלוויזיה לא הושלם.</string>
     <string name="tv_input_setup_idle_body">אנא המתן.</string>
     <string name="tv_input_setup_source_format">מקור: %1$s</string>
-    <string name="tv_input_setup_open_setup">פתח את הגדרת Afterglow TV</string>
+    <string name="tv_input_setup_open_setup">פתח את הגדרת AfterglowTV</string>
     <string name="tv_input_setup_try_scan_again">נסה שוב סריקה אוטומטית</string>
     <string name="tv_input_setup_retry_scan">סרוק שוב אוטומטית</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV יכולה כעת לפתוח את ערוצי Afterglow TV שלך.</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV יכולה כעת לפתוח את ערוצי AfterglowTV שלך.</string>
     <string name="badge_beta">בטא</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1206,8 +1206,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d חריצים</string>
     <string name="movie_detail_related">עוד כזה</string>
     <string name="movie_detail_resume_from">המשך מ-%1$s</string>
-    <string name="notification_permission_recording_alert_required">הפעל התראות עבור Afterglow TV לקבלת התראות כישלון הקלטה.</string>
-    <string name="notification_permission_reminder_required">הפעל התראות עבור Afterglow TV לקבלת תזכורות תוכנית.</string>
+    <string name="notification_permission_recording_alert_required">הפעל התראות עבור AfterglowTV לקבלת התראות כישלון הקלטה.</string>
+    <string name="notification_permission_reminder_required">הפעל התראות עבור AfterglowTV לקבלת תזכורות תוכנית.</string>
     <string name="player_action_variants">גרסאות</string>
     <string name="player_auto_play_cancel">בטל</string>
     <string name="player_auto_play_countdown">מתחיל בעוד %1$d שנ\'</string>
@@ -1381,7 +1381,7 @@
     <string name="settings_recording_skipped">הופעה דולגה</string>
     <string name="settings_recording_wifi_only">הקלט על Wi-Fi בלבד</string>
     <string name="settings_reset">איפוס</string>
-    <string name="settings_restore_subtitle">בחר קובץ גיבוי, או פתח גיבוי עם Afterglow TV ממנהל קבצים.</string>
+    <string name="settings_restore_subtitle">בחר קובץ גיבוי, או פתח גיבוי עם AfterglowTV ממנהל קבצים.</string>
     <string name="settings_select_guide_default_category">בחר קטגוריית ברירת מחדל של מדריך</string>
     <string name="settings_select_live_timeshift_depth">בחר עומק הרצה לאחור מקומית</string>
     <string name="settings_select_time_format">בחר פורמט שעה</string>

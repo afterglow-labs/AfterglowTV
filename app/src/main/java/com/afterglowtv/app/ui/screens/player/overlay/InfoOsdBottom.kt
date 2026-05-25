@@ -35,11 +35,11 @@ import com.afterglowtv.app.ui.design.LocalAppSpacing
 import kotlinx.coroutines.delay
 
 /**
- * Afterglow TV bottom info OSD. Renders the bottom ~180 dp of the screen
- * (matches Afterglow TV dimens) with a vertical gradient that fades into
- * a 75% black scrim against the deepest Afterglow TV surface.
+ * AfterglowTV bottom info OSD. Renders the bottom ~180 dp of the screen
+ * (matches AfterglowTV dimens) with a vertical gradient that fades into
+ * a 75% black scrim against the deepest AfterglowTV surface.
  *
- * Auto-dismisses after 3 s (Afterglow TV's `0x7f0c0027` integer = 3000 ms).
+ * Auto-dismisses after 3 s (AfterglowTV's `0x7f0c0027` integer = 3000 ms).
  *
  * Content: channel logo + number + name + status pills (REC, CATCH-UP),
  * NOW program line + description, progress bar, NEXT line.

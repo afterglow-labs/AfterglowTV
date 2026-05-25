@@ -15,6 +15,8 @@ import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
 import com.afterglowtv.app.ui.model.guideLookupKey
 import com.afterglowtv.app.ui.model.isAdultGuideChannel
+import com.afterglowtv.app.ui.model.isExplicitAdultGuideChannel
+import com.afterglowtv.app.ui.model.isLikelyAdultGuideCategory
 import com.afterglowtv.app.ui.model.LiveTvChannelMode
 import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.data.preferences.PreferencesRepository
@@ -165,6 +167,7 @@ class HomeViewModel @Inject constructor(
     private var previewPlayerEngine: PlayerEngine? = null
     private var previewSessionVersion: Long = 0L
     private var combinedCategoriesById: Map<Long, CombinedCategory> = emptyMap()
+    private var liveCategoryLookupById: Map<Long, Category> = emptyMap()
     private var adultGuideChannelIdsByCategoryId: Map<Long, List<Long>> = emptyMap()
 
     init {
@@ -241,6 +244,7 @@ class HomeViewModel @Inject constructor(
                             ?: return@collectLatest
                         parentalControlManager.clearUnlockedCategories(provider.id)
                         combinedCategoriesById = emptyMap()
+                        liveCategoryLookupById = emptyMap()
                         _uiState.update {
                             it.copy(
                                 provider = provider,
@@ -573,6 +577,8 @@ class HomeViewModel @Inject constructor(
                     val hiddenCategoryIds = values[4] as Set<Long>
                     val sortMode = values[5] as CategorySortMode
                     val pinnedCategoryIds = values[6] as Set<Long>
+                    liveCategoryLookupById = providerCats.associateBy(Category::id)
+                    val visibleProviderCats = providerCats.filter(::isStandardLiveCategoryVisible)
                     val recentCategory = Category(
                         id = VirtualCategoryIds.RECENT,
                         name = "Recent",
@@ -580,16 +586,16 @@ class HomeViewModel @Inject constructor(
                         isVirtual = true,
                         count = _uiState.value.recentChannels.size
                     )
-                    val allChannelsCategory = providerCats.firstOrNull { it.id == ChannelRepository.ALL_CHANNELS_ID }
-                        ?.copy(count = providerCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count))
+                    val allChannelsCategory = visibleProviderCats.firstOrNull { it.id == ChannelRepository.ALL_CHANNELS_ID }
+                        ?.copy(count = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count))
                         ?: Category(
                             id = ChannelRepository.ALL_CHANNELS_ID,
                             name = "All Channels",
                             type = ContentType.LIVE,
-                            count = providerCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count)
+                            count = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count)
                         )
                     val visibleProviderCategories = applyProviderCategoryDisplayPreferences(
-                        categories = providerCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID },
+                        categories = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID },
                         hiddenCategoryIds = hiddenCategoryIds,
                         sortMode = sortMode
                     )
@@ -743,7 +749,11 @@ class HomeViewModel @Inject constructor(
                     combinedM3uRepository.getCombinedCategories(profileId),
                     getCustomCategories(providerIds, ContentType.LIVE)
                 ) { combinedCategories, customCats ->
-                    combinedCategoriesById = combinedCategories.associateBy { it.category.id }
+                    liveCategoryLookupById = combinedCategories.map { it.category }.associateBy(Category::id)
+                    val visibleCombinedCategories = combinedCategories.filter {
+                        isStandardLiveCategoryVisible(it.category)
+                    }
+                    combinedCategoriesById = visibleCombinedCategories.associateBy { it.category.id }
                     val recentCategory = Category(
                         id = VirtualCategoryIds.RECENT,
                         name = "Recent",
@@ -755,7 +765,7 @@ class HomeViewModel @Inject constructor(
                         id = ChannelRepository.ALL_CHANNELS_ID,
                         name = "All Channels",
                         type = ContentType.LIVE,
-                        count = combinedCategories.sumOf { it.category.count }
+                        count = visibleCombinedCategories.sumOf { it.category.count }
                     )
                     CategorySelectionContext(
                         categories = buildList {
@@ -764,7 +774,7 @@ class HomeViewModel @Inject constructor(
                             add(recentCategory)
                             addAll(customCats.filter { it.id != VirtualCategoryIds.FAVORITES })
                             add(allChannelsCategory)
-                            addAll(combinedCategories.map { it.category })
+                            addAll(visibleCombinedCategories.map { it.category })
                         },
                         defaultCategoryId = null,
                         lastVisitedCategoryId = null,
@@ -1005,11 +1015,18 @@ class HomeViewModel @Inject constructor(
                         category.id == VirtualCategoryIds.RECENT
                     if (_adultGuideMode.value) {
                         numbered
-                    } else if (isAggregatedSurface) {
-                        AdultContentVisibilityPolicy.filterForAggregatedSurface(
-                            numbered, level
-                        ) { isUserProtected }
-                    } else numbered
+                    } else {
+                        val standardLiveChannels = numbered.filterNot { channel ->
+                            isStandardLiveAdultChannel(channel, category)
+                        }
+                        if (isAggregatedSurface) {
+                            AdultContentVisibilityPolicy.filterForAggregatedSurface(
+                                standardLiveChannels, level
+                            ) { isUserProtected }
+                        } else {
+                            standardLiveChannels
+                        }
+                    }
                 }.collect { displayedChannels ->
                     val currentQuery = _uiState.value.channelSearchQuery.trim()
                     val currentLimit = if (currentQuery.length < MIN_CHANNEL_SEARCH_QUERY_LENGTH) {
@@ -1456,8 +1473,9 @@ class HomeViewModel @Inject constructor(
                     .flatMapLatest(::loadChannelsByOrderedIds),
                 preferencesRepository.parentalControlLevel
             ) { channels, level ->
+                val standardLiveChannels = channels.filterNot(::isStandardLiveAdultChannel)
                 AdultContentVisibilityPolicy.filterForAggregatedSurface(
-                    channels, level
+                    standardLiveChannels, level
                 ) { isUserProtected }
             }.collect { visible ->
                 _uiState.update { it.copy(recentChannels = visible) }
@@ -1475,8 +1493,9 @@ class HomeViewModel @Inject constructor(
                     .flatMapLatest { ids -> loadChannelsByOrderedIds(ids) },
                 preferencesRepository.parentalControlLevel
             ) { channels, level ->
+                val standardLiveChannels = channels.filterNot(::isStandardLiveAdultChannel)
                 AdultContentVisibilityPolicy.filterForAggregatedSurface(
-                    channels, level
+                    standardLiveChannels, level
                 ) { isUserProtected }
             }.collect { visible ->
                 _uiState.update { it.copy(recentChannels = visible) }
@@ -1493,6 +1512,15 @@ class HomeViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    private fun isStandardLiveCategoryVisible(category: Category): Boolean =
+        category.id == ChannelRepository.ALL_CHANNELS_ID || !isLikelyAdultGuideCategory(category)
+
+    private fun isStandardLiveAdultChannel(channel: Channel, selectedCategory: Category? = null): Boolean {
+        val sourceCategory = channel.categoryId?.let(liveCategoryLookupById::get)
+            ?: selectedCategory?.takeUnless { it.isVirtual || it.id == ChannelRepository.ALL_CHANNELS_ID }
+        return isLikelyAdultGuideCategory(sourceCategory) || isExplicitAdultGuideChannel(channel)
     }
 
     fun requestRenameGroup(category: Category) {

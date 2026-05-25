@@ -180,7 +180,7 @@ fun SeriesScreen(
         ) {
         AfterglowBrandStrip(
             wordmark = "Series",
-            tagline = "Shows, seasons, and what's still on the queue.",
+            tagline = "Browse shows by season and episode.",
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
         )
         if (uiState.vodSourceOptions.size > 1) {

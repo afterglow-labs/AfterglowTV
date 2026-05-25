@@ -327,6 +327,52 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `standard live tv hides adult provider categories and channels`() = runTest {
+        val provider = Provider(
+            id = 17L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "http://test"
+        )
+        val newsCategory = Category(id = 5L, name = "News", count = 1)
+        val adultCategory = Category(id = 6L, name = "XXX", count = 1)
+        val newsChannel = Channel(
+            id = 41L,
+            name = "Local News",
+            providerId = provider.id,
+            categoryId = newsCategory.id,
+            streamUrl = "http://news"
+        )
+        val adultChannel = Channel(
+            id = 42L,
+            name = "Late Night XXX",
+            providerId = provider.id,
+            categoryId = adultCategory.id,
+            streamUrl = "http://adult"
+        )
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(flowOf(listOf(newsCategory, adultCategory)))
+        whenever(channelRepository.getChannelsByCategoryPage(eq(provider.id), eq(ChannelRepository.ALL_CHANNELS_ID), any()))
+            .thenReturn(flowOf(listOf(newsChannel, adultChannel)))
+        whenever(getCustomCategories.invoke(eq(provider.id), eq(ContentType.LIVE))).thenReturn(flowOf(emptyList()))
+        whenever(playbackHistoryRepository.getRecentlyWatchedByProvider(eq(provider.id), any())).thenReturn(flowOf(emptyList()))
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.categories.map(Category::name)).doesNotContain("XXX")
+
+        val allChannels = viewModel.uiState.value.categories.first { it.id == ChannelRepository.ALL_CHANNELS_ID }
+        assertThat(allChannels.count).isEqualTo(1)
+
+        viewModel.selectCategory(allChannels)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.filteredChannels.map(Channel::id)).containsExactly(newsChannel.id)
+    }
+
+    @Test
     fun `selecting a live category remembers it for the current provider`() = runTest {
         val provider = Provider(
             id = 20L,

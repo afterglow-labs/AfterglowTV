@@ -19,7 +19,7 @@ data class AppSpacing(
     val safeTop: Dp = 32.dp,
     val safeBottom: Dp = 32.dp,
     val safeHoriz: Dp = 56.dp,
-    // --- Afterglow TV ground-truth dimensions ---------------------------
+    // --- AfterglowTV ground-truth dimensions ---------------------------
     val livePanelColumn: Dp = 320.dp,
     val livePanelWidth: Dp = 640.dp,
     val livePanelRowHeight: Dp = 56.dp,

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Afterglow TV</string>
+    <string name="app_name">AfterglowTV</string>
     <string name="nav_home">الرئيسية</string>
     <string name="nav_live_tv">البث التلفزيوني المباشر</string>
     <string name="nav_movies">أفلام</string>
@@ -102,7 +102,7 @@
     <string name="dashboard_provider_no_expiry">لم يتم الإبلاغ عن انتهاء الصلاحية</string>
     <string name="dashboard_warning_title">مقدم يحتاج إلى الاهتمام</string>
     <string name="dashboard_warning_review">افتح تفاصيل المزود</string>
-    <string name="dashboard_update_title">يتوفر Afterglow TV %1$s</string>
+    <string name="dashboard_update_title">يتوفر AfterglowTV %1$s</string>
     <string name="dashboard_update_available">تم تخزين إصدار أحدث من التطبيق وهو جاهز للمراجعة من الإعدادات.</string>
     <string name="dashboard_update_install_ready">تم تنزيل آخر تحديث بالفعل. افتح الإعدادات لتثبيته.</string>
     <string name="dashboard_update_open_settings">فتح التحديثات</string>
@@ -402,7 +402,7 @@
     <string name="settings_about_subtitle">تفاصيل الإصدار والبنية والدعم لهذا التثبيت.</string>
     <string name="settings_app_version">إصدار التطبيق</string>
     <string name="settings_build">الإصدار</string>
-    <string name="settings_build_desc">Afterglow TV لـ Android TV</string>
+    <string name="settings_build_desc">AfterglowTV لـ Android TV</string>
     <string name="settings_enabled">مفعّل</string>
     <string name="settings_disabled">معطّل</string>
     <string name="settings_developed_by">تم التطوير بواسطة</string>
@@ -412,7 +412,7 @@
     <string name="settings_donate">ادعمنا على Ko-fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">التحديثات</string>
-    <string name="settings_updates_subtitle">تحقق من إصدارات GitHub للحصول على نسخ أحدث من Afterglow TV دون مغادرة التطبيق.</string>
+    <string name="settings_updates_subtitle">تحقق من إصدارات GitHub للحصول على نسخ أحدث من AfterglowTV دون مغادرة التطبيق.</string>
     <string name="settings_update_auto_check">التحقق من التحديثات تلقائيًا</string>
     <string name="settings_update_latest_release">أحدث إصدار</string>
     <string name="settings_update_status">حالة التحديث</string>
@@ -436,8 +436,8 @@
     <string name="settings_update_status_check_failed">فشل آخر فحص</string>
     <string name="settings_update_status_downloading">جارٍ تنزيل التحديث</string>
     <string name="settings_update_status_ready_to_install">جاهز للتثبيت</string>
-    <string name="settings_update_available_message">يتوفر Afterglow TV %1$s.</string>
-    <string name="settings_update_current_message">لديك بالفعل أحدث إصدار من Afterglow TV.</string>
+    <string name="settings_update_available_message">يتوفر AfterglowTV %1$s.</string>
+    <string name="settings_update_current_message">لديك بالفعل أحدث إصدار من AfterglowTV.</string>
     <string name="settings_syncing">جارٍ مزامنة البيانات، يُرجى الانتظار...</string>
     <string name="settings_syncing_title">جارٍ مزامنة البيانات...</string>
     <string name="settings_syncing_subtitle">يرجى الانتظار أثناء استيراد قائمة التشغيل الخاصة بك.</string>
@@ -700,7 +700,7 @@
     <string name="a11y_catch_up_available">متاح للمشاهدة اللاحقة</string>
     <string name="a11y_now_playing">يتم التشغيل الآن %1$s</string>
     <string name="a11y_channel_with_number">القناة %1$d، %2$s</string>
-    <string name="setup_title_afterglowtv">Afterglow TV</string>
+    <string name="setup_title_afterglowtv">AfterglowTV</string>
     <string name="setup_provider_title">أضف مزودًا</string>
     <string name="setup_edit_provider">تعديل المزود</string>
     <string name="setup_update_desc">حدّث تفاصيل مزود IPTV الخاص بك</string>
@@ -1165,21 +1165,21 @@
     <string name="settings_history_cleared">تم مسح سجل المشاهدة والعناصر الأخيرة</string>
     <string name="settings_pin_changed">تم حفظ رمز PIN بنجاح</string>
     <string name="home_reorder_channels">إعادة ترتيب القنوات</string>
-    <string name="tv_input_setup_scanning_title">جارٍ فحص قنوات Afterglow TV</string>
+    <string name="tv_input_setup_scanning_title">جارٍ فحص قنوات AfterglowTV</string>
     <string name="tv_input_setup_success_title">البث التلفزيوني المباشر جاهز</string>
     <string name="tv_input_setup_no_provider_title">لم يتم إعداد أي مزود IPTV</string>
     <string name="tv_input_setup_error_title">فشل الفحص التلقائي</string>
     <string name="tv_input_setup_idle_title">جارٍ تجهيز تكامل البث التلفزيوني المباشر</string>
-    <string name="tv_input_setup_scanning_body">يقوم Afterglow TV بمزامنة المزود النشط لديك مع Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">يقوم AfterglowTV بمزامنة المزود النشط لديك مع Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">تمت مزامنة قنواتك بنجاح.</string>
-    <string name="tv_input_setup_no_provider_body">أضف مزود IPTV واحدًا على الأقل في Afterglow TV، ثم عد هنا لفحص القنوات إلى Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">أضف مزود IPTV واحدًا على الأقل في AfterglowTV، ثم عد هنا لفحص القنوات إلى Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">لم تكتمل مزامنة إدخال التلفزيون.</string>
     <string name="tv_input_setup_idle_body">يرجى الانتظار.</string>
     <string name="tv_input_setup_source_format">المصدر: %1$s</string>
-    <string name="tv_input_setup_open_setup">فتح إعداد Afterglow TV</string>
+    <string name="tv_input_setup_open_setup">فتح إعداد AfterglowTV</string>
     <string name="tv_input_setup_try_scan_again">حاول الفحص التلقائي مرة أخرى</string>
     <string name="tv_input_setup_retry_scan">إعادة محاولة الفحص التلقائي</string>
-    <string name="tv_input_setup_success_hint">يمكن لـ Android TV Live TV الآن فتح قنوات Afterglow TV الخاصة بك.</string>
+    <string name="tv_input_setup_success_hint">يمكن لـ Android TV Live TV الآن فتح قنوات AfterglowTV الخاصة بك.</string>
     <string name="badge_beta">بيتا</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1206,8 +1206,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d خانات</string>
     <string name="movie_detail_related">مشابه لهذا</string>
     <string name="movie_detail_resume_from">استئناف من %1$s</string>
-    <string name="notification_permission_recording_alert_required">فعّل الإشعارات لـ Afterglow TV لتلقي تنبيهات فشل التسجيل.</string>
-    <string name="notification_permission_reminder_required">فعّل الإشعارات لـ Afterglow TV لتلقي تذكيرات البرامج.</string>
+    <string name="notification_permission_recording_alert_required">فعّل الإشعارات لـ AfterglowTV لتلقي تنبيهات فشل التسجيل.</string>
+    <string name="notification_permission_reminder_required">فعّل الإشعارات لـ AfterglowTV لتلقي تذكيرات البرامج.</string>
     <string name="player_action_variants">متغيرات</string>
     <string name="player_auto_play_cancel">إلغاء</string>
     <string name="player_auto_play_countdown">التشغيل بعد %1$d ثانية</string>
@@ -1381,7 +1381,7 @@
     <string name="settings_recording_skipped">تم تخطي الحلقة</string>
     <string name="settings_recording_wifi_only">التسجيل على Wi-Fi فقط</string>
     <string name="settings_reset">إعادة تعيين</string>
-    <string name="settings_restore_subtitle">اختر ملف نسخ احتياطي، أو افتح نسخة احتياطية مع Afterglow TV من مدير الملفات.</string>
+    <string name="settings_restore_subtitle">اختر ملف نسخ احتياطي، أو افتح نسخة احتياطية مع AfterglowTV من مدير الملفات.</string>
     <string name="settings_select_guide_default_category">اختر الفئة الافتراضية للدليل</string>
     <string name="settings_select_live_timeshift_depth">اختر عمق الإرجاع المحلي للبث المباشر</string>
     <string name="settings_select_time_format">اختر تنسيق الوقت</string>

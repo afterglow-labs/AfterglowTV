@@ -22,7 +22,7 @@ import com.afterglowtv.app.ui.design.AfterglowFocusRole
 import com.afterglowtv.app.ui.design.afterglowFocus
 
 /**
- * Afterglow TV top tabs row. Alternative chrome to the existing left rail —
+ * AfterglowTV top tabs row. Alternative chrome to the existing left rail —
  * meant for the Home / Live TV / Guide / Movies / Series / Recordings /
  * Search / Settings landing screens. The player route ignores this and
  * renders full-bleed.

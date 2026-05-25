@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Afterglow TV</string>
+    <string name="app_name">AfterglowTV</string>
     <string name="nav_home">首页</string>
     <string name="nav_live_tv">直播电视</string>
     <string name="nav_movies">电影</string>
@@ -102,7 +102,7 @@
     <string name="dashboard_provider_no_expiry">未报告到期时间</string>
     <string name="dashboard_warning_title">提供商需要注意</string>
     <string name="dashboard_warning_review">打开提供商详情</string>
-    <string name="dashboard_update_title">Afterglow TV %1$s 可用</string>
+    <string name="dashboard_update_title">AfterglowTV %1$s 可用</string>
     <string name="dashboard_update_available">有更新版本已缓存，可在设置中查看。</string>
     <string name="dashboard_update_install_ready">最新更新已下载。打开设置即可安装。</string>
     <string name="dashboard_update_open_settings">打开更新</string>
@@ -402,7 +402,7 @@
     <string name="settings_about_subtitle">此安装的版本、构建和支持信息。</string>
     <string name="settings_app_version">应用版本</string>
     <string name="settings_build">构建</string>
-    <string name="settings_build_desc">适用于 Android TV 的 Afterglow TV</string>
+    <string name="settings_build_desc">适用于 Android TV 的 AfterglowTV</string>
     <string name="settings_enabled">已启用</string>
     <string name="settings_disabled">已禁用</string>
     <string name="settings_developed_by">开发者</string>
@@ -412,7 +412,7 @@
     <string name="settings_donate">在 Ko-fi 上支持</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">更新</string>
-    <string name="settings_updates_subtitle">无需离开应用即可在 GitHub Releases 查看更新的 Afterglow TV 版本。</string>
+    <string name="settings_updates_subtitle">无需离开应用即可在 GitHub Releases 查看更新的 AfterglowTV 版本。</string>
     <string name="settings_update_auto_check">自动检查更新</string>
     <string name="settings_update_latest_release">最新版本</string>
     <string name="settings_update_status">更新状态</string>
@@ -436,8 +436,8 @@
     <string name="settings_update_status_check_failed">上次检查失败</string>
     <string name="settings_update_status_downloading">正在下载更新</string>
     <string name="settings_update_status_ready_to_install">已准备好安装</string>
-    <string name="settings_update_available_message">Afterglow TV %1$s 可用。</string>
-    <string name="settings_update_current_message">您已拥有最新的 Afterglow TV 版本。</string>
+    <string name="settings_update_available_message">AfterglowTV %1$s 可用。</string>
+    <string name="settings_update_current_message">您已拥有最新的 AfterglowTV 版本。</string>
     <string name="settings_syncing">正在同步数据，请稍候...</string>
     <string name="settings_syncing_title">正在同步数据...</string>
     <string name="settings_syncing_subtitle">正在导入播放列表，请稍候。</string>
@@ -700,7 +700,7 @@
     <string name="a11y_catch_up_available">可回看</string>
     <string name="a11y_now_playing">正在播放 %1$s</string>
     <string name="a11y_channel_with_number">频道 %1$d，%2$s</string>
-    <string name="setup_title_afterglowtv">Afterglow TV</string>
+    <string name="setup_title_afterglowtv">AfterglowTV</string>
     <string name="setup_provider_title">添加提供商</string>
     <string name="setup_edit_provider">编辑提供商</string>
     <string name="setup_update_desc">更新您的 IPTV 提供商详情</string>
@@ -1165,21 +1165,21 @@
     <string name="settings_history_cleared">观看历史和最近记录已清除</string>
     <string name="settings_pin_changed">PIN 已成功保存</string>
     <string name="home_reorder_channels">重新排序频道</string>
-    <string name="tv_input_setup_scanning_title">扫描 Afterglow TV 频道</string>
+    <string name="tv_input_setup_scanning_title">扫描 AfterglowTV 频道</string>
     <string name="tv_input_setup_success_title">电视直播已准备就绪</string>
     <string name="tv_input_setup_no_provider_title">未配置 IPTV 提供商</string>
     <string name="tv_input_setup_error_title">自动扫描失败</string>
     <string name="tv_input_setup_idle_title">准备直播电视集成</string>
-    <string name="tv_input_setup_scanning_body">Afterglow TV 正在将您的活动提供商同步到 Android TV Live TV。</string>
+    <string name="tv_input_setup_scanning_body">AfterglowTV 正在将您的活动提供商同步到 Android TV Live TV。</string>
     <string name="tv_input_setup_success_body">您的频道已成功同步。</string>
-    <string name="tv_input_setup_no_provider_body">在 Afterglow TV 中添加至少一个 IPTV 提供商，然后返回此处将频道扫描到 Android TV Live TV。</string>
+    <string name="tv_input_setup_no_provider_body">在 AfterglowTV 中添加至少一个 IPTV 提供商，然后返回此处将频道扫描到 Android TV Live TV。</string>
     <string name="tv_input_setup_error_body">电视输入同步未完成。</string>
     <string name="tv_input_setup_idle_body">请稍等。</string>
     <string name="tv_input_setup_source_format">来源：%1$s</string>
-    <string name="tv_input_setup_open_setup">打开 Afterglow TV 设置</string>
+    <string name="tv_input_setup_open_setup">打开 AfterglowTV 设置</string>
     <string name="tv_input_setup_try_scan_again">再次尝试自动扫描</string>
     <string name="tv_input_setup_retry_scan">重试自动扫描</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV 现在可以打开您的 Afterglow TV 频道。</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV 现在可以打开您的 AfterglowTV 频道。</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1206,8 +1206,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d 插槽</string>
     <string name="movie_detail_related">更多类似内容</string>
     <string name="movie_detail_resume_from">从 %1$s 继续</string>
-    <string name="notification_permission_recording_alert_required">为 Afterglow TV 启用通知以接收录制失败提醒。</string>
-    <string name="notification_permission_reminder_required">为 Afterglow TV 启用通知以接收节目提醒。</string>
+    <string name="notification_permission_recording_alert_required">为 AfterglowTV 启用通知以接收录制失败提醒。</string>
+    <string name="notification_permission_reminder_required">为 AfterglowTV 启用通知以接收节目提醒。</string>
     <string name="player_action_variants">变体</string>
     <string name="player_auto_play_cancel">取消</string>
     <string name="player_auto_play_countdown">%1$d 秒后播放</string>
@@ -1381,7 +1381,7 @@
     <string name="settings_recording_skipped">已跳过此次</string>
     <string name="settings_recording_wifi_only">仅在 Wi-Fi 下录制</string>
     <string name="settings_reset">重置</string>
-    <string name="settings_restore_subtitle">选择备份文件，或从文件管理器用 Afterglow TV 打开备份。</string>
+    <string name="settings_restore_subtitle">选择备份文件，或从文件管理器用 AfterglowTV 打开备份。</string>
     <string name="settings_select_guide_default_category">选择指南默认类别</string>
     <string name="settings_select_live_timeshift_depth">选择本地直播回退深度</string>
     <string name="settings_select_time_format">选择时间格式</string>

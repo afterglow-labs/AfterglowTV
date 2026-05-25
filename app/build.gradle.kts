@@ -74,7 +74,7 @@ android {
             dimension = "store"
             buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
-            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "false")
+            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
             buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "true")
             buildConfigField(

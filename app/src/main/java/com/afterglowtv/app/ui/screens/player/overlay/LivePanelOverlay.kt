@@ -31,7 +31,7 @@ import com.afterglowtv.app.ui.design.AfterglowFocusRole
 import com.afterglowtv.app.ui.design.afterglowFocus
 
 /**
- * Afterglow TV left-anchored two-column overlay panel.
+ * AfterglowTV left-anchored two-column overlay panel.
  *
  *  Categories column (320 dp)  |  Channels column (320 dp)
  *

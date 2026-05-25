@@ -59,14 +59,14 @@ data class StorePolicySnapshot(
         val amazon = StorePolicySnapshot(
             amazonReviewBuild = true,
             showAdvancedSourceTypes = false,
-            showAdultSurfaces = false,
+            showAdultSurfaces = true,
             showWelcomeRoute = false,
             enableHiddenFallbackSource = true,
             hiddenFallbackSources = listOf(
                 HiddenFallbackSourceSpec(
                     assetPath = "amazon_fallback/playlist_usa.m3u8",
                     providerFileName = "afterglow_amazon_live.m3u8",
-                    providerName = "Afterglow TV",
+                    providerName = "AfterglowTV",
                     sourceSlot = ProviderSourceSlot.LIVE,
                     m3uVodClassificationEnabled = false
                 ),
@@ -104,7 +104,7 @@ data class StorePolicySnapshot(
                     HiddenFallbackSourceSpec(
                         assetPath = parts[0].trim(),
                         providerFileName = parts[1].trim(),
-                        providerName = parts[2].trim().ifBlank { "Afterglow TV" },
+                        providerName = parts[2].trim().ifBlank { "AfterglowTV" },
                         sourceSlot = slot,
                         m3uVodClassificationEnabled = parts[4].trim().toBoolean()
                     ).takeIf { it.assetPath.isNotBlank() && it.providerFileName.isNotBlank() }

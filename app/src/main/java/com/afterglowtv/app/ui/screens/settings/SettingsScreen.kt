@@ -174,7 +174,7 @@ fun SettingsScreen(
             currentRoute = currentRoute,
             onNavigate = { if (!uiState.isSyncing) onNavigate(it) },
             title = stringResource(R.string.settings_title),
-            subtitle = stringResource(R.string.settings_providers_subtitle),
+            subtitle = "",
             navigationChrome = AppNavigationChrome.TopBar,
             compactHeader = true,
             showScreenHeader = false
@@ -182,7 +182,7 @@ fun SettingsScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 AfterglowBrandStrip(
                     wordmark = "Settings",
-                    tagline = "Providers, playback, themes, glow — all the knobs.",
+                    tagline = "",
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
                 )
                 Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
