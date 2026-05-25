@@ -93,7 +93,8 @@ object DatabaseModule {
                 AfterglowTVDatabase.MIGRATION_51_52,
                 AfterglowTVDatabase.MIGRATION_52_53,
                 AfterglowTVDatabase.MIGRATION_53_54,
-                AfterglowTVDatabase.MIGRATION_54_55
+                AfterglowTVDatabase.MIGRATION_54_55,
+                AfterglowTVDatabase.MIGRATION_55_56
             )
             // NOTE: fallbackToDestructiveMigration() intentionally removed.
             // All future schema changes MUST add a corresponding Migration in AfterglowTVDatabase.
@@ -136,4 +137,5 @@ object DatabaseModule {
     @Provides fun provideLocalMediaItemDao(db: AfterglowTVDatabase): LocalMediaItemDao = db.localMediaItemDao()
     @Provides fun provideLocalMediaChannelDao(db: AfterglowTVDatabase): LocalMediaChannelDao = db.localMediaChannelDao()
     @Provides fun provideLocalMediaProgramDao(db: AfterglowTVDatabase): LocalMediaProgramDao = db.localMediaProgramDao()
+    @Provides fun provideAdultGuideCacheDao(db: AfterglowTVDatabase): AdultGuideCacheDao = db.adultGuideCacheDao()
 }
