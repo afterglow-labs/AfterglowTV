@@ -588,11 +588,11 @@ fun AppNavigation(mainActivity: MainActivity) {
                 return@composable
             }
             HomeScreen(
-                onChannelClick = { channel, _, provider, combinedProfileId, combinedSourceFilterProviderId ->
+                onChannelClick = { channel, category, provider, combinedProfileId, combinedSourceFilterProviderId ->
                     navController.navigateToPlayer(
                         Routes.livePlayer(
                             channel = channel,
-                            categoryId = VirtualCategoryIds.ADULT_GUIDE,
+                            categoryId = adultGuidePlaybackCategoryId(category),
                             providerId = provider?.id ?: channel.providerId,
                             isVirtual = true,
                             combinedProfileId = combinedProfileId,
