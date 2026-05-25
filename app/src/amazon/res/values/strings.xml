@@ -7,7 +7,7 @@
 
     <string name="dashboard_provider_xtream">Server Login</string>
     <string name="dashboard_provider_m3u">Playlist Link</string>
-    <string name="dashboard_empty_title">Add a TV source</string>
+    <string name="dashboard_empty_title">Add a source</string>
     <string name="dashboard_empty_body">Add a playlist link or local playlist file from Settings to use your own channels and videos.</string>
     <string name="dashboard_library_ready">Your TV library is ready</string>
 
@@ -15,7 +15,7 @@
     <string name="settings_providers">Sources</string>
     <string name="settings_no_providers">No sources configured</string>
     <string name="settings_add_provider">Add Source</string>
-    <string name="settings_providers_subtitle">Switch, sync, edit, and troubleshoot your TV sources.</string>
+    <string name="settings_providers_subtitle">Switch, sync, edit, and troubleshoot your sources.</string>
     <string name="settings_provider_selector_hint">Select a source to view details and actions.</string>
     <string name="settings_build_desc">AfterglowTV for FireOS</string>
     <string name="settings_parental_control">Content Controls</string>
@@ -44,7 +44,7 @@
     <string name="settings_xtream_base64_compatibility">Encoded Text Compatibility</string>
     <string name="settings_xtream_base64_compatibility_subtitle">Decode source names and categories when a source stores them as encoded text. Leave this off unless text looks encoded.</string>
 
-    <string name="setup_provider_title">Add a TV source</string>
+    <string name="setup_provider_title">Add a source</string>
     <string name="setup_edit_provider">Edit source</string>
     <string name="setup_update_desc">Tweak how this source connects</string>
     <string name="setup_add_desc">Connect a video source</string>
@@ -73,6 +73,6 @@
     <string name="setup_badge_vod_sorting">Video sorting</string>
     <string name="setup_discard_draft_body">This source setup is incomplete. Go back and lose the current draft?</string>
 
-    <string name="tv_input_setup_no_provider_title">No TV source configured</string>
-    <string name="tv_input_setup_no_provider_body">Add at least one TV source in AfterglowTV, then return here to scan channels into Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_title">No source configured</string>
+    <string name="tv_input_setup_no_provider_body">Add at least one source in AfterglowTV, then return here to scan channels into Android TV Live TV.</string>
 </resources>

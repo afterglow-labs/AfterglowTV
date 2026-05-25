@@ -70,6 +70,11 @@ private fun sanitizePlaybackTimerMinutes(minutes: Int): Int = when (minutes) {
     else -> 120
 }
 
+internal fun shouldRepairAdultGuideTabVisibility(
+    developerModeEnabled: Boolean,
+    showAdultGuideTab: Boolean?
+): Boolean = developerModeEnabled && showAdultGuideTab != true
+
 @Serializable
 data class AdultGuideCategoryCache(
     val categorizedChannelCount: Int,
@@ -1504,12 +1509,28 @@ class PreferencesRepository @Inject constructor(
     suspend fun setDeveloperModeEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] = enabled
+            if (enabled) {
+                preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = true
+            }
         }
     }
 
     suspend fun setShowAdultGuideTab(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = enabled
+        }
+    }
+
+    suspend fun ensureAdultGuideTabVisibleForDeveloperMode() {
+        context.dataStore.edit { preferences ->
+            if (
+                shouldRepairAdultGuideTabVisibility(
+                    developerModeEnabled = preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] ?: false,
+                    showAdultGuideTab = preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB]
+                )
+            ) {
+                preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = true
+            }
         }
     }
 

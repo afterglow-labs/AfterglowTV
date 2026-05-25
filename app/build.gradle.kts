@@ -80,7 +80,7 @@ android {
             buildConfigField(
                 "String",
                 "HIDDEN_FALLBACK_SOURCE_SPECS",
-                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::Afterglow TV::LIVE::false|amazon_fallback/playlist_usa_vod.m3u8::afterglow_amazon_vod.m3u8::Afterglow Videos::VOD::true\""
+                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::AfterglowTV::LIVE::false|amazon_fallback/playlist_usa_vod.m3u8::afterglow_amazon_vod.m3u8::Afterglow Videos::VOD::true\""
             )
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
