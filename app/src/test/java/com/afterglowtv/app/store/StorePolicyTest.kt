@@ -5,6 +5,7 @@ import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.navigation.resolveStartupRoute
 import com.afterglowtv.app.ui.screens.provider.ProviderSetupSourceType
 import com.afterglowtv.app.ui.screens.provider.visibleProviderSetupSourceTypes
+import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderSourceSlot
@@ -22,6 +23,17 @@ class StorePolicyTest {
             ProviderSetupSourceType.PLAYLIST_URL,
             ProviderSetupSourceType.PLAYLIST_FILE
         ).inOrder()
+    }
+
+    @Test
+    fun `amazon build uses Afterglow Labs package identity`() {
+        if (BuildConfig.AMAZON_REVIEW_BUILD) {
+            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglowlabs.tv")
+            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowlabs.tv")
+        } else {
+            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglowtv.app")
+            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
+        }
     }
 
     @Test
@@ -63,7 +75,7 @@ class StorePolicyTest {
     @Test
     fun `amazon hides fallback source from user source lists`() {
         val fallback = provider(
-            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowlabs.tv/files/hidden_fallback/afterglow_amazon_live.m3u8"
         )
         val userProvider = provider(id = 2L, m3uUrl = "https://example.test/user.m3u8")
 
@@ -76,7 +88,7 @@ class StorePolicyTest {
     @Test
     fun `amazon should seed fallback only when no user source exists`() {
         val fallback = provider(
-            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_vod.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowlabs.tv/files/hidden_fallback/afterglow_amazon_vod.m3u8"
         )
         val userProvider = provider(id = 2L, m3uUrl = "https://example.test/user.m3u8")
 
@@ -111,7 +123,7 @@ class StorePolicyTest {
     fun `amazon fallback repairs stale active source when no user source exists`() {
         val fallback = provider(
             id = 2L,
-            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowlabs.tv/files/hidden_fallback/afterglow_amazon_live.m3u8"
         )
 
         assertThat(
@@ -128,7 +140,7 @@ class StorePolicyTest {
     fun `amazon fallback keeps matching active source when no user source exists`() {
         val fallback = provider(
             id = 2L,
-            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowlabs.tv/files/hidden_fallback/afterglow_amazon_live.m3u8"
         )
 
         assertThat(
@@ -162,20 +174,47 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `amazon bundled live fallback contains demo hls streams`() {
+    fun `amazon bundled live fallback contains controlled demo and public channels`() {
         val livePlaylist = amazonAsset("playlist_usa.m3u8").readText()
 
-        assertThat(livePlaylist).contains("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
-        assertThat(livePlaylist).contains("https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8")
-        assertThat(livePlaylist).contains("https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8")
-        assertThat(livePlaylist).contains("https://test-streams.mux.dev/test_001/stream.m3u8")
+        assertThat(livePlaylist).contains("Afterglow Music Demo")
+        assertThat(livePlaylist).contains("media.boni-records.com/index.m3u8")
+        assertThat(livePlaylist).contains("Access Media Productions Channel")
+        assertThat(livePlaylist).contains("Access Nashua")
+        assertThat(livePlaylist).contains("AccuWeather Now")
+        assertThat(livePlaylist).contains("AFTV")
     }
 
     @Test
-    fun `amazon bundled live fallback excludes unsupported or blocked demo sources`() {
+    fun `amazon bundled live fallback excludes unsupported or review risk sources`() {
         val livePlaylist = amazonAsset("playlist_usa.m3u8").readText()
 
+        assertThat(livePlaylist).doesNotContain("3catdirectes.cat")
+        assertThat(livePlaylist).doesNotContain("ztnr.rtve.es")
+        assertThat(livePlaylist).doesNotContain("30a-tv.com")
+        assertThat(livePlaylist).doesNotContain("ADN TV+")
+        assertThat(livePlaylist).doesNotContain("Anime Vision")
+        assertThat(livePlaylist).doesNotContain("Canal 24 Horas")
+        assertThat(livePlaylist).doesNotContain("Afghan")
+        assertThat(livePlaylist).doesNotContain("Afghanistan")
+        assertThat(livePlaylist).doesNotContain("Africa")
+        assertThat(livePlaylist).doesNotContain("Afrique")
+        assertThat(livePlaylist).doesNotContain("AfroLand")
+        assertThat(livePlaylist).doesNotContain("1KZN")
+        assertThat(livePlaylist).doesNotContain(".za@")
+        assertThat(livePlaylist).doesNotContain(".cm@")
+        assertThat(livePlaylist).doesNotContain("Abante")
+        assertThat(livePlaylist).doesNotContain("ABP News")
+        assertThat(livePlaylist).doesNotContain("10 Bold")
+        assertThat(livePlaylist).doesNotContain("Acheloos")
+        assertThat(livePlaylist).doesNotContain("A2i TV")
+        assertThat(livePlaylist).doesNotContain("[Geo-blocked]")
         assertThat(livePlaylist).doesNotContain("youtube.com")
+        assertThat(livePlaylist).doesNotContain("Disney")
+        assertThat(livePlaylist).doesNotContain("Naruto")
+        assertThat(livePlaylist).doesNotContain("XXX")
+        assertThat(livePlaylist).doesNotContain("xxx.m3u")
+        assertThat(livePlaylist).doesNotContain("Undefined")
         assertThat(livePlaylist).doesNotContain("buzzrota-ono.amagi.tv")
         assertThat(livePlaylist).doesNotContain("bcovlive-a.akamaihd.net")
         assertThat(livePlaylist).doesNotContain("tve-live-lln.warnermediacdn.com")
