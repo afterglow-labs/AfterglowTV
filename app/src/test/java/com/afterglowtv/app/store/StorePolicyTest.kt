@@ -35,6 +35,13 @@ class StorePolicyTest {
     }
 
     @Test
+    fun `amazon review build hides dvr unless developer mode unlocks it`() {
+        assertThat(StorePolicySnapshot.amazon.canUseDvr(developerModeEnabled = false)).isFalse()
+        assertThat(StorePolicySnapshot.amazon.canUseDvr(developerModeEnabled = true)).isTrue()
+        assertThat(StorePolicySnapshot.standard.canUseDvr(developerModeEnabled = false)).isTrue()
+    }
+
+    @Test
     fun `amazon startup allows adult route only after developer mode unlock`() {
         val lockedRoute = resolveStartupRoute(
             destination = StartupDestination.XXX_GUIDE,

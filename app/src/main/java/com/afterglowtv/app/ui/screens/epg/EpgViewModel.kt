@@ -61,6 +61,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -288,6 +290,8 @@ class EpgViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(EpgUiState())
     val uiState: StateFlow<EpgUiState> = _uiState.asStateFlow()
+    val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     private val selectedCategoryId = MutableStateFlow(ChannelRepository.ALL_CHANNELS_ID)
     private val guideAnchorTime = MutableStateFlow(System.currentTimeMillis())

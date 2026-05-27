@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
@@ -25,9 +25,39 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.theme.Primary
 
+internal const val SETTINGS_CATEGORY_PROVIDERS = 0
+internal const val SETTINGS_CATEGORY_PLAYBACK = 1
+internal const val SETTINGS_CATEGORY_BROWSING = 2
+internal const val SETTINGS_CATEGORY_PRIVACY = 3
+internal const val SETTINGS_CATEGORY_RECORDING = 4
+internal const val SETTINGS_CATEGORY_LOCAL_MEDIA = 5
+internal const val SETTINGS_CATEGORY_BACKUP = 6
+internal const val SETTINGS_CATEGORY_EPG_SOURCES = 7
+internal const val SETTINGS_CATEGORY_ABOUT = 8
+
+internal fun visibleSettingsCategoryIds(
+    policy: StorePolicySnapshot = StorePolicy.current,
+    developerModeEnabled: Boolean = false
+): List<Int> = buildList {
+    add(SETTINGS_CATEGORY_PROVIDERS)
+    add(SETTINGS_CATEGORY_PLAYBACK)
+    add(SETTINGS_CATEGORY_BROWSING)
+    add(SETTINGS_CATEGORY_PRIVACY)
+    if (policy.canUseDvr(developerModeEnabled)) {
+        add(SETTINGS_CATEGORY_RECORDING)
+    }
+    add(SETTINGS_CATEGORY_LOCAL_MEDIA)
+    add(SETTINGS_CATEGORY_BACKUP)
+    add(SETTINGS_CATEGORY_EPG_SOURCES)
+    add(SETTINGS_CATEGORY_ABOUT)
+}
+
 private data class SettingsNavEntry(
+    val categoryId: Int,
     val label: String,
     val icon: ImageVector,
     val accent: Color
@@ -36,57 +66,71 @@ private data class SettingsNavEntry(
 @Composable
 internal fun SettingsNavigationRail(
     selectedCategory: Int,
+    developerModeEnabled: Boolean,
     focusRequester: FocusRequester,
     onCategorySelected: (Int) -> Unit,
     onNavigate: (String) -> Unit = {},
 ) {
+    val visibleCategoryIds = visibleSettingsCategoryIds(
+        policy = StorePolicy.current,
+        developerModeEnabled = developerModeEnabled
+    )
     val entries = listOf(
         SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_PROVIDERS,
             label = stringResource(R.string.settings_providers),
             icon = Icons.Default.Settings,
             accent = Primary
         ),
         SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_PLAYBACK,
             label = stringResource(R.string.settings_playback),
             icon = Icons.Default.PlayArrow,
             accent = Color(0xFF9E8FFF)
         ),
         SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_BROWSING,
             label = stringResource(R.string.settings_browsing),
             icon = Icons.Default.Search,
             accent = Color(0xFF26A69A)
         ),
         SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_PRIVACY,
             label = stringResource(R.string.settings_privacy),
             icon = Icons.Default.Lock,
             accent = Color(0xFFFFB74D)
         ),
         SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_RECORDING,
             label = stringResource(R.string.settings_recording_title),
             icon = Icons.Default.Star,
             accent = Color(0xFFEF5350)
         ),
         SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_LOCAL_MEDIA,
             label = "Local Media",
             icon = Icons.Default.PlayArrow,
             accent = Color(0xFF26C6DA)
         ),
         SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_BACKUP,
             label = stringResource(R.string.settings_backup_restore),
             icon = Icons.Default.Menu,
             accent = Color(0xFF42A5F5)
         ),
         SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_EPG_SOURCES,
             label = "EPG Sources",
             icon = Icons.Default.Info,
             accent = Color(0xFF66BB6A)
         ),
         SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_ABOUT,
             label = stringResource(R.string.settings_about),
             icon = Icons.Default.Info,
             accent = Color(0xFF78909C)
         )
-    )
+    ).filter { it.categoryId in visibleCategoryIds }
 
     LazyColumn(
         modifier = Modifier
@@ -96,14 +140,14 @@ internal fun SettingsNavigationRail(
         contentPadding = PaddingValues(top = 76.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        itemsIndexed(entries) { index, entry ->
+        items(entries, key = { it.categoryId }) { entry ->
             SettingsNavItem(
                 label = entry.label,
                 badgeIcon = entry.icon,
                 accentColor = entry.accent,
-                isSelected = selectedCategory == index,
-                modifier = if (selectedCategory == index) Modifier.focusRequester(focusRequester) else Modifier,
-                onClick = { onCategorySelected(index) }
+                isSelected = selectedCategory == entry.categoryId,
+                modifier = if (selectedCategory == entry.categoryId) Modifier.focusRequester(focusRequester) else Modifier,
+                onClick = { onCategorySelected(entry.categoryId) }
             )
         }
         item {

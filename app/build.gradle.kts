@@ -68,6 +68,8 @@ android {
             buildConfigField("String", "HIDDEN_FALLBACK_SOURCE_SPECS", "\"\"")
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "true")
+            buildConfigField("boolean", "ENABLE_DVR", "true")
+            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "false")
         }
 
         create("amazon") {
@@ -84,6 +86,8 @@ android {
             )
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
+            buildConfigField("boolean", "ENABLE_DVR", "false")
+            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
             resourceConfigurations += listOf("en")
         }
     }

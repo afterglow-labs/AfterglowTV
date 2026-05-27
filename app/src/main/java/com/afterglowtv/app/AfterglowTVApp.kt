@@ -14,6 +14,7 @@ import com.afterglowtv.app.diagnostics.CrashReportStore
 import com.afterglowtv.app.diagnostics.RuntimeDiagnosticsManager
 import com.afterglowtv.app.store.HiddenFallbackSourceSeeder
 import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.update.GitHubReleaseChecker
 import com.afterglowtv.app.ui.accessibility.isReducedMotionEnabled
 import com.afterglowtv.app.ui.design.AppColors
@@ -46,6 +47,11 @@ import com.afterglowtv.data.sync.VodEnrichmentWorker
 import com.afterglowtv.data.sync.XtreamIndexWorker
 import com.afterglowtv.player.timeshift.TimeshiftDiskManager
 import java.util.concurrent.TimeUnit
+
+internal fun shouldEnqueueRecordingMaintenance(
+    policy: StorePolicySnapshot,
+    developerModeEnabled: Boolean
+): Boolean = policy.canUseDvr(developerModeEnabled)
 
 @HiltAndroidApp
 class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
@@ -102,7 +108,9 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         val preferencesRepository = entryPoint.preferencesRepository()
         TimeshiftDiskManager(applicationContext).cleanupStaleDirectories(activeSessionDir = null)
         refreshCachedAppUpdateIfNeeded(preferencesRepository, entryPoint.gitHubReleaseChecker())
-        enqueueMaintenanceWorkers()
+        enqueueMaintenanceWorkers(
+            developerModeEnabled = preferencesRepository.developerModeEnabled.first()
+        )
     }
 
     private fun applySavedVisualPreferencesBeforeUi() {
@@ -147,7 +155,7 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         }
     }
 
-    private fun enqueueMaintenanceWorkers() {
+    private fun enqueueMaintenanceWorkers(developerModeEnabled: Boolean) {
         // Schedule daily data maintenance: EPG pruning, stale-favorite cleanup, and DB compaction checks.
         // BLD-H02: Require network + device idle so the worker doesn't drain battery.
         val gcConstraints = Constraints.Builder()
@@ -173,8 +181,10 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         XtreamIndexWorker.enqueueLaunchStaleCheck(this)
         VodEnrichmentWorker.enqueuePeriodic(this)
         VodEnrichmentWorker.enqueueLaunchScan(this)
-        RecordingReconcileWorker.enqueuePeriodic(this)
-        RecordingReconcileWorker.enqueueOneShot(this)
+        if (shouldEnqueueRecordingMaintenance(StorePolicy.current, developerModeEnabled)) {
+            RecordingReconcileWorker.enqueuePeriodic(this)
+            RecordingReconcileWorker.enqueueOneShot(this)
+        }
     }
 
     private fun cancelColdStartMaintenanceWork() {

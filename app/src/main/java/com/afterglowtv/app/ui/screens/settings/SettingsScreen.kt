@@ -160,8 +160,18 @@ fun SettingsScreen(
         val uri = initialBackupImportUri?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
         if (handledInitialBackupImportUri == uri) return@LaunchedEffect
         handledInitialBackupImportUri = uri
-        dialogState.selectedCategory = 6
+        dialogState.selectedCategory = SETTINGS_CATEGORY_BACKUP
         viewModel.inspectBackup(uri)
+    }
+
+    LaunchedEffect(uiState.developerModeEnabled, dialogState.selectedCategory) {
+        if (
+            dialogState.selectedCategory !in visibleSettingsCategoryIds(
+                developerModeEnabled = uiState.developerModeEnabled
+            )
+        ) {
+            dialogState.selectedCategory = SETTINGS_CATEGORY_PROVIDERS
+        }
     }
 
     LaunchedEffect(currentRoute, dialogState.selectedCategory) {
@@ -188,6 +198,7 @@ fun SettingsScreen(
                 Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     SettingsNavigationRail(
                         selectedCategory = dialogState.selectedCategory,
+                        developerModeEnabled = uiState.developerModeEnabled,
                         focusRequester = settingsNavFocusRequester,
                         onCategorySelected = { dialogState.selectedCategory = it },
                         onNavigate = onNavigate,

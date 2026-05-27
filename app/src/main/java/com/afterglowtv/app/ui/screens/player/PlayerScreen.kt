@@ -75,6 +75,8 @@ import androidx.compose.ui.res.stringResource
 import com.afterglowtv.app.R
 import com.afterglowtv.app.MainActivity
 import com.afterglowtv.app.cast.CastConnectionState
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.components.PlayerRenderView
 import com.afterglowtv.app.ui.design.requestFocusSafely
 import com.afterglowtv.app.ui.model.RemoteChannelButtonAction
@@ -105,6 +107,10 @@ import com.afterglowtv.app.ui.screens.multiview.MultiViewPlannerDialog
 import com.afterglowtv.app.navigation.Routes
 
 
+internal fun shouldShowPlayerRecordingControls(
+    policy: StorePolicySnapshot,
+    developerModeEnabled: Boolean
+): Boolean = policy.canUseDvr(developerModeEnabled)
 
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -209,6 +215,7 @@ fun PlayerScreen(
     val playerDiagnostics by viewModel.playerDiagnostics.collectAsStateWithLifecycle()
     val playerNotice by viewModel.playerNotice.collectAsStateWithLifecycle()
     val currentChannelRecording by viewModel.currentChannelRecording.collectAsStateWithLifecycle()
+    val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val isMuted by viewModel.isMuted.collectAsStateWithLifecycle()
     val mediaTitle by viewModel.mediaTitle.collectAsStateWithLifecycle()
     val playbackSpeed by viewModel.playbackSpeed.collectAsStateWithLifecycle()
@@ -220,6 +227,11 @@ fun PlayerScreen(
     val timeshiftUiState by viewModel.timeshiftUiState.collectAsStateWithLifecycle()
     val sleepTimerUiState by viewModel.sleepTimerUiState.collectAsStateWithLifecycle()
     val sleepTimerExitEvent by viewModel.sleepTimerExitEvent.collectAsStateWithLifecycle()
+    val dvrEnabled = shouldShowPlayerRecordingControls(
+        policy = StorePolicy.current,
+        developerModeEnabled = developerModeEnabled
+    )
+    val visibleCurrentChannelRecording = currentChannelRecording.takeIf { dvrEnabled }
 
     var showTrackSelection by remember { mutableStateOf<TrackType?>(null) }
     var showVariantSelection by remember { mutableStateOf(false) }
@@ -1011,7 +1023,7 @@ fun PlayerScreen(
             )
         }
 
-        if (currentChannelRecording?.status == com.afterglowtv.domain.model.RecordingStatus.RECORDING) {
+        if (visibleCurrentChannelRecording?.status == com.afterglowtv.domain.model.RecordingStatus.RECORDING) {
             val recordingPulse = rememberInfiniteTransition(label = "recordingPulse")
             val recordingAlpha by recordingPulse.animateFloat(
                 initialValue = 1f,
@@ -1070,7 +1082,8 @@ fun PlayerScreen(
             subtitleTrackCount = availableSubtitleTracks.size,
             audioTrackCount = availableAudioTracks.size,
             videoQualityCount = availableVideoQualities.size,
-            currentRecordingStatus = currentChannelRecording?.status,
+            currentRecordingStatus = visibleCurrentChannelRecording?.status,
+            enableDvr = dvrEnabled,
             isMuted = isMuted,
             playbackSpeed = playbackSpeed,
             mediaTitle = mediaTitle,
@@ -1413,7 +1426,8 @@ fun PlayerScreen(
                         viewModel.closeChannelInfoOverlay()
                         viewModel.openLastVisitedCategory()
                     },
-                    currentRecordingStatus = currentChannelRecording?.status,
+                    currentRecordingStatus = visibleCurrentChannelRecording?.status,
+                    enableDvr = dvrEnabled,
                     onStartRecording = {
                         notificationPermissionGate.runRecordingAction {
                             viewModel.startManualRecording()
@@ -1507,6 +1521,7 @@ private fun PlayerControlsOverlayHost(
     audioTrackCount: Int,
     videoQualityCount: Int,
     currentRecordingStatus: com.afterglowtv.domain.model.RecordingStatus?,
+    enableDvr: Boolean,
     isMuted: Boolean,
     playbackSpeed: Float,
     mediaTitle: String?,
@@ -1569,6 +1584,7 @@ private fun PlayerControlsOverlayHost(
         audioTrackCount = audioTrackCount,
         videoQualityCount = videoQualityCount,
         currentRecordingStatus = currentRecordingStatus,
+        enableDvr = enableDvr,
         isMuted = isMuted,
         playbackSpeed = playbackSpeed,
         mediaTitle = mediaTitle,

@@ -348,6 +348,8 @@ class PlayerViewModel @Inject constructor(
     internal var sleepTimerExitEmitted = false
 
     val castConnectionState: StateFlow<CastConnectionState> = castManager.connectionState
+    val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     private fun setActivePlayerEngine(engine: PlayerEngine) {
         if (activePlayerEngineFlow.value === engine) return

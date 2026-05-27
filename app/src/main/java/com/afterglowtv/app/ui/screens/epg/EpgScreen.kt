@@ -88,6 +88,8 @@ import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
 import com.afterglowtv.app.device.rememberIsTelevisionDevice
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.components.ChannelLogoBadge
 import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.ui.notifications.rememberNotificationPermissionGate
@@ -170,6 +172,12 @@ internal fun shouldUseAdultGuide(state: EpgUiState): Boolean {
     return state.selectedCategoryId == VirtualCategoryIds.ADULT_GUIDE && state.channels.isNotEmpty()
 }
 
+internal fun shouldShowGuideRecordingActions(
+    policy: StorePolicySnapshot,
+    developerModeEnabled: Boolean,
+    canScheduleRecording: Boolean
+): Boolean = canScheduleRecording && policy.canUseDvr(developerModeEnabled)
+
 private fun hasRestrictiveGuideView(state: EpgUiState): Boolean =
     state.programSearchQuery.isNotBlank() ||
         state.showScheduledOnly ||
@@ -194,6 +202,7 @@ fun FullEpgScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val overrideUiState by viewModel.overrideUiState.collectAsStateWithLifecycle()
     val programReminderUiState by viewModel.programReminderUiState.collectAsStateWithLifecycle()
+    val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val isTelevisionDevice = rememberIsTelevisionDevice()
     var selectedProgram by remember { mutableStateOf<Pair<Channel, Program>?>(null) }
     var focusedChannel by remember { mutableStateOf<Channel?>(null) }
@@ -289,7 +298,7 @@ fun FullEpgScreen(
         }
     }
 
-    uiState.pendingRecordingConflict?.let { conflict ->
+    if (StorePolicy.current.canUseDvr(developerModeEnabled)) uiState.pendingRecordingConflict?.let { conflict ->
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { viewModel.dismissRecordingConflict() },
             title = {
@@ -869,6 +878,11 @@ fun FullEpgScreen(
             }
             val canWatchArchive = !isPlaceholderProgram && channel.isArchivePlayable(program, currentGuideNow())
             val canScheduleRecording = channel.streamUrl.isNotBlank() && program.endTime > currentGuideNow()
+            val showRecordingActions = shouldShowGuideRecordingActions(
+                policy = StorePolicy.current,
+                developerModeEnabled = developerModeEnabled,
+                canScheduleRecording = canScheduleRecording
+            )
             CompactGuideProgramDialog(
                 channel = channel,
                 program = program,
@@ -920,7 +934,7 @@ fun FullEpgScreen(
                         }
                     }
                 },
-                onScheduleRecording = if (canScheduleRecording) {
+                onScheduleRecording = if (showRecordingActions) {
                     {
                         notificationPermissionGate.runRecordingAction {
                             viewModel.scheduleRecording(channel, program)
@@ -929,7 +943,7 @@ fun FullEpgScreen(
                 } else {
                     null
                 },
-                onScheduleDailyRecording = if (canScheduleRecording) {
+                onScheduleDailyRecording = if (showRecordingActions) {
                     {
                         notificationPermissionGate.runRecordingAction {
                             viewModel.scheduleRecording(channel, program, com.afterglowtv.domain.model.RecordingRecurrence.DAILY)
@@ -938,7 +952,7 @@ fun FullEpgScreen(
                 } else {
                     null
                 },
-                onScheduleWeeklyRecording = if (canScheduleRecording) {
+                onScheduleWeeklyRecording = if (showRecordingActions) {
                     {
                         notificationPermissionGate.runRecordingAction {
                             viewModel.scheduleRecording(channel, program, com.afterglowtv.domain.model.RecordingRecurrence.WEEKLY)

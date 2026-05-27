@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.model.RemoteChannelButtonAction
 import com.afterglowtv.app.ui.theme.OnSurface
 import com.afterglowtv.app.ui.theme.Primary
@@ -202,24 +203,28 @@ internal fun SettingsScreenDialogs(
         onPendingProtectionLevelChange = { dialogState.pendingProtectionLevel = it }
     )
 
-    SettingsRecordingDialogs(
-        uiState = uiState,
-        viewModel = viewModel,
-        showRecordingPatternDialog = dialogState.showRecordingPatternDialog,
-        onShowRecordingPatternDialogChange = { dialogState.showRecordingPatternDialog = it },
-        showRecordingRetentionDialog = dialogState.showRecordingRetentionDialog,
-        onShowRecordingRetentionDialogChange = { dialogState.showRecordingRetentionDialog = it },
-        showRecordingConcurrencyDialog = dialogState.showRecordingConcurrencyDialog,
-        onShowRecordingConcurrencyDialogChange = { dialogState.showRecordingConcurrencyDialog = it },
-        showRecordingPaddingDialog = dialogState.showRecordingPaddingDialog,
-        onShowRecordingPaddingDialogChange = { dialogState.showRecordingPaddingDialog = it }
-    )
+    val dvrEnabled = StorePolicy.current.canUseDvr(uiState.developerModeEnabled)
+    if (dvrEnabled) {
+        SettingsRecordingDialogs(
+            uiState = uiState,
+            viewModel = viewModel,
+            showRecordingPatternDialog = dialogState.showRecordingPatternDialog,
+            onShowRecordingPatternDialogChange = { dialogState.showRecordingPatternDialog = it },
+            showRecordingRetentionDialog = dialogState.showRecordingRetentionDialog,
+            onShowRecordingRetentionDialogChange = { dialogState.showRecordingRetentionDialog = it },
+            showRecordingConcurrencyDialog = dialogState.showRecordingConcurrencyDialog,
+            onShowRecordingConcurrencyDialogChange = { dialogState.showRecordingConcurrencyDialog = it },
+            showRecordingPaddingDialog = dialogState.showRecordingPaddingDialog,
+            onShowRecordingPaddingDialogChange = { dialogState.showRecordingPaddingDialog = it }
+        )
+    }
 
     val backupPreview = uiState.backupPreview
     if (backupPreview != null && uiState.pendingBackupUri != null) {
         BackupImportPreviewDialog(
             preview = backupPreview,
-            plan = uiState.backupImportPlan,
+            plan = sanitizedBackupImportPlanForDvr(uiState.backupImportPlan, dvrEnabled),
+            showRecordingSchedules = dvrEnabled,
             onDismiss = { viewModel.dismissBackupPreview() },
             onStrategySelected = { viewModel.setBackupConflictStrategy(it) },
             onImportPreferencesChanged = { viewModel.setImportPreferences(it) },
@@ -227,7 +232,7 @@ internal fun SettingsScreenDialogs(
             onImportSavedLibraryChanged = { viewModel.setImportSavedLibrary(it) },
             onImportPlaybackHistoryChanged = { viewModel.setImportPlaybackHistory(it) },
             onImportMultiViewChanged = { viewModel.setImportMultiViewPresets(it) },
-            onImportRecordingSchedulesChanged = { viewModel.setImportRecordingSchedules(it) },
+            onImportRecordingSchedulesChanged = { if (dvrEnabled) viewModel.setImportRecordingSchedules(it) },
             isImporting = uiState.isImportingBackup,
             onConfirm = { viewModel.confirmBackupImport() }
         )

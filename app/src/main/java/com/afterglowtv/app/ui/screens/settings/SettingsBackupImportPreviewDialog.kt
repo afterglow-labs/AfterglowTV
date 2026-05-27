@@ -16,6 +16,8 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.components.dialogs.PremiumDialog
 import com.afterglowtv.app.ui.components.dialogs.PremiumDialogFooterButton
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
@@ -28,10 +30,22 @@ import com.afterglowtv.domain.manager.BackupConflictStrategy
 import com.afterglowtv.domain.manager.BackupImportPlan
 import com.afterglowtv.domain.manager.BackupPreview
 
+internal fun shouldShowBackupRecordingSchedules(
+    policy: StorePolicySnapshot = StorePolicy.current,
+    developerModeEnabled: Boolean
+): Boolean = policy.canUseDvr(developerModeEnabled)
+
+internal fun sanitizedBackupImportPlanForDvr(
+    plan: BackupImportPlan,
+    showRecordingSchedules: Boolean
+): BackupImportPlan =
+    if (showRecordingSchedules) plan else plan.copy(importRecordingSchedules = false)
+
 @Composable
 internal fun BackupImportPreviewDialog(
     preview: BackupPreview,
     plan: BackupImportPlan,
+    showRecordingSchedules: Boolean = true,
     onDismiss: () -> Unit,
     onStrategySelected: (BackupConflictStrategy) -> Unit,
     onImportPreferencesChanged: (Boolean) -> Unit,
@@ -43,8 +57,9 @@ internal fun BackupImportPreviewDialog(
     isImporting: Boolean = false,
     onConfirm: () -> Unit
 ) {
-    val anyEnabled = plan.importPreferences || plan.importProviders || plan.importSavedLibrary ||
-        plan.importPlaybackHistory || plan.importMultiViewPresets || plan.importRecordingSchedules
+    val visiblePlan = sanitizedBackupImportPlanForDvr(plan, showRecordingSchedules)
+    val anyEnabled = visiblePlan.importPreferences || visiblePlan.importProviders || visiblePlan.importSavedLibrary ||
+        visiblePlan.importPlaybackHistory || visiblePlan.importMultiViewPresets || visiblePlan.importRecordingSchedules
     PremiumDialog(
         title = stringResource(R.string.settings_backup_preview_title),
         subtitle = stringResource(R.string.settings_backup_preview_subtitle, preview.version),
@@ -56,7 +71,9 @@ internal fun BackupImportPreviewDialog(
             BackupPreviewRow(stringResource(R.string.settings_backup_section_saved), preview.favoriteCount + preview.groupCount + preview.protectedCategoryCount, preview.favoriteConflicts + preview.groupConflicts + preview.protectedCategoryConflicts)
             BackupPreviewRow(stringResource(R.string.settings_backup_section_history), preview.playbackHistoryCount, preview.historyConflicts)
             BackupPreviewRow(stringResource(R.string.settings_backup_section_multiview), preview.multiViewPresetCount, 0)
-            BackupPreviewRow(stringResource(R.string.settings_backup_section_recordings), preview.scheduledRecordingCount, preview.recordingConflicts)
+            if (showRecordingSchedules) {
+                BackupPreviewRow(stringResource(R.string.settings_backup_section_recordings), preview.scheduledRecordingCount, preview.recordingConflicts)
+            }
             Text(
                 text = stringResource(R.string.settings_backup_conflict_strategy),
                 style = MaterialTheme.typography.titleSmall,
@@ -79,12 +96,14 @@ internal fun BackupImportPreviewDialog(
                 style = MaterialTheme.typography.titleSmall,
                 color = Primary
             )
-            BackupToggleRow(stringResource(R.string.settings_backup_section_preferences), plan.importPreferences, onImportPreferencesChanged)
-            BackupToggleRow(stringResource(R.string.settings_backup_section_providers), plan.importProviders, onImportProvidersChanged)
-            BackupToggleRow(stringResource(R.string.settings_backup_section_saved), plan.importSavedLibrary, onImportSavedLibraryChanged)
-            BackupToggleRow(stringResource(R.string.settings_backup_section_history), plan.importPlaybackHistory, onImportPlaybackHistoryChanged)
-            BackupToggleRow(stringResource(R.string.settings_backup_section_multiview), plan.importMultiViewPresets, onImportMultiViewChanged)
-            BackupToggleRow(stringResource(R.string.settings_backup_section_recordings), plan.importRecordingSchedules, onImportRecordingSchedulesChanged)
+            BackupToggleRow(stringResource(R.string.settings_backup_section_preferences), visiblePlan.importPreferences, onImportPreferencesChanged)
+            BackupToggleRow(stringResource(R.string.settings_backup_section_providers), visiblePlan.importProviders, onImportProvidersChanged)
+            BackupToggleRow(stringResource(R.string.settings_backup_section_saved), visiblePlan.importSavedLibrary, onImportSavedLibraryChanged)
+            BackupToggleRow(stringResource(R.string.settings_backup_section_history), visiblePlan.importPlaybackHistory, onImportPlaybackHistoryChanged)
+            BackupToggleRow(stringResource(R.string.settings_backup_section_multiview), visiblePlan.importMultiViewPresets, onImportMultiViewChanged)
+            if (showRecordingSchedules) {
+                BackupToggleRow(stringResource(R.string.settings_backup_section_recordings), visiblePlan.importRecordingSchedules, onImportRecordingSchedulesChanged)
+            }
         },
         footer = {
             PremiumDialogFooterButton(

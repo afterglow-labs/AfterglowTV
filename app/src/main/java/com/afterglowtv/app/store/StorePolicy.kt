@@ -20,8 +20,13 @@ data class StorePolicySnapshot(
     val enableHiddenFallbackSource: Boolean,
     val hiddenFallbackSources: List<HiddenFallbackSourceSpec>,
     val allowXtreamPlaylistAutoDetection: Boolean,
-    val enableSideloadUpdates: Boolean
+    val enableSideloadUpdates: Boolean,
+    val enableDvr: Boolean,
+    val allowDvrDeveloperUnlock: Boolean
 ) {
+    fun canUseDvr(developerModeEnabled: Boolean): Boolean =
+        enableDvr || (allowDvrDeveloperUnlock && developerModeEnabled)
+
     fun isHiddenFallbackProvider(provider: Provider): Boolean {
         return enableHiddenFallbackSource &&
             hiddenFallbackSources.any { spec ->
@@ -53,7 +58,9 @@ data class StorePolicySnapshot(
             enableHiddenFallbackSource = false,
             hiddenFallbackSources = emptyList(),
             allowXtreamPlaylistAutoDetection = true,
-            enableSideloadUpdates = true
+            enableSideloadUpdates = true,
+            enableDvr = true,
+            allowDvrDeveloperUnlock = false
         )
 
         val amazon = StorePolicySnapshot(
@@ -79,7 +86,9 @@ data class StorePolicySnapshot(
                 )
             ),
             allowXtreamPlaylistAutoDetection = false,
-            enableSideloadUpdates = false
+            enableSideloadUpdates = false,
+            enableDvr = false,
+            allowDvrDeveloperUnlock = true
         )
 
         val current: StorePolicySnapshot
@@ -91,7 +100,9 @@ data class StorePolicySnapshot(
                 enableHiddenFallbackSource = BuildConfig.ENABLE_HIDDEN_FALLBACK_SOURCE,
                 hiddenFallbackSources = parseHiddenFallbackSourceSpecs(BuildConfig.HIDDEN_FALLBACK_SOURCE_SPECS),
                 allowXtreamPlaylistAutoDetection = BuildConfig.ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION,
-                enableSideloadUpdates = BuildConfig.ENABLE_SIDELOAD_UPDATES
+                enableSideloadUpdates = BuildConfig.ENABLE_SIDELOAD_UPDATES,
+                enableDvr = BuildConfig.ENABLE_DVR,
+                allowDvrDeveloperUnlock = BuildConfig.ALLOW_DVR_DEVELOPER_UNLOCK
             )
 
         private fun parseHiddenFallbackSourceSpecs(rawSpecs: String): List<HiddenFallbackSourceSpec> =
