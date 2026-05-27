@@ -74,8 +74,8 @@ android {
 
         create("amazon") {
             dimension = "store"
-            applicationId = "com.afterglowlabs.tv"
-            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowlabs.tv\"")
+            applicationId = "com.afterglowtv.app"
+            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
             buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")

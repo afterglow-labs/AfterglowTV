@@ -129,6 +129,7 @@ import com.afterglowtv.app.ui.interaction.TvIconButton
 private sealed interface LockedGuideAction {
     data class SelectCategory(val category: Category) : LockedGuideAction
     data class OpenProgram(val channel: Channel, val program: Program) : LockedGuideAction
+    data class PreviewChannel(val channel: Channel) : LockedGuideAction
     data class PlayChannel(val channel: Channel, val returnRoute: String) : LockedGuideAction
     data class PlayArchive(val channel: Channel, val program: Program, val returnRoute: String) : LockedGuideAction
 }
@@ -252,18 +253,22 @@ fun FullEpgScreen(
         playerCategoryId == VirtualCategoryIds.RECENT ||
         (playerCategoryId < 0L && playerCategoryId != ChannelRepository.ALL_CHANNELS_ID)
 
+    fun playChannelFullscreen(channel: Channel) {
+        onPlayChannel(
+            channel,
+            playerCategoryId,
+            playerIsVirtualCategory,
+            uiState.combinedProfileId,
+            returnRoute
+        )
+    }
+
     fun executeLockedGuideAction(action: LockedGuideAction) {
         when (action) {
             is LockedGuideAction.SelectCategory -> viewModel.selectCategory(action.category.id)
             is LockedGuideAction.OpenProgram -> selectedProgram = action.channel to action.program
-            is LockedGuideAction.PlayChannel ->
-                onPlayChannel(
-                    action.channel,
-                    playerCategoryId,
-                    playerIsVirtualCategory,
-                    uiState.combinedProfileId,
-                    action.returnRoute
-                )
+            is LockedGuideAction.PreviewChannel -> viewModel.previewChannel(action.channel)
+            is LockedGuideAction.PlayChannel -> playChannelFullscreen(action.channel)
             is LockedGuideAction.PlayArchive ->
                 onPlayArchive(
                     action.channel,
@@ -280,6 +285,22 @@ fun FullEpgScreen(
         pendingLockedAction = action
         pinError = null
         showPinDialog = true
+    }
+
+    fun selectChannelForPreviewOrFullscreen(channel: Channel) {
+        if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
+            requestLockedGuideAction(LockedGuideAction.PreviewChannel(channel))
+            return
+        }
+        if (uiState.previewChannelId == channel.id) {
+            val handedOff = viewModel.beginPreviewHandoff(channel)
+            if (!handedOff) {
+                viewModel.clearPreview()
+            }
+            playChannelFullscreen(channel)
+        } else {
+            viewModel.previewChannel(channel)
+        }
     }
 
     LaunchedEffect(fixedCategoryId, initialCategoryId, initialAnchorTime, initialFavoritesOnly) {
@@ -493,6 +514,10 @@ fun FullEpgScreen(
                             uiState = uiState,
                             focusedChannel = focusedChannel,
                             focusedProgram = focusedProgram,
+                            previewChannelId = uiState.previewChannelId,
+                            previewPlayerEngine = uiState.previewPlayerEngine,
+                            isPreviewLoading = uiState.isPreviewLoading,
+                            previewErrorMessage = uiState.previewErrorMessage,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 14.dp, vertical = 4.dp)
@@ -646,17 +671,7 @@ fun FullEpgScreen(
                                     },
                                     onCategorySelected = { selectedAdultGuideCategoryKey = it },
                                     onChannelClick = { channel ->
-                                        if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
-                                            requestLockedGuideAction(LockedGuideAction.PlayChannel(channel, returnRoute))
-                                        } else {
-                                            onPlayChannel(
-                                                channel,
-                                                playerCategoryId,
-                                                playerIsVirtualCategory,
-                                                uiState.combinedProfileId,
-                                                returnRoute
-                                            )
-                                        }
+                                        selectChannelForPreviewOrFullscreen(channel)
                                     },
                                     onChannelFocused = { channel, isFirstRow ->
                                         topNavVisible = isFirstRow
@@ -686,24 +701,16 @@ fun FullEpgScreen(
                                     guideWindowEnd = uiState.guideWindowEnd,
                                     density = uiState.selectedDensity,
                                     onChannelClick = { channel ->
-                                        if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
-                                            requestLockedGuideAction(LockedGuideAction.PlayChannel(channel, returnRoute))
-                                        } else {
-                                            onPlayChannel(
-                                                channel,
-                                                playerCategoryId,
-                                                playerIsVirtualCategory,
-                                                uiState.combinedProfileId,
-                                                returnRoute
-                                            )
-                                        }
+                                        selectChannelForPreviewOrFullscreen(channel)
                                     },
                                     onProgramClick = { channel, program ->
                                         topNavVisible = false
                                         if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
-                                            requestLockedGuideAction(LockedGuideAction.OpenProgram(channel, program))
+                                            requestLockedGuideAction(LockedGuideAction.PreviewChannel(channel))
                                         } else {
-                                            selectedProgram = channel to program
+                                            focusedChannel = channel
+                                            focusedProgram = program
+                                            selectChannelForPreviewOrFullscreen(channel)
                                         }
                                     },
                                     onChannelFocused = { channel, currentProgram, isFirstRow ->
@@ -825,6 +832,7 @@ fun FullEpgScreen(
                         val lockedCategoryId = when (action) {
                             is LockedGuideAction.SelectCategory -> action.category.id
                             is LockedGuideAction.OpenProgram -> action.channel.categoryId
+                            is LockedGuideAction.PreviewChannel -> action.channel.categoryId
                             is LockedGuideAction.PlayChannel -> action.channel.categoryId
                             is LockedGuideAction.PlayArchive -> action.channel.categoryId
                             null -> null

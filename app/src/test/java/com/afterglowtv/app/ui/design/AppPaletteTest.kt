@@ -62,6 +62,36 @@ class AppPaletteTest {
     }
 
     @Test
+    fun `blue steel replaces cyan cyber punk accent`() {
+        val palette = AppPalette.CyberPunk
+
+        assertThat(palette.displayName).contains("Steel")
+        assertThat(palette.description.lowercase()).doesNotContain("cyan")
+        assertThat(palette.accent).isEqualTo(Color(0xFF6F8FA8))
+        assertThat(palette.accent.green).isGreaterThan(palette.accent.red)
+        assertThat(palette.accent.blue).isGreaterThan(palette.accent.green)
+    }
+
+    @Test
+    fun `afterglow dark one through four use visibly different color families`() {
+        assertThat(AppPalette.Afterglow1.accent.blue).isGreaterThan(AppPalette.Afterglow1.accent.red)
+        assertThat(AppPalette.AfterglowSunset.accent.red).isGreaterThan(AppPalette.AfterglowSunset.accent.blue)
+        assertThat(AppPalette.Afterglow3.accent.blue).isGreaterThan(AppPalette.Afterglow3.accent.green)
+        assertThat(AppPalette.Afterglow4.accent.red).isGreaterThan(AppPalette.Afterglow4.accent.blue)
+
+        val signatures = listOf(
+            AppPalette.Afterglow1,
+            AppPalette.AfterglowSunset,
+            AppPalette.Afterglow3,
+            AppPalette.Afterglow4,
+        ).map { palette ->
+            listOf(palette.surfaceDeep, palette.surfaceAccent, palette.accent, palette.nowLine, palette.info)
+        }
+
+        assertThat(signatures.toSet().size).isEqualTo(signatures.size)
+    }
+
+    @Test
     fun `rachels sunset keeps mint teal as the dominant accent`() {
         listOf(AppPalette.SunsetAurora, AppPalette.RachelsSunsetLight).forEach { palette ->
             assertThat(palette.accent.green).isGreaterThan(palette.accent.red)

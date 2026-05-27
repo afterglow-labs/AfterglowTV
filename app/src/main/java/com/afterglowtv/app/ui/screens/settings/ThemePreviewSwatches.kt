@@ -5,12 +5,15 @@ import com.afterglowtv.app.ui.design.AppPalette
 
 internal fun themePreviewSwatches(palette: AppPalette): List<Color> = listOf(
     palette.surfaceDeep,
-    palette.surfaceBase,
+    palette.surfaceAccent,
     palette.accent,
     palette.accentLight,
     palette.nowLine,
+    palette.info,
     palette.live,
-).distinct()
+    palette.success,
+    palette.warning,
+).distinct().take(6)
 
 internal fun themeSelectionGradient(palette: AppPalette): List<Color> = listOf(
     palette.surfaceDeep,

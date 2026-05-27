@@ -2,6 +2,7 @@ package com.afterglowtv.app.ui.screens.epg
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,6 +50,7 @@ import com.afterglowtv.app.ui.theme.SurfaceElevated
 import com.afterglowtv.app.ui.theme.SurfaceHighlight
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Program
+import com.afterglowtv.player.PlayerEngine
 import java.util.Date
 
 internal data class GuideHeroSelection(
@@ -89,6 +91,10 @@ internal fun GuideHeroSection(
     uiState: EpgUiState,
     focusedChannel: Channel?,
     focusedProgram: Program?,
+    previewChannelId: Long?,
+    previewPlayerEngine: PlayerEngine?,
+    isPreviewLoading: Boolean,
+    previewErrorMessage: String?,
     modifier: Modifier = Modifier
 ) {
     val now = currentGuideNow()
@@ -102,9 +108,16 @@ internal fun GuideHeroSection(
             )
         }
     }
+    val previewChannel = remember(uiState.channels, previewChannelId) {
+        previewChannelId?.let { id -> uiState.channels.firstOrNull { it.id == id } }
+    }
 
     ImmersiveGuideHero(
         selection = heroSelection,
+        previewChannel = previewChannel,
+        previewPlayerEngine = previewPlayerEngine,
+        isPreviewLoading = isPreviewLoading,
+        previewErrorMessage = previewErrorMessage,
         providerLabel = uiState.providerSourceLabel,
         selectedCategoryName = uiState.categories
             .firstOrNull { it.id == uiState.selectedCategoryId }
@@ -122,6 +135,10 @@ internal fun GuideHeroSection(
 @Composable
 internal fun ImmersiveGuideHero(
     selection: GuideHeroSelection?,
+    previewChannel: Channel?,
+    previewPlayerEngine: PlayerEngine?,
+    isPreviewLoading: Boolean,
+    previewErrorMessage: String?,
     providerLabel: String,
     selectedCategoryName: String,
     isGuideStale: Boolean,
@@ -145,128 +162,148 @@ internal fun ImmersiveGuideHero(
         }
     }
 
-    Surface(
-        modifier = modifier.height(96.dp),
-        colors = SurfaceDefaults.colors(containerColor = SurfaceElevated),
-        shape = RoundedCornerShape(20.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val channel = selection?.channel
-            ChannelLogoBadge(
-                channelName = channel?.name ?: stringResource(R.string.epg_title),
-                logoUrl = channel?.logoUrl,
-                modifier = Modifier
-                    .width(54.dp)
-                    .height(54.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
+    BoxWithConstraints(modifier = modifier) {
+        val showInlinePreview = maxWidth >= 860.dp && selection != null
+        val heroHeight = if (showInlinePreview) 164.dp else 96.dp
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(1.dp)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(heroHeight),
+            colors = SurfaceDefaults.colors(containerColor = SurfaceElevated),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val program = selection?.program
-                Text(
-                    text = program?.title ?: channel?.name ?: stringResource(R.string.epg_title),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 15.sp,
-                        lineHeight = 18.sp
-                    ),
-                    color = OnSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                val channel = selection?.channel
+                ChannelLogoBadge(
+                    channelName = channel?.name ?: stringResource(R.string.epg_title),
+                    logoUrl = channel?.logoUrl,
+                    modifier = Modifier
+                        .width(54.dp)
+                        .height(54.dp),
+                    shape = RoundedCornerShape(12.dp)
                 )
-                Text(
-                    text = buildString {
-                        channel?.let { append("${it.number}. ${it.name}") }
-                        if (providerLabel.isNotBlank()) {
-                            if (isNotEmpty()) append("  |  ")
-                            append(providerLabel)
-                        }
-                        if (selectedCategoryName.isNotBlank()) {
-                            if (isNotEmpty()) append("  |  ")
-                            append(selectedCategoryName)
-                        }
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceDim,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (program != null) {
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                ) {
+                    val program = selection?.program
                     Text(
-                        text = "${format.format(Date(program.startTime))} - ${format.format(Date(program.endTime))}",
-                        style = MaterialTheme.typography.labelSmall.copy(lineHeight = 11.sp),
-                        color = OnSurface
+                        text = program?.title ?: channel?.name ?: stringResource(R.string.epg_title),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 15.sp,
+                            lineHeight = 18.sp
+                        ),
+                        color = OnSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    if (currentTime in program.startTime until program.endTime) {
-                        LinearProgressIndicator(
-                            progress = { ((currentTime - program.startTime).toFloat() / (program.endTime - program.startTime).toFloat()).coerceIn(0f, 1f) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(4.dp),
-                            color = Primary,
-                            trackColor = SurfaceHighlight
+                    Text(
+                        text = buildString {
+                            channel?.let { append("${it.number}. ${it.name}") }
+                            if (providerLabel.isNotBlank()) {
+                                if (isNotEmpty()) append("  |  ")
+                                append(providerLabel)
+                            }
+                            if (selectedCategoryName.isNotBlank()) {
+                                if (isNotEmpty()) append("  |  ")
+                                append(selectedCategoryName)
+                            }
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OnSurfaceDim,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (program != null) {
+                        Text(
+                            text = "${format.format(Date(program.startTime))} - ${format.format(Date(program.endTime))}",
+                            style = MaterialTheme.typography.labelSmall.copy(lineHeight = 11.sp),
+                            color = OnSurface
+                        )
+                        if (currentTime in program.startTime until program.endTime) {
+                            LinearProgressIndicator(
+                                progress = { ((currentTime - program.startTime).toFloat() / (program.endTime - program.startTime).toFloat()).coerceIn(0f, 1f) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp),
+                                color = Primary,
+                                trackColor = SurfaceHighlight
+                            )
+                        }
+                        Text(
+                            text = program.description.ifBlank { stringResource(R.string.epg_hero_no_program_description) },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = OnSurfaceDim,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.epg_no_schedule),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = OnSurface
+                        )
+                        Text(
+                            text = stringResource(R.string.epg_hero_no_schedule_hint),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = OnSurfaceDim,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                    Text(
-                        text = program.description.ifBlank { stringResource(R.string.epg_hero_no_program_description) },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = OnSurfaceDim,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                } else {
-                    Text(
-                        text = stringResource(R.string.epg_no_schedule),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = OnSurface
-                    )
-                    Text(
-                        text = stringResource(R.string.epg_hero_no_schedule_hint),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = OnSurfaceDim,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
                 }
-            }
 
-            Column(
-                modifier = Modifier.widthIn(min = 176.dp, max = 220.dp),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                GuideHeroBadge(text = stringResource(R.string.epg_schedule_summary_short, channelsWithSchedule, channelCount))
-                if (isRefreshing) {
-                    GuideHeroBadge(text = stringResource(R.string.epg_loading))
+                Column(
+                    modifier = if (showInlinePreview) {
+                        Modifier.widthIn(min = 150.dp, max = 176.dp)
+                    } else {
+                        Modifier.widthIn(min = 176.dp, max = 220.dp)
+                    },
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    GuideHeroBadge(text = stringResource(R.string.epg_schedule_summary_short, channelsWithSchedule, channelCount))
+                    if (isRefreshing) {
+                        GuideHeroBadge(text = stringResource(R.string.epg_loading))
+                    }
+                    if (selection?.program != null && selection.channel.isArchivePlayable(selection.program, currentGuideNow())) {
+                        GuideHeroBadge(
+                            text = if (selection.program.hasArchive) {
+                                stringResource(R.string.epg_program_replay_ready)
+                            } else {
+                                stringResource(R.string.epg_program_replay_partial)
+                            },
+                            highlight = true
+                        )
+                    }
+                    if (isGuideStale) {
+                        GuideHeroBadge(
+                            text = stringResource(R.string.epg_stale_short),
+                            accentColor = Color(0xFFFF6B6B)
+                        )
+                    }
+                    if (!lastUpdatedLabel.isNullOrBlank()) {
+                        Text(
+                            text = lastUpdatedLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = OnSurfaceDim
+                        )
+                    }
                 }
-                if (selection?.program != null && selection.channel.isArchivePlayable(selection.program, currentGuideNow())) {
-                    GuideHeroBadge(
-                        text = if (selection.program.hasArchive) {
-                            stringResource(R.string.epg_program_replay_ready)
-                        } else {
-                            stringResource(R.string.epg_program_replay_partial)
-                        },
-                        highlight = true
-                    )
-                }
-                if (isGuideStale) {
-                    GuideHeroBadge(
-                        text = stringResource(R.string.epg_stale_short),
-                        accentColor = Color(0xFFFF6B6B)
-                    )
-                }
-                if (!lastUpdatedLabel.isNullOrBlank()) {
-                    Text(
-                        text = lastUpdatedLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = OnSurfaceDim
+
+                if (showInlinePreview) {
+                    EpgPipPreview(
+                        channel = previewChannel,
+                        playerEngine = previewPlayerEngine,
+                        isLoading = isPreviewLoading,
+                        errorMessage = previewErrorMessage
                     )
                 }
             }

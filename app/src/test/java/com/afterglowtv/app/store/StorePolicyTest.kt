@@ -26,10 +26,10 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `amazon build uses Afterglow Labs package identity`() {
+    fun `amazon build uses AfterglowTV package identity`() {
         if (BuildConfig.AMAZON_REVIEW_BUILD) {
-            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglowlabs.tv")
-            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowlabs.tv")
+            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglowtv.app")
+            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
         } else {
             assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglowtv.app")
             assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
@@ -75,7 +75,7 @@ class StorePolicyTest {
     @Test
     fun `amazon hides fallback source from user source lists`() {
         val fallback = provider(
-            m3uUrl = "file:///data/user/0/com.afterglowlabs.tv/files/hidden_fallback/afterglow_amazon_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
         )
         val userProvider = provider(id = 2L, m3uUrl = "https://example.test/user.m3u8")
 
@@ -88,7 +88,7 @@ class StorePolicyTest {
     @Test
     fun `amazon should seed fallback only when no user source exists`() {
         val fallback = provider(
-            m3uUrl = "file:///data/user/0/com.afterglowlabs.tv/files/hidden_fallback/afterglow_amazon_vod.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_vod.m3u8"
         )
         val userProvider = provider(id = 2L, m3uUrl = "https://example.test/user.m3u8")
 
@@ -123,7 +123,7 @@ class StorePolicyTest {
     fun `amazon fallback repairs stale active source when no user source exists`() {
         val fallback = provider(
             id = 2L,
-            m3uUrl = "file:///data/user/0/com.afterglowlabs.tv/files/hidden_fallback/afterglow_amazon_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
         )
 
         assertThat(
@@ -140,7 +140,7 @@ class StorePolicyTest {
     fun `amazon fallback keeps matching active source when no user source exists`() {
         val fallback = provider(
             id = 2L,
-            m3uUrl = "file:///data/user/0/com.afterglowlabs.tv/files/hidden_fallback/afterglow_amazon_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
         )
 
         assertThat(

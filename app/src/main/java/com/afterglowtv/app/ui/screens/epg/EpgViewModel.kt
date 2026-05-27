@@ -1,5 +1,9 @@
 package com.afterglowtv.app.ui.screens.epg
 
+import android.app.Application
+import com.afterglowtv.app.R
+import com.afterglowtv.app.di.AuxiliaryPlayerEngine
+import com.afterglowtv.app.player.LivePreviewHandoffManager
 import com.afterglowtv.app.ui.model.AdultGuideCategory
 import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.model.isArchivePlayable
@@ -40,6 +44,8 @@ import com.afterglowtv.domain.usecase.GetCustomCategories
 import com.afterglowtv.domain.usecase.ScheduleRecording
 import com.afterglowtv.domain.usecase.ScheduleRecordingCommand
 import com.afterglowtv.domain.util.AdultContentVisibilityPolicy
+import com.afterglowtv.player.PlaybackState
+import com.afterglowtv.player.PlayerEngine
 import com.afterglowtv.data.preferences.AdultGuideCategoryCache
 import com.afterglowtv.data.preferences.AdultGuideCategoryCacheEntry
 import com.afterglowtv.data.preferences.PreferencesRepository
@@ -69,6 +75,7 @@ import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
+import javax.inject.Provider as InjectProvider
 
 data class RecordingConflictInfo(
     val conflictingItems: List<RecordingItem>,
@@ -110,7 +117,11 @@ data class EpgUiState(
     val adultGuideCategories: List<AdultGuideCategory> = emptyList(),
     val adultGuideCategorizedChannelCount: Int = 0,
     val adultGuideSortBatchSize: Int = 200,
-    val isAdultGuideCategorizing: Boolean = false
+    val isAdultGuideCategorizing: Boolean = false,
+    val previewChannelId: Long? = null,
+    val previewPlayerEngine: PlayerEngine? = null,
+    val isPreviewLoading: Boolean = false,
+    val previewErrorMessage: String? = null
 ) {
     companion object {
         private val DEFAULT_NOW = System.currentTimeMillis()
@@ -248,6 +259,7 @@ private data class GuideFallbackContext(
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class EpgViewModel @Inject constructor(
+    application: Application,
     private val providerRepository: ProviderRepository,
     private val combinedM3uRepository: CombinedM3uRepository,
     private val channelRepository: ChannelRepository,
@@ -260,8 +272,12 @@ class EpgViewModel @Inject constructor(
     private val getCustomCategories: GetCustomCategories,
     private val scheduleRecording: ScheduleRecording,
     private val recordingManager: RecordingManager,
+    private val livePreviewHandoffManager: LivePreviewHandoffManager,
+    @param:AuxiliaryPlayerEngine
+    private val playerEngineProvider: InjectProvider<PlayerEngine>,
     private val positionMemo: EpgPositionMemo,
 ) : ViewModel() {
+    private val appContext = application
 
     /** Read by [FullEpgScreen] at first composition to restore the user's last
      *  spot in the guide. Returns null on first launch / after [positionMemo.clear]. */
@@ -311,6 +327,10 @@ class EpgViewModel @Inject constructor(
     private var overrideSearchJob: Job? = null
     private var guideFallbackJob: Job? = null
     private var adultGuideCategorizationJob: Job? = null
+    private var previewPlaybackJob: Job? = null
+    private var previewErrorJob: Job? = null
+    private var previewPlayerEngine: PlayerEngine? = null
+    private var previewSessionVersion: Long = 0L
     private var combinedCategoriesById: Map<Long, CombinedCategory> = emptyMap()
     private var adultGuideRenderLimit: Int = ADULT_GUIDE_RENDER_PAGE_SIZE
     private val adultGuideSortBatchSize = MutableStateFlow(DEFAULT_ADULT_GUIDE_SORT_BATCH_SIZE)
@@ -363,6 +383,130 @@ class EpgViewModel @Inject constructor(
     fun refresh() {
         refreshNonce.update { it + 1 }
     }
+
+    fun previewChannel(channel: Channel) {
+        if (_uiState.value.previewChannelId == channel.id && _uiState.value.previewPlayerEngine != null) return
+
+        val previewVersion = ++previewSessionVersion
+        val engine = previewPlayerEngine ?: playerEngineProvider.get().also { previewPlayerEngine = it }
+        previewPlaybackJob?.cancel()
+        previewErrorJob?.cancel()
+
+        _uiState.update {
+            it.copy(
+                previewChannelId = channel.id,
+                previewPlayerEngine = engine,
+                isPreviewLoading = true,
+                previewErrorMessage = null
+            )
+        }
+
+        previewPlaybackJob = viewModelScope.launch {
+            engine.playbackState.collectLatest { playbackState ->
+                if (!isActivePreviewSession(previewVersion, channel.id)) return@collectLatest
+                _uiState.update { state ->
+                    state.copy(
+                        isPreviewLoading = playbackState == PlaybackState.IDLE || playbackState == PlaybackState.BUFFERING,
+                        previewErrorMessage = when {
+                            playbackState == PlaybackState.ERROR && state.previewErrorMessage.isNullOrBlank() ->
+                                appContext.getString(R.string.live_preview_failed)
+                            playbackState != PlaybackState.ERROR -> null
+                            else -> state.previewErrorMessage
+                        }
+                    )
+                }
+            }
+        }
+
+        previewErrorJob = viewModelScope.launch {
+            engine.error.collectLatest { error ->
+                if (!isActivePreviewSession(previewVersion, channel.id)) return@collectLatest
+                if (error != null) {
+                    _uiState.update {
+                        it.copy(
+                            isPreviewLoading = false,
+                            previewErrorMessage = error.message.ifBlank { appContext.getString(R.string.live_preview_failed) }
+                        )
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            when (val result = channelRepository.getStreamInfo(channel)) {
+                is Result.Success -> {
+                    if (!isActivePreviewSession(previewVersion, channel.id)) return@launch
+                    engine.stop()
+                    engine.setDecoderMode(preferencesRepository.playerDecoderMode.first())
+                    engine.setSurfaceMode(preferencesRepository.playerSurfaceMode.first())
+                    engine.prepare(result.data)
+                    engine.setVolume(1f)
+                    engine.play()
+                    livePreviewHandoffManager.registerPreviewSession(
+                        channel = channel,
+                        streamInfo = result.data,
+                        engine = engine
+                    )
+                }
+                is Result.Error -> {
+                    if (!isActivePreviewSession(previewVersion, channel.id)) return@launch
+                    _uiState.update {
+                        it.copy(
+                            isPreviewLoading = false,
+                            previewErrorMessage = result.message
+                        )
+                    }
+                }
+                Result.Loading -> Unit
+            }
+        }
+    }
+
+    fun beginPreviewHandoff(channel: Channel): Boolean {
+        val engine = previewPlayerEngine ?: return false
+        if (_uiState.value.previewChannelId != channel.id) return false
+        if (!livePreviewHandoffManager.beginFullscreenHandoff(channel.id, engine)) return false
+
+        previewSessionVersion++
+        previewPlaybackJob?.cancel()
+        previewErrorJob?.cancel()
+        previewPlaybackJob = null
+        previewErrorJob = null
+        previewPlayerEngine = null
+        _uiState.update {
+            it.copy(
+                previewChannelId = null,
+                previewPlayerEngine = null,
+                isPreviewLoading = false,
+                previewErrorMessage = null
+            )
+        }
+        return true
+    }
+
+    fun clearPreview() {
+        if (previewPlayerEngine == null) return
+        previewSessionVersion++
+        previewPlaybackJob?.cancel()
+        previewErrorJob?.cancel()
+        previewPlaybackJob = null
+        previewErrorJob = null
+        livePreviewHandoffManager.clear(previewPlayerEngine)
+        previewPlayerEngine?.stop()
+        previewPlayerEngine?.release()
+        previewPlayerEngine = null
+        _uiState.update {
+            it.copy(
+                previewChannelId = null,
+                previewPlayerEngine = null,
+                isPreviewLoading = false,
+                previewErrorMessage = null
+            )
+        }
+    }
+
+    private fun isActivePreviewSession(version: Long, channelId: Long): Boolean =
+        version == previewSessionVersion && _uiState.value.previewChannelId == channelId
 
     fun requestMoreChannels() {
         val snapshot = baseGuideSnapshot.value ?: return
@@ -2296,6 +2440,14 @@ class EpgViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    override fun onCleared() {
+        overrideSearchJob?.cancel()
+        guideFallbackJob?.cancel()
+        adultGuideCategorizationJob?.cancel()
+        clearPreview()
+        super.onCleared()
     }
 }
 

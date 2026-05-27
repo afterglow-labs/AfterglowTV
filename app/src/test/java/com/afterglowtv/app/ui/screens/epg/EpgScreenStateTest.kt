@@ -124,4 +124,5 @@ class EpgScreenStateTest {
 
         assertThat(shouldUseAdultGuide(state)).isFalse()
     }
+
 }
