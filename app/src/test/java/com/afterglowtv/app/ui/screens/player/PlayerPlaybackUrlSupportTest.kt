@@ -53,6 +53,49 @@ class PlayerPlaybackUrlSupportTest {
     }
 
     @Test
+    fun `resolvePlaybackIdentityUrl tolerates missing playback urls`() {
+        val result = resolvePlaybackIdentityUrl(
+            currentResolvedPlaybackUrl = null,
+            currentStreamUrl = null
+        )
+
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `matchesActivePlaybackSession tolerates missing playback urls`() {
+        val result = matchesActivePlaybackSession(
+            requestVersion = 9L,
+            activeRequestVersion = 9L,
+            expectedLogicalUrl = "playlist://demo/1",
+            currentResolvedPlaybackUrl = null,
+            currentStreamUrl = null
+        )
+
+        assertThat(result).isTrue()
+    }
+
+    @Test
+    fun `shouldReuseActivePlaybackForRoute rejects route reuse when playback urls are missing`() {
+        val result = shouldReuseActivePlaybackForRoute(
+            hasArchiveRequest = false,
+            prepareRequestVersion = 3L,
+            playbackState = PlaybackState.READY,
+            currentContentType = ContentType.LIVE,
+            requestedContentType = ContentType.LIVE.name,
+            currentContentId = 230L,
+            requestedContentId = 230L,
+            currentProviderId = 7L,
+            requestedProviderId = 7L,
+            currentStreamUrl = null,
+            currentResolvedPlaybackUrl = null,
+            requestedStreamUrl = "playlist://demo/230"
+        )
+
+        assertThat(result).isFalse()
+    }
+
+    @Test
     fun `shouldReuseActivePlaybackForRoute keeps active live player for same route`() {
         val result = shouldReuseActivePlaybackForRoute(
             hasArchiveRequest = false,

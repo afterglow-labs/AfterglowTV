@@ -162,6 +162,29 @@ class StorePolicyTest {
     }
 
     @Test
+    fun `amazon bundled live fallback contains demo hls streams`() {
+        val livePlaylist = amazonAsset("playlist_usa.m3u8").readText()
+
+        assertThat(livePlaylist).contains("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
+        assertThat(livePlaylist).contains("https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8")
+        assertThat(livePlaylist).contains("https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8")
+        assertThat(livePlaylist).contains("https://test-streams.mux.dev/test_001/stream.m3u8")
+    }
+
+    @Test
+    fun `amazon bundled live fallback excludes unsupported or blocked demo sources`() {
+        val livePlaylist = amazonAsset("playlist_usa.m3u8").readText()
+
+        assertThat(livePlaylist).doesNotContain("youtube.com")
+        assertThat(livePlaylist).doesNotContain("buzzrota-ono.amagi.tv")
+        assertThat(livePlaylist).doesNotContain("bcovlive-a.akamaihd.net")
+        assertThat(livePlaylist).doesNotContain("tve-live-lln.warnermediacdn.com")
+        assertThat(livePlaylist).doesNotContain("ntv1.akamaized.net")
+        assertThat(livePlaylist).doesNotContain("ntv2.akamaized.net")
+        assertThat(livePlaylist).doesNotContain("service-stitcher.clusters.pluto.tv")
+    }
+
+    @Test
     fun `amazon bundled vod fallback contains direct video files`() {
         val vodPlaylist = amazonAsset("playlist_usa_vod.m3u8").readText()
 
