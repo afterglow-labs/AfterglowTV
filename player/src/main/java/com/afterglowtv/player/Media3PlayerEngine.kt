@@ -31,6 +31,7 @@ import com.afterglowtv.domain.model.DecoderMode
 import com.afterglowtv.domain.model.PlaybackCompatibilityKey
 import com.afterglowtv.domain.model.PlaybackCompatibilityRecord
 import com.afterglowtv.domain.model.PlayerSurfaceMode
+import com.afterglowtv.domain.model.SmbMediaSourceResolver
 import com.afterglowtv.domain.model.StreamInfo
 import com.afterglowtv.domain.model.VideoFormat
 import com.afterglowtv.domain.repository.PlaybackCompatibilityRepository
@@ -100,6 +101,7 @@ class Media3PlayerEngine @Inject constructor(
     private val networkClassDetector: NetworkClassDetector,
     private val connectionPrewarmer: ConnectionPrewarmer,
     private val adaptiveBufferController: AdaptiveBufferController,
+    private val smbMediaSourceResolver: SmbMediaSourceResolver,
 ) : PlayerEngine {
 
     private val adaptiveBandwidthMeter = AdaptiveBandwidthMeter()
@@ -251,7 +253,7 @@ class Media3PlayerEngine @Inject constructor(
     ).also {
         it.bind { exoPlayer }
     }
-    private val dataSourceFactoryProvider = PlayerDataSourceFactoryProvider(context, okHttpClient)
+    private val dataSourceFactoryProvider = PlayerDataSourceFactoryProvider(context, okHttpClient, smbMediaSourceResolver)
     private val mediaSourceFactory = PlayerMediaSourceFactory(dataSourceFactoryProvider)
     private val preloadCoordinator = PreloadCoordinator()
     private val compatibilityProfile: PlaybackCompatibilityProfile = DefaultPlaybackCompatibilityProfile

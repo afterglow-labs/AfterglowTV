@@ -48,6 +48,7 @@ dependencies {
 
     // OkHttp (for custom data source)
     implementation(libs.okhttp)
+    implementation(libs.smbj)
 
     // Hilt
     implementation(libs.hilt.android)

@@ -21,6 +21,9 @@ interface LocalMediaLibraryDao {
     @Query("SELECT * FROM local_media_libraries WHERE root_uri = :rootUri LIMIT 1")
     suspend fun getLibraryByRootUri(rootUri: String): LocalMediaLibraryEntity?
 
+    @Query("SELECT * FROM local_media_libraries WHERE source_type = 'SMB'")
+    fun getSmbLibrariesBlocking(): List<LocalMediaLibraryEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertLibrary(library: LocalMediaLibraryEntity): Long
 

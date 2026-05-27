@@ -5,10 +5,12 @@ import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.navigation.resolveStartupRoute
 import com.afterglowtv.app.ui.screens.provider.ProviderSetupSourceType
 import com.afterglowtv.app.ui.screens.provider.visibleProviderSetupSourceTypes
+import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderType
 import com.google.common.truth.Truth.assertThat
+import java.io.File
 import org.junit.Test
 
 class StorePolicyTest {
@@ -105,6 +107,68 @@ class StorePolicyTest {
         ).inOrder()
     }
 
+    @Test
+    fun `amazon fallback repairs stale active source when no user source exists`() {
+        val fallback = provider(
+            id = 2L,
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
+        )
+
+        assertThat(
+            shouldUseHiddenFallbackSourceForSlot(
+                policy = StorePolicySnapshot.amazon,
+                providers = listOf(fallback),
+                currentSource = ActiveLiveSource.ProviderSource(1L),
+                fallbackProviderId = fallback.id
+            )
+        ).isTrue()
+    }
+
+    @Test
+    fun `amazon fallback keeps matching active source when no user source exists`() {
+        val fallback = provider(
+            id = 2L,
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
+        )
+
+        assertThat(
+            shouldUseHiddenFallbackSourceForSlot(
+                policy = StorePolicySnapshot.amazon,
+                providers = listOf(fallback),
+                currentSource = ActiveLiveSource.ProviderSource(fallback.id),
+                fallbackProviderId = fallback.id
+            )
+        ).isFalse()
+    }
+
+    @Test
+    fun `amazon fallback keeps user source active`() {
+        val userProvider = provider(id = 7L, m3uUrl = "https://example.test/user.m3u8")
+
+        assertThat(
+            shouldUseHiddenFallbackSourceForSlot(
+                policy = StorePolicySnapshot.amazon,
+                providers = listOf(userProvider),
+                currentSource = ActiveLiveSource.ProviderSource(userProvider.id),
+                fallbackProviderId = 2L
+            )
+        ).isFalse()
+    }
+
+    @Test
+    fun `amazon bundled fallback playlists avoid automatic epg discovery`() {
+        assertThat(amazonAsset("playlist_usa.m3u8").readText()).doesNotContain("x-tvg-url")
+        assertThat(amazonAsset("playlist_usa_vod.m3u8").readText()).doesNotContain("x-tvg-url")
+    }
+
+    @Test
+    fun `amazon bundled vod fallback contains direct video files`() {
+        val vodPlaylist = amazonAsset("playlist_usa_vod.m3u8").readText()
+
+        assertThat(vodPlaylist).contains("group-title=\"Demo Videos\"")
+        assertThat(vodPlaylist).containsMatch("""https://[^\n]+\.(m4v|mp4|mov)""")
+    }
+
     private fun provider(id: Long = 1L, m3uUrl: String): Provider =
         Provider(
             id = id,
@@ -113,4 +177,7 @@ class StorePolicyTest {
             serverUrl = m3uUrl,
             m3uUrl = m3uUrl
         )
+
+    private fun amazonAsset(fileName: String): File =
+        File("src/amazon/assets/amazon_fallback/$fileName")
 }

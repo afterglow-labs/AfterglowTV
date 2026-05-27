@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.afterglowtv.domain.model.LocalMediaKind
+import com.afterglowtv.domain.model.LocalMediaLibrarySourceType
 
 @Entity(
     tableName = "local_media_libraries",
@@ -19,12 +20,20 @@ data class LocalMediaLibraryEntity(
     val id: Long = 0,
     val name: String,
     @ColumnInfo(name = "root_uri") val rootUri: String,
+    @ColumnInfo(name = "source_type") val sourceType: LocalMediaLibrarySourceType = LocalMediaLibrarySourceType.DOCUMENT_TREE,
     @ColumnInfo(name = "display_name") val displayName: String? = null,
     val enabled: Boolean = true,
     @ColumnInfo(name = "item_count") val itemCount: Int = 0,
     @ColumnInfo(name = "added_at_ms") val addedAtMs: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at_ms") val updatedAtMs: Long = System.currentTimeMillis(),
-    @ColumnInfo(name = "last_scanned_at_ms") val lastScannedAtMs: Long? = null
+    @ColumnInfo(name = "last_scanned_at_ms") val lastScannedAtMs: Long? = null,
+    @ColumnInfo(name = "smb_host") val smbHost: String? = null,
+    @ColumnInfo(name = "smb_port") val smbPort: Int? = null,
+    @ColumnInfo(name = "smb_share") val smbShare: String? = null,
+    @ColumnInfo(name = "smb_path") val smbPath: String? = null,
+    @ColumnInfo(name = "smb_domain") val smbDomain: String? = null,
+    @ColumnInfo(name = "smb_username") val smbUsername: String? = null,
+    @ColumnInfo(name = "smb_password") val smbPassword: String? = null
 )
 
 @Entity(

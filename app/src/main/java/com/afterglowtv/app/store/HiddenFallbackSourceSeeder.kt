@@ -5,6 +5,8 @@ import android.util.Log
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.repository.ProviderRepository
 import com.afterglowtv.domain.usecase.M3uProviderSetupCommand
 import com.afterglowtv.domain.usecase.ValidateAndAddProvider
@@ -18,18 +20,20 @@ import kotlinx.coroutines.flow.first
 
 @Singleton
 class HiddenFallbackSourceSeeder @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val providerRepository: ProviderRepository,
     private val preferencesRepository: PreferencesRepository,
     private val validateAndAddProvider: ValidateAndAddProvider
 ) {
     suspend fun seedIfNeeded(policy: StorePolicySnapshot = StorePolicy.current) {
         if (!policy.enableHiddenFallbackSource) return
-        val providers = providerRepository.getProviders().first()
+        var providers = providerRepository.getProviders().first()
         if (!policy.shouldEnsureHiddenFallback(providers)) return
 
+        var liveFallbackProviderId: Long? = null
         policy.hiddenFallbackSources.forEach { spec ->
             val fallbackUrl = prepareHiddenFallbackPlaylistFile(spec) ?: return@forEach
+            providers = providerRepository.getProviders().first()
             val existingFallback = providers.firstOrNull { provider ->
                 provider.m3uUrl.contains(spec.providerFileName) ||
                     provider.serverUrl.contains(spec.providerFileName)
@@ -39,7 +43,7 @@ class HiddenFallbackSourceSeeder @Inject constructor(
                     M3uProviderSetupCommand(
                         url = fallbackUrl,
                         name = spec.providerName,
-                        epgSyncMode = ProviderEpgSyncMode.BACKGROUND,
+                        epgSyncMode = ProviderEpgSyncMode.SKIP,
                         m3uVodClassificationEnabled = spec.m3uVodClassificationEnabled,
                         existingProviderId = existingFallback?.id,
                         allowXtreamPlaylistAutoDetection = false
@@ -52,14 +56,36 @@ class HiddenFallbackSourceSeeder @Inject constructor(
             }
 
             if (providerId != null) {
+                if (existingFallback != null) {
+                    providerRepository.updateProvider(
+                        existingFallback.copy(
+                            epgUrl = "",
+                            epgSyncMode = ProviderEpgSyncMode.SKIP
+                        )
+                    )
+                    providerRepository.refreshProviderData(
+                        providerId = providerId,
+                        force = true,
+                        epgSyncModeOverride = ProviderEpgSyncMode.SKIP
+                    )
+                }
+                providers = providerRepository.getProviders().first()
                 val currentSource = preferencesRepository.activeSource(spec.sourceSlot).first()
-                if (currentSource == null) {
+                if (shouldUseHiddenFallbackSourceForSlot(policy, providers, currentSource, providerId)) {
                     preferencesRepository.setActiveSource(
                         spec.sourceSlot,
                         ActiveLiveSource.ProviderSource(providerId)
                     )
                 }
+                if (spec.sourceSlot == ProviderSourceSlot.LIVE) {
+                    liveFallbackProviderId = providerId
+                }
             }
+        }
+
+        liveFallbackProviderId?.let {
+            providerRepository.setActiveProvider(it)
+            preferencesRepository.setLastActiveProviderId(it)
         }
     }
 
@@ -93,4 +119,14 @@ class HiddenFallbackSourceSeeder @Inject constructor(
     private companion object {
         private const val TAG = "HiddenFallbackSeeder"
     }
+}
+
+internal fun shouldUseHiddenFallbackSourceForSlot(
+    policy: StorePolicySnapshot,
+    providers: List<Provider>,
+    currentSource: ActiveLiveSource?,
+    fallbackProviderId: Long
+): Boolean {
+    if (!policy.shouldEnsureHiddenFallback(providers)) return false
+    return currentSource != ActiveLiveSource.ProviderSource(fallbackProviderId)
 }

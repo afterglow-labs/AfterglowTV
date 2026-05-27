@@ -4,29 +4,50 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import com.afterglowtv.data.local.dao.LocalMediaItemDao
 import com.afterglowtv.data.local.dao.LocalMediaLibraryDao
+import com.afterglowtv.data.local.dao.LocalMediaItemDao
 import com.afterglowtv.data.local.entity.LocalMediaItemEntity
 import com.afterglowtv.data.local.entity.LocalMediaLibraryEntity
+import com.afterglowtv.data.security.CredentialCrypto
+import com.afterglowtv.domain.model.LocalMediaLibrarySourceType
 import com.afterglowtv.domain.model.LocalMediaItem
 import com.afterglowtv.domain.model.LocalMediaKind
 import com.afterglowtv.domain.model.LocalMediaLibrary
 import com.afterglowtv.domain.model.LocalMediaScanResult
 import com.afterglowtv.domain.model.Result
+import com.afterglowtv.domain.model.SmbMediaSourceResolver
+import com.afterglowtv.domain.model.SmbResolvedMedia
+import com.afterglowtv.domain.model.SmbShareConfig
+import com.afterglowtv.domain.model.SmbShareReference
+import com.afterglowtv.domain.model.SmbShareUri
 import com.afterglowtv.domain.repository.LocalMediaRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.hierynomus.msfscc.FileAttributes
+import com.hierynomus.msdtyp.AccessMask
+import com.hierynomus.mssmb2.SMB2CreateDisposition
+import com.hierynomus.mssmb2.SMB2CreateOptions
+import com.hierynomus.mssmb2.SMB2ShareAccess
+import com.hierynomus.smbj.SMBClient
+import com.hierynomus.smbj.SmbConfig
+import com.hierynomus.smbj.auth.AuthenticationContext
+import com.hierynomus.smbj.share.DiskShare
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import java.util.EnumSet
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class LocalMediaRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val libraryDao: LocalMediaLibraryDao,
-    private val itemDao: LocalMediaItemDao
-) : LocalMediaRepository {
+    private val itemDao: LocalMediaItemDao,
+    private val credentialCrypto: CredentialCrypto
+) : LocalMediaRepository, SmbMediaSourceResolver {
     override fun observeLibraries(): Flow<List<LocalMediaLibrary>> =
         libraryDao.observeLibraries().map { libraries -> libraries.map { it.toDomain() } }
 
@@ -48,6 +69,7 @@ class LocalMediaRepositoryImpl @Inject constructor(
                 id = existing?.id ?: 0L,
                 name = name,
                 rootUri = rootUri,
+                sourceType = LocalMediaLibrarySourceType.DOCUMENT_TREE,
                 displayName = displayName?.takeIf { it.isNotBlank() } ?: existing?.displayName,
                 enabled = true,
                 itemCount = existing?.itemCount ?: 0,
@@ -63,6 +85,45 @@ class LocalMediaRepositoryImpl @Inject constructor(
             onFailure = { error -> Result.error(error.message ?: "Failed to add local media library.", error) }
         )
     }
+
+    override suspend fun addSmbLibrary(config: SmbShareConfig): Result<LocalMediaScanResult> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val reference = SmbShareUri.fromConfig(config)
+                val rootUri = SmbShareUri.buildRoot(reference)
+                val now = System.currentTimeMillis()
+                val existing = libraryDao.getLibraryByRootUri(rootUri)
+                val name = config.displayName?.takeIf { it.isNotBlank() }
+                    ?: existing?.name
+                    ?: SmbShareUri.displayName(reference)
+                val entity = LocalMediaLibraryEntity(
+                    id = existing?.id ?: 0L,
+                    name = name,
+                    rootUri = rootUri,
+                    sourceType = LocalMediaLibrarySourceType.SMB,
+                    displayName = config.displayName?.takeIf { it.isNotBlank() } ?: existing?.displayName,
+                    enabled = true,
+                    itemCount = existing?.itemCount ?: 0,
+                    addedAtMs = existing?.addedAtMs ?: now,
+                    updatedAtMs = now,
+                    lastScannedAtMs = existing?.lastScannedAtMs,
+                    smbHost = reference.host,
+                    smbPort = reference.port,
+                    smbShare = reference.shareName,
+                    smbPath = reference.path.takeIf { it.isNotBlank() },
+                    smbDomain = config.domain.trim().takeIf { it.isNotBlank() },
+                    smbUsername = config.username.trim().takeIf { it.isNotBlank() },
+                    smbPassword = config.password.takeIf { it.isNotBlank() }?.let(credentialCrypto::encryptIfNeeded)
+                        ?: existing?.smbPassword
+                )
+                val insertedId = libraryDao.upsertLibrary(entity)
+                val libraryId = existing?.id ?: insertedId
+                scanLibrary(libraryDao.getLibrary(libraryId) ?: entity.copy(id = libraryId))
+            }.fold(
+                onSuccess = { Result.success(it) },
+                onFailure = { error -> Result.error(error.message ?: "Failed to add network share.", error) }
+            )
+        }
 
     override suspend fun rescanLibrary(libraryId: Long): Result<LocalMediaScanResult> = withContext(Dispatchers.IO) {
         runCatching {
@@ -84,7 +145,33 @@ class LocalMediaRepositoryImpl @Inject constructor(
         )
     }
 
-    private suspend fun scanLibrary(library: LocalMediaLibraryEntity): LocalMediaScanResult {
+    override fun resolve(uri: String): SmbResolvedMedia? {
+        val itemReference = SmbShareUri.parse(uri) ?: return null
+        val canonicalUri = SmbShareUri.buildRoot(itemReference)
+        val library = libraryDao.getSmbLibrariesBlocking()
+            .firstOrNull { candidate ->
+                val root = candidate.rootUri.trimEnd('/')
+                canonicalUri == root || canonicalUri.startsWith("$root/")
+            }
+            ?: return null
+        return SmbResolvedMedia(
+            host = itemReference.host,
+            port = itemReference.port,
+            shareName = itemReference.shareName,
+            path = itemReference.path,
+            username = library.smbUsername.orEmpty(),
+            password = library.smbPassword.orEmpty().let(credentialCrypto::decryptIfNeeded),
+            domain = library.smbDomain.orEmpty()
+        )
+    }
+
+    private suspend fun scanLibrary(library: LocalMediaLibraryEntity): LocalMediaScanResult =
+        when (library.sourceType) {
+            LocalMediaLibrarySourceType.DOCUMENT_TREE -> scanDocumentLibrary(library)
+            LocalMediaLibrarySourceType.SMB -> scanSmbLibrary(library)
+        }
+
+    private suspend fun scanDocumentLibrary(library: LocalMediaLibraryEntity): LocalMediaScanResult {
         val root = DocumentFile.fromTreeUri(context, Uri.parse(library.rootUri))
             ?: throw IllegalArgumentException("Local media folder is no longer accessible.")
         if (!root.exists() || !root.isDirectory) {
@@ -94,6 +181,41 @@ class LocalMediaRepositoryImpl @Inject constructor(
         val now = System.currentTimeMillis()
         val scan = LocalMediaTreeScan(libraryId = library.id, scannedAtMs = now)
         walkTree(root, scan, depth = 0)
+        itemDao.deleteByLibrary(library.id)
+        if (scan.items.isNotEmpty()) {
+            itemDao.upsertItems(scan.items)
+        }
+        libraryDao.updateScanState(
+            libraryId = library.id,
+            itemCount = scan.items.size,
+            scannedAtMs = now,
+            updatedAtMs = now
+        )
+        return LocalMediaScanResult(
+            libraryId = library.id,
+            scannedCount = scan.scannedCount,
+            importedCount = scan.items.size,
+            skippedCount = scan.skippedCount
+        )
+    }
+
+    private suspend fun scanSmbLibrary(library: LocalMediaLibraryEntity): LocalMediaScanResult {
+        val reference = SmbShareUri.parse(library.rootUri)
+            ?: throw IllegalArgumentException("Network share path is invalid.")
+        val now = System.currentTimeMillis()
+        val scan = LocalMediaTreeScan(libraryId = library.id, scannedAtMs = now)
+        withSmbShare(library, reference) { share ->
+            if (reference.path.isNotBlank() && !share.folderExists(reference.path)) {
+                throw IllegalArgumentException("Network share folder is not available.")
+            }
+            walkSmbTree(
+                share = share,
+                reference = reference,
+                currentPath = reference.path,
+                scan = scan,
+                depth = 0
+            )
+        }
         itemDao.deleteByLibrary(library.id)
         if (scan.items.isNotEmpty()) {
             itemDao.upsertItems(scan.items)
@@ -153,6 +275,84 @@ class LocalMediaRepositoryImpl @Inject constructor(
         }
     }
 
+    private fun walkSmbTree(
+        share: DiskShare,
+        reference: SmbShareReference,
+        currentPath: String,
+        scan: LocalMediaTreeScan,
+        depth: Int
+    ) {
+        if (depth > MAX_SCAN_DEPTH) return
+        val entries = share.list(currentPath.ifBlank { "" })
+        for (entry in entries) {
+            val displayName = entry.fileName.orEmpty()
+            if (displayName == "." || displayName == "..") continue
+            val childPath = joinSmbPath(currentPath, displayName)
+            val isDirectory = (entry.fileAttributes and FileAttributes.FILE_ATTRIBUTE_DIRECTORY.value) != 0L
+            if (isDirectory) {
+                walkSmbTree(share, reference, childPath, scan, depth + 1)
+                continue
+            }
+            scan.scannedCount += 1
+            if (!LocalMediaImport.isImportableVideo(displayName, mimeType = null)) {
+                scan.skippedCount += 1
+                continue
+            }
+            val metadata = LocalMediaImport.describeFile(displayName, mimeType = null)
+            scan.items += LocalMediaItemEntity(
+                libraryId = scan.libraryId,
+                uri = SmbShareUri.build(
+                    host = reference.host,
+                    port = reference.port,
+                    shareName = reference.shareName,
+                    path = childPath
+                ),
+                displayName = displayName,
+                title = metadata.title,
+                sortTitle = metadata.title.toSortTitle(),
+                mediaKind = metadata.mediaKind,
+                mimeType = null,
+                durationMs = null,
+                sizeBytes = entry.endOfFile.takeIf { it > 0L },
+                dateModifiedMs = entry.lastWriteTime?.toEpochMillis()?.takeIf { it > 0L },
+                seriesTitle = metadata.seriesTitle,
+                seasonNumber = metadata.seasonNumber,
+                episodeNumber = metadata.episodeNumber,
+                addedAtMs = scan.scannedAtMs,
+                updatedAtMs = scan.scannedAtMs,
+                lastScannedAtMs = scan.scannedAtMs
+            )
+        }
+    }
+
+    private fun <T> withSmbShare(
+        library: LocalMediaLibraryEntity,
+        reference: SmbShareReference,
+        block: (DiskShare) -> T
+    ): T {
+        val config = SmbConfig.builder()
+            .withTimeout(SMB_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .withSoTimeout(SMB_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .build()
+        return SMBClient(config).use { client ->
+            client.connect(reference.host, reference.port).use { connection ->
+                val username = library.smbUsername.orEmpty()
+                val password = library.smbPassword.orEmpty().let(credentialCrypto::decryptIfNeeded)
+                val domain = library.smbDomain.orEmpty().takeIf { it.isNotBlank() }
+                val authentication = if (username.isBlank() && password.isBlank()) {
+                    AuthenticationContext.guest()
+                } else {
+                    AuthenticationContext(username, password.toCharArray(), domain)
+                }
+                connection.authenticate(authentication).use { session ->
+                    val share = session.connectShare(reference.shareName) as? DiskShare
+                        ?: throw IllegalArgumentException("Network share is not a file share.")
+                    share.use(block)
+                }
+            }
+        }
+    }
+
     private fun readDurationMs(uri: Uri): Long? {
         val retriever = MediaMetadataRetriever()
         return try {
@@ -189,6 +389,7 @@ class LocalMediaRepositoryImpl @Inject constructor(
 
     private companion object {
         const val MAX_SCAN_DEPTH = 16
+        const val SMB_TIMEOUT_SECONDS = 20L
     }
 }
 
@@ -196,6 +397,7 @@ private fun LocalMediaLibraryEntity.toDomain(): LocalMediaLibrary = LocalMediaLi
     id = id,
     name = name,
     rootUri = rootUri,
+    sourceType = sourceType ?: LocalMediaLibrarySourceType.DOCUMENT_TREE,
     displayName = displayName,
     enabled = enabled,
     itemCount = itemCount,
@@ -203,6 +405,11 @@ private fun LocalMediaLibraryEntity.toDomain(): LocalMediaLibrary = LocalMediaLi
     updatedAtMs = updatedAtMs,
     lastScannedAtMs = lastScannedAtMs
 )
+
+private fun joinSmbPath(parent: String, child: String): String =
+    listOf(parent.trim('/'), child.trim('/'))
+        .filter { it.isNotBlank() }
+        .joinToString("/")
 
 private fun LocalMediaItemEntity.toDomain(): LocalMediaItem = LocalMediaItem(
     id = id,

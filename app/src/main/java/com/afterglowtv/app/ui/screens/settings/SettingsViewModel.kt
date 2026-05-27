@@ -62,6 +62,7 @@ import com.afterglowtv.domain.repository.CategoryRepository
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.domain.repository.MovieRepository
 import com.afterglowtv.domain.repository.LocalMediaRepository
+import com.afterglowtv.domain.model.SmbShareConfig
 import com.afterglowtv.domain.repository.SeriesRepository
 import com.afterglowtv.domain.repository.SyncMetadataRepository
 import com.afterglowtv.domain.usecase.GetCustomCategories
@@ -1051,6 +1052,33 @@ class SettingsViewModel @Inject constructor(
                         it.copy(
                             isScanningLocalMedia = false,
                             userMessage = "Added ${result.data.importedCount} local media files."
+                        )
+                    }
+                }
+                is Result.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            userMessage = result.message
+                        )
+                    }
+                }
+                Result.Loading -> {
+                    _uiState.update { it.copy(isScanningLocalMedia = true) }
+                }
+            }
+        }
+    }
+
+    fun addSmbLocalMediaLibrary(config: SmbShareConfig) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isScanningLocalMedia = true) }
+            when (val result = localMediaRepository.addSmbLibrary(config)) {
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            userMessage = "Added ${result.data.importedCount} network media files."
                         )
                     }
                 }

@@ -140,6 +140,7 @@ object NetworkModule {
         networkClassDetector: NetworkClassDetector,
         connectionPrewarmer: ConnectionPrewarmer,
         adaptiveBufferController: AdaptiveBufferController,
+        smbMediaSourceResolver: com.afterglowtv.domain.model.SmbMediaSourceResolver,
     ): PlayerEngine = Media3PlayerEngine(
         context = context,
         okHttpClient = okHttpClient,
@@ -148,6 +149,7 @@ object NetworkModule {
         networkClassDetector = networkClassDetector,
         connectionPrewarmer = connectionPrewarmer,
         adaptiveBufferController = adaptiveBufferController,
+        smbMediaSourceResolver = smbMediaSourceResolver,
     )
 
     /**
@@ -164,6 +166,7 @@ object NetworkModule {
         networkClassDetector: NetworkClassDetector,
         connectionPrewarmer: ConnectionPrewarmer,
         adaptiveBufferController: AdaptiveBufferController,
+        smbMediaSourceResolver: com.afterglowtv.domain.model.SmbMediaSourceResolver,
     ): PlayerEngine = Media3PlayerEngine(
         context = context,
         okHttpClient = okHttpClient,
@@ -172,6 +175,7 @@ object NetworkModule {
         networkClassDetector = networkClassDetector,
         connectionPrewarmer = connectionPrewarmer,
         adaptiveBufferController = adaptiveBufferController,
+        smbMediaSourceResolver = smbMediaSourceResolver,
     ).apply {
         enableMediaSession = false
         bypassAudioFocus = true

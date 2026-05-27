@@ -76,6 +76,9 @@ abstract class RepositoryModule {
     abstract fun bindLocalMediaRepository(impl: LocalMediaRepositoryImpl): LocalMediaRepository
 
     @Binds @Singleton
+    abstract fun bindSmbMediaSourceResolver(impl: LocalMediaRepositoryImpl): com.afterglowtv.domain.model.SmbMediaSourceResolver
+
+    @Binds @Singleton
     abstract fun bindDatabaseTransactionRunner(impl: RoomDatabaseTransactionRunner): DatabaseTransactionRunner
 
     @Binds @Singleton
