@@ -160,7 +160,7 @@ fun GlowSettingsScreen(
                         painter = androidx.compose.ui.res.painterResource(
                             id = com.afterglowtv.app.R.drawable.afterglow_logo
                         ),
-                        contentDescription = "Afterglow TV",
+                        contentDescription = "AfterglowTV",
                         modifier = Modifier
                             .size(56.dp)
                             .afterglow(

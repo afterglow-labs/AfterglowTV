@@ -43,7 +43,7 @@
         android:required="false" />
 
     <!-- Echo Show 15 + Fire TV both support D-pad navigation; declaring it
-         here helps both launchers score Afterglow TV as a first-class app. -->
+         here helps both launchers score AfterglowTV as a first-class app. -->
     <uses-configuration android:reqNavigation="dpad" />
 
     <application
@@ -52,7 +52,7 @@
         android:banner="@drawable/app_banner"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="Afterglow TV"
+        android:label="AfterglowTV"
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="false"
         android:supportsRtl="true"
@@ -64,7 +64,7 @@
             android:banner="@drawable/app_banner"
             android:icon="@mipmap/ic_launcher"
             android:roundIcon="@mipmap/ic_launcher_round"
-            android:label="Afterglow TV"
+            android:label="AfterglowTV"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize"
             android:launchMode="singleTask"
             android:supportsPictureInPicture="true"
@@ -145,7 +145,7 @@
         <service
             android:name=".tvinput.AfterglowTVTvInputService"
             android:exported="true"
-            android:label="Afterglow TV Live Channels"
+            android:label="AfterglowTV Live Channels"
             android:permission="android.permission.BIND_TV_INPUT">
 
             <intent-filter>

@@ -4,6 +4,7 @@ import com.afterglowtv.app.tv.LauncherRecommendationsManager
 import com.afterglowtv.app.tv.WatchNextManager
 import com.afterglowtv.app.tvinput.TvInputChannelSyncManager
 import com.afterglowtv.domain.model.ActiveLiveSource
+import com.afterglowtv.domain.model.BuiltInPlaylists
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Result
@@ -18,6 +19,7 @@ import com.afterglowtv.data.sync.SyncManager
 import com.afterglowtv.data.preferences.PreferencesRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.hours
@@ -217,6 +219,70 @@ internal class SettingsProviderActions(
                     it.copy(userMessage = if (enabled) "Playlist enabled in combined source" else "Playlist disabled in combined source")
                 }
                 is Result.Error -> uiState.update { it.copy(userMessage = result.message) }
+                Result.Loading -> Unit
+            }
+        }
+    }
+
+    fun setBuiltInPlaylistsLoaded(scope: CoroutineScope, loaded: Boolean) {
+        scope.launch {
+            preferencesRepository.setShowBuiltInPlaylists(loaded)
+            if (!loaded) {
+                uiState.update {
+                    it.copy(userMessage = "Free broadcasts unloaded")
+                }
+                return@launch
+            }
+
+            val existing = providerRepository.getProviders()
+                .first()
+                .firstOrNull(BuiltInPlaylists::isBuiltInProvider)
+            if (existing != null) {
+                uiState.update {
+                    it.copy(userMessage = "Free broadcasts loaded")
+                }
+                return@launch
+            }
+
+            uiState.update {
+                it.copy(
+                    isSyncing = true,
+                    syncProgress = "Scanning for legal and free broadcasts...",
+                    syncingProviderName = BuiltInPlaylists.FREE_BROADCASTS_NAME
+                )
+            }
+            when (val result = providerRepository.validateM3u(
+                url = BuiltInPlaylists.FREE_BROADCASTS_URL,
+                name = BuiltInPlaylists.FREE_BROADCASTS_NAME,
+                epgSyncMode = ProviderEpgSyncMode.BACKGROUND,
+                onProgress = { progress ->
+                    uiState.update { state ->
+                        state.copy(
+                            syncProgress = progress.ifBlank { "Scanning for legal and free broadcasts..." },
+                            syncingProviderName = BuiltInPlaylists.FREE_BROADCASTS_NAME
+                        )
+                    }
+                }
+            )) {
+                is Result.Success -> uiState.update {
+                    it.copy(
+                        isSyncing = false,
+                        syncProgress = null,
+                        syncingProviderName = null,
+                        userMessage = "Free broadcasts loaded"
+                    )
+                }
+                is Result.Error -> {
+                    preferencesRepository.setShowBuiltInPlaylists(false)
+                    uiState.update {
+                        it.copy(
+                            isSyncing = false,
+                            syncProgress = null,
+                            syncingProviderName = null,
+                            userMessage = "Could not load free broadcasts: ${result.message}"
+                        )
+                    }
+                }
                 Result.Loading -> Unit
             }
         }

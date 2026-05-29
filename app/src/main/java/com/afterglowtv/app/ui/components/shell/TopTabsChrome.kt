@@ -28,17 +28,24 @@ import com.afterglowtv.app.ui.design.afterglowFocus
  */
 data class TopTab(val id: String, val label: String)
 
-fun defaultTopTabs(showAdultGuideTab: Boolean = true): List<TopTab> = buildList {
+fun defaultTopTabs(
+    developerModeEnabled: Boolean = false,
+    showAdultGuideTab: Boolean = false
+): List<TopTab> = buildList {
     add(TopTab("home", "Home"))
     add(TopTab("live_tv", "Live TV"))
-    add(TopTab("epg", "IPTV Guide"))
-    add(TopTab("vod_guide", "VOD Guide"))
-    if (showAdultGuideTab) {
-        add(TopTab("adult_guide", "XXX Guide"))
+    add(TopTab("epg", "TV Guide"))
+    if (developerModeEnabled) {
+        add(TopTab("vod_guide", "VOD Guide"))
+        if (showAdultGuideTab) {
+            add(TopTab("adult_guide", "Adult Guide"))
+        }
     }
     add(TopTab("movies", "Movies"))
     add(TopTab("series", "Series"))
-    add(TopTab("local_media", "Personal Guide"))
+    if (developerModeEnabled) {
+        add(TopTab("local_media", "Personal Guide"))
+    }
     add(TopTab("favorites", "Favorites"))
     add(TopTab("search", "Search"))
     add(TopTab("settings", "Settings"))

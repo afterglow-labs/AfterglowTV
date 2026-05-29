@@ -24,6 +24,7 @@ internal fun SettingsContentPane(
     onNavigateToParentalControl: (Long) -> Unit,
     onChooseRecordingFolder: () -> Unit,
     onChooseLocalMediaLibrary: () -> Unit,
+    onAddLocalMediaNetworkShare: () -> Unit,
     onCreateBackup: () -> Unit,
     onShareBackup: () -> Unit,
     onViewCrashReport: () -> Unit,
@@ -126,7 +127,7 @@ internal fun SettingsContentPane(
                 onShowLevelDialogChange = { dialogState.showLevelDialog = it },
                 onShowClearHistoryDialogChange = { dialogState.showClearHistoryDialog = it }
             )
-        } else if (dialogState.selectedCategory == 4) {
+        } else if (dialogState.selectedCategory == 4 && uiState.developerModeEnabled) {
             settingsRecordingSection(
                 uiState = uiState,
                 viewModel = viewModel,
@@ -137,11 +138,12 @@ internal fun SettingsContentPane(
                 onShowRecordingPaddingDialogChange = { dialogState.showRecordingPaddingDialog = it },
                 onShowRecordingBrowserDialogChange = { dialogState.showRecordingBrowserDialog = it }
             )
-        } else if (dialogState.selectedCategory == 5) {
+        } else if (dialogState.selectedCategory == 5 && uiState.developerModeEnabled) {
             settingsLocalMediaSection(
                 uiState = uiState,
                 viewModel = viewModel,
-                onChooseLibrary = onChooseLocalMediaLibrary
+                onChooseLibrary = onChooseLocalMediaLibrary,
+                onAddNetworkShare = onAddLocalMediaNetworkShare
             )
         } else if (dialogState.selectedCategory == 6) {
             settingsBackupSection(
@@ -149,7 +151,7 @@ internal fun SettingsContentPane(
                 onShareBackup = onShareBackup,
                 onRestoreBackup = onRestoreBackup
             )
-        } else if (dialogState.selectedCategory == 7) {
+        } else if (dialogState.selectedCategory == 7 && uiState.developerModeEnabled) {
             epgSourcesSection(
                 uiState = uiState,
                 viewModel = viewModel
@@ -165,10 +167,20 @@ internal fun SettingsContentPane(
                 onDownloadLatestUpdate = viewModel::downloadLatestUpdate,
                 onSetAutoCheckAppUpdates = viewModel::setAutoCheckAppUpdates,
                 onSetAutoDownloadAppUpdates = viewModel::setAutoDownloadAppUpdates,
+                onSetDeveloperModeEnabled = viewModel::setDeveloperModeEnabled,
                 onRefreshDownloadState = viewModel::refreshDownloadState,
                 onViewCrashReport = onViewCrashReport,
                 onShareCrashReport = onShareCrashReport,
                 onDeleteCrashReport = onDeleteCrashReport
+            )
+        } else {
+            providerSection(
+                uiState = uiState,
+                onAddProvider = onAddProvider,
+                onEditProvider = onEditProvider,
+                onNavigateToParentalControl = onNavigateToParentalControl,
+                viewModel = viewModel,
+                providerState = providerState
             )
         }
     }

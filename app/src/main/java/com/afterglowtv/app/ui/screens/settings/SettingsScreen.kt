@@ -164,6 +164,13 @@ fun SettingsScreen(
         viewModel.inspectBackup(uri)
     }
 
+    LaunchedEffect(uiState.developerModeEnabled, dialogState.selectedCategory) {
+        val hiddenReviewSections = setOf(4, 5, 7)
+        if (!uiState.developerModeEnabled && dialogState.selectedCategory in hiddenReviewSections) {
+            dialogState.selectedCategory = 0
+        }
+    }
+
     LaunchedEffect(currentRoute, dialogState.selectedCategory) {
         delay(80)
         settingsNavFocusRequester.requestFocusSafely(tag = "SettingsScreen", target = "Selected settings section")
@@ -182,13 +189,14 @@ fun SettingsScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 AfterglowBrandStrip(
                     wordmark = "Settings",
-                    tagline = "Providers, playback, themes, glow — all the knobs.",
+                    tagline = "",
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
                 )
                 Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     SettingsNavigationRail(
                         selectedCategory = dialogState.selectedCategory,
                         focusRequester = settingsNavFocusRequester,
+                        developerModeEnabled = uiState.developerModeEnabled,
                         onCategorySelected = { dialogState.selectedCategory = it },
                         onNavigate = onNavigate,
                     )
@@ -212,6 +220,7 @@ fun SettingsScreen(
                         onNavigateToParentalControl = onNavigateToParentalControl,
                         onChooseRecordingFolder = { recordingFolderLauncher.launch(null) },
                         onChooseLocalMediaLibrary = { localMediaFolderLauncher.launch(null) },
+                        onAddLocalMediaNetworkShare = { dialogState.showAddLocalMediaNetworkShareDialog = true },
                         onCreateBackup = ::exportBackupToDownloads,
                         onShareBackup = ::shareBackup,
                         onViewCrashReport = viewModel::viewCrashReport,

@@ -121,7 +121,7 @@ fun AfterglowBrandStrip(
     ) {
         Image(
             painter = painterResource(id = R.drawable.afterglow_logo),
-            contentDescription = "Afterglow TV",
+            contentDescription = "AfterglowTV",
             modifier = Modifier
                 .size(logoSize)
                 .afterglow(
@@ -192,7 +192,7 @@ fun AfterglowHero(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.afterglow_logo),
-                contentDescription = "Afterglow TV",
+                contentDescription = "AfterglowTV",
                 modifier = Modifier
                     .size(logoSize)
                     .afterglow(

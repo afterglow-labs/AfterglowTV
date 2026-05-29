@@ -155,6 +155,20 @@ internal fun LazyListScope.providerSection(
     }
 
     item {
+        SwitchSettingsRow(
+            label = stringResource(R.string.settings_free_broadcasts_title),
+            value = if (uiState.showBuiltInPlaylists) {
+                stringResource(R.string.settings_free_broadcasts_loaded)
+            } else {
+                stringResource(R.string.settings_free_broadcasts_unloaded)
+            },
+            checked = uiState.showBuiltInPlaylists,
+            enabled = !uiState.isSyncing,
+            onCheckedChange = viewModel::setBuiltInPlaylistsLoaded
+        )
+    }
+
+    item {
         TvClickableSurface(
             onClick = onAddProvider,
             shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp)),

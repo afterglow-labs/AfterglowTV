@@ -31,6 +31,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -64,10 +65,20 @@ class ProviderRepositoryImpl @Inject constructor(
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun getProviders(): Flow<List<Provider>> =
-        providerDao.getAll().map { entities -> entities.map { it.toPublicDomain() } }
+        providerDao.getAll()
+            .map { entities -> entities.map { it.toPublicDomain() } }
+            .combine(preferencesRepository.showBuiltInPlaylists) { providers, showBuiltInPlaylists ->
+                providers.filter { provider ->
+                    showBuiltInPlaylists || !BuiltInPlaylists.isBuiltInProvider(provider)
+                }
+            }
 
     override fun getActiveProvider(): Flow<Provider?> =
-        providerDao.getActive().map { it?.toPublicDomain() }
+        providerDao.getActive()
+            .map { it?.toPublicDomain() }
+            .combine(preferencesRepository.showBuiltInPlaylists) { provider, showBuiltInPlaylists ->
+                provider?.takeIf { showBuiltInPlaylists || !BuiltInPlaylists.isBuiltInProvider(it) }
+            }
 
     override suspend fun getProvider(id: Long): Provider? =
         providerDao.getById(id)?.toPublicDomain()

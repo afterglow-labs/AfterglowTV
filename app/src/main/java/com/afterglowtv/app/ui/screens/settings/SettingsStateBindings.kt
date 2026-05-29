@@ -70,10 +70,12 @@ internal fun observeSettingsPreferenceSnapshot(
             liveTvChannelMode = LiveTvChannelMode.PRO,
             startupDestination = StartupDestination.default,
             showLiveSourceSwitcher = false,
+            showBuiltInPlaylists = true,
             showAllChannelsCategory = true,
             showRecentChannelsCategory = true,
             liveTvCategoryFilters = emptyList(),
             liveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.ALWAYS_VISIBLE,
+            developerModeEnabled = false,
             showAdultGuideTab = true,
             liveChannelNumberingMode = ChannelNumberingMode.GROUP,
             liveChannelGroupingMode = LiveChannelGroupingMode.RAW_VARIANTS,
@@ -171,6 +173,8 @@ internal fun observeSettingsPreferenceSnapshot(
         snapshot.copy(startupDestination = StartupDestination.fromStorage(startupDestination))
     }.combine(preferencesRepository.showLiveSourceSwitcher) { snapshot, showLiveSourceSwitcher ->
         snapshot.copy(showLiveSourceSwitcher = showLiveSourceSwitcher)
+    }.combine(preferencesRepository.showBuiltInPlaylists) { snapshot, showBuiltInPlaylists ->
+        snapshot.copy(showBuiltInPlaylists = showBuiltInPlaylists)
     }.combine(preferencesRepository.showAllChannelsCategory) { snapshot, showAllChannelsCategory ->
         snapshot.copy(showAllChannelsCategory = showAllChannelsCategory)
     }.combine(preferencesRepository.showRecentChannelsCategory) { snapshot, showRecentChannelsCategory ->
@@ -181,6 +185,8 @@ internal fun observeSettingsPreferenceSnapshot(
         snapshot.copy(
             liveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.fromStorage(visibilityMode)
         )
+    }.combine(preferencesRepository.developerModeEnabled) { snapshot, developerModeEnabled ->
+        snapshot.copy(developerModeEnabled = developerModeEnabled)
     }.combine(preferencesRepository.showAdultGuideTab) { snapshot, showAdultGuideTab ->
         snapshot.copy(showAdultGuideTab = showAdultGuideTab)
     }.combine(preferencesRepository.liveChannelNumberingMode) { snapshot, liveChannelNumberingMode ->

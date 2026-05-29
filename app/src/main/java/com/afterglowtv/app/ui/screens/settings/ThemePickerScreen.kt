@@ -123,7 +123,7 @@ fun ThemePickerScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.afterglow_logo),
-                    contentDescription = "Afterglow TV",
+                    contentDescription = "AfterglowTV",
                     modifier = Modifier
                         .size(56.dp)
                         .afterglow(

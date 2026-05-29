@@ -26,6 +26,7 @@ data class LocalMediaItem(
     val displayName: String,
     val title: String,
     val sortTitle: String = title,
+    val folderPath: String = "",
     val mediaKind: LocalMediaKind = LocalMediaKind.UNKNOWN,
     val mimeType: String? = null,
     val durationMs: Long? = null,

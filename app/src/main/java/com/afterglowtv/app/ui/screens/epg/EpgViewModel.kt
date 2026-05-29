@@ -1617,16 +1617,16 @@ class EpgViewModel @Inject constructor(
 
     private fun buildProviderSourceLabel(provider: com.afterglowtv.domain.model.Provider): String {
         return when (provider.type) {
-            com.afterglowtv.domain.model.ProviderType.XTREAM_CODES -> "Xtream Codes"
-            com.afterglowtv.domain.model.ProviderType.M3U -> "M3U Playlist"
-            com.afterglowtv.domain.model.ProviderType.STALKER_PORTAL -> "Portal/MAG Login"
+            com.afterglowtv.domain.model.ProviderType.XTREAM_CODES -> "Account Login"
+            com.afterglowtv.domain.model.ProviderType.M3U -> "Playlist"
+            com.afterglowtv.domain.model.ProviderType.STALKER_PORTAL -> "Portal"
         }
     }
 
     private fun buildProviderArchiveSummary(provider: com.afterglowtv.domain.model.Provider): String {
         return when (provider.type) {
             com.afterglowtv.domain.model.ProviderType.XTREAM_CODES ->
-                "Xtream replay depends on archive-enabled channels and valid replay stream ids from the provider."
+                "Replay depends on archive-enabled channels and valid replay stream ids from the provider."
             com.afterglowtv.domain.model.ProviderType.M3U ->
                 if (provider.epgUrl.isBlank()) {
                     "M3U replay is limited: archive depends on provider templates and guide coverage is weaker without XMLTV."
@@ -1635,9 +1635,9 @@ class EpgViewModel @Inject constructor(
                 }
             com.afterglowtv.domain.model.ProviderType.STALKER_PORTAL ->
                 if (provider.epgUrl.isBlank()) {
-                    "Portal guide falls back to on-demand Stalker data when XMLTV is unavailable."
+                    "Portal guide falls back to on-demand data when XMLTV is unavailable."
                 } else {
-                    "Guide combines optional XMLTV with on-demand Stalker portal data."
+                    "Guide combines optional XMLTV with on-demand portal data."
                 }
         }
     }
@@ -1667,7 +1667,7 @@ class EpgViewModel @Inject constructor(
             add(
                 Category(
                     id = VirtualCategoryIds.ADULT_GUIDE,
-                    name = "XXX Guide",
+                    name = "Adult Guide",
                     type = ContentType.LIVE,
                     isVirtual = true,
                     count = adultGuideCount,

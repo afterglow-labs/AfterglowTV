@@ -134,10 +134,12 @@ class PreferencesRepository @Inject constructor(
         val APP_TIME_FORMAT = stringPreferencesKey("app_time_format")
         val LIVE_TV_CHANNEL_MODE = stringPreferencesKey("live_tv_channel_mode")
         val SHOW_LIVE_SOURCE_SWITCHER = booleanPreferencesKey("show_live_source_switcher")
+        val SHOW_BUILT_IN_PLAYLISTS = booleanPreferencesKey("show_builtin_playlists")
         val SHOW_ALL_CHANNELS_CATEGORY = booleanPreferencesKey("show_all_channels_category")
         val SHOW_RECENT_CHANNELS_CATEGORY = booleanPreferencesKey("show_recent_channels_category")
         val LIVE_TV_CATEGORY_FILTERS = stringPreferencesKey("live_tv_category_filters")
         val LIVE_TV_QUICK_FILTER_VISIBILITY = stringPreferencesKey("live_tv_quick_filter_visibility")
+        val DEVELOPER_MODE_ENABLED = booleanPreferencesKey("developer_mode_enabled")
         val SHOW_ADULT_GUIDE_TAB = booleanPreferencesKey("show_adult_guide_tab")
         val LIVE_CHANNEL_NUMBERING_MODE = stringPreferencesKey("live_channel_numbering_mode")
         val LIVE_CHANNEL_GROUPING_MODE = stringPreferencesKey("live_channel_grouping_mode")
@@ -1370,6 +1372,16 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
+    val showBuiltInPlaylists: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.SHOW_BUILT_IN_PLAYLISTS] ?: true
+    }
+
+    suspend fun setShowBuiltInPlaylists(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SHOW_BUILT_IN_PLAYLISTS] = enabled
+        }
+    }
+
     val showAllChannelsCategory: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.SHOW_ALL_CHANNELS_CATEGORY] ?: true
     }
@@ -1402,6 +1414,16 @@ class PreferencesRepository @Inject constructor(
 
     val showAdultGuideTab: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] ?: true
+    }
+
+    val developerModeEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] ?: false
+    }
+
+    suspend fun setDeveloperModeEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] = enabled
+        }
     }
 
     suspend fun setShowAdultGuideTab(enabled: Boolean) {

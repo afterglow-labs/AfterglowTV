@@ -115,7 +115,7 @@ fun ProviderSetupScreen(
     var appFilesDir by remember { mutableStateOf<java.io.File?>(null) }
 
     // Local form state
-    var selectedTab by rememberSaveable { mutableStateOf(0) }
+    var selectedTab by rememberSaveable { mutableStateOf(2) }
     var name by rememberSaveable { mutableStateOf("") }
     var m3uUrl by rememberSaveable { mutableStateOf("") }
     var m3uEpgUrl by rememberSaveable { mutableStateOf("") }
@@ -243,6 +243,14 @@ fun ProviderSetupScreen(
         }
     }
 
+    LaunchedEffect(uiState.developerModeEnabled, uiState.isEditing) {
+        if (!uiState.developerModeEnabled && !uiState.isEditing && selectedTab < 2) {
+            selectedTab = 2
+            viewModel.updateM3uTab(0)
+            viewModel.applySourceDefaults(ProviderSetupViewModel.SetupSourceType.M3U)
+        }
+    }
+
     // Derived UI source type
     val sourceType = when {
         selectedTab == 0 -> SourceType.XTREAM
@@ -253,6 +261,7 @@ fun ProviderSetupScreen(
 
     fun onSourceTypeSelected(type: SourceType) {
         if (uiState.isEditing) return
+        if (!uiState.developerModeEnabled && type !in setOf(SourceType.M3U_URL, SourceType.M3U_FILE)) return
         when (type) {
             SourceType.XTREAM  -> {
                 selectedTab = 0
@@ -381,7 +390,7 @@ fun ProviderSetupScreen(
                     painter = androidx.compose.ui.res.painterResource(
                         id = com.afterglowtv.app.R.drawable.afterglow_logo
                     ),
-                    contentDescription = "Afterglow TV",
+                    contentDescription = "AfterglowTV",
                     modifier = Modifier
                         .size(
                             when {
@@ -449,6 +458,7 @@ fun ProviderSetupScreen(
                     SourceTypeSelectorPanel(
                         sourceType = sourceType,
                         isEditing = uiState.isEditing,
+                        developerModeEnabled = uiState.developerModeEnabled,
                         isEditLabel = if (uiState.isEditing) androidx.compose.ui.res.stringResource(R.string.setup_edit_provider)
                                       else androidx.compose.ui.res.stringResource(R.string.setup_provider_title),
                         onSelect = ::onSourceTypeSelected,
@@ -492,6 +502,7 @@ fun ProviderSetupScreen(
                     SourceTypeTabRow(
                         sourceType = sourceType,
                         isEditing = uiState.isEditing,
+                        developerModeEnabled = uiState.developerModeEnabled,
                         onSelect = ::onSourceTypeSelected,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -1597,6 +1608,7 @@ private fun FormErrors(validationError: String?, error: String?) {
 private fun SourceTypeSelectorPanel(
     sourceType: SourceType,
     isEditing: Boolean,
+    developerModeEnabled: Boolean,
     isEditLabel: String,
     onSelect: (SourceType) -> Unit,
     modifier: Modifier = Modifier
@@ -1626,7 +1638,7 @@ private fun SourceTypeSelectorPanel(
                 style = MaterialTheme.typography.labelSmall,
                 color = TextTertiary
             )
-            if (!isEditing || sourceType == SourceType.XTREAM) {
+            if ((developerModeEnabled && !isEditing) || sourceType == SourceType.XTREAM) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_xtream),
                     subtitle = androidx.compose.ui.res.stringResource(R.string.setup_info_xtream_body),
@@ -1635,7 +1647,7 @@ private fun SourceTypeSelectorPanel(
                     onClick = { onSelect(SourceType.XTREAM) }
                 )
             }
-            if (!isEditing || sourceType == SourceType.STALKER) {
+            if ((developerModeEnabled && !isEditing) || sourceType == SourceType.STALKER) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_stalker),
                     badge = androidx.compose.ui.res.stringResource(R.string.badge_beta),
@@ -1735,18 +1747,19 @@ private fun SourceTypeCard(
 private fun SourceTypeTabRow(
     sourceType: SourceType,
     isEditing: Boolean,
+    developerModeEnabled: Boolean,
     onSelect: (SourceType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (!isEditing || sourceType == SourceType.XTREAM) {
+        if ((developerModeEnabled && !isEditing) || sourceType == SourceType.XTREAM) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_xtream),
                 isSelected = sourceType == SourceType.XTREAM,
                 onClick = { if (!isEditing) onSelect(SourceType.XTREAM) }
             )
         }
-        if (!isEditing || sourceType == SourceType.STALKER) {
+        if ((developerModeEnabled && !isEditing) || sourceType == SourceType.STALKER) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_stalker),
                 badge = androidx.compose.ui.res.stringResource(R.string.badge_beta),

@@ -1391,9 +1391,9 @@ class PlayerViewModel @Inject constructor(
                         it.copy(
                             providerName = provider.name,
                             providerSourceLabel = when (provider.type) {
-                                com.afterglowtv.domain.model.ProviderType.XTREAM_CODES -> "Xtream Codes"
-                                com.afterglowtv.domain.model.ProviderType.M3U -> "M3U Playlist"
-                                com.afterglowtv.domain.model.ProviderType.STALKER_PORTAL -> "Portal/MAG Login"
+                                com.afterglowtv.domain.model.ProviderType.XTREAM_CODES -> "Account Login"
+                                com.afterglowtv.domain.model.ProviderType.M3U -> "Playlist"
+                                com.afterglowtv.domain.model.ProviderType.STALKER_PORTAL -> "Portal"
                             }
                         )
                     }
