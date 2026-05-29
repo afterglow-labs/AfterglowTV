@@ -53,7 +53,7 @@ import com.afterglowtv.data.local.entity.*
         LocalMediaChannelEntity::class,
         LocalMediaProgramEntity::class
     ],
-    version = 54,
+    version = 55,
     exportSchema = true   // ← was false; schema JSON now tracked in version control
 )
 @TypeConverters(RoomEnumConverters::class)
@@ -2638,6 +2638,14 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     "local_media_channels",
                     "local_media_programs"
                 )
+            }
+        }
+
+        val MIGRATION_54_55 = object : Migration(54, 55) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE local_media_items ADD COLUMN folder_path TEXT NOT NULL DEFAULT ''")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_folder_path ON local_media_items(folder_path)")
+                validateForeignKeys(database, "local_media_items")
             }
         }
     }

@@ -363,7 +363,7 @@ fun ChannelInfoOverlay(
             ) {
                 item {
                     QuickActionButton(
-                        icon = if (showTimeshiftControls) "DVR" else stringResource(R.string.player_action_playback),
+                        icon = if (showTimeshiftControls) "Replay" else stringResource(R.string.player_action_playback),
                         label = if (showTimeshiftControls) {
                             stringResource(R.string.player_live_dvr_controls)
                         } else if (isPlaying) {

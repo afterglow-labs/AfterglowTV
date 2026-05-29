@@ -28,6 +28,7 @@ import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.theme.Primary
 
 private data class SettingsNavEntry(
+    val category: Int,
     val label: String,
     val icon: ImageVector,
     val accent: Color
@@ -37,56 +38,88 @@ private data class SettingsNavEntry(
 internal fun SettingsNavigationRail(
     selectedCategory: Int,
     focusRequester: FocusRequester,
+    developerModeEnabled: Boolean,
     onCategorySelected: (Int) -> Unit,
     onNavigate: (String) -> Unit = {},
 ) {
-    val entries = listOf(
-        SettingsNavEntry(
-            label = stringResource(R.string.settings_providers),
-            icon = Icons.Default.Settings,
-            accent = Primary
-        ),
-        SettingsNavEntry(
-            label = stringResource(R.string.settings_playback),
-            icon = Icons.Default.PlayArrow,
-            accent = Color(0xFF9E8FFF)
-        ),
-        SettingsNavEntry(
-            label = stringResource(R.string.settings_browsing),
-            icon = Icons.Default.Search,
-            accent = Color(0xFF26A69A)
-        ),
-        SettingsNavEntry(
-            label = stringResource(R.string.settings_privacy),
-            icon = Icons.Default.Lock,
-            accent = Color(0xFFFFB74D)
-        ),
-        SettingsNavEntry(
-            label = stringResource(R.string.settings_recording_title),
-            icon = Icons.Default.Star,
-            accent = Color(0xFFEF5350)
-        ),
-        SettingsNavEntry(
-            label = "Local Media",
-            icon = Icons.Default.PlayArrow,
-            accent = Color(0xFF26C6DA)
-        ),
-        SettingsNavEntry(
-            label = stringResource(R.string.settings_backup_restore),
-            icon = Icons.Default.Menu,
-            accent = Color(0xFF42A5F5)
-        ),
-        SettingsNavEntry(
-            label = "EPG Sources",
-            icon = Icons.Default.Info,
-            accent = Color(0xFF66BB6A)
-        ),
-        SettingsNavEntry(
-            label = stringResource(R.string.settings_about),
-            icon = Icons.Default.Info,
-            accent = Color(0xFF78909C)
+    val entries = buildList {
+        add(
+            SettingsNavEntry(
+                category = 0,
+                label = stringResource(R.string.settings_providers),
+                icon = Icons.Default.Settings,
+                accent = Primary
+            )
         )
-    )
+        add(
+            SettingsNavEntry(
+                category = 1,
+                label = stringResource(R.string.settings_playback),
+                icon = Icons.Default.PlayArrow,
+                accent = Color(0xFF9E8FFF)
+            )
+        )
+        add(
+            SettingsNavEntry(
+                category = 2,
+                label = stringResource(R.string.settings_browsing),
+                icon = Icons.Default.Search,
+                accent = Color(0xFF26A69A)
+            )
+        )
+        add(
+            SettingsNavEntry(
+                category = 3,
+                label = stringResource(R.string.settings_privacy),
+                icon = Icons.Default.Lock,
+                accent = Color(0xFFFFB74D)
+            )
+        )
+        if (developerModeEnabled) {
+            add(
+                SettingsNavEntry(
+                    category = 4,
+                    label = stringResource(R.string.settings_recording_title),
+                    icon = Icons.Default.Star,
+                    accent = Color(0xFFEF5350)
+                )
+            )
+            add(
+                SettingsNavEntry(
+                    category = 5,
+                    label = "Local Media",
+                    icon = Icons.Default.PlayArrow,
+                    accent = Color(0xFF26C6DA)
+                )
+            )
+        }
+        add(
+            SettingsNavEntry(
+                category = 6,
+                label = stringResource(R.string.settings_backup_restore),
+                icon = Icons.Default.Menu,
+                accent = Color(0xFF42A5F5)
+            )
+        )
+        if (developerModeEnabled) {
+            add(
+                SettingsNavEntry(
+                    category = 7,
+                    label = "Guide Sources",
+                    icon = Icons.Default.Info,
+                    accent = Color(0xFF66BB6A)
+                )
+            )
+        }
+        add(
+            SettingsNavEntry(
+                category = 8,
+                label = stringResource(R.string.settings_about),
+                icon = Icons.Default.Info,
+                accent = Color(0xFF78909C)
+            )
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -101,9 +134,9 @@ internal fun SettingsNavigationRail(
                 label = entry.label,
                 badgeIcon = entry.icon,
                 accentColor = entry.accent,
-                isSelected = selectedCategory == index,
-                modifier = if (selectedCategory == index) Modifier.focusRequester(focusRequester) else Modifier,
-                onClick = { onCategorySelected(index) }
+                isSelected = selectedCategory == entry.category,
+                modifier = if (selectedCategory == entry.category) Modifier.focusRequester(focusRequester) else Modifier,
+                onClick = { onCategorySelected(entry.category) }
             )
         }
         item {
@@ -126,16 +159,18 @@ internal fun SettingsNavigationRail(
                 onClick = { onNavigate(com.afterglowtv.app.navigation.Routes.GLOW_SETTINGS) },
             )
         }
-        item {
-            SettingsNavItem(
-                label = "Customize",
-                badgeIcon = Icons.Default.Edit,
-                accentColor = Color(0xFFFF7A38),
-                isSelected = false,
-                indent = 28.dp,
-                compact = true,
-                onClick = { onNavigate(com.afterglowtv.app.navigation.Routes.STYLE_CUSTOMIZER) },
-            )
+        if (developerModeEnabled) {
+            item {
+                SettingsNavItem(
+                    label = "Customize",
+                    badgeIcon = Icons.Default.Edit,
+                    accentColor = Color(0xFFFF7A38),
+                    isSelected = false,
+                    indent = 28.dp,
+                    compact = true,
+                    onClick = { onNavigate(com.afterglowtv.app.navigation.Routes.STYLE_CUSTOMIZER) },
+                )
+            }
         }
     }
 }

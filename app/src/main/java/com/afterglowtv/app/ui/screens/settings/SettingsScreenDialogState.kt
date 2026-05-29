@@ -41,6 +41,7 @@ internal class SettingsScreenDialogState(
     private val showSubtitleSizeDialogState: MutableState<Boolean>,
     private val showSubtitleTextColorDialogState: MutableState<Boolean>,
     private val showSubtitleBackgroundDialogState: MutableState<Boolean>,
+    private val showAddLocalMediaNetworkShareDialogState: MutableState<Boolean>,
     private val showWifiQualityDialogState: MutableState<Boolean>,
     private val showProviderSyncDialogState: MutableState<Boolean>,
     private val showCustomProviderSyncDialogState: MutableState<Boolean>,
@@ -97,6 +98,7 @@ internal class SettingsScreenDialogState(
     var showSubtitleSizeDialog by showSubtitleSizeDialogState
     var showSubtitleTextColorDialog by showSubtitleTextColorDialogState
     var showSubtitleBackgroundDialog by showSubtitleBackgroundDialogState
+    var showAddLocalMediaNetworkShareDialog by showAddLocalMediaNetworkShareDialogState
     var showWifiQualityDialog by showWifiQualityDialogState
     var showProviderSyncDialog by showProviderSyncDialogState
     var showCustomProviderSyncDialog by showCustomProviderSyncDialogState
@@ -221,6 +223,7 @@ internal fun rememberSettingsScreenDialogState(): SettingsScreenDialogState {
     val showSubtitleSizeDialogState = rememberSaveable { mutableStateOf(false) }
     val showSubtitleTextColorDialogState = rememberSaveable { mutableStateOf(false) }
     val showSubtitleBackgroundDialogState = rememberSaveable { mutableStateOf(false) }
+    val showAddLocalMediaNetworkShareDialogState = rememberSaveable { mutableStateOf(false) }
     val showWifiQualityDialogState = rememberSaveable { mutableStateOf(false) }
     val showProviderSyncDialogState = rememberSaveable { mutableStateOf(false) }
     val showCustomProviderSyncDialogState = rememberSaveable { mutableStateOf(false) }
@@ -286,6 +289,7 @@ internal fun rememberSettingsScreenDialogState(): SettingsScreenDialogState {
         showSubtitleSizeDialogState = showSubtitleSizeDialogState,
         showSubtitleTextColorDialogState = showSubtitleTextColorDialogState,
         showSubtitleBackgroundDialogState = showSubtitleBackgroundDialogState,
+        showAddLocalMediaNetworkShareDialogState = showAddLocalMediaNetworkShareDialogState,
         showWifiQualityDialogState = showWifiQualityDialogState,
         showProviderSyncDialogState = showProviderSyncDialogState,
         showCustomProviderSyncDialogState = showCustomProviderSyncDialogState,

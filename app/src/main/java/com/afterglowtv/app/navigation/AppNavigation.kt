@@ -40,6 +40,7 @@ import com.afterglowtv.data.preferences.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.Serializable
 import javax.inject.Inject
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -270,6 +271,13 @@ private fun NavHostController.navigateToExternalPlayer(request: PlayerNavigation
 class AppStartupDestinationViewModel @Inject constructor(
     preferencesRepository: PreferencesRepository
 ) : ViewModel() {
+    val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = false
+        )
+
     val startupDestination: StateFlow<StartupDestination> = preferencesRepository.startupDestination
         .map(StartupDestination::fromStorage)
         .stateIn(
@@ -278,23 +286,28 @@ class AppStartupDestinationViewModel @Inject constructor(
             initialValue = StartupDestination.default
         )
 
-    val startupRoute: StateFlow<String> = startupDestination
-        .map(::resolveStartupRoute)
+    val startupRoute: StateFlow<String> = combine(startupDestination, developerModeEnabled) { destination, developerModeEnabled ->
+        resolveStartupRoute(destination, developerModeEnabled)
+    }
         .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000L),
-        initialValue = resolveStartupRoute(StartupDestination.default)
+        initialValue = resolveStartupRoute(StartupDestination.default, false)
     )
 }
 
-internal fun resolveStartupRoute(destination: StartupDestination): String = destination.route
+internal fun resolveStartupRoute(destination: StartupDestination, developerModeEnabled: Boolean): String =
+    if (destination.requiresDeveloperMode && !developerModeEnabled) Routes.HOME else destination.route
+
+private fun isDeveloperRoute(route: String): Boolean =
+    route == Routes.VOD_GUIDE || route == Routes.ADULT_GUIDE || route == Routes.LOCAL_MEDIA
 
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
     val navController = rememberNavController()
     val startupDestinationViewModel: AppStartupDestinationViewModel = hiltViewModel()
-    val startupDestination = startupDestinationViewModel.startupDestination.collectAsStateWithLifecycle().value
     val startupRoute = startupDestinationViewModel.startupRoute.collectAsStateWithLifecycle().value
+    val developerModeEnabled = startupDestinationViewModel.developerModeEnabled.collectAsStateWithLifecycle().value
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val externalNavigationRequest = mainActivity.externalNavigationRequestFlow.collectAsStateWithLifecycle().value
 
@@ -337,6 +350,9 @@ fun AppNavigation(mainActivity: MainActivity) {
     // NAV-M02/NAV-H02: Single helper replacing repeated tab lambdas without serializing
     // each tab's full UI tree into saved state on every switch.
     fun tabNavigate(route: String) {
+        if (isDeveloperRoute(route) && !developerModeEnabled) {
+            return
+        }
         val entry = navController.currentBackStackEntry ?: return
         if (!entry.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
         val currentRoute = entry.destination?.route
@@ -358,7 +374,7 @@ fun AppNavigation(mainActivity: MainActivity) {
         composable(Routes.WELCOME) {
             WelcomeScreen(
                 onNavigateToHome = dropUnlessResumed {
-                    navController.navigate(startupDestination.route) {
+                    navController.navigate(startupRoute) {
                         popUpTo(Routes.WELCOME) { inclusive = true }
                     }
                 },
@@ -385,7 +401,7 @@ fun AppNavigation(mainActivity: MainActivity) {
                 initialImportUri = importUri,
                 onBack = { navController.popBackStack() },
                 onProviderAdded = dropUnlessResumed {
-                    navController.navigate(startupDestination.route) {
+                    navController.navigate(startupRoute) {
                         popUpTo(Routes.PROVIDER_SETUP) { inclusive = true }
                     }
                 }
@@ -532,6 +548,14 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
 
         composable(Routes.LOCAL_MEDIA) {
+            if (!developerModeEnabled) {
+                LaunchedEffect(Unit) {
+                    navController.navigate(Routes.HOME) {
+                        launchSingleTop = true
+                    }
+                }
+                return@composable
+            }
             LocalMediaScreen(
                 onPlayItem = { item ->
                     navController.navigateToPlayer(Routes.localMediaPlayer(item))
@@ -542,6 +566,14 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
 
         composable(Routes.VOD_GUIDE) {
+            if (!developerModeEnabled) {
+                LaunchedEffect(Unit) {
+                    navController.navigate(Routes.HOME) {
+                        launchSingleTop = true
+                    }
+                }
+                return@composable
+            }
             MoviesScreen(
                 onMovieClick = { movie ->
                     navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.VOD_GUIDE))
@@ -560,6 +592,14 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
 
         composable(Routes.ADULT_GUIDE) {
+            if (!developerModeEnabled) {
+                LaunchedEffect(Unit) {
+                    navController.navigate(Routes.HOME) {
+                        launchSingleTop = true
+                    }
+                }
+                return@composable
+            }
             com.afterglowtv.app.ui.screens.epg.FullEpgScreen(
                 currentRoute = Routes.ADULT_GUIDE,
                 initialCategoryId = VirtualCategoryIds.ADULT_GUIDE,

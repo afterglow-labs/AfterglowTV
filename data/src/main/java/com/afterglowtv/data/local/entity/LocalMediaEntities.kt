@@ -19,12 +19,20 @@ data class LocalMediaLibraryEntity(
     val id: Long = 0,
     val name: String,
     @ColumnInfo(name = "root_uri") val rootUri: String,
+    @ColumnInfo(name = "source_type") val sourceType: String = "DOCUMENT_TREE",
     @ColumnInfo(name = "display_name") val displayName: String? = null,
     val enabled: Boolean = true,
     @ColumnInfo(name = "item_count") val itemCount: Int = 0,
     @ColumnInfo(name = "added_at_ms") val addedAtMs: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at_ms") val updatedAtMs: Long = System.currentTimeMillis(),
-    @ColumnInfo(name = "last_scanned_at_ms") val lastScannedAtMs: Long? = null
+    @ColumnInfo(name = "last_scanned_at_ms") val lastScannedAtMs: Long? = null,
+    @ColumnInfo(name = "smb_host") val smbHost: String? = null,
+    @ColumnInfo(name = "smb_port") val smbPort: Int? = null,
+    @ColumnInfo(name = "smb_share") val smbShare: String? = null,
+    @ColumnInfo(name = "smb_path") val smbPath: String? = null,
+    @ColumnInfo(name = "smb_domain") val smbDomain: String? = null,
+    @ColumnInfo(name = "smb_username") val smbUsername: String? = null,
+    @ColumnInfo(name = "smb_password") val smbPassword: String? = null
 )
 
 @Entity(
@@ -41,6 +49,7 @@ data class LocalMediaLibraryEntity(
         Index(value = ["library_id"]),
         Index(value = ["uri"], unique = true),
         Index(value = ["media_kind"]),
+        Index(value = ["folder_path"]),
         Index(value = ["series_title", "season_number", "episode_number"]),
         Index(value = ["sort_title"])
     ]
@@ -53,6 +62,7 @@ data class LocalMediaItemEntity(
     @ColumnInfo(name = "display_name") val displayName: String,
     val title: String,
     @ColumnInfo(name = "sort_title") val sortTitle: String,
+    @ColumnInfo(name = "folder_path") val folderPath: String = "",
     @ColumnInfo(name = "media_kind") val mediaKind: LocalMediaKind = LocalMediaKind.UNKNOWN,
     @ColumnInfo(name = "mime_type") val mimeType: String? = null,
     @ColumnInfo(name = "duration_ms") val durationMs: Long? = null,

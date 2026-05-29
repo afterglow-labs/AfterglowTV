@@ -7,6 +7,7 @@ import com.afterglowtv.data.remote.xtream.XtreamNetworkException
 import com.afterglowtv.data.remote.xtream.XtreamParsingException
 import com.afterglowtv.data.remote.xtream.XtreamRequestException
 import com.afterglowtv.data.remote.xtream.XtreamResponseTooLargeException
+import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.data.security.CredentialDecryptionException
 import com.afterglowtv.domain.manager.BackupConflictStrategy
 import com.afterglowtv.domain.manager.BackupImportPlan
@@ -49,7 +50,8 @@ class ProviderSetupViewModel @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val combinedM3uRepository: CombinedM3uRepository,
     private val validateAndAddProvider: ValidateAndAddProvider,
-    private val importBackup: ImportBackup
+    private val importBackup: ImportBackup,
+    private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
 
     enum class OnboardingCompletion {
@@ -84,6 +86,11 @@ class ProviderSetupViewModel @Inject constructor(
                         provider.m3uUrl.takeIf { it.startsWith("file://") }
                     }
                     .toSet()
+            }
+        }
+        viewModelScope.launch {
+            preferencesRepository.developerModeEnabled.collect { enabled ->
+                _uiState.update { it.copy(developerModeEnabled = enabled) }
             }
         }
     }
@@ -722,6 +729,7 @@ data class ProviderSetupState(
     val xtreamFastSyncEnabled: Boolean = true,
     val xtreamLiveSyncMode: ProviderXtreamLiveSyncMode = ProviderXtreamLiveSyncMode.AUTO,
     val hasCustomizedEpgSyncMode: Boolean = false,
+    val developerModeEnabled: Boolean = false,
     // Opt-in only. A plain M3U playlist should be treated as Live TV unless the
     // user explicitly asks AfterglowTV to classify VOD/movie-looking entries.
     val m3uVodClassificationEnabled: Boolean = false

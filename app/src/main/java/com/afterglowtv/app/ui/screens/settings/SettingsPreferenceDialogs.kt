@@ -149,7 +149,7 @@ internal fun SettingsPreferenceDialogs(
             title = stringResource(R.string.settings_select_startup_destination),
             onDismiss = { onShowStartupDestinationDialogChange(false) }
         ) {
-            StartupDestination.entries.forEachIndexed { index, destination ->
+            StartupDestination.visibleEntries(uiState.developerModeEnabled).forEachIndexed { index, destination ->
                 LevelOption(
                     level = index,
                     text = stringResource(destination.labelResId),

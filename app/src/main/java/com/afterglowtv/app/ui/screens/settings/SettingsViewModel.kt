@@ -396,6 +396,10 @@ class SettingsViewModel @Inject constructor(
         providerActions.setM3uVodClassificationEnabled(viewModelScope, providerId, enabled)
     }
 
+    fun setBuiltInPlaylistsLoaded(loaded: Boolean) {
+        providerActions.setBuiltInPlaylistsLoaded(viewModelScope, loaded)
+    }
+
     fun refreshProviderClassification(providerId: Long) {
         refreshProvider(providerId)
     }
@@ -445,6 +449,18 @@ class SettingsViewModel @Inject constructor(
     fun setLiveTvQuickFilterVisibilityMode(mode: LiveTvQuickFilterVisibilityMode) {
         viewModelScope.launch {
             preferencesRepository.setLiveTvQuickFilterVisibility(mode.storageValue)
+        }
+    }
+
+    fun setDeveloperModeEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setDeveloperModeEnabled(enabled)
+            _uiState.update {
+                it.copy(
+                    developerModeEnabled = enabled,
+                    userMessage = if (enabled) "Developer Mode unlocked" else "Developer Mode disabled"
+                )
+            }
         }
     }
 
@@ -1033,6 +1049,43 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isScanningLocalMedia = true) }
             when (val result = localMediaRepository.addLibrary(treeUri, displayName)) {
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            userMessage = "Added ${result.data.importedCount} local media files."
+                        )
+                    }
+                }
+                is Result.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            userMessage = result.message
+                        )
+                    }
+                }
+                Result.Loading -> {
+                    _uiState.update { it.copy(isScanningLocalMedia = true) }
+                }
+            }
+        }
+    }
+
+    fun addLocalMediaNetworkShare(input: LocalMediaNetworkShareInput) {
+        if (input.sharePath.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isScanningLocalMedia = true) }
+            when (
+                val result = localMediaRepository.addNetworkShare(
+                    rootUri = input.sharePath,
+                    displayName = null,
+                    username = input.username,
+                    password = input.password,
+                    domain = input.domain,
+                    guest = input.guest
+                )
+            ) {
                 is Result.Success -> {
                     _uiState.update {
                         it.copy(

@@ -609,7 +609,7 @@ fun FullEpgScreen(
                             if (useAdultGuide && adultGuideCategories.isEmpty()) {
                                 GuideMessageState(
                                     modifier = Modifier.weight(1f),
-                                    title = "XXX Guide is ready",
+                                    title = "Adult Guide is ready",
                                     subtitle = "Press Sort next 200 to categorize channels in small chunks.",
                                     actionLabel = if (uiState.isAdultGuideCategorizing) {
                                         "Sorting..."

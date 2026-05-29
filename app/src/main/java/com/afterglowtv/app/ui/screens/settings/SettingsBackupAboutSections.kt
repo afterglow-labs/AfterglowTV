@@ -1,6 +1,7 @@
 package com.afterglowtv.app.ui.screens.settings
 
 import android.content.Context
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,12 +9,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ClickableSurfaceDefaults
@@ -110,12 +121,17 @@ internal fun LazyListScope.settingsAboutSection(
     onDownloadLatestUpdate: () -> Unit,
     onSetAutoCheckAppUpdates: (Boolean) -> Unit,
     onSetAutoDownloadAppUpdates: (Boolean) -> Unit,
+    onSetDeveloperModeEnabled: (Boolean) -> Unit,
     onRefreshDownloadState: () -> Unit,
     onViewCrashReport: () -> Unit,
     onShareCrashReport: () -> Unit,
     onDeleteCrashReport: () -> Unit
 ) {
     item {
+        var developerTapCount by rememberSaveable { mutableStateOf(0) }
+        var showDeveloperPasswordDialog by rememberSaveable { mutableStateOf(false) }
+        var developerPassword by rememberSaveable { mutableStateOf("") }
+        var developerPasswordError by rememberSaveable { mutableStateOf(false) }
         val downloadStatus = uiState.appUpdate.downloadStatus
         LaunchedEffect(downloadStatus) {
             if (downloadStatus == com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloading) {
@@ -125,11 +141,90 @@ internal fun LazyListScope.settingsAboutSection(
                 }
             }
         }
+        if (showDeveloperPasswordDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showDeveloperPasswordDialog = false
+                    developerPassword = ""
+                    developerPasswordError = false
+                },
+                title = { Text(text = "Developer Mode") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = "Enter the unlock code.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = OnSurfaceDim
+                        )
+                        OutlinedTextField(
+                            value = developerPassword,
+                            onValueChange = {
+                                developerPassword = it.take(8)
+                                developerPasswordError = false
+                            },
+                            singleLine = true,
+                            isError = developerPasswordError,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.NumberPassword,
+                                imeAction = ImeAction.Done
+                            )
+                        )
+                        if (developerPasswordError) {
+                            Text(
+                                text = "Incorrect code.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFFF8A80)
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (developerPassword == "1337") {
+                                onSetDeveloperModeEnabled(true)
+                                showDeveloperPasswordDialog = false
+                                developerPassword = ""
+                                developerPasswordError = false
+                                developerTapCount = 0
+                            } else {
+                                developerPasswordError = true
+                            }
+                        }
+                    ) {
+                        Text(text = "Unlock")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showDeveloperPasswordDialog = false
+                            developerPassword = ""
+                            developerPasswordError = false
+                        }
+                    ) {
+                        Text(text = "Cancel")
+                    }
+                }
+            )
+        }
         SettingsSectionHeader(
             title = stringResource(R.string.settings_updates_title),
             subtitle = stringResource(R.string.settings_updates_subtitle)
         )
-        SettingsRow(label = stringResource(R.string.settings_app_version), value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+        ClickableSettingsRow(
+            label = stringResource(R.string.settings_app_version),
+            value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+            onClick = {
+                if (uiState.developerModeEnabled) return@ClickableSettingsRow
+                developerTapCount += 1
+                if (developerTapCount >= 7) {
+                    developerTapCount = 0
+                    showDeveloperPasswordDialog = true
+                }
+            }
+        )
         SwitchSettingsRow(
             label = stringResource(R.string.settings_update_auto_check),
             value = stringResource(
@@ -240,6 +335,9 @@ internal fun LazyListScope.settingsAboutSection(
         SettingsRow(label = stringResource(R.string.settings_build), value = stringResource(R.string.settings_build_desc))
         SettingsRow(label = stringResource(R.string.settings_build_verification), value = buildVerificationLabel)
         SettingsRow(label = stringResource(R.string.settings_developed_by), value = stringResource(R.string.settings_developer_name))
+        if (uiState.developerModeEnabled) {
+            SettingsRow(label = "Developer Mode", value = stringResource(R.string.settings_enabled))
+        }
         ClickableSettingsRow(
             label = stringResource(R.string.settings_github),
             value = stringResource(R.string.settings_github_url),

@@ -164,15 +164,17 @@ internal fun LazyListScope.settingsBrowsingSection(
             value = guideDefaultCategoryLabel,
             onClick = { onShowGuideDefaultCategoryDialogChange(true) }
         )
-        SwitchSettingsRow(
-            label = stringResource(R.string.settings_show_adult_guide_tab),
-            value = stringResource(
-                if (uiState.showAdultGuideTab) R.string.settings_show_adult_guide_tab_on
-                else R.string.settings_show_adult_guide_tab_off
-            ),
-            checked = uiState.showAdultGuideTab,
-            onCheckedChange = viewModel::setShowAdultGuideTab
-        )
+        if (uiState.developerModeEnabled) {
+            SwitchSettingsRow(
+                label = stringResource(R.string.settings_show_adult_guide_tab),
+                value = stringResource(
+                    if (uiState.showAdultGuideTab) R.string.settings_show_adult_guide_tab_on
+                    else R.string.settings_show_adult_guide_tab_off
+                ),
+                checked = uiState.showAdultGuideTab,
+                onCheckedChange = viewModel::setShowAdultGuideTab
+            )
+        }
         ClickableSettingsRow(
             label = stringResource(R.string.settings_time_format),
             value = timeFormatLabel,

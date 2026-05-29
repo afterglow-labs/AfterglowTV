@@ -11,6 +11,14 @@ interface LocalMediaRepository {
     fun observeItems(libraryId: Long? = null): Flow<List<LocalMediaItem>>
 
     suspend fun addLibrary(rootUri: String, displayName: String?): Result<LocalMediaScanResult>
+    suspend fun addNetworkShare(
+        rootUri: String,
+        displayName: String?,
+        username: String?,
+        password: String?,
+        domain: String?,
+        guest: Boolean
+    ): Result<LocalMediaScanResult>
     suspend fun rescanLibrary(libraryId: Long): Result<LocalMediaScanResult>
     suspend fun deleteLibrary(libraryId: Long): Result<Unit>
 }

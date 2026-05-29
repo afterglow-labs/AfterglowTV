@@ -45,13 +45,13 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.afterglowtv.app"
+        applicationId = "com.afterglowtv.app.corey"
         minSdk = 28
         targetSdk = 36
         versionCode = 29
         versionName = "0.1.28"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
+        buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app.corey\"")
         buildConfigField("String", "OFFICIAL_SIGNING_CERT_SHA256", "\"$officialSigningCertSha256\"")
     }
 

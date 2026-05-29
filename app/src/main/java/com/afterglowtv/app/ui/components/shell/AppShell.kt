@@ -259,8 +259,14 @@ private fun TopNavigationBar(
     modifier: Modifier = Modifier,
     viewModel: AppShellViewModel = hiltViewModel()
 ) {
+    val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val showAdultGuideTab by viewModel.showAdultGuideTab.collectAsStateWithLifecycle()
-    val items = remember(showAdultGuideTab) { buildDestinationItems(showAdultGuideTab) }
+    val items = remember(developerModeEnabled, showAdultGuideTab) {
+        buildDestinationItems(
+            developerModeEnabled = developerModeEnabled,
+            showAdultGuideTab = showAdultGuideTab
+        )
+    }
     val scrollState = rememberScrollState()
 
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
@@ -674,8 +680,14 @@ private fun DestinationRail(
     viewModel: AppShellViewModel = hiltViewModel()
 ) {
     val spacing = LocalAppSpacing.current
+    val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val showAdultGuideTab by viewModel.showAdultGuideTab.collectAsStateWithLifecycle()
-    val items = remember(showAdultGuideTab) { buildDestinationItems(showAdultGuideTab) }
+    val items = remember(developerModeEnabled, showAdultGuideTab) {
+        buildDestinationItems(
+            developerModeEnabled = developerModeEnabled,
+            showAdultGuideTab = showAdultGuideTab
+        )
+    }
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
 
     Box(
@@ -813,17 +825,24 @@ private fun findActiveDestinationItem(
         .maxByOrNull { it.route.length }
         ?: items.firstOrNull { it.route == currentRoute }
 
-private fun buildDestinationItems(showAdultGuideTab: Boolean = true): List<DestinationItem> = buildList {
+private fun buildDestinationItems(
+    developerModeEnabled: Boolean = false,
+    showAdultGuideTab: Boolean = false
+): List<DestinationItem> = buildList {
     add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))
     add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
     add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
-    add(DestinationItem(Routes.VOD_GUIDE, R.string.nav_vod_guide, Icons.Default.Star))
-    if (showAdultGuideTab) {
-        add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info))
+    if (developerModeEnabled) {
+        add(DestinationItem(Routes.VOD_GUIDE, R.string.nav_vod_guide, Icons.Default.Star))
+        if (showAdultGuideTab) {
+            add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info))
+        }
     }
     add(DestinationItem(Routes.MOVIES, R.string.nav_movies, Icons.Default.Star))
     add(DestinationItem(Routes.SERIES, R.string.nav_series, Icons.Default.Menu))
-    add(DestinationItem(Routes.LOCAL_MEDIA, R.string.nav_personal_guide, Icons.Default.Menu))
+    if (developerModeEnabled) {
+        add(DestinationItem(Routes.LOCAL_MEDIA, R.string.nav_personal_guide, Icons.Default.Menu))
+    }
     add(DestinationItem(Routes.SEARCH, R.string.search_title, Icons.Default.Search))
     add(DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings))
 }
