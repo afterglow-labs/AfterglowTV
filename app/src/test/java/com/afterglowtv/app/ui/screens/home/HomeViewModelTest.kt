@@ -29,6 +29,7 @@ import com.afterglowtv.player.adaptive.ConnectionPrewarmer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -92,6 +93,7 @@ class HomeViewModelTest {
         whenever(preferencesRepository.multiViewCenterTwoSlotLayout).thenReturn(flowOf(false))
         whenever(preferencesRepository.liveChannelNumberingMode).thenReturn(flowOf(ChannelNumberingMode.PROVIDER))
         whenever(preferencesRepository.isIncognitoMode).thenReturn(flowOf(false))
+        whenever(adultGuideCacheRepository.observeProviderCache(any<Long>())).thenReturn(flowOf(null))
         whenever(adultGuideCacheRepository.observeProviderCache(any(), any())).thenReturn(flowOf(null))
         whenever(preferencesRepository.getHiddenCategoryIds(any(), any())).thenReturn(flowOf(emptySet()))
         whenever(preferencesRepository.getCategorySortMode(any(), any())).thenReturn(flowOf(CategorySortMode.DEFAULT))
@@ -452,20 +454,22 @@ class HomeViewModelTest {
         whenever(channelRepository.getChannelsByCategoryPage(eq(provider.id), eq(ChannelRepository.ALL_CHANNELS_ID), any()))
             .thenReturn(flowOf(emptyList()))
         whenever(channelRepository.getChannelsByIds(listOf(cachedChannel.id))).thenReturn(flowOf(listOf(cachedChannel)))
+        val cacheSnapshot = AdultGuideCacheSnapshot(
+            providerId = provider.id,
+            playlistFingerprint = playlistFingerprint,
+            categorizedChannelCount = 1,
+            categories = listOf(
+                AdultGuideCachedCategory(
+                    key = "trans",
+                    title = "Trans",
+                    channelIds = listOf(cachedChannel.id)
+                )
+            )
+        )
+        whenever(adultGuideCacheRepository.observeProviderCache(provider.id)).thenReturn(flowOf(cacheSnapshot))
         whenever(adultGuideCacheRepository.observeProviderCache(provider.id, playlistFingerprint)).thenReturn(
             flowOf(
-                AdultGuideCacheSnapshot(
-                    providerId = provider.id,
-                    playlistFingerprint = playlistFingerprint,
-                    categorizedChannelCount = 1,
-                    categories = listOf(
-                        AdultGuideCachedCategory(
-                            key = "trans",
-                            title = "Trans",
-                            channelIds = listOf(cachedChannel.id)
-                        )
-                    )
-                )
+                cacheSnapshot
             )
         )
 
@@ -492,6 +496,56 @@ class HomeViewModelTest {
             any(),
             any()
         )
+    }
+
+    @Test
+    fun `adult guide mode shows persisted cache when playlist metadata load fails`() = runTest {
+        val provider = Provider(
+            id = 30L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "https://test",
+            lastSyncedAt = 1_234L
+        )
+        val cachedChannel = Channel(
+            id = 8L,
+            name = "MILF Channel",
+            providerId = provider.id,
+            streamUrl = "https://adult/8"
+        )
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(flow { throw IllegalStateException("metadata failed") })
+        whenever(channelRepository.getChannelCount(provider.id)).thenReturn(flowOf(1))
+        whenever(channelRepository.getChannelsByIds(listOf(cachedChannel.id))).thenReturn(flowOf(listOf(cachedChannel)))
+        whenever(adultGuideCacheRepository.observeProviderCache(provider.id)).thenReturn(
+            flowOf(
+                AdultGuideCacheSnapshot(
+                    providerId = provider.id,
+                    playlistFingerprint = "provider:30:live:1234:1",
+                    categorizedChannelCount = 1,
+                    categories = listOf(
+                        AdultGuideCachedCategory(
+                            key = "milf",
+                            title = "MILF",
+                            channelIds = listOf(cachedChannel.id)
+                        )
+                    )
+                )
+            )
+        )
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.setAdultGuideMode(true)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.errorMessage).isNull()
+        assertThat(state.isCategoriesLoading).isFalse()
+        assertThat(state.isLoading).isFalse()
+        assertThat(state.categories.map { it.name }).containsAtLeast("MILF", "All XXX")
+        assertThat(state.filteredChannels.map(Channel::id)).containsExactly(cachedChannel.id)
+        verify(adultGuideCacheRepository, never()).replaceProviderCache(eq(provider.id), any(), any(), any())
     }
 
     @Test

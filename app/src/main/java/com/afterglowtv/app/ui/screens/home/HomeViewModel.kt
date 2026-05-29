@@ -66,6 +66,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
@@ -512,53 +513,7 @@ class HomeViewModel @Inject constructor(
             try {
                 _uiState.update { it.copy(isCategoriesLoading = true, errorMessage = null) }
                 if (_adultGuideMode.value) {
-                    combine(
-                        channelRepository.getCategories(providerId),
-                        channelRepository.getChannelCount(providerId)
-                    ) { providerCats, channelCount ->
-                        val provider = _uiState.value.provider?.takeIf { it.id == providerId }
-                        AdultGuideCacheRequest(
-                            providerId = providerId,
-                            playlistFingerprint = adultGuidePlaylistFingerprint(
-                                providerId = providerId,
-                                lastSyncedAt = provider?.lastSyncedAt ?: 0L,
-                                channelCount = channelCount
-                            ),
-                            providerCategories = providerCats
-                        )
-                    }.distinctUntilChanged()
-                        .flatMapLatest { request ->
-                            adultGuideCacheRepository
-                                .observeProviderCache(request.providerId, request.playlistFingerprint)
-                                .map { cache -> request to cache }
-                        }
-                        .collect { (request, cache) ->
-                        val adultContext = buildAdultGuideLiveContextFromCache(cache)
-                        adultGuideChannelIdsByCategoryId = adultContext.channelIdsByCategoryId
-                        if (cache == null) {
-                            startAdultGuideCacheRefresh(request, force = false)
-                        }
-                        val categories = adultContext.categories
-                        _uiState.update {
-                            it.copy(
-                                categories = categories,
-                                lastVisitedCategory = null,
-                                isCategoriesLoading = cache == null && categories.isEmpty(),
-                                pinnedCategoryIds = emptySet()
-                            )
-                        }
-
-                        val currentSelected = _uiState.value.selectedCategory
-                        if (currentSelected == null && categories.isNotEmpty()) {
-                            selectCategory(categories.first())
-                        } else if (currentSelected != null && categories.none { it.id == currentSelected.id }) {
-                            categories.firstOrNull()?.let(::selectCategory)
-                        } else if (currentSelected != null) {
-                            categories.firstOrNull { it.id == currentSelected.id }?.let { reselected ->
-                                _uiState.update { it.copy(selectedCategory = reselected) }
-                            }
-                        }
-                    }
+                    observeAdultGuideCategories(providerId)
                     return@launch
                 }
                 combine(
@@ -684,6 +639,79 @@ class HomeViewModel @Inject constructor(
                         errorMessage = appContext.getString(R.string.home_error_load_failed)
                     )
                 }
+            }
+        }
+    }
+
+    private suspend fun observeAdultGuideCategories(providerId: Long): Unit = coroutineScope {
+        launch {
+            adultGuideCacheRepository.observeProviderCache(providerId).collect { cache ->
+                publishAdultGuideCache(cache)
+            }
+        }
+        launch {
+            try {
+                val providerCats = channelRepository.getCategories(providerId).first()
+                val channelCount = channelRepository.getChannelCount(providerId).first()
+                val provider = _uiState.value.provider?.takeIf { it.id == providerId }
+                val request = AdultGuideCacheRequest(
+                    providerId = providerId,
+                    playlistFingerprint = adultGuidePlaylistFingerprint(
+                        providerId = providerId,
+                        lastSyncedAt = provider?.lastSyncedAt ?: 0L,
+                        channelCount = channelCount
+                    ),
+                    providerCategories = providerCats
+                )
+                val cache = adultGuideCacheRepository.observeProviderCache(providerId).first()
+                if (cache?.playlistFingerprint != request.playlistFingerprint) {
+                    startAdultGuideCacheRefresh(request, force = false)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                _uiState.update { state ->
+                    if (state.categories.isNotEmpty() || state.filteredChannels.isNotEmpty()) {
+                        state.copy(
+                            isCategoriesLoading = false,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    } else {
+                        state.copy(
+                            isCategoriesLoading = false,
+                            isLoading = false,
+                            errorMessage = appContext.getString(R.string.home_error_load_failed)
+                        )
+                    }
+                }
+            }
+        }
+        awaitCancellation()
+    }
+
+    private fun publishAdultGuideCache(cache: AdultGuideCacheSnapshot?) {
+        val adultContext = buildAdultGuideLiveContextFromCache(cache)
+        adultGuideChannelIdsByCategoryId = adultContext.channelIdsByCategoryId
+        val categories = adultContext.categories
+        _uiState.update {
+            it.copy(
+                categories = categories,
+                lastVisitedCategory = null,
+                isCategoriesLoading = cache == null && categories.isEmpty(),
+                errorMessage = if (categories.isNotEmpty()) null else it.errorMessage,
+                pinnedCategoryIds = emptySet()
+            )
+        }
+
+        val currentSelected = _uiState.value.selectedCategory
+        if (currentSelected == null && categories.isNotEmpty()) {
+            selectCategory(categories.first())
+        } else if (currentSelected != null && categories.none { it.id == currentSelected.id }) {
+            categories.firstOrNull()?.let(::selectCategory)
+        } else if (currentSelected != null) {
+            categories.firstOrNull { it.id == currentSelected.id }?.let { reselected ->
+                _uiState.update { it.copy(selectedCategory = reselected) }
             }
         }
     }
@@ -1047,11 +1075,19 @@ class HomeViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = appContext.getString(R.string.home_error_load_failed)
-                    )
+                _uiState.update { state ->
+                    if (_adultGuideMode.value && _localChannels.value.isNotEmpty()) {
+                        state.copy(
+                            hasChannels = true,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    } else {
+                        state.copy(
+                            isLoading = false,
+                            errorMessage = appContext.getString(R.string.home_error_load_failed)
+                        )
+                    }
                 }
             }
         }
@@ -2229,10 +2265,35 @@ private data class CategorySelectionContext(
     val pinnedCategoryIds: Set<Long>
 )
 
-private data class AdultGuideLiveContext(
+internal data class AdultGuideLiveContext(
     val categories: List<Category>,
     val channelIdsByCategoryId: Map<Long, List<Long>>
 )
+
+internal fun filterAdultGuideVisibility(
+    context: AdultGuideLiveContext,
+    hiddenCategoryIds: Set<Long>,
+    hiddenChannelIds: Set<Long>
+): AdultGuideLiveContext {
+    val channelsHiddenByCategory = hiddenCategoryIds
+        .flatMap { categoryId -> context.channelIdsByCategoryId[categoryId].orEmpty() }
+        .toSet()
+    val effectiveHiddenChannelIds = hiddenChannelIds + channelsHiddenByCategory
+    val filteredChannelIdsByCategoryId = linkedMapOf<Long, List<Long>>()
+    val filteredCategories = context.categories.mapNotNull { category ->
+        if (category.id in hiddenCategoryIds) return@mapNotNull null
+        val visibleChannelIds = context.channelIdsByCategoryId[category.id]
+            .orEmpty()
+            .filterNot { channelId -> channelId in effectiveHiddenChannelIds }
+        if (visibleChannelIds.isEmpty()) return@mapNotNull null
+        filteredChannelIdsByCategoryId[category.id] = visibleChannelIds
+        category.copy(count = visibleChannelIds.size)
+    }
+    return AdultGuideLiveContext(
+        categories = filteredCategories,
+        channelIdsByCategoryId = filteredChannelIdsByCategoryId
+    )
+}
 
 private data class AdultGuideCacheRequest(
     val providerId: Long,

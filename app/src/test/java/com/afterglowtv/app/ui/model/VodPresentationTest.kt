@@ -69,6 +69,33 @@ class VodPresentationTest {
     }
 
     @Test
+    fun adultGuideRowsUseKeywordCategoriesAndDoNotCollapseIntoGenericXxxRow() {
+        val multiMatch = VodGuideItem(
+            id = "1",
+            title = "Blonde Trans MILF Cousin",
+            providerCategory = "XXX"
+        )
+        val fallback = VodGuideItem(
+            id = "2",
+            title = "Late Night Feature",
+            providerCategory = "XXX"
+        )
+
+        val rows = VodGuideRowBuilder.buildAdultRows(
+            items = listOf(multiMatch, fallback),
+            uncategorizedTitle = "Other"
+        )
+
+        assertThat(rows.map { it.title }).containsAtLeast("MILF", "Taboo", "Blondes", "Trans", "Other")
+        assertThat(rows.single { it.title == "MILF" }.items).containsExactly(multiMatch)
+        assertThat(rows.single { it.title == "Taboo" }.items).containsExactly(multiMatch)
+        assertThat(rows.single { it.title == "Blondes" }.items).containsExactly(multiMatch)
+        assertThat(rows.single { it.title == "Trans" }.items).containsExactly(multiMatch)
+        assertThat(rows.single { it.title == "Other" }.items).containsExactly(fallback)
+        assertThat(rows.map { it.title }).doesNotContain("XXX")
+    }
+
+    @Test
     fun adultVodDetectionUsesItemAndProviderCategoryContext() {
         val category = Category(id = 90L, name = "Adult Premium", isAdult = true)
         val movie = Movie(id = 10L, name = "Provider Title", categoryId = 90L)

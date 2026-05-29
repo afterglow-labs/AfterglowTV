@@ -1,8 +1,11 @@
 package com.afterglowtv.app.ui.screens.player
 
 import com.afterglowtv.app.ui.model.adultGuideCategoryId
+import com.afterglowtv.app.ui.model.adultGuideCachedChannelIdsForCategory
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.VirtualCategoryIds
+import com.afterglowtv.domain.repository.AdultGuideCachedCategory
+import com.afterglowtv.domain.repository.AdultGuideCacheSnapshot
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -40,5 +43,25 @@ class PlayerAdultGuidePlaylistTest {
         )
 
         assertThat(selected.map(Channel::id)).containsExactly(1L, 2L).inOrder()
+    }
+
+    @Test
+    fun `cached adult category ids keep playback scoped to selected category`() {
+        val cache = AdultGuideCacheSnapshot(
+            providerId = 7L,
+            playlistFingerprint = "provider:7:live:old",
+            categorizedChannelCount = 3,
+            categories = listOf(
+                AdultGuideCachedCategory("blondes", "Blondes", listOf(1L, 2L)),
+                AdultGuideCachedCategory("trans", "Trans", listOf(3L))
+            )
+        )
+
+        val selectedIds = adultGuideCachedChannelIdsForCategory(
+            cache = cache,
+            categoryId = adultGuideCategoryId("blondes")
+        )
+
+        assertThat(selectedIds).containsExactly(1L, 2L).inOrder()
     }
 }

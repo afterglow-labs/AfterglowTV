@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -26,11 +27,23 @@ internal fun LazyListScope.settingsLocalMediaSection(
     }
     item {
         var showNetworkShareDialog by rememberSaveable { mutableStateOf(false) }
+        var submittedNetworkShare by rememberSaveable { mutableStateOf(false) }
+        LaunchedEffect(uiState.isScanningLocalMedia, submittedNetworkShare) {
+            if (submittedNetworkShare && !uiState.isScanningLocalMedia) {
+                showNetworkShareDialog = false
+                submittedNetworkShare = false
+            }
+        }
         if (showNetworkShareDialog) {
             NetworkShareDialog(
                 isScanning = uiState.isScanningLocalMedia,
+                status = uiState.localMediaScanStatus,
                 onDismiss = { showNetworkShareDialog = false },
-                onAddShare = viewModel::addSmbLocalMediaLibrary
+                onCancelScan = viewModel::cancelLocalMediaScan,
+                onAddShare = {
+                    submittedNetworkShare = true
+                    viewModel.addSmbLocalMediaLibrary(it)
+                }
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -46,6 +59,17 @@ internal fun LazyListScope.settingsLocalMediaSection(
                 onClick = { showNetworkShareDialog = true },
                 enabled = !uiState.isScanningLocalMedia
             )
+            if (uiState.isScanningLocalMedia) {
+                SettingsRow(
+                    label = "Local media scan",
+                    value = uiState.localMediaScanStatus ?: "Working..."
+                )
+                ClickableSettingsRow(
+                    label = "Cancel scan",
+                    value = "Stop current load",
+                    onClick = viewModel::cancelLocalMediaScan
+                )
+            }
         }
     }
     if (uiState.localMediaLibraries.isEmpty()) {

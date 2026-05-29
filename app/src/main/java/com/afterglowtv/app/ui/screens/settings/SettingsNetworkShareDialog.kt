@@ -18,31 +18,34 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.theme.OnSurface
 import com.afterglowtv.app.ui.theme.Primary
 import com.afterglowtv.app.ui.theme.SurfaceElevated
 import com.afterglowtv.app.ui.theme.TextSecondary
 import com.afterglowtv.domain.model.SmbShareConfig
+import com.afterglowtv.domain.model.SmbShareUri
 
 @Composable
 internal fun NetworkShareDialog(
     isScanning: Boolean,
+    status: String?,
     onDismiss: () -> Unit,
+    onCancelScan: () -> Unit,
     onAddShare: (SmbShareConfig) -> Unit
 ) {
-    var displayName by rememberSaveable { mutableStateOf("") }
-    var host by rememberSaveable { mutableStateOf("") }
-    var shareName by rememberSaveable { mutableStateOf("") }
-    var folderPath by rememberSaveable { mutableStateOf("") }
+    var displayName by rememberSaveable { mutableStateOf(BuildConfig.DEFAULT_NETWORK_SHARE_NAME) }
+    var networkPath by rememberSaveable { mutableStateOf(BuildConfig.DEFAULT_NETWORK_SHARE_PATH) }
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var domain by rememberSaveable { mutableStateOf("") }
-    var port by rememberSaveable { mutableStateOf("445") }
     var validationMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            if (isScanning) onCancelScan() else onDismiss()
+        },
         title = { Text(text = "Add Network Share") },
         text = {
             Column(
@@ -58,10 +61,17 @@ internal fun NetworkShareDialog(
                         color = Primary
                     )
                 }
-                NetworkShareField("Name", displayName, "NAS Movies") { displayName = it }
-                NetworkShareField("Host", host, "192.168.1.20 or qnap.local") { host = it }
-                NetworkShareField("Share", shareName, "Multimedia") { shareName = it }
-                NetworkShareField("Folder", folderPath, "Movies/Action") { folderPath = it }
+                if (isScanning) {
+                    Text(
+                        text = status ?: "Trying to connect to the network share...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Primary
+                    )
+                }
+                NetworkShareField("Network path", networkPath, "\\\\NAS66B7CA\\Plex or \\\\192.168.1.8\\Plex") { value ->
+                    networkPath = value
+                }
+                NetworkShareField("Name", displayName, "Plex") { displayName = it }
                 NetworkShareField("Username", username, "Optional") { username = it }
                 NetworkShareField(
                     label = "Password",
@@ -71,42 +81,46 @@ internal fun NetworkShareDialog(
                     onValueChange = { password = it }
                 )
                 NetworkShareField("Domain", domain, "Optional") { domain = it }
-                NetworkShareField("Port", port, "445") { port = it.filter(Char::isDigit).take(5) }
             }
         },
         confirmButton = {
             TextButton(
                 enabled = !isScanning,
                 onClick = {
-                    val parsedPort = port.toIntOrNull() ?: 445
+                    val parsedPath = SmbShareUri.parse(networkPath)
                     when {
-                        host.isBlank() -> validationMessage = "Host is required."
-                        shareName.isBlank() -> validationMessage = "Share is required."
-                        parsedPort !in 1..65_535 -> validationMessage = "Port must be between 1 and 65535."
+                        parsedPath == null ->
+                            validationMessage = "Use a Windows share path like \\\\NAS66B7CA\\Plex."
                         else -> {
                             onAddShare(
                                 SmbShareConfig(
-                                    host = host,
-                                    shareName = shareName,
-                                    path = folderPath,
+                                    host = parsedPath.host,
+                                    shareName = parsedPath.shareName,
+                                    path = parsedPath.path,
                                     displayName = displayName,
                                     username = username,
                                     password = password,
                                     domain = domain,
-                                    port = parsedPort
+                                    port = parsedPath.port
                                 )
                             )
-                            onDismiss()
                         }
                     }
                 }
             ) {
-                Text(text = if (isScanning) "Scanning" else "Add", color = Primary)
+                Text(text = if (isScanning) "Working..." else "Add", color = Primary)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = androidx.compose.ui.res.stringResource(R.string.settings_cancel), color = OnSurface)
+            TextButton(
+                onClick = {
+                    if (isScanning) onCancelScan() else onDismiss()
+                }
+            ) {
+                Text(
+                    text = if (isScanning) "Cancel load" else androidx.compose.ui.res.stringResource(R.string.settings_cancel),
+                    color = OnSurface
+                )
             }
         },
         containerColor = SurfaceElevated,

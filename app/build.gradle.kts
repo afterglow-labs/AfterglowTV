@@ -61,6 +61,8 @@ android {
         create("standard") {
             dimension = "store"
             buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "false")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
@@ -77,6 +79,8 @@ android {
             applicationId = "com.afterglowtv.app"
             buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
             buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
@@ -91,6 +95,24 @@ android {
             buildConfigField("boolean", "ENABLE_DVR", "false")
             buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
             resourceConfigurations += listOf("en")
+        }
+
+        create("corey") {
+            dimension = "store"
+            applicationIdSuffix = ".corey"
+            versionNameSuffix = "-corey"
+            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "false")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"Plex\"")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"//192.168.1.8/Plex/\"")
+            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
+            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
+            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
+            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "false")
+            buildConfigField("String", "HIDDEN_FALLBACK_SOURCE_SPECS", "\"\"")
+            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
+            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "true")
+            buildConfigField("boolean", "ENABLE_DVR", "true")
+            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "false")
         }
     }
 

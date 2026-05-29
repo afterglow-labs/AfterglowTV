@@ -1,6 +1,7 @@
 package com.afterglowtv.data.repository
 
 import android.database.sqlite.SQLiteException
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.google.common.truth.Truth.assertThat
 import com.afterglowtv.data.local.dao.CategoryDao
 import com.afterglowtv.data.local.dao.FavoriteDao
@@ -504,6 +505,40 @@ class MovieRepositoryImplTest {
         verify(movieDao, times(1)).searchPage(eq(7L), any(), any(), any(), any(), eq(2), eq(0))
         verify(movieDao, never()).search(eq(7L), any(), any())
         verify(movieDao, never()).searchFallback(eq(7L), any(), any())
+    }
+
+    @Test
+    fun `browseAdultMovies uses bounded database page instead of loading provider catalog`() = runTest {
+        whenever(preferencesRepository.parentalControlLevel).thenReturn(flowOf(0))
+        whenever(movieDao.getAdultBrowseCount(any())).thenReturn(flowOf(501))
+        whenever(movieDao.getAdultBrowsePage(any())).thenReturn(
+            flowOf(
+                listOf(
+                    movieEntity(id = 201L, name = "Adult Alpha", genre = "Adult", categoryId = 77L, rating = 7.0f),
+                    movieEntity(id = 202L, name = "Adult Beta", genre = "Adult", categoryId = 77L, rating = 6.5f)
+                )
+            )
+        )
+        whenever(favoriteDao.getAllByType(7L, ContentType.MOVIE.name)).thenReturn(flowOf(emptyList()))
+
+        val result = createRepository().browseAdultMovies(
+            LibraryBrowseQuery(
+                providerId = 7L,
+                limit = 120,
+                offset = 0
+            ),
+            hiddenCategoryIds = setOf(42L)
+        ).first()
+
+        assertThat(result.totalCount).isEqualTo(501)
+        assertThat(result.items.map { it.name }).containsExactly("Adult Alpha", "Adult Beta").inOrder()
+        verify(movieDao, never()).getByProvider(7L)
+
+        val pageQuery = argumentCaptor<SupportSQLiteQuery>()
+        verify(movieDao).getAdultBrowsePage(pageQuery.capture())
+        assertThat(pageQuery.firstValue.sql).contains("LIMIT ? OFFSET ?")
+        assertThat(pageQuery.firstValue.sql).contains("movies.is_adult = 1")
+        assertThat(pageQuery.firstValue.sql).contains("movies.category_id IS NULL OR movies.category_id NOT IN")
     }
 
     @Test

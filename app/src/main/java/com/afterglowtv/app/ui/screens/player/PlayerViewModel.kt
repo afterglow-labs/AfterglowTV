@@ -1360,7 +1360,7 @@ class PlayerViewModel @Inject constructor(
                 // Check for resume position after the player is fully prepared (VOD only).
                 // Doing this after preparePlayer ensures pause() acts on the live player instance,
                 // not a stale one that may have already been replaced by prepareInternal().
-                if (showResumePrompt && startPositionMs == null && currentContentType != ContentType.LIVE && currentContentId != -1L && currentProviderId != -1L) {
+                if (showResumePrompt && startPositionMs == null && currentContentType != ContentType.LIVE && currentContentId > 0L && currentProviderId > 0L) {
                     val history = playbackHistoryRepository.getPlaybackHistory(
                         contentId = currentContentId,
                         contentType = currentContentType,

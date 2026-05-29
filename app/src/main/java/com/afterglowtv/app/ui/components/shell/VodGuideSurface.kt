@@ -60,7 +60,9 @@ fun VodGuideLane(
     programs: List<VodGuideProgramCard>,
     modifier: Modifier = Modifier,
     initialFocusRequester: FocusRequester? = null,
-    rowHeight: Dp = 118.dp
+    rowHeight: Dp = 118.dp,
+    programCardWidth: Dp = 300.dp,
+    textFirstMissingArtwork: Boolean = false
 ) {
     Row(
         modifier = modifier
@@ -87,8 +89,9 @@ fun VodGuideLane(
             itemsIndexed(programs, key = { _, program -> program.key }) { index, program ->
                 VodGuideProgramSurface(
                     program = program,
+                    textFirstMissingArtwork = textFirstMissingArtwork,
                     modifier = Modifier
-                        .width(300.dp)
+                        .width(programCardWidth)
                         .fillMaxHeight()
                         .then(
                             if (index == 0 && initialFocusRequester != null) {
@@ -144,9 +147,11 @@ private fun VodGuideLaneHeader(
 @Composable
 private fun VodGuideProgramSurface(
     program: VodGuideProgramCard,
+    textFirstMissingArtwork: Boolean,
     modifier: Modifier = Modifier
 ) {
     val lockedLabel = stringResource(R.string.home_locked_short)
+    val showTextFirstFallback = textFirstMissingArtwork && program.imageUrl.isNullOrBlank()
     TvClickableSurface(
         onClick = program.onClick,
         onLongClick = program.onLongClick,
@@ -177,13 +182,21 @@ private fun VodGuideProgramSurface(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            VodGuideThumbnail(
-                imageUrl = program.imageUrl,
-                title = program.title,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(16f / 9f)
-            )
+            if (showTextFirstFallback) {
+                VodGuideArtworkMarker(
+                    modifier = Modifier
+                        .width(5.dp)
+                        .fillMaxHeight()
+                )
+            } else {
+                VodGuideThumbnail(
+                    imageUrl = program.imageUrl,
+                    title = program.title,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .aspectRatio(16f / 9f)
+                )
+            }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -192,7 +205,7 @@ private fun VodGuideProgramSurface(
                     text = program.title,
                     style = MaterialTheme.typography.titleSmall,
                     color = AppColors.TextPrimary,
-                    maxLines = 2,
+                    maxLines = if (showTextFirstFallback) 3 else 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 program.subtitle?.takeIf { it.isNotBlank() }?.let {
@@ -221,6 +234,22 @@ private fun VodGuideProgramSurface(
 }
 
 @Composable
+private fun VodGuideArtworkMarker(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        AppColors.BrandStrong,
+                        AppColors.SurfaceAccent
+                    )
+                )
+            )
+    )
+}
+
+@Composable
 private fun VodGuideThumbnail(
     imageUrl: String?,
     title: String,
@@ -239,10 +268,12 @@ private fun VodGuideThumbnail(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = title.take(1).uppercase(),
-            style = MaterialTheme.typography.headlineSmall,
-            color = AppColors.TextSecondary
+        Box(
+            modifier = Modifier
+                .width(34.dp)
+                .height(3.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(AppColors.BrandStrong.copy(alpha = 0.6f))
         )
         if (!imageUrl.isNullOrBlank()) {
             AsyncImage(

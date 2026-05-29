@@ -1058,9 +1058,8 @@ private fun MoviesVodGuideContent(
     }
 
     val guideMovies = uiState.selectedCategoryItems
-    val guideRows = remember(guideMovies, categoryById) {
-        VodGuideRowBuilder.build(
-            items = guideMovies.map { movie ->
+    val guideRows = remember(guideMovies, categoryById, uiState.showAdultVodGuide) {
+        val guideItems = guideMovies.map { movie ->
                 val displayTitle = VodTitleFormatter.format(movie.name, movie.year)
                 VodGuideItem(
                     id = movie.id.toString(),
@@ -1068,9 +1067,18 @@ private fun MoviesVodGuideContent(
                     providerCategory = movie.categoryName
                         ?: movie.categoryId?.let { categoryById[kotlin.math.abs(it)] }
                 )
-            },
-            uncategorizedTitle = "Other"
-        )
+        }
+        if (uiState.showAdultVodGuide) {
+            VodGuideRowBuilder.buildAdultRows(
+                items = guideItems,
+                uncategorizedTitle = "Other"
+            )
+        } else {
+            VodGuideRowBuilder.build(
+                items = guideItems,
+                uncategorizedTitle = "Other"
+            )
+        }
     }
     val moviesById = remember(guideMovies) {
         guideMovies.associateBy { it.id.toString() }
@@ -1192,6 +1200,8 @@ private fun MoviesVodGuideContent(
                             subtitle = "${programs.size} titles",
                             programs = programs,
                             initialFocusRequester = if (!showSearchBar && rowIndex == 0) initialFocusRequester else null,
+                            programCardWidth = if (uiState.showAdultVodGuide) 380.dp else 300.dp,
+                            textFirstMissingArtwork = uiState.showAdultVodGuide,
                             modifier = Modifier.padding(start = 20.dp)
                         )
                     }

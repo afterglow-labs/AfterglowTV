@@ -88,6 +88,18 @@ data class LocalMediaPlaybackStart(
     val title: String
 )
 
+data class LocalMediaFolderEntry(
+    val name: String,
+    val path: String
+)
+
+data class LocalMediaBrowseResult(
+    val library: LocalMediaLibrary,
+    val path: String = "",
+    val folders: List<LocalMediaFolderEntry> = emptyList(),
+    val items: List<LocalMediaItem> = emptyList()
+)
+
 data class LocalMediaScanResult(
     val libraryId: Long,
     val scannedCount: Int,

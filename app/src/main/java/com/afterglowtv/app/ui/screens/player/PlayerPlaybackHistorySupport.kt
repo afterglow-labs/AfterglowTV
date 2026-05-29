@@ -19,7 +19,7 @@ internal fun buildPlaybackHistorySnapshot(
     currentEpisodeNumber: Int?,
     lastWatchedAt: Long = System.currentTimeMillis()
 ): PlaybackHistory? {
-    if (positionMs < 0 || durationMs <= 0 || currentContentId == -1L || currentProviderId == -1L) {
+    if (positionMs < 0 || durationMs <= 0 || currentContentId <= 0L || currentProviderId <= 0L) {
         return null
     }
     return PlaybackHistory(

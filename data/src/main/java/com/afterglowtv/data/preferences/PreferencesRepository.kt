@@ -1856,6 +1856,43 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
+    fun getHiddenChannelIds(providerId: Long, type: ContentType): Flow<Set<Long>> {
+        val key = stringPreferencesKey(hiddenChannelsKey(providerId, type))
+        return context.dataStore.data.map { preferences ->
+            preferences[key]
+                ?.split(',')
+                ?.mapNotNull { token -> token.toLongOrNull() }
+                ?.toSet()
+                .orEmpty()
+        }
+    }
+
+    suspend fun setChannelHidden(
+        providerId: Long,
+        type: ContentType,
+        channelId: Long,
+        hidden: Boolean
+    ) {
+        val key = stringPreferencesKey(hiddenChannelsKey(providerId, type))
+        context.dataStore.edit { preferences ->
+            val current = preferences[key]
+                ?.split(',')
+                ?.mapNotNull { token -> token.toLongOrNull() }
+                ?.toMutableSet()
+                ?: mutableSetOf()
+            if (hidden) {
+                current += channelId
+            } else {
+                current -= channelId
+            }
+            if (current.isEmpty()) {
+                preferences.remove(key)
+            } else {
+                preferences[key] = current.sorted().joinToString(",")
+            }
+        }
+    }
+
     fun getPinnedCategoryIds(providerId: Long, type: ContentType): Flow<Set<Long>> {
         val key = stringPreferencesKey(pinnedCategoriesKey(providerId, type))
         return context.dataStore.data.map { preferences ->
@@ -2019,6 +2056,9 @@ class PreferencesRepository @Inject constructor(
 
     private fun hiddenCategoriesKey(providerId: Long, type: ContentType): String =
         "hidden_categories_${providerId}_${type.name}"
+
+    private fun hiddenChannelsKey(providerId: Long, type: ContentType): String =
+        "hidden_channels_${providerId}_${type.name}"
 
     private fun pinnedCategoriesKey(providerId: Long, type: ContentType): String =
         "pinned_categories_${providerId}_${type.name}"

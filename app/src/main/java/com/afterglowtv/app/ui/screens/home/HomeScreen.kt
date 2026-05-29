@@ -53,6 +53,7 @@ import com.afterglowtv.app.ui.components.LiveSourceSwitcher
 import com.afterglowtv.app.ui.components.shell.ContentMetadataStrip
 import com.afterglowtv.app.ui.components.shell.LiveChannelRowSurface
 import com.afterglowtv.app.ui.components.shell.StatusPill
+import com.afterglowtv.app.ui.components.shell.liveChannelFallbackProgramLabelRes
 import com.afterglowtv.app.ui.components.TvEmptyState
 import com.afterglowtv.app.ui.components.dialogs.CategoryOptionsDialog
 import com.afterglowtv.app.ui.components.dialogs.PinDialog
@@ -95,6 +96,27 @@ private enum class FocusRestoreTarget {
     CATEGORY,
     CHANNEL
 }
+
+internal data class LiveContentPaneWeights(
+    val channelList: Float,
+    val preview: Float
+)
+
+internal fun liveContentPaneWeights(
+    adultGuideMode: Boolean,
+    isProMode: Boolean
+): LiveContentPaneWeights = when {
+    !isProMode -> LiveContentPaneWeights(channelList = 1f, preview = 0f)
+    adultGuideMode -> LiveContentPaneWeights(channelList = 0.62f, preview = 1.38f)
+    else -> LiveContentPaneWeights(channelList = 1.08f, preview = 0.92f)
+}
+
+internal fun canHideHomeCategory(category: Category, adultGuideMode: Boolean): Boolean =
+    if (adultGuideMode) {
+        category.id != VirtualCategoryIds.ADULT_GUIDE
+    } else {
+        !category.isVirtual && category.id != ChannelRepository.ALL_CHANNELS_ID
+    }
 
 internal sealed interface HomeChannelRestorePlan {
     data class FocusChannel(val channelId: Long, val index: Int) : HomeChannelRestorePlan
@@ -180,6 +202,7 @@ fun HomeScreen(
     val isReorderMode = uiState.isChannelReorderMode
     val isProMode = adultGuideMode || uiState.liveTvChannelMode == LiveTvChannelMode.PRO
     val isDenseMode = adultGuideMode || uiState.liveTvChannelMode != LiveTvChannelMode.COMFORTABLE
+    val paneWeights = liveContentPaneWeights(adultGuideMode = adultGuideMode, isProMode = isProMode)
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val isTelevisionDevice = rememberIsTelevisionDevice()
     val sidebarWidth = if (screenWidth < 900.dp) {
@@ -902,7 +925,7 @@ fun HomeScreen(
                 ) {
                     Column(
                         modifier = Modifier
-                            .weight(if (isProMode) 1.08f else 1f)
+                            .weight(paneWeights.channelList)
                             .fillMaxHeight()
                     ) {
                         Column(
@@ -1222,6 +1245,8 @@ fun HomeScreen(
                                         isReorderMode = uiState.isChannelReorderMode,
                                         isDragging = isDraggingThis,
                                         rowHeight = channelRowHeight,
+                                        fallbackProgramLabelRes = liveChannelFallbackProgramLabelRes(adultGuideMode),
+                                        separateChannelNumber = adultGuideMode,
                                         onClick = {
                                             if (isReorderMode) {
                                                 draggingChannel = if (isDraggingThis) null else channel
@@ -1309,7 +1334,7 @@ fun HomeScreen(
                             isLoading = uiState.isPreviewLoading,
                             errorMessage = uiState.previewErrorMessage,
                             modifier = Modifier
-                                .weight(0.92f)
+                                .weight(paneWeights.preview)
                                 .fillMaxHeight()
                         )
                     }

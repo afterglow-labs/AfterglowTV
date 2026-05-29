@@ -245,7 +245,7 @@ object Routes {
 private fun isStreamUrlSafe(url: String?): Boolean {
     if (url.isNullOrBlank()) return false
     val scheme = url.substringBefore("://").lowercase()
-    return scheme in setOf("http", "https", "rtsp", "rtmp", "rtsps", "mms", "xtream", "content", "file")
+    return scheme in setOf("http", "https", "rtsp", "rtmp", "rtsps", "mms", "xtream", "content", "file", "smb")
 }
 
 /** Navigate only when the current destination is fully resumed – prevents double-navigation during transitions. */

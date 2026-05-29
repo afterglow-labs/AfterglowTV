@@ -35,12 +35,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
+private const val MIN_CANDIDATES_PER_SECTION = 12
+private const val MAX_CANDIDATES_PER_SECTION = 240
+
 internal fun shouldAttemptVodFrameArtwork(posterUrl: String?, streamUrl: String?): Boolean {
     val normalizedStream = streamUrl.orEmpty().trim()
     return posterUrl.isNullOrBlank() &&
         (normalizedStream.startsWith("http://", ignoreCase = true) ||
             normalizedStream.startsWith("https://", ignoreCase = true))
 }
+
+internal fun normalizeVodEnrichmentCandidateLimit(value: Int): Int =
+    value.coerceIn(MIN_CANDIDATES_PER_SECTION, MAX_CANDIDATES_PER_SECTION)
 
 internal enum class VodEnrichmentReadiness {
     READY,
@@ -80,6 +86,10 @@ class VodEnrichmentWorker(
                 VodEnrichmentWorkerEntryPoint::class.java
             )
             val requestedProviderId = inputData.getLong(KEY_PROVIDER_ID, INVALID_PROVIDER_ID)
+            val adultOnly = inputData.getBoolean(KEY_ADULT_ONLY, false)
+            val candidateLimit = normalizeVodEnrichmentCandidateLimit(
+                inputData.getInt(KEY_CANDIDATE_LIMIT, CANDIDATES_PER_SECTION)
+            )
             val providers = if (requestedProviderId > 0L) {
                 entryPoint.providerDao().getById(requestedProviderId)?.let(::listOf).orEmpty()
             } else {
@@ -96,7 +106,12 @@ class VodEnrichmentWorker(
             providers
                 .forEach { provider ->
                     runCatching {
-                        enrichProvider(entryPoint, provider.id)
+                        enrichProvider(
+                            entryPoint = entryPoint,
+                            providerId = provider.id,
+                            candidateLimit = candidateLimit,
+                            adultOnly = adultOnly
+                        )
                     }.onFailure { error ->
                         Log.w(TAG, "VOD enrichment failed for provider ${provider.id}", error)
                         if (shouldRetry(error)) sawRetryableFailure = true
@@ -112,11 +127,17 @@ class VodEnrichmentWorker(
 
     private suspend fun enrichProvider(
         entryPoint: VodEnrichmentWorkerEntryPoint,
-        providerId: Long
+        providerId: Long,
+        candidateLimit: Int,
+        adultOnly: Boolean
     ) {
         val staleBefore = System.currentTimeMillis() - ENRICHMENT_RETRY_COOLDOWN_MILLIS
-        entryPoint.movieDao()
-            .getVodEnrichmentCandidates(providerId, CANDIDATES_PER_SECTION, staleBefore)
+        val movieCandidates = if (adultOnly) {
+            entryPoint.movieDao().getAdultVodEnrichmentCandidates(providerId, candidateLimit, staleBefore)
+        } else {
+            entryPoint.movieDao().getVodEnrichmentCandidates(providerId, candidateLimit, staleBefore)
+        }
+        movieCandidates
             .forEach { movie ->
                 entryPoint.movieRepository().getMovieDetails(providerId, movie.id)
                 var refreshedMovie = entryPoint.movieDao().getById(movie.id) ?: movie
@@ -145,8 +166,12 @@ class VodEnrichmentWorker(
                 }
             }
 
-        entryPoint.seriesDao()
-            .getVodEnrichmentCandidates(providerId, CANDIDATES_PER_SECTION, staleBefore)
+        val seriesCandidates = if (adultOnly) {
+            entryPoint.seriesDao().getAdultVodEnrichmentCandidates(providerId, candidateLimit, staleBefore)
+        } else {
+            entryPoint.seriesDao().getVodEnrichmentCandidates(providerId, candidateLimit, staleBefore)
+        }
+        seriesCandidates
             .forEach { series ->
                 entryPoint.seriesRepository().getSeriesDetails(providerId, series.id)
                 var refreshedSeries = entryPoint.seriesDao().getById(series.id) ?: series
@@ -178,6 +203,8 @@ class VodEnrichmentWorker(
     companion object {
         private const val TAG = "VodEnrichmentWorker"
         private const val KEY_PROVIDER_ID = "provider_id"
+        private const val KEY_ADULT_ONLY = "adult_only"
+        private const val KEY_CANDIDATE_LIMIT = "candidate_limit"
         private const val INVALID_PROVIDER_ID = -1L
         private const val CANDIDATES_PER_SECTION = 12
         private const val CACHE_STATE_SUMMARY_ONLY = "SUMMARY_ONLY"
@@ -191,13 +218,15 @@ class VodEnrichmentWorker(
         fun enqueueProvider(
             context: Context,
             providerId: Long,
-            initialDelaySeconds: Long = 0L
+            initialDelaySeconds: Long = 0L,
+            candidateLimit: Int = CANDIDATES_PER_SECTION,
+            adultOnly: Boolean = false
         ) {
             if (providerId <= 0L) return
             WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE_PROVIDER_WORK_PREFIX + providerId,
+                UNIQUE_PROVIDER_WORK_PREFIX + providerId + if (adultOnly) "-adult" else "",
                 ExistingWorkPolicy.APPEND_OR_REPLACE,
-                createProviderRequest(providerId, initialDelaySeconds)
+                createProviderRequest(providerId, initialDelaySeconds, candidateLimit, adultOnly)
             )
         }
 
@@ -225,9 +254,20 @@ class VodEnrichmentWorker(
             )
         }
 
-        internal fun createProviderRequest(providerId: Long, initialDelaySeconds: Long) =
+        internal fun createProviderRequest(
+            providerId: Long,
+            initialDelaySeconds: Long,
+            candidateLimit: Int = CANDIDATES_PER_SECTION,
+            adultOnly: Boolean = false
+        ) =
             OneTimeWorkRequestBuilder<VodEnrichmentWorker>()
-                .setInputData(workDataOf(KEY_PROVIDER_ID to providerId))
+                .setInputData(
+                    workDataOf(
+                        KEY_PROVIDER_ID to providerId,
+                        KEY_CANDIDATE_LIMIT to normalizeVodEnrichmentCandidateLimit(candidateLimit),
+                        KEY_ADULT_ONLY to adultOnly
+                    )
+                )
                 .setConstraints(defaultConstraints())
                 .setInitialDelay(initialDelaySeconds.coerceAtLeast(0L), TimeUnit.SECONDS)
                 .setBackoffCriteria(

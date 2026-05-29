@@ -13,6 +13,11 @@ data class AdultGuideCategory(
     val channels: List<Channel>
 )
 
+internal data class AdultGuideCategoryMatch(
+    val key: String,
+    val title: String
+)
+
 object AdultGuideCategoryBuilder {
     const val ALL_CATEGORY_KEY = "all"
 
@@ -44,6 +49,7 @@ object AdultGuideCategoryBuilder {
         "threesome",
         "orgy"
     )
+    private val normalizedExplicitAdultSignals = explicitAdultSignals.map(::normalizeAdultGuideText)
     private val categoryRules = listOf(
         AdultGuideRule("milf", "MILF", listOf("milf", "milfs", "stepmom", "step mom")),
         AdultGuideRule(
@@ -100,14 +106,7 @@ object AdultGuideCategoryBuilder {
         }
 
         channels.forEach { channel ->
-            val titleMatches = categoryRules.filter { rule ->
-                rule.matches(channel.name)
-            }
-            val contextMatches = categoryRules.filter { rule ->
-                rule !in titleMatches &&
-                    (rule.matches(channel.categoryName) || rule.matches(channel.groupTitle))
-            }
-            val matches = titleMatches + contextMatches
+            val matches = keywordCategoryMatches(channel.name, channel.categoryName, channel.groupTitle)
             if (matches.isEmpty()) {
                 val sourceCategory = channel.categoryId?.let(providerCategoryById::get)
                 if (isAdultGuideChannel(channel, sourceCategory)) {
@@ -148,13 +147,34 @@ object AdultGuideCategoryBuilder {
     }
 
     fun matchesGeneratedCategory(value: String?): Boolean =
-        categoryRules.any { it.matches(value) }
+        normalizeAdultGuideText(value)
+            .takeIf(String::isNotBlank)
+            ?.let { normalized -> categoryRules.any { it.matchesNormalized(normalized) } }
+            ?: false
+
+    internal fun keywordCategoryMatches(
+        primaryValue: String?,
+        vararg contextValues: String?
+    ): List<AdultGuideCategoryMatch> {
+        val normalizedPrimary = normalizeAdultGuideText(primaryValue)
+        val normalizedContextValues = contextValues
+            .map(::normalizeAdultGuideText)
+            .filter(String::isNotBlank)
+        val primaryMatches = categoryRules
+            .filter { rule -> rule.matchesNormalized(normalizedPrimary) }
+            .map { rule -> AdultGuideCategoryMatch(rule.key, rule.title) }
+        val primaryKeys = primaryMatches.mapTo(mutableSetOf()) { it.key }
+        val contextMatches = categoryRules
+            .filterNot { rule -> rule.key in primaryKeys }
+            .filter { rule -> normalizedContextValues.any(rule::matchesNormalized) }
+            .map { rule -> AdultGuideCategoryMatch(rule.key, rule.title) }
+        return primaryMatches + contextMatches
+    }
 
     fun matchesExplicitAdultSignal(value: String?): Boolean {
         val normalized = normalizeAdultGuideText(value)
         if (normalized.isBlank()) return false
-        return explicitAdultSignals.any { signal ->
-            val normalizedSignal = normalizeAdultGuideText(signal)
+        return normalizedExplicitAdultSignals.any { normalizedSignal ->
             normalized == normalizedSignal ||
                 normalized.startsWith("$normalizedSignal ") ||
                 normalized.endsWith(" $normalizedSignal") ||
@@ -235,11 +255,16 @@ private data class AdultGuideRule(
     val title: String,
     val aliases: List<String>
 ) {
+    private val normalizedAliases = aliases.map(::normalizeAdultGuideText)
+
     fun matches(value: String?): Boolean {
         val normalized = normalizeAdultGuideText(value)
+        return matchesNormalized(normalized)
+    }
+
+    fun matchesNormalized(normalized: String): Boolean {
         if (normalized.isBlank()) return false
-        return aliases.any { alias ->
-            val normalizedAlias = normalizeAdultGuideText(alias)
+        return normalizedAliases.any { normalizedAlias ->
             normalized == normalizedAlias ||
                 normalized.startsWith("$normalizedAlias ") ||
                 normalized.endsWith(" $normalizedAlias") ||
@@ -264,13 +289,16 @@ private fun String.containsWholeAdultGuideTerm(term: String): Boolean =
         endsWith(" $term") ||
         contains(" $term ")
 
+private val adultGuideNonAlphaNumericRegex = Regex("""[^a-z0-9]+""")
+private val adultGuideWhitespaceRegex = Regex("""\s+""")
+
 private fun normalizeAdultGuideText(value: String?): String =
     value
         .orEmpty()
         .lowercase(Locale.US)
         .replace("+", " plus ")
-        .replace(Regex("""[^a-z0-9]+"""), " ")
-        .replace(Regex("""\s+"""), " ")
+        .replace(adultGuideNonAlphaNumericRegex, " ")
+        .replace(adultGuideWhitespaceRegex, " ")
         .trim()
 
 private fun adultGuideCategoryKey(value: String): String =

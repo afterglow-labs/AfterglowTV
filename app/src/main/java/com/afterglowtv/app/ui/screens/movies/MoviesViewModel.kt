@@ -1,12 +1,13 @@
 package com.afterglowtv.app.ui.screens.movies
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.data.preferences.PreferencesRepository
+import com.afterglowtv.data.sync.VodEnrichmentWorker
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
-import com.afterglowtv.app.ui.model.isAdultVodMovie
 import com.afterglowtv.domain.manager.ParentalControlManager
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.ActiveLiveSourceOption
@@ -50,6 +51,7 @@ import com.afterglowtv.app.ui.screens.vod.setVodFavorite
 import com.afterglowtv.app.ui.screens.vod.updateVodGroupMembership
 import com.afterglowtv.app.ui.screens.vod.VodBrowseDefaults
 import com.afterglowtv.app.util.isPlaybackComplete
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -78,6 +80,15 @@ enum class MovieLibraryLens {
     FRESH
 }
 
+internal fun shouldAutoLoadVodGuideSource(
+    provider: Provider?,
+    libraryCount: Int,
+    alreadyAttempted: Boolean
+): Boolean {
+    if (provider == null || alreadyAttempted) return false
+    return provider.lastSyncedAt <= 0L || libraryCount <= 0
+}
+
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class MoviesViewModel @Inject constructor(
@@ -88,13 +99,16 @@ class MoviesViewModel @Inject constructor(
     private val favoriteRepository: FavoriteRepository,
     private val getContinueWatching: GetContinueWatching,
     private val getCustomCategories: GetCustomCategories,
-    private val parentalControlManager: ParentalControlManager
+    private val parentalControlManager: ParentalControlManager,
+    @param:ApplicationContext private val appContext: Context
 ) : ViewModel() {
     private companion object {
         const val UNCATEGORIZED = "Uncategorized"
         const val MIN_SEARCH_QUERY_LENGTH = 2
         const val FAVORITE_ID_FETCH_BUFFER = 80
         const val INITIAL_PREVIEW_BATCH_SIZE = 6
+        const val VOD_GUIDE_ENRICHMENT_BATCH_SIZE = 48
+        const val ADULT_VOD_GUIDE_ENRICHMENT_BATCH_SIZE = 180
     }
 
     private val _uiState = MutableStateFlow(MoviesUiState())
@@ -112,6 +126,7 @@ class MoviesViewModel @Inject constructor(
     private val _selectedLibrarySortBy = MutableStateFlow(LibrarySortBy.LIBRARY)
     private val _previewBatchSize = MutableStateFlow(INITIAL_PREVIEW_BATCH_SIZE)
     private var activeProviderId: Long? = null
+    private val attemptedVodGuideSourceLoads = mutableSetOf<String>()
 
     private fun activeVodSourceSlot(): ProviderSourceSlot =
         if (_uiState.value.showAdultVodGuide) ProviderSourceSlot.ADULT_VOD else ProviderSourceSlot.VOD
@@ -182,6 +197,7 @@ class MoviesViewModel @Inject constructor(
                         isRefreshingProvider = if (provider == null) false else it.isRefreshingProvider
                     )
                 }
+                maybeAutoLoadVodGuideSource(provider, adultOnly = _uiState.value.showAdultVodGuide)
             }
         }
 
@@ -630,6 +646,8 @@ class MoviesViewModel @Inject constructor(
         viewModelScope.launch {
             preferencesRepository.setVodViewMode(VodViewMode.GUIDE.storageValue)
         }
+        maybeAutoLoadVodGuideSource(provider = null, adultOnly = adultOnly)
+        enqueueVodGuideArtworkEnrichment(adultOnly)
     }
 
     fun refreshProviderVodLibrary() {
@@ -654,12 +672,82 @@ class MoviesViewModel @Inject constructor(
                     )
                 }
                 Result.Loading -> Unit
-                is Result.Success -> _uiState.update {
-                    it.copy(
-                        isRefreshingProvider = false,
-                        userMessage = "Provider VOD sync complete."
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isRefreshingProvider = false,
+                            userMessage = "Provider VOD sync complete."
+                        )
+                    }
+                    enqueueVodGuideArtworkEnrichment(_uiState.value.showAdultVodGuide)
+                }
+            }
+        }
+    }
+
+    private fun enqueueVodGuideArtworkEnrichment(adultOnly: Boolean) {
+        viewModelScope.launch {
+            val providerId = activeVodProviderFlow().first()?.id ?: return@launch
+            VodEnrichmentWorker.enqueueProvider(
+                context = appContext,
+                providerId = providerId,
+                initialDelaySeconds = 0L,
+                candidateLimit = if (adultOnly) {
+                    ADULT_VOD_GUIDE_ENRICHMENT_BATCH_SIZE
+                } else {
+                    VOD_GUIDE_ENRICHMENT_BATCH_SIZE
+                },
+                adultOnly = adultOnly
+            )
+        }
+    }
+
+    private fun maybeAutoLoadVodGuideSource(provider: Provider?, adultOnly: Boolean) {
+        if (_uiState.value.vodViewMode != VodViewMode.GUIDE) return
+        viewModelScope.launch {
+            val selectedProvider = provider ?: activeVodProviderFlow().first() ?: return@launch
+            val loadKey = "${if (adultOnly) "adult-vod" else "vod"}:${selectedProvider.id}"
+            if (_uiState.value.isRefreshingProvider || loadKey in attemptedVodGuideSourceLoads) return@launch
+            val libraryCount = runCatching {
+                movieRepository.getLibraryCount(selectedProvider.id).first()
+            }.getOrDefault(_uiState.value.libraryCount)
+            if (!shouldAutoLoadVodGuideSource(
+                    provider = selectedProvider,
+                    libraryCount = libraryCount,
+                    alreadyAttempted = loadKey in attemptedVodGuideSourceLoads
+                )
+            ) {
+                return@launch
+            }
+            if (!attemptedVodGuideSourceLoads.add(loadKey)) return@launch
+            _uiState.update { state ->
+                if (state.vodViewMode != VodViewMode.GUIDE || activeProviderId != selectedProvider.id) {
+                    state
+                } else {
+                    state.copy(
+                        isRefreshingProvider = true,
+                        isLoadingSelectedCategory = state.selectedCategory == state.fullLibraryCategoryName,
+                        userMessage = null
                     )
                 }
+            }
+            val result = providerRepository.refreshProviderData(
+                providerId = selectedProvider.id,
+                force = true,
+                movieFastSyncOverride = false
+            )
+            _uiState.update { state ->
+                if (activeProviderId != selectedProvider.id) {
+                    state
+                } else {
+                    state.copy(
+                        isRefreshingProvider = false,
+                        userMessage = (result as? Result.Error)?.message
+                    )
+                }
+            }
+            if (result is Result.Success) {
+                enqueueVodGuideArtworkEnrichment(adultOnly)
             }
         }
     }
@@ -1145,26 +1233,23 @@ class MoviesViewModel @Inject constructor(
         val (selectedItems, totalCount, hasMoreRemote) = when (request.selectedCategory) {
             VodBrowseDefaults.FULL_LIBRARY_CATEGORY -> {
                 if (request.adultOnly) {
-                    val providerCategoriesById = request.providerCategories.associateBy { kotlin.math.abs(it.id) }
-                    val filteredItems = movieRepository.getMovies(request.providerId).first()
-                        .asSequence()
-                        .filterNot { movie -> movie.categoryId in request.hiddenCategoryIds }
-                        .filter { movie ->
-                            isAdultVodMovie(movie, movie.categoryId?.let { providerCategoriesById[kotlin.math.abs(it)] })
-                        }
-                        .toList()
-                        .let { items ->
-                            applyLocalBrowseToMovies(
-                                items,
-                                request.filterType,
-                                request.sortBy,
-                                effectiveQuery
-                            )
-                        }
+                    val result = movieRepository
+                        .browseAdultMovies(
+                            LibraryBrowseQuery(
+                                providerId = request.providerId,
+                                sortBy = request.sortBy,
+                                filterBy = LibraryFilterBy(type = request.filterType),
+                                searchQuery = effectiveQuery,
+                                limit = request.loadLimit,
+                                offset = 0
+                            ),
+                            hiddenCategoryIds = request.hiddenCategoryIds
+                        )
+                        .first()
                     Triple(
-                        filteredItems.take(request.loadLimit),
-                        filteredItems.size,
-                        false
+                        result.items,
+                        result.totalCount,
+                        result.hasMoreRemote
                     )
                 } else {
                     val result = movieRepository

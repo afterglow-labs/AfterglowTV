@@ -52,6 +52,65 @@ interface LocalMediaItemDao {
     @Query("SELECT * FROM local_media_items ORDER BY sort_title COLLATE NOCASE ASC")
     fun observeAll(): Flow<List<LocalMediaItemEntity>>
 
+    @Query("SELECT * FROM local_media_items ORDER BY sort_title COLLATE NOCASE ASC LIMIT :limit")
+    fun observeAllPage(limit: Int): Flow<List<LocalMediaItemEntity>>
+
+    @Query(
+        """
+        SELECT * FROM local_media_items
+        WHERE library_id IN (:libraryIds)
+        ORDER BY sort_title COLLATE NOCASE ASC
+        LIMIT :limit
+        """
+    )
+    fun observeByLibrariesPage(
+        libraryIds: List<Long>,
+        limit: Int
+    ): Flow<List<LocalMediaItemEntity>>
+
+    @Query(
+        """
+        SELECT * FROM local_media_items
+        WHERE media_kind IN (:mediaKinds)
+        ORDER BY sort_title COLLATE NOCASE ASC
+        LIMIT :limit
+        """
+    )
+    fun observeByMediaKindsPage(
+        mediaKinds: List<com.afterglowtv.domain.model.LocalMediaKind>,
+        limit: Int
+    ): Flow<List<LocalMediaItemEntity>>
+
+    @Query(
+        """
+        SELECT * FROM local_media_items
+        WHERE media_kind IN (:mediaKinds)
+          AND library_id IN (:libraryIds)
+        ORDER BY sort_title COLLATE NOCASE ASC
+        LIMIT :limit
+        """
+    )
+    fun observeByMediaKindsAndLibrariesPage(
+        mediaKinds: List<com.afterglowtv.domain.model.LocalMediaKind>,
+        libraryIds: List<Long>,
+        limit: Int
+    ): Flow<List<LocalMediaItemEntity>>
+
+    @Query("SELECT COUNT(*) FROM local_media_items")
+    fun observeCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM local_media_items WHERE library_id IN (:libraryIds)")
+    fun observeCountByLibraries(libraryIds: List<Long>): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM local_media_items WHERE media_kind IN (:mediaKinds)")
+    fun observeCountByMediaKinds(mediaKinds: List<com.afterglowtv.domain.model.LocalMediaKind>): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM local_media_items WHERE media_kind IN (:mediaKinds) AND library_id IN (:libraryIds)")
+    fun observeCountByMediaKindsAndLibraries(
+        mediaKinds: List<com.afterglowtv.domain.model.LocalMediaKind>,
+        libraryIds: List<Long>
+    ): Flow<Int>
+
     @Query(
         """
         SELECT * FROM local_media_items
@@ -69,6 +128,15 @@ interface LocalMediaItemDao {
 
     @Query("DELETE FROM local_media_items WHERE library_id = :libraryId")
     suspend fun deleteByLibrary(libraryId: Long)
+
+    @Query(
+        """
+        DELETE FROM local_media_items
+        WHERE library_id = :libraryId
+          AND (last_scanned_at_ms IS NULL OR last_scanned_at_ms != :scannedAtMs)
+        """
+    )
+    suspend fun deleteStaleByLibrary(libraryId: Long, scannedAtMs: Long)
 }
 
 @Dao

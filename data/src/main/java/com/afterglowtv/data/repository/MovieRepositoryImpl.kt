@@ -2,6 +2,8 @@ package com.afterglowtv.data.repository
 
 import android.database.sqlite.SQLiteException
 import android.util.Log
+import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.afterglowtv.data.local.DatabaseTransactionRunner
 import com.afterglowtv.data.local.dao.CategoryDao
 import com.afterglowtv.data.local.dao.FavoriteDao
@@ -100,6 +102,82 @@ class MovieRepositoryImpl @Inject constructor(
         const val DETAIL_REFRESH_TTL_MILLIS = 14L * 24L * 60L * 60L * 1000L
         const val CACHE_STATE_SUMMARY_ONLY = "SUMMARY_ONLY"
         const val CACHE_STATE_DETAIL_HYDRATED = "DETAIL_HYDRATED"
+        val ADULT_VOD_TEXT_COLUMNS = listOf(
+            "movies.name",
+            "movies.category_name",
+            "movies.genre"
+        )
+        val ADULT_VOD_SQL_PATTERNS = listOf(
+            "xxx",
+            "adult",
+            "adults",
+            "porn",
+            "porno",
+            "sex",
+            "erotic",
+            "hustler",
+            "playboy",
+            "hentai",
+            "hanime",
+            "redlight",
+            "red light",
+            "x rated",
+            "18+",
+            "+18",
+            "18 plus",
+            "plus 18",
+            "milf",
+            "milfs",
+            "step",
+            "stepmom",
+            "step mom",
+            "stepdad",
+            "step dad",
+            "stepsister",
+            "step sister",
+            "stepbrother",
+            "step brother",
+            "taboo",
+            "family",
+            "cousin",
+            "aunt",
+            "uncle",
+            "trans",
+            "transgender",
+            "lesbian",
+            "bbw",
+            "cougar",
+            "cougars",
+            "fetish",
+            "bdsm",
+            "bondage",
+            "threesome",
+            "orgy",
+            "interracial",
+            "blonde",
+            "blondes",
+            "brunette",
+            "brunettes",
+            "latina",
+            "latinas",
+            "latin",
+            "asian",
+            "japanese",
+            "korean",
+            "chinese",
+            "ebony",
+            "black",
+            "amateur",
+            "homemade",
+            "gay",
+            "mature",
+            "pov",
+            "group",
+            "reality",
+            "casting",
+            "audition",
+            "virtual reality"
+        ).distinct().map { "%$it%" }
     }
 
     private data class CachedXtreamProvider(
@@ -344,6 +422,15 @@ class MovieRepositoryImpl @Inject constructor(
                 )
             }
             emit(fetchMovieBrowseResult(query))
+        }.flowOn(Dispatchers.IO)
+    }
+
+    override fun browseAdultMovies(
+        query: LibraryBrowseQuery,
+        hiddenCategoryIds: Set<Long>
+    ): Flow<PagedResult<Movie>> {
+        return flow {
+            emit(fetchAdultMovieBrowseResult(query, hiddenCategoryIds))
         }.flowOn(Dispatchers.IO)
     }
 
@@ -936,6 +1023,196 @@ class MovieRepositoryImpl @Inject constructor(
             limit = query.limit,
             hasMoreRemote = hasMoreRemote
         )
+    }
+
+    private suspend fun fetchAdultMovieBrowseResult(
+        query: LibraryBrowseQuery,
+        hiddenCategoryIds: Set<Long>
+    ): PagedResult<Movie> {
+        val includeProtected = preferencesRepository.parentalControlLevel.first() < 3
+        val totalCount = movieDao.getAdultBrowseCount(
+            buildAdultMovieBrowseQuery(
+                query = query,
+                hiddenCategoryIds = hiddenCategoryIds,
+                includeProtected = includeProtected,
+                countOnly = true
+            )
+        ).first()
+        val favoriteIds = favoriteDao.getAllByType(query.providerId, ContentType.MOVIE.name)
+            .first()
+            .asSequence()
+            .filter { it.groupId == null }
+            .map { it.contentId }
+            .toSet()
+        val items = movieDao.getAdultBrowsePage(
+            buildAdultMovieBrowseQuery(
+                query = query,
+                hiddenCategoryIds = hiddenCategoryIds,
+                includeProtected = includeProtected,
+                countOnly = false
+            )
+        )
+            .first()
+            .map { entity ->
+                val movie = entity.toDomain()
+                if (movie.id in favoriteIds) movie.copy(isFavorite = true) else movie
+            }
+
+        return PagedResult(
+            items = items,
+            totalCount = totalCount,
+            offset = query.offset,
+            limit = query.limit,
+            hasMoreRemote = false
+        )
+    }
+
+    private fun buildAdultMovieBrowseQuery(
+        query: LibraryBrowseQuery,
+        hiddenCategoryIds: Set<Long>,
+        includeProtected: Boolean,
+        countOnly: Boolean
+    ): SupportSQLiteQuery {
+        val whereClauses = mutableListOf<String>()
+        val args = mutableListOf<Any>()
+
+        whereClauses += "movies.provider_id = ?"
+        args += query.providerId
+
+        query.categoryId?.let { categoryId ->
+            whereClauses += "movies.category_id = ?"
+            args += categoryId
+        }
+
+        val hiddenIds = hiddenCategoryIds.toList()
+        if (hiddenIds.isNotEmpty()) {
+            whereClauses += "(movies.category_id IS NULL OR movies.category_id NOT IN (${hiddenIds.joinToString(",") { "?" }}))"
+            args.addAll(hiddenIds)
+        }
+
+        if (!includeProtected) {
+            whereClauses += "movies.is_user_protected = 0"
+        }
+
+        appendAdultMovieMatchClause(whereClauses, args)
+        appendAdultMovieFilterClause(query, whereClauses)
+        appendAdultMovieSearchClause(query.searchQuery.trim(), whereClauses, args)
+
+        val sql = if (countOnly) {
+            """
+            SELECT COUNT(*)
+            FROM movies
+            WHERE ${whereClauses.joinToString(" AND ")}
+            """.trimIndent()
+        } else {
+            args += query.limit.coerceAtLeast(0)
+            args += query.offset.coerceAtLeast(0)
+            """
+            SELECT movies.*
+            FROM movies
+            WHERE ${whereClauses.joinToString(" AND ")}
+            ORDER BY ${adultMovieOrderBy(query)}
+            LIMIT ? OFFSET ?
+            """.trimIndent()
+        }
+        return SimpleSQLiteQuery(sql, args.toTypedArray())
+    }
+
+    private fun appendAdultMovieMatchClause(
+        whereClauses: MutableList<String>,
+        args: MutableList<Any>
+    ) {
+        val matchClauses = mutableListOf("movies.is_adult = 1")
+        ADULT_VOD_TEXT_COLUMNS.forEach { column ->
+            ADULT_VOD_SQL_PATTERNS.forEach { pattern ->
+                matchClauses += "LOWER(COALESCE($column, '')) LIKE ? ESCAPE '\\'"
+                args += pattern
+            }
+        }
+        whereClauses += matchClauses.joinToString(
+            separator = " OR ",
+            prefix = "(",
+            postfix = ")"
+        )
+    }
+
+    private fun appendAdultMovieFilterClause(
+        query: LibraryBrowseQuery,
+        whereClauses: MutableList<String>
+    ) {
+        when (query.filterBy.type) {
+            LibraryFilterType.ALL -> Unit
+            LibraryFilterType.FAVORITES -> whereClauses += """
+                EXISTS (
+                    SELECT 1 FROM favorites
+                    WHERE favorites.content_type = 'MOVIE'
+                      AND favorites.provider_id = movies.provider_id
+                      AND favorites.group_id IS NULL
+                      AND favorites.content_id = movies.id
+                )
+            """.trimIndent()
+            LibraryFilterType.IN_PROGRESS -> whereClauses += """
+                EXISTS (
+                    SELECT 1 FROM playback_history
+                    WHERE playback_history.provider_id = movies.provider_id
+                      AND playback_history.content_type = 'MOVIE'
+                      AND playback_history.content_id = movies.id
+                      AND playback_history.resume_position_ms > 0
+                      AND (
+                          playback_history.total_duration_ms <= 0
+                          OR playback_history.resume_position_ms < CAST(playback_history.total_duration_ms * 0.95 AS INTEGER)
+                      )
+                )
+            """.trimIndent()
+            LibraryFilterType.UNWATCHED -> whereClauses += """
+                NOT EXISTS (
+                    SELECT 1 FROM playback_history
+                    WHERE playback_history.provider_id = movies.provider_id
+                      AND playback_history.content_type = 'MOVIE'
+                      AND playback_history.content_id = movies.id
+                      AND playback_history.resume_position_ms > 0
+                )
+            """.trimIndent()
+            LibraryFilterType.TOP_RATED -> whereClauses += "movies.rating > 0"
+            LibraryFilterType.RECENTLY_UPDATED -> whereClauses += """
+                (
+                    movies.added_at > 0
+                    OR COALESCE(movies.release_date, '') != ''
+                    OR COALESCE(movies.year, '') != ''
+                )
+            """.trimIndent()
+        }
+    }
+
+    private fun appendAdultMovieSearchClause(
+        normalizedSearch: String,
+        whereClauses: MutableList<String>,
+        args: MutableList<Any>
+    ) {
+        if (normalizedSearch.length < MIN_SEARCH_QUERY_LENGTH) return
+        val like = normalizedSearch.toSqlLikePattern()
+        whereClauses += """
+            (
+                movies.name LIKE ? ESCAPE '\'
+                OR COALESCE(movies.genre, '') LIKE ? ESCAPE '\'
+                OR COALESCE(movies.category_name, '') LIKE ? ESCAPE '\'
+                OR COALESCE(movies.year, '') LIKE ? ESCAPE '\'
+            )
+        """.trimIndent()
+        repeat(4) { args += like }
+    }
+
+    private fun adultMovieOrderBy(query: LibraryBrowseQuery): String = when {
+        query.sortBy == LibrarySortBy.RATING || query.filterBy.type == LibraryFilterType.TOP_RATED ->
+            "movies.rating DESC, movies.name ASC, movies.id ASC"
+        query.sortBy == LibrarySortBy.RELEASE ||
+            query.sortBy == LibrarySortBy.UPDATED ||
+            query.filterBy.type == LibraryFilterType.RECENTLY_UPDATED ->
+            "movies.added_at DESC, COALESCE(movies.release_date, '') DESC, movies.name ASC, movies.id ASC"
+        query.sortBy == LibrarySortBy.WATCH_COUNT ->
+            "COALESCE(movies.watch_count, 0) DESC, movies.name ASC, movies.id ASC"
+        else ->
+            "movies.name ASC, movies.id ASC"
     }
 
     private suspend fun fetchFastMovieSearchBrowseResult(
