@@ -1,5 +1,6 @@
 package com.afterglowtv.app.ui.screens.local
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -208,6 +209,10 @@ fun LocalMediaScreen(
     viewModel: LocalMediaViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    BackHandler(enabled = uiState.isBrowsingLibrary) {
+        viewModel.navigateUp()
+    }
 
     AppScreenScaffold(
         currentRoute = currentRoute,
