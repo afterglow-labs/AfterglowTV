@@ -132,8 +132,8 @@
     <string name="dashboard_stat_resume">%1$d to resume</string>
     <string name="dashboard_stat_movies">%1$d movies</string>
     <string name="dashboard_stat_series">%1$d series</string>
-    <string name="dashboard_empty_title">Set up a provider to unlock the home screen</string>
-    <string name="dashboard_empty_body">Add a playlist or Xtream source first. Once a provider is active, Home will surface favorite channels, continue watching, and fresh library rows.</string>
+    <string name="dashboard_empty_title">Welcome to AfterglowTV</string>
+    <string name="dashboard_empty_body">Browse your Personal Guide and network shares any time. Want live channels and on-demand rows on Home too? Add a playlist or Xtream provider whenever you like.</string>
 
     
     <string name="pin_dialog_title">Enter PIN</string>
