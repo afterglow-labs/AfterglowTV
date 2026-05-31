@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
@@ -35,9 +36,13 @@ import com.afterglowtv.app.ui.design.LocalAppSpacing
 fun EpgPipPreview(
     streamUrl: String?,
     modifier: Modifier = Modifier,
+    previewWidth: Dp? = null,
+    previewHeight: Dp? = null
 ) {
     if (streamUrl.isNullOrBlank()) return
     val spacing = LocalAppSpacing.current
+    val width = previewWidth ?: spacing.epgPipWidth
+    val height = previewHeight ?: spacing.epgPipHeight
     val ctx = LocalContext.current
     val player = remember(streamUrl) {
         ExoPlayer.Builder(ctx).build().also {
@@ -53,7 +58,7 @@ fun EpgPipPreview(
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(spacing.epgPipWidth, spacing.epgPipHeight)
+                .size(width, height)
                 .clip(RoundedCornerShape(6.dp))
                 .border(2.dp, AppColors.PipPreviewOutline, RoundedCornerShape(6.dp)),
         ) {

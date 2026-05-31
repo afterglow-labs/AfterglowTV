@@ -124,4 +124,22 @@ class EpgScreenStateTest {
 
         assertThat(shouldUseAdultGuide(state)).isFalse()
     }
+
+    @Test
+    fun `guide hero preview uses focused channel stream`() {
+        val focused = Channel(
+            id = 2L,
+            name = "Preview Channel",
+            providerId = 1L,
+            categoryId = 10L,
+            streamUrl = "http://example.test/live.ts"
+        )
+        val selection = GuideHeroSelection(
+            channel = focused,
+            program = null,
+            isFallbackToChannel = true
+        )
+
+        assertThat(guideHeroPreviewStreamUrl(selection)).isEqualTo("http://example.test/live.ts")
+    }
 }

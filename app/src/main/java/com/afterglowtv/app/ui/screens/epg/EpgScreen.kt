@@ -735,12 +735,6 @@ fun FullEpgScreen(
                                         },
                                         onRequestMoreChannels = viewModel::requestMoreChannels
                                     )
-                                    EpgPipPreview(
-                                        streamUrl = focusedChannel?.streamUrl,
-                                        modifier = Modifier
-                                            .matchParentSize()
-                                            .padding(top = 8.dp, end = 18.dp)
-                                    )
                                 }
                             }
                         }

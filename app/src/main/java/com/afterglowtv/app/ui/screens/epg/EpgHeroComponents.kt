@@ -1,6 +1,7 @@
 package com.afterglowtv.app.ui.screens.epg
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -84,6 +85,9 @@ internal fun resolveGuideHeroSelection(
     )
 }
 
+internal fun guideHeroPreviewStreamUrl(selection: GuideHeroSelection?): String? =
+    selection?.channel?.streamUrl?.takeIf { it.isNotBlank() }
+
 @Composable
 internal fun GuideHeroSection(
     uiState: EpgUiState,
@@ -146,7 +150,7 @@ internal fun ImmersiveGuideHero(
     }
 
     Surface(
-        modifier = modifier.height(96.dp),
+        modifier = modifier.height(152.dp),
         colors = SurfaceDefaults.colors(containerColor = SurfaceElevated),
         shape = RoundedCornerShape(20.dp)
     ) {
@@ -158,14 +162,7 @@ internal fun ImmersiveGuideHero(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val channel = selection?.channel
-            ChannelLogoBadge(
-                channelName = channel?.name ?: stringResource(R.string.epg_title),
-                logoUrl = channel?.logoUrl,
-                modifier = Modifier
-                    .width(54.dp)
-                    .height(54.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
+            GuideHeroPreviewPane(selection = selection)
 
             Column(
                 modifier = Modifier.weight(1f),
@@ -269,6 +266,42 @@ internal fun ImmersiveGuideHero(
                         color = OnSurfaceDim
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuideHeroPreviewPane(
+    selection: GuideHeroSelection?,
+    modifier: Modifier = Modifier
+) {
+    val channel = selection?.channel
+    val previewWidth = 244.dp
+    val previewHeight = 137.dp
+    Surface(
+        modifier = modifier
+            .width(previewWidth)
+            .height(previewHeight),
+        colors = SurfaceDefaults.colors(containerColor = Color.Black.copy(alpha = 0.72f)),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            EpgPipPreview(
+                streamUrl = guideHeroPreviewStreamUrl(selection),
+                previewWidth = previewWidth,
+                previewHeight = previewHeight,
+                modifier = Modifier.fillMaxSize()
+            )
+            if (guideHeroPreviewStreamUrl(selection).isNullOrBlank()) {
+                ChannelLogoBadge(
+                    channelName = channel?.name ?: stringResource(R.string.epg_title),
+                    logoUrl = channel?.logoUrl,
+                    modifier = Modifier
+                        .width(64.dp)
+                        .height(64.dp),
+                    shape = RoundedCornerShape(14.dp)
+                )
             }
         }
     }
