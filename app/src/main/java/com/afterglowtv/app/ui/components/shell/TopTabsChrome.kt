@@ -30,14 +30,15 @@ data class TopTab(val id: String, val label: String)
 
 fun defaultTopTabs(
     developerModeEnabled: Boolean = false,
-    showAdultGuideTab: Boolean = false
+    showAdultGuideTab: Boolean = false,
+    adultGuideLabel: String = "Adult"
 ): List<TopTab> = buildList {
     add(TopTab("home", "Home"))
     add(TopTab("live_tv", "Live TV"))
     add(TopTab("epg", "TV Guide"))
     if (developerModeEnabled) {
         if (showAdultGuideTab) {
-            add(TopTab("adult_guide", "Adult Guide"))
+            add(TopTab("adult_guide", adultGuideLabel.ifBlank { "Adult" }))
         }
     }
     add(TopTab("movies", "Movies"))

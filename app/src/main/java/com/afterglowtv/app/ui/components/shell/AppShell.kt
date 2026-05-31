@@ -261,10 +261,12 @@ private fun TopNavigationBar(
 ) {
     val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val showAdultGuideTab by viewModel.showAdultGuideTab.collectAsStateWithLifecycle()
-    val items = remember(developerModeEnabled, showAdultGuideTab) {
+    val adultGuideTabLabel by viewModel.adultGuideTabLabel.collectAsStateWithLifecycle()
+    val items = remember(developerModeEnabled, showAdultGuideTab, adultGuideTabLabel) {
         buildDestinationItems(
             developerModeEnabled = developerModeEnabled,
-            showAdultGuideTab = showAdultGuideTab
+            showAdultGuideTab = showAdultGuideTab,
+            adultGuideLabel = adultGuideTabLabel
         )
     }
     val scrollState = rememberScrollState()
@@ -306,7 +308,7 @@ private fun TopNavigationBar(
                 items.forEach { item ->
                     val requester = focusRequesters.getOrPut(item.route) { FocusRequester() }
                     TopNavigationButton(
-                        label = stringResource(item.labelRes),
+                        label = item.labelOverride ?: stringResource(item.labelRes),
                         icon = item.icon,
                         selected = currentRoute.startsWith(item.route),
                         focusRequester = requester,
@@ -682,10 +684,12 @@ private fun DestinationRail(
     val spacing = LocalAppSpacing.current
     val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val showAdultGuideTab by viewModel.showAdultGuideTab.collectAsStateWithLifecycle()
-    val items = remember(developerModeEnabled, showAdultGuideTab) {
+    val adultGuideTabLabel by viewModel.adultGuideTabLabel.collectAsStateWithLifecycle()
+    val items = remember(developerModeEnabled, showAdultGuideTab, adultGuideTabLabel) {
         buildDestinationItems(
             developerModeEnabled = developerModeEnabled,
-            showAdultGuideTab = showAdultGuideTab
+            showAdultGuideTab = showAdultGuideTab,
+            adultGuideLabel = adultGuideTabLabel
         )
     }
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
@@ -729,7 +733,7 @@ private fun DestinationRail(
             items.forEach { item ->
                 val requester = focusRequesters.getOrPut(item.route) { FocusRequester() }
                 RailButton(
-                    label = stringResource(item.labelRes),
+                    label = item.labelOverride ?: stringResource(item.labelRes),
                     icon = item.icon,
                     selected = currentRoute.startsWith(item.route),
                     modifier = Modifier.focusRequester(requester),
@@ -813,7 +817,8 @@ private fun RailButton(
 private data class DestinationItem(
     val route: String,
     @StringRes val labelRes: Int,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val labelOverride: String? = null
 )
 
 private fun findActiveDestinationItem(
@@ -827,14 +832,15 @@ private fun findActiveDestinationItem(
 
 private fun buildDestinationItems(
     developerModeEnabled: Boolean = false,
-    showAdultGuideTab: Boolean = false
+    showAdultGuideTab: Boolean = false,
+    adultGuideLabel: String = "Adult"
 ): List<DestinationItem> = buildList {
     add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))
     add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
     add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
     if (developerModeEnabled) {
         if (showAdultGuideTab) {
-            add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info))
+            add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info, adultGuideLabel.ifBlank { "Adult" }))
         }
     }
     add(DestinationItem(Routes.MOVIES, R.string.nav_movies, Icons.Default.Star))

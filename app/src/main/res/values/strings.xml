@@ -12,7 +12,7 @@
     <string name="nav_epg">Guide</string>
     <string name="nav_iptv_guide">TV Guide</string>
     <string name="nav_vod_guide">VOD Guide</string>
-    <string name="nav_adult_guide">Adult Guide</string>
+    <string name="nav_adult_guide">Adult</string>
     <string name="nav_settings">Settings</string>
 
     
@@ -417,9 +417,12 @@
     <string name="settings_guide_no_data_show_channel_text">Show Text In Empty Guide Blocks</string>
     <string name="settings_guide_no_data_show_channel_text_on">Show channel name and a no-guide description.</string>
     <string name="settings_guide_no_data_show_channel_text_off">Leave empty guide blocks blank for faster browsing.</string>
-    <string name="settings_show_adult_guide_tab">Show Adult Guide Tab</string>
-    <string name="settings_show_adult_guide_tab_on">Adult Guide appears in the main navigation.</string>
-    <string name="settings_show_adult_guide_tab_off">Adult Guide is hidden from the main navigation.</string>
+    <string name="settings_show_adult_guide_tab">Show Adult Tab</string>
+    <string name="settings_show_adult_guide_tab_on">Adult appears in the main navigation.</string>
+    <string name="settings_show_adult_guide_tab_off">Adult is hidden from the main navigation.</string>
+    <string name="settings_adult_guide_tab_label">Adult tab name</string>
+    <string name="settings_adult_guide_tab_label_dialog_title">Rename Adult tab</string>
+    <string name="settings_adult_guide_tab_label_reset">Reset</string>
     <string name="settings_time_format">Time Format</string>
     <string name="settings_select_time_format">Select time format</string>
     <string name="settings_time_format_system">System Default</string>

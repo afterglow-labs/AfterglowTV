@@ -16,14 +16,29 @@ class TopTabsChromeTest {
 
         assertThat(guideTabs.map { it.id }).containsExactly(
             "epg",
-            "adult_guide",
             "local_media"
         ).inOrder()
         assertThat(guideTabs.map { it.label }).containsExactly(
             "TV Guide",
-            "Adult Guide",
             "Personal Guide"
         ).inOrder()
+        assertThat(
+            defaultTopTabs(
+                developerModeEnabled = true,
+                showAdultGuideTab = true
+            ).first { it.id == "adult_guide" }.label
+        ).isEqualTo("Adult")
+    }
+
+    @Test
+    fun `adult guide tab uses custom label`() {
+        val adultTab = defaultTopTabs(
+            developerModeEnabled = true,
+            showAdultGuideTab = true,
+            adultGuideLabel = "After Dark"
+        ).first { it.id == "adult_guide" }
+
+        assertThat(adultTab.label).isEqualTo("After Dark")
     }
 
     @Test

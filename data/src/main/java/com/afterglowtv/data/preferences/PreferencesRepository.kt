@@ -158,6 +158,7 @@ class PreferencesRepository @Inject constructor(
         val LIVE_TV_QUICK_FILTER_VISIBILITY = stringPreferencesKey("live_tv_quick_filter_visibility")
         val DEVELOPER_MODE_ENABLED = booleanPreferencesKey("developer_mode_enabled")
         val SHOW_ADULT_GUIDE_TAB = booleanPreferencesKey("show_adult_guide_tab")
+        val ADULT_GUIDE_TAB_LABEL = stringPreferencesKey("adult_guide_tab_label")
         val ADULT_GUIDE_SORT_BATCH_SIZE = intPreferencesKey("adult_guide_sort_batch_size")
         val LIVE_CHANNEL_NUMBERING_MODE = stringPreferencesKey("live_channel_numbering_mode")
         val LIVE_CHANNEL_GROUPING_MODE = stringPreferencesKey("live_channel_grouping_mode")
@@ -1466,6 +1467,10 @@ class PreferencesRepository @Inject constructor(
         preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] ?: true
     }
 
+    val adultGuideTabLabel: Flow<String> = context.dataStore.data.map { preferences ->
+        normalizeAdultGuideTabLabel(preferences[PreferencesKeys.ADULT_GUIDE_TAB_LABEL])
+    }
+
     val developerModeEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] ?: false
     }
@@ -1479,6 +1484,17 @@ class PreferencesRepository @Inject constructor(
     suspend fun setShowAdultGuideTab(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = enabled
+        }
+    }
+
+    suspend fun setAdultGuideTabLabel(label: String) {
+        context.dataStore.edit { preferences ->
+            val normalized = normalizeAdultGuideTabLabel(label)
+            if (normalized == DEFAULT_ADULT_GUIDE_TAB_LABEL) {
+                preferences.remove(PreferencesKeys.ADULT_GUIDE_TAB_LABEL)
+            } else {
+                preferences[PreferencesKeys.ADULT_GUIDE_TAB_LABEL] = normalized
+            }
         }
     }
 
@@ -2109,6 +2125,15 @@ private fun normalizeAdultGuideSortBatchSize(size: Int?): Int = when (val value 
     in 50..2_000 -> value
     else -> 2_000
 }
+
+private const val DEFAULT_ADULT_GUIDE_TAB_LABEL = "Adult"
+
+private fun normalizeAdultGuideTabLabel(label: String?): String =
+    label
+        ?.trim()
+        ?.take(24)
+        ?.takeIf { it.isNotEmpty() }
+        ?: DEFAULT_ADULT_GUIDE_TAB_LABEL
 
 data class ParentalPinBackupData(
     val hash: String,

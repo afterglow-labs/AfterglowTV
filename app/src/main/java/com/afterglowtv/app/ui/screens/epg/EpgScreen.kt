@@ -666,72 +666,82 @@ fun FullEpgScreen(
                                     onRequestMoreChannels = viewModel::requestMoreChannels
                                 )
                             } else {
-                                EpgGrid(
+                                Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .weight(1f),
-                                    channels = uiState.channels,
-                                    favoriteChannelIds = uiState.favoriteChannelIds,
-                                    programsByChannel = uiState.programsByChannel,
-                                    guideWindowStart = uiState.guideWindowStart,
-                                    guideWindowEnd = uiState.guideWindowEnd,
-                                    density = uiState.selectedDensity,
-                                    onChannelClick = { channel ->
-                                        if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
-                                            requestLockedGuideAction(LockedGuideAction.PlayChannel(channel, returnRoute))
-                                        } else {
-                                            onPlayChannel(
-                                                channel,
-                                                playerCategoryId,
-                                                playerIsVirtualCategory,
-                                                uiState.combinedProfileId,
-                                                returnRoute
+                                        .weight(1f)
+                                ) {
+                                    EpgGrid(
+                                        modifier = Modifier.fillMaxSize(),
+                                        channels = uiState.channels,
+                                        favoriteChannelIds = uiState.favoriteChannelIds,
+                                        programsByChannel = uiState.programsByChannel,
+                                        guideWindowStart = uiState.guideWindowStart,
+                                        guideWindowEnd = uiState.guideWindowEnd,
+                                        density = uiState.selectedDensity,
+                                        onChannelClick = { channel ->
+                                            if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
+                                                requestLockedGuideAction(LockedGuideAction.PlayChannel(channel, returnRoute))
+                                            } else {
+                                                onPlayChannel(
+                                                    channel,
+                                                    playerCategoryId,
+                                                    playerIsVirtualCategory,
+                                                    uiState.combinedProfileId,
+                                                    returnRoute
+                                                )
+                                            }
+                                        },
+                                        onProgramClick = { channel, program ->
+                                            topNavVisible = false
+                                            if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
+                                                requestLockedGuideAction(LockedGuideAction.OpenProgram(channel, program))
+                                            } else {
+                                                selectedProgram = channel to program
+                                            }
+                                        },
+                                        onChannelFocused = { channel, currentProgram, isFirstRow ->
+                                            topNavVisible = isFirstRow
+                                            focusedChannel = channel
+                                            focusedProgram = currentProgram
+                                            // Always save the channel ID on focus, even when
+                                            // there's no current program. Channels with no
+                                            // EPG data previously had their focus dropped
+                                            // from the position memo entirely, which is why
+                                            // re-entering the EPG landed on the first
+                                            // channel instead of the user's last spot.
+                                            // programStartMs=0L is a sentinel for
+                                            // "channel-only position"; the restore path
+                                            // falls back to the current-time program.
+                                            viewModel.rememberPosition(
+                                                channelId = channel.id,
+                                                programStartMs = currentProgram?.startTime ?: 0L,
+                                                categoryId = uiState.selectedCategoryId,
                                             )
-                                        }
-                                    },
-                                    onProgramClick = { channel, program ->
-                                        topNavVisible = false
-                                        if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
-                                            requestLockedGuideAction(LockedGuideAction.OpenProgram(channel, program))
-                                        } else {
-                                            selectedProgram = channel to program
-                                        }
-                                    },
-                                    onChannelFocused = { channel, currentProgram, isFirstRow ->
-                                        topNavVisible = isFirstRow
-                                        focusedChannel = channel
-                                        focusedProgram = currentProgram
-                                        // Always save the channel ID on focus, even when
-                                        // there's no current program. Channels with no
-                                        // EPG data previously had their focus dropped
-                                        // from the position memo entirely, which is why
-                                        // re-entering the EPG landed on the first
-                                        // channel instead of the user's last spot.
-                                        // programStartMs=0L is a sentinel for
-                                        // "channel-only position"; the restore path
-                                        // falls back to the current-time program.
-                                        viewModel.rememberPosition(
-                                            channelId = channel.id,
-                                            programStartMs = currentProgram?.startTime ?: 0L,
-                                            categoryId = uiState.selectedCategoryId,
-                                        )
-                                    },
-                                    onProgramFocused = { channel, program, isFirstRow ->
-                                        topNavVisible = isFirstRow
-                                        focusedChannel = channel
-                                        focusedProgram = program
-                                        viewModel.rememberPosition(
-                                            channelId = channel.id,
-                                            programStartMs = program.startTime,
-                                            categoryId = uiState.selectedCategoryId,
-                                        )
-                                    },
-                                    onRequestGuideToolbarFocus = {
-                                        topNavVisible = true
-                                        guideToolbarFocusRequester.requestFocus()
-                                    },
-                                    onRequestMoreChannels = viewModel::requestMoreChannels
-                                )
+                                        },
+                                        onProgramFocused = { channel, program, isFirstRow ->
+                                            topNavVisible = isFirstRow
+                                            focusedChannel = channel
+                                            focusedProgram = program
+                                            viewModel.rememberPosition(
+                                                channelId = channel.id,
+                                                programStartMs = program.startTime,
+                                                categoryId = uiState.selectedCategoryId,
+                                            )
+                                        },
+                                        onRequestGuideToolbarFocus = {
+                                            topNavVisible = true
+                                            guideToolbarFocusRequester.requestFocus()
+                                        },
+                                        onRequestMoreChannels = viewModel::requestMoreChannels
+                                    )
+                                    EpgPipPreview(
+                                        streamUrl = focusedChannel?.streamUrl,
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .padding(top = 8.dp, end = 18.dp)
+                                    )
+                                }
                             }
                         }
                     }

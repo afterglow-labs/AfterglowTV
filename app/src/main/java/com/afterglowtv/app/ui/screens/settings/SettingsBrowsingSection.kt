@@ -7,8 +7,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -165,6 +171,49 @@ internal fun LazyListScope.settingsBrowsingSection(
             onClick = { onShowGuideDefaultCategoryDialogChange(true) }
         )
         if (uiState.developerModeEnabled) {
+            var showAdultTabLabelDialog by rememberSaveable { mutableStateOf(false) }
+            var pendingAdultTabLabel by rememberSaveable(uiState.adultGuideTabLabel) {
+                mutableStateOf(uiState.adultGuideTabLabel)
+            }
+            if (showAdultTabLabelDialog) {
+                AlertDialog(
+                    onDismissRequest = { showAdultTabLabelDialog = false },
+                    title = { Text(text = stringResource(R.string.settings_adult_guide_tab_label_dialog_title)) },
+                    text = {
+                        EpgSourceTextField(
+                            value = pendingAdultTabLabel,
+                            onValueChange = { pendingAdultTabLabel = it },
+                            placeholder = stringResource(R.string.nav_adult_guide)
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.setAdultGuideTabLabel(pendingAdultTabLabel)
+                                showAdultTabLabelDialog = false
+                            }
+                        ) {
+                            Text(text = stringResource(R.string.settings_save), color = Primary)
+                        }
+                    },
+                    dismissButton = {
+                        Row {
+                            TextButton(
+                                onClick = {
+                                    viewModel.setAdultGuideTabLabel("")
+                                    pendingAdultTabLabel = ""
+                                    showAdultTabLabelDialog = false
+                                }
+                            ) {
+                                Text(text = stringResource(R.string.settings_adult_guide_tab_label_reset), color = OnSurface)
+                            }
+                            TextButton(onClick = { showAdultTabLabelDialog = false }) {
+                                Text(text = stringResource(R.string.settings_cancel), color = OnSurface)
+                            }
+                        }
+                    }
+                )
+            }
             SwitchSettingsRow(
                 label = stringResource(R.string.settings_show_adult_guide_tab),
                 value = stringResource(
@@ -173,6 +222,15 @@ internal fun LazyListScope.settingsBrowsingSection(
                 ),
                 checked = uiState.showAdultGuideTab,
                 onCheckedChange = viewModel::setShowAdultGuideTab
+            )
+            ClickableSettingsRow(
+                label = stringResource(R.string.settings_adult_guide_tab_label),
+                value = uiState.adultGuideTabLabel,
+                onClick = {
+                    pendingAdultTabLabel = uiState.adultGuideTabLabel
+                    showAdultTabLabelDialog = true
+                },
+                enabled = uiState.showAdultGuideTab
             )
         }
         ClickableSettingsRow(

@@ -104,6 +104,7 @@ data class SettingsUiState(
     val liveTvQuickFilterVisibilityMode: LiveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.ALWAYS_VISIBLE,
     val developerModeEnabled: Boolean = false,
     val showAdultGuideTab: Boolean = true,
+    val adultGuideTabLabel: String = "Adult",
     val liveChannelNumberingMode: ChannelNumberingMode = ChannelNumberingMode.GROUP,
     val liveChannelGroupingMode: LiveChannelGroupingMode = LiveChannelGroupingMode.RAW_VARIANTS,
     val groupedChannelLabelMode: GroupedChannelLabelMode = GroupedChannelLabelMode.HYBRID,

@@ -30,4 +30,10 @@ internal class AppShellViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = false
     )
+
+    val adultGuideTabLabel: StateFlow<String> = preferencesRepository.adultGuideTabLabel.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = "Adult"
+    )
 }

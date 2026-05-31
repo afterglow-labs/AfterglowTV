@@ -475,6 +475,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setAdultGuideTabLabel(label: String) {
+        viewModelScope.launch {
+            preferencesRepository.setAdultGuideTabLabel(label)
+        }
+    }
+
     fun addLiveTvCategoryFilter(filter: String) {
         viewModelScope.launch {
             val normalized = filter.trim()
