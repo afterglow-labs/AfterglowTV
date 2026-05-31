@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.afterglowtv.domain.model.LocalMediaKind
+import com.afterglowtv.domain.model.LocalMediaLibrarySourceType
 
 @Entity(
     tableName = "local_media_libraries",
@@ -19,7 +20,7 @@ data class LocalMediaLibraryEntity(
     val id: Long = 0,
     val name: String,
     @ColumnInfo(name = "root_uri") val rootUri: String,
-    @ColumnInfo(name = "source_type") val sourceType: String = "DOCUMENT_TREE",
+    @ColumnInfo(name = "source_type") val sourceType: LocalMediaLibrarySourceType = LocalMediaLibrarySourceType.DOCUMENT_TREE,
     @ColumnInfo(name = "display_name") val displayName: String? = null,
     val enabled: Boolean = true,
     @ColumnInfo(name = "item_count") val itemCount: Int = 0,

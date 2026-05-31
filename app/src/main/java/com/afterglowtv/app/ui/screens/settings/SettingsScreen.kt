@@ -220,7 +220,6 @@ fun SettingsScreen(
                         onNavigateToParentalControl = onNavigateToParentalControl,
                         onChooseRecordingFolder = { recordingFolderLauncher.launch(null) },
                         onChooseLocalMediaLibrary = { localMediaFolderLauncher.launch(null) },
-                        onAddLocalMediaNetworkShare = { dialogState.showAddLocalMediaNetworkShareDialog = true },
                         onCreateBackup = ::exportBackupToDownloads,
                         onShareBackup = ::shareBackup,
                         onViewCrashReport = viewModel::viewCrashReport,

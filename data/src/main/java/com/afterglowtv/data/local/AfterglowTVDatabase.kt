@@ -56,7 +56,7 @@ import com.afterglowtv.data.local.entity.*
         AdultGuideCacheCategoryEntity::class,
         AdultGuideCacheCategoryChannelEntity::class
     ],
-    version = 56,
+    version = 57,
     exportSchema = true   // ← was false; schema JSON now tracked in version control
 )
 @TypeConverters(RoomEnumConverters::class)
@@ -2707,6 +2707,20 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     "adult_guide_cache_categories",
                     "adult_guide_cache_category_channels"
                 )
+            }
+        }
+
+        val MIGRATION_56_57 = object : Migration(56, 57) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN source_type TEXT NOT NULL DEFAULT 'DOCUMENT_TREE'")
+                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_host TEXT")
+                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_port INTEGER")
+                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_share TEXT")
+                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_path TEXT")
+                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_domain TEXT")
+                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_username TEXT")
+                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_password TEXT")
+                validateForeignKeys(database, "local_media_libraries")
             }
         }
     }

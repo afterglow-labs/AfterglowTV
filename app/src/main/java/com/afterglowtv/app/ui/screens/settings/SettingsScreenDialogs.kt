@@ -293,17 +293,6 @@ internal fun SettingsScreenDialogs(
         )
     }
 
-    if (dialogState.showAddLocalMediaNetworkShareDialog) {
-        AddLocalMediaNetworkShareDialog(
-            isScanning = uiState.isScanningLocalMedia,
-            onDismiss = { dialogState.showAddLocalMediaNetworkShareDialog = false },
-            onAdd = { input ->
-                viewModel.addLocalMediaLibrary(input.sharePath, null)
-                dialogState.showAddLocalMediaNetworkShareDialog = false
-            }
-        )
-    }
-
     SettingsProviderManagementDialogs(
         uiState = uiState,
         viewModel = viewModel,

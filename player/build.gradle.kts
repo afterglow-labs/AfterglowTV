@@ -23,6 +23,7 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
     }
 }
 
@@ -48,6 +49,7 @@ dependencies {
 
     // OkHttp (for custom data source)
     implementation(libs.okhttp)
+    implementation(libs.smbj)
 
     // Hilt
     implementation(libs.hilt.android)

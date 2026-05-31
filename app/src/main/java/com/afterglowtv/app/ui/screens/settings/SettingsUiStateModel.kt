@@ -87,6 +87,7 @@ data class SettingsUiState(
     val recordingStorageState: RecordingStorageState = RecordingStorageState(),
     val localMediaLibraries: List<LocalMediaLibrary> = emptyList(),
     val isScanningLocalMedia: Boolean = false,
+    val localMediaScanStatus: String? = null,
     val wifiOnlyRecording: Boolean = false,
     val recordingPaddingBeforeMinutes: Int = 0,
     val recordingPaddingAfterMinutes: Int = 0,

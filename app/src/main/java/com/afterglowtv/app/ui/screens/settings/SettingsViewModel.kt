@@ -62,6 +62,7 @@ import com.afterglowtv.domain.repository.CategoryRepository
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.domain.repository.MovieRepository
 import com.afterglowtv.domain.repository.LocalMediaRepository
+import com.afterglowtv.domain.model.SmbShareConfig
 import com.afterglowtv.domain.repository.SeriesRepository
 import com.afterglowtv.domain.repository.SyncMetadataRepository
 import com.afterglowtv.domain.usecase.GetCustomCategories
@@ -69,7 +70,9 @@ import com.afterglowtv.domain.usecase.SyncProvider
 import com.afterglowtv.domain.usecase.SyncProviderCommand
 import com.afterglowtv.domain.usecase.SyncProviderResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -113,6 +116,7 @@ class SettingsViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+    private var localMediaScanJob: Job? = null
     private val activeProviderIdFlow = providerRepository.getActiveProvider().map { it?.id }
     private val appUpdateActions = SettingsAppUpdateActions(
         appContext = application,
@@ -446,21 +450,22 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setLiveTvQuickFilterVisibilityMode(mode: LiveTvQuickFilterVisibilityMode) {
-        viewModelScope.launch {
-            preferencesRepository.setLiveTvQuickFilterVisibility(mode.storageValue)
-        }
-    }
-
     fun setDeveloperModeEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferencesRepository.setDeveloperModeEnabled(enabled)
             _uiState.update {
                 it.copy(
                     developerModeEnabled = enabled,
+                    showAdultGuideTab = enabled,
                     userMessage = if (enabled) "Developer Mode unlocked" else "Developer Mode disabled"
                 )
             }
+        }
+    }
+
+    fun setLiveTvQuickFilterVisibilityMode(mode: LiveTvQuickFilterVisibilityMode) {
+        viewModelScope.launch {
+            preferencesRepository.setLiveTvQuickFilterVisibility(mode.storageValue)
         }
     }
 
@@ -1046,91 +1051,86 @@ class SettingsViewModel @Inject constructor(
 
     fun addLocalMediaLibrary(treeUri: String, displayName: String?) {
         if (treeUri.isBlank()) return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isScanningLocalMedia = true) }
-            when (val result = localMediaRepository.addLibrary(treeUri, displayName)) {
-                is Result.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isScanningLocalMedia = false,
-                            userMessage = "Added ${result.data.importedCount} local media files."
-                        )
-                    }
-                }
-                is Result.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isScanningLocalMedia = false,
-                            userMessage = result.message
-                        )
-                    }
-                }
-                Result.Loading -> {
-                    _uiState.update { it.copy(isScanningLocalMedia = true) }
-                }
-            }
+        startLocalMediaScan("Scanning local folder...") {
+            localMediaRepository.addLibrary(treeUri, displayName)
         }
     }
 
-    fun addLocalMediaNetworkShare(input: LocalMediaNetworkShareInput) {
-        if (input.sharePath.isBlank()) return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isScanningLocalMedia = true) }
-            when (
-                val result = localMediaRepository.addNetworkShare(
-                    rootUri = input.sharePath,
-                    displayName = null,
-                    username = input.username,
-                    password = input.password,
-                    domain = input.domain,
-                    guest = input.guest
-                )
-            ) {
-                is Result.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isScanningLocalMedia = false,
-                            userMessage = "Added ${result.data.importedCount} local media files."
-                        )
-                    }
-                }
-                is Result.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isScanningLocalMedia = false,
-                            userMessage = result.message
-                        )
-                    }
-                }
-                Result.Loading -> {
-                    _uiState.update { it.copy(isScanningLocalMedia = true) }
-                }
-            }
+    fun addSmbLocalMediaLibrary(config: SmbShareConfig) {
+        val target = listOf(config.host, config.shareName, config.path)
+            .filter { it.isNotBlank() }
+            .joinToString("/")
+        startLocalMediaScan("Trying to connect to $target...") {
+            localMediaRepository.addSmbLibrary(config)
         }
     }
 
     fun rescanLocalMediaLibrary(libraryId: Long) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isScanningLocalMedia = true) }
-            when (val result = localMediaRepository.rescanLibrary(libraryId)) {
-                is Result.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isScanningLocalMedia = false,
-                            userMessage = "Rescanned ${result.data.importedCount} local media files."
-                        )
+        startLocalMediaScan("Rescanning local media library...") {
+            localMediaRepository.rescanLibrary(libraryId)
+        }
+    }
+
+    fun cancelLocalMediaScan() {
+        localMediaScanJob?.cancel(CancellationException("Local media scan cancelled by user"))
+        localMediaScanJob = null
+        _uiState.update {
+            it.copy(
+                isScanningLocalMedia = false,
+                localMediaScanStatus = null,
+                userMessage = "Local media scan cancelled."
+            )
+        }
+    }
+
+    private fun startLocalMediaScan(
+        status: String,
+        block: suspend () -> Result<com.afterglowtv.domain.model.LocalMediaScanResult>
+    ) {
+        localMediaScanJob?.cancel()
+        localMediaScanJob = viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isScanningLocalMedia = true,
+                    localMediaScanStatus = status,
+                    userMessage = null
+                )
+            }
+            try {
+                when (val result = block()) {
+                    is Result.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isScanningLocalMedia = false,
+                                localMediaScanStatus = null,
+                                userMessage = "Indexed ${result.data.importedCount} media files."
+                            )
+                        }
+                    }
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isScanningLocalMedia = false,
+                                localMediaScanStatus = null,
+                                userMessage = result.message
+                            )
+                        }
+                    }
+                    Result.Loading -> {
+                        _uiState.update { it.copy(isScanningLocalMedia = true, localMediaScanStatus = status) }
                     }
                 }
-                is Result.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isScanningLocalMedia = false,
-                            userMessage = result.message
-                        )
-                    }
+            } catch (_: CancellationException) {
+                _uiState.update {
+                    it.copy(
+                        isScanningLocalMedia = false,
+                        localMediaScanStatus = null,
+                        userMessage = "Local media scan cancelled."
+                    )
                 }
-                Result.Loading -> {
-                    _uiState.update { it.copy(isScanningLocalMedia = true) }
+            } finally {
+                if (localMediaScanJob === coroutineContext[Job]) {
+                    localMediaScanJob = null
                 }
             }
         }

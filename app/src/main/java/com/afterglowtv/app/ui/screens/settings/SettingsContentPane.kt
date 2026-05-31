@@ -24,7 +24,6 @@ internal fun SettingsContentPane(
     onNavigateToParentalControl: (Long) -> Unit,
     onChooseRecordingFolder: () -> Unit,
     onChooseLocalMediaLibrary: () -> Unit,
-    onAddLocalMediaNetworkShare: () -> Unit,
     onCreateBackup: () -> Unit,
     onShareBackup: () -> Unit,
     onViewCrashReport: () -> Unit,
@@ -142,8 +141,7 @@ internal fun SettingsContentPane(
             settingsLocalMediaSection(
                 uiState = uiState,
                 viewModel = viewModel,
-                onChooseLibrary = onChooseLocalMediaLibrary,
-                onAddNetworkShare = onAddLocalMediaNetworkShare
+                onChooseLibrary = onChooseLocalMediaLibrary
             )
         } else if (dialogState.selectedCategory == 6) {
             settingsBackupSection(

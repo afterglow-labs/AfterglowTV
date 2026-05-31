@@ -1,5 +1,10 @@
 package com.afterglowtv.domain.model
 
+import java.net.URI
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+
 enum class LocalMediaKind {
     MOVIE,
     EPISODE,
@@ -7,10 +12,16 @@ enum class LocalMediaKind {
     UNKNOWN
 }
 
+enum class LocalMediaLibrarySourceType {
+    DOCUMENT_TREE,
+    SMB
+}
+
 data class LocalMediaLibrary(
     val id: Long = 0,
     val name: String,
     val rootUri: String,
+    val sourceType: LocalMediaLibrarySourceType = LocalMediaLibrarySourceType.DOCUMENT_TREE,
     val displayName: String? = null,
     val enabled: Boolean = true,
     val itemCount: Int = 0,
@@ -26,7 +37,6 @@ data class LocalMediaItem(
     val displayName: String,
     val title: String,
     val sortTitle: String = title,
-    val folderPath: String = "",
     val mediaKind: LocalMediaKind = LocalMediaKind.UNKNOWN,
     val mimeType: String? = null,
     val durationMs: Long? = null,
@@ -78,12 +88,157 @@ data class LocalMediaPlaybackStart(
     val title: String
 )
 
+data class LocalMediaFolderEntry(
+    val name: String,
+    val path: String
+)
+
+data class LocalMediaBrowseResult(
+    val library: LocalMediaLibrary,
+    val path: String = "",
+    val folders: List<LocalMediaFolderEntry> = emptyList(),
+    val items: List<LocalMediaItem> = emptyList()
+)
+
 data class LocalMediaScanResult(
     val libraryId: Long,
     val scannedCount: Int,
     val importedCount: Int,
     val skippedCount: Int
 )
+
+data class SmbShareConfig(
+    val host: String,
+    val shareName: String,
+    val path: String = "",
+    val displayName: String? = null,
+    val username: String = "",
+    val password: String = "",
+    val domain: String = "",
+    val port: Int = SmbShareUri.DEFAULT_PORT
+)
+
+data class SmbShareReference(
+    val host: String,
+    val port: Int = SmbShareUri.DEFAULT_PORT,
+    val shareName: String,
+    val path: String = ""
+)
+
+data class SmbResolvedMedia(
+    val host: String,
+    val port: Int = SmbShareUri.DEFAULT_PORT,
+    val shareName: String,
+    val path: String,
+    val username: String = "",
+    val password: String = "",
+    val domain: String = ""
+)
+
+interface SmbMediaSourceResolver {
+    fun resolve(uri: String): SmbResolvedMedia?
+}
+
+object NoopSmbMediaSourceResolver : SmbMediaSourceResolver {
+    override fun resolve(uri: String): SmbResolvedMedia? = null
+}
+
+object SmbShareUri {
+    const val DEFAULT_PORT = 445
+
+    fun fromConfig(config: SmbShareConfig): SmbShareReference =
+        SmbShareReference(
+            host = config.host.trim(),
+            port = config.port,
+            shareName = config.shareName.trim(),
+            path = normalizePath(config.path)
+        ).also(::validate)
+
+    fun parse(input: String): SmbShareReference? {
+        val normalizedInput = input.trim().takeIf { it.isNotBlank() } ?: return null
+        val uriText = when {
+            normalizedInput.startsWith("\\\\") -> {
+                val unixPath = normalizedInput.replace('\\', '/').trimStart('/')
+                "smb://$unixPath"
+            }
+            normalizedInput.startsWith("//") -> "smb:$normalizedInput"
+            normalizedInput.startsWith("smb://", ignoreCase = true) -> normalizedInput
+            else -> return null
+        }
+        return runCatching {
+            val uri = URI(uriText.replace(" ", "%20"))
+            val host = uri.host?.takeIf { it.isNotBlank() } ?: return null
+            val port = uri.port.takeIf { it > 0 } ?: DEFAULT_PORT
+            val pathSegments = uri.rawPath
+                ?.trim('/')
+                ?.split('/')
+                ?.filter { it.isNotBlank() }
+                ?.map(::decodeSegment)
+                .orEmpty()
+            val shareName = pathSegments.firstOrNull()?.takeIf { it.isNotBlank() } ?: return null
+            SmbShareReference(
+                host = host,
+                port = port,
+                shareName = shareName,
+                path = normalizePath(pathSegments.drop(1).joinToString("/"))
+            ).also(::validate)
+        }.getOrNull()
+    }
+
+    fun buildRoot(reference: SmbShareReference): String = build(
+        host = reference.host,
+        port = reference.port,
+        shareName = reference.shareName,
+        path = reference.path
+    )
+
+    fun build(
+        host: String,
+        port: Int = DEFAULT_PORT,
+        shareName: String,
+        path: String = ""
+    ): String {
+        val reference = SmbShareReference(
+            host = host.trim(),
+            port = port,
+            shareName = shareName.trim(),
+            path = normalizePath(path)
+        ).also(::validate)
+        val hostAndPort = if (reference.port == DEFAULT_PORT) {
+            reference.host
+        } else {
+            "${reference.host}:${reference.port}"
+        }
+        val encodedPath = listOf(reference.shareName)
+            .plus(reference.path.split('/').filter { it.isNotBlank() })
+            .joinToString("/") { encodeSegment(it) }
+        return "smb://$hostAndPort/$encodedPath"
+    }
+
+    fun displayName(reference: SmbShareReference): String =
+        listOf(reference.host, reference.shareName, reference.path)
+            .filter { it.isNotBlank() }
+            .joinToString("/")
+
+    fun normalizePath(path: String): String =
+        path.trim()
+            .replace('\\', '/')
+            .split('/')
+            .filter { it.isNotBlank() }
+            .joinToString("/")
+
+    private fun validate(reference: SmbShareReference) {
+        require(reference.host.isNotBlank()) { "SMB host is required." }
+        require(reference.shareName.isNotBlank()) { "SMB share name is required." }
+        require(reference.port in 1..65_535) { "SMB port must be between 1 and 65535." }
+    }
+
+    private fun encodeSegment(value: String): String =
+        URLEncoder.encode(value, StandardCharsets.UTF_8.name()).replace("+", "%20")
+
+    private fun decodeSegment(value: String): String =
+        URLDecoder.decode(value, StandardCharsets.UTF_8.name())
+}
 
 object LocalMediaPlaybackResolver {
     private const val END_GUARD_MS = 1_000L

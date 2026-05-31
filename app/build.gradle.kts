@@ -53,6 +53,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app.corey\"")
         buildConfigField("String", "OFFICIAL_SIGNING_CERT_SHA256", "\"$officialSigningCertSha256\"")
+        buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
+        buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
     }
 
     signingConfigs {
