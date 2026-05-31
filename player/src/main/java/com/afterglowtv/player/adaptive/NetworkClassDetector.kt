@@ -94,6 +94,7 @@ class NetworkClassDetector @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
+    @Suppress("DEPRECATION")
     private fun classifyCellular(): NetworkClass {
         val telephony = runCatching {
             context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager

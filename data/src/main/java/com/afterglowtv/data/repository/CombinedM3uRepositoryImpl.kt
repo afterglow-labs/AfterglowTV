@@ -1,3 +1,6 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@file:Suppress("UNCHECKED_CAST")
+
 package com.afterglowtv.data.repository
 
 import com.afterglowtv.data.local.dao.CombinedM3uProfileDao

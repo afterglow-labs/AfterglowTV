@@ -109,6 +109,7 @@ internal data class CatalogSyncRuntimeProfile(
     }
 }
 
+@Suppress("DEPRECATION")
 private fun Context.isSyncTelevisionDevice(): Boolean {
     val packageManager = packageManager
     if (packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)) return true

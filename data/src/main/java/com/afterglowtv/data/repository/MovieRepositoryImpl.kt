@@ -386,7 +386,9 @@ class MovieRepositoryImpl @Inject constructor(
         }
 
     override fun getMoviesByIds(ids: List<Long>): Flow<List<Movie>> =
-        movieDao.getByIds(ids).map { entities -> entities.map { it.toDomain() } }
+        movieDao.getByIds(ids)
+            .map { entities -> entities.map { it.toDomain() } }
+            .flowOn(Dispatchers.IO)
 
     override fun getCategories(providerId: Long): Flow<List<Category>> =
         combine(
@@ -399,15 +401,16 @@ class MovieRepositoryImpl @Inject constructor(
             } else {
                 mapped
             }
-        }
+        }.flowOn(Dispatchers.IO)
 
     override fun getCategoryItemCounts(providerId: Long): Flow<Map<Long, Int>> =
-        movieDao.getCategoryCounts(providerId).map { counts ->
-            counts.associate { it.categoryId to it.item_count }
-        }
+        movieDao.getCategoryCounts(providerId)
+            .map { counts -> counts.associate { it.categoryId to it.item_count } }
+            .flowOn(Dispatchers.IO)
 
     override fun getLibraryCount(providerId: Long): Flow<Int> =
         movieDao.getCount(providerId)
+            .flowOn(Dispatchers.IO)
 
     override fun browseMovies(query: LibraryBrowseQuery): Flow<PagedResult<Movie>> {
         return flow {

@@ -75,6 +75,7 @@ internal class DefaultLiveTimeshiftManager @Inject constructor(
         context.registerComponentCallbacks(this)
     }
 
+    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
     override fun onTrimMemory(level: Int) {
         if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) {
             scope.launch {
@@ -93,6 +94,7 @@ internal class DefaultLiveTimeshiftManager @Inject constructor(
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) = Unit
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onLowMemory() = Unit
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
+@Suppress("DEPRECATION")
 fun Context.isTelevisionDevice(): Boolean {
     val packageManager = packageManager
     if (packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)) {

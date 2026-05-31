@@ -611,6 +611,7 @@ class Media3PlayerEngine @Inject constructor(
         exoPlayer?.let { trackController.selectSubtitleTrack(it, trackId) }
     }
 
+    @Suppress("DEPRECATION")
     override fun addExternalSubtitle(subtitleUri: android.net.Uri, language: String) {
         val player = exoPlayer ?: return
         val streamInfo = lastStreamInfo ?: return
@@ -1022,6 +1023,7 @@ class Media3PlayerEngine @Inject constructor(
     }
 
 
+    @Suppress("DEPRECATION")
     private fun buildRenderersFactory(): DefaultRenderersFactory {
         val decoderPolicy = activeDecoderPolicy
         val badDecoderNames = knownBadDecoderNames

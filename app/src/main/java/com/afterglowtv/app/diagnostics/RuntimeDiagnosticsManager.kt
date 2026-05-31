@@ -103,10 +103,12 @@ class RuntimeDiagnosticsManager(
         samplingJob = null
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onTrimMemory(level: Int) {
         writeSnapshot("trim_memory:${trimLevelLabel(level)}")
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onLowMemory() {
         writeSnapshot("low_memory")
     }
@@ -155,6 +157,7 @@ class RuntimeDiagnosticsManager(
         return String.format(Locale.US, "%.1f", bytes.toDouble() / (1024.0 * 1024.0))
     }
 
+    @Suppress("DEPRECATION")
     private fun trimLevelLabel(level: Int): String = when (level) {
         ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> "ui_hidden"
         ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE -> "running_moderate"

@@ -557,13 +557,13 @@ private fun FolderGlyph(modifier: Modifier = Modifier) {
             lineTo(tabWidth + tabSlope, frontTop)
             lineTo(w - r, frontTop)
             // round top-right of the panel
-            quadraticBezierTo(w, frontTop, w, frontTop + r)
+            quadraticTo(w, frontTop, w, frontTop + r)
             lineTo(w, h - r)
-            quadraticBezierTo(w, h, w - r, h)
+            quadraticTo(w, h, w - r, h)
             lineTo(r, h)
-            quadraticBezierTo(0f, h, 0f, h - r)
+            quadraticTo(0f, h, 0f, h - r)
             lineTo(0f, backTop + r)
-            quadraticBezierTo(0f, backTop, r, backTop)
+            quadraticTo(0f, backTop, r, backTop)
             close()
         }
         drawPath(
@@ -576,13 +576,13 @@ private fun FolderGlyph(modifier: Modifier = Modifier) {
         val frontFlap = Path().apply {
             moveTo(r, flapTop)
             lineTo(w - r, flapTop)
-            quadraticBezierTo(w, flapTop, w, flapTop + r)
+            quadraticTo(w, flapTop, w, flapTop + r)
             lineTo(w, h - r)
-            quadraticBezierTo(w, h, w - r, h)
+            quadraticTo(w, h, w - r, h)
             lineTo(r, h)
-            quadraticBezierTo(0f, h, 0f, h - r)
+            quadraticTo(0f, h, 0f, h - r)
             lineTo(0f, flapTop + r)
-            quadraticBezierTo(0f, flapTop, r, flapTop)
+            quadraticTo(0f, flapTop, r, flapTop)
             close()
         }
         drawPath(

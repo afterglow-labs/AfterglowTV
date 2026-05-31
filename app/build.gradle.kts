@@ -94,6 +94,7 @@ android {
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
             buildConfigField("boolean", "ENABLE_DVR", "false")
             buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
+            @Suppress("DEPRECATION")
             resourceConfigurations += listOf("en")
         }
 
@@ -165,6 +166,7 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
     }
 }
 

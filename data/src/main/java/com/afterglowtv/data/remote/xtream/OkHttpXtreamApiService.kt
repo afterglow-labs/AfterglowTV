@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.afterglowtv.data.remote.xtream
 
 import android.util.Log

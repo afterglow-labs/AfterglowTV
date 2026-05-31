@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package com.afterglowtv.app.ui.screens.home
 
 import androidx.lifecycle.ViewModel
