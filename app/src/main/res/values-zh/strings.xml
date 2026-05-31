@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d 个继续观看</string>
     <string name="dashboard_stat_movies">%1$d 部电影</string>
     <string name="dashboard_stat_series">%1$d 部剧集</string>
-    <string name="dashboard_empty_title">设置提供商以解锁主屏幕</string>
-    <string name="dashboard_empty_body">请先添加播放列表或 Xtream 来源。启用提供商后，首页将显示收藏频道、继续观看和新的媒体库内容。</string>
+    <string name="dashboard_empty_title">欢迎使用 AfterglowTV</string>
+    <string name="dashboard_empty_body">随时浏览您的个人指南和网络共享。想在首页也显示直播频道和点播内容吗？您可以随时添加播放列表或 Xtream 提供商。</string>
     <string name="pin_dialog_title">输入 PIN</string>
     <string name="pin_dialog_cancel">取消</string>
     <string name="category_options_set_default">设为默认组</string>

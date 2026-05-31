@@ -102,6 +102,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val recordingChannelIds by viewModel.recordingChannelIds.collectAsStateWithLifecycle()
     val scheduledChannelIds by viewModel.scheduledChannelIds.collectAsStateWithLifecycle()
+    val welcomeSeen by viewModel.welcomeSeen.collectAsStateWithLifecycle()
     val provider = uiState.provider
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -131,7 +132,8 @@ fun DashboardScreen(
                 }
                 return@AppScreenScaffold
             }
-            if (shouldShowDashboardEmptyState(uiState)) {
+            if (shouldShowDashboardEmptyState(uiState) && !welcomeSeen) {
+                LaunchedEffect(Unit) { viewModel.markWelcomeSeen() }
                 EmptyDashboard(
                     onAddProvider = onAddProvider,
                     onOpenSettings = { onNavigate(Routes.SETTINGS) }

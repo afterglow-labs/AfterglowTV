@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d for at genoptage</string>
     <string name="dashboard_stat_movies">%1$d film</string>
     <string name="dashboard_stat_series">%1$d serie</string>
-    <string name="dashboard_empty_title">Opsæt en udbyder for at låse startskærmen op</string>
-    <string name="dashboard_empty_body">Tilføj først en playliste eller Xtream-kilde. Når en udbyder er aktiv, viser Hjem favoritkanaler, fortsæt hvor du slap, og nye rækker i biblioteket.</string>
+    <string name="dashboard_empty_title">Velkommen til AfterglowTV</string>
+    <string name="dashboard_empty_body">Gennemse din personlige guide og netværksdrev når som helst. Vil du også have live-kanaler og on-demand-rækker på Hjem? Tilføj en playliste eller en Xtream-udbyder, når du vil.</string>
     <string name="pin_dialog_title">Indtast PIN-kode</string>
     <string name="pin_dialog_cancel">Annuller</string>
     <string name="category_options_set_default">Indstil som standardgruppe</string>

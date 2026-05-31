@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d للاستئناف</string>
     <string name="dashboard_stat_movies">%1$d افلام</string>
     <string name="dashboard_stat_series">سلسلة %1$d</string>
-    <string name="dashboard_empty_title">قم بإعداد مزود لفتح الشاشة الرئيسية</string>
-    <string name="dashboard_empty_body">أضف قائمة تشغيل أو مصدر Xtream أولاً. بمجرد تنشيط الموفر، ستعرض الصفحة الرئيسية القنوات المفضلة، وتستمر في المشاهدة، وصفوف المكتبة الجديدة.</string>
+    <string name="dashboard_empty_title">مرحبًا بك في AfterglowTV</string>
+    <string name="dashboard_empty_body">تصفح دليلك الشخصي ومشاركات الشبكة في أي وقت. هل تريد أيضًا قنوات مباشرة وصفوفًا عند الطلب على الصفحة الرئيسية؟ أضف قائمة تشغيل أو مزود Xtream متى شئت.</string>
     <string name="pin_dialog_title">أدخل رقم التعريف الشخصي</string>
     <string name="pin_dialog_cancel">إلغاء</string>
     <string name="category_options_set_default">تعيين كمجموعة افتراضية</string>

@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d pour reprendre</string>
     <string name="dashboard_stat_movies">%1$d films</string>
     <string name="dashboard_stat_series">Série %1$d</string>
-    <string name="dashboard_empty_title">Configurer un fournisseur pour déverrouiller l\'écran d\'accueil</string>
-    <string name="dashboard_empty_body">Ajoutez d’abord une playlist ou une source Xtream. Une fois un fournisseur actif, l’accueil affichera les chaînes favorites, la reprise de lecture et de nouvelles lignes de bibliothèque.</string>
+    <string name="dashboard_empty_title">Bienvenue sur AfterglowTV</string>
+    <string name="dashboard_empty_body">Parcourez votre Guide personnel et vos partages réseau à tout moment. Vous voulez aussi des chaînes en direct et des lignes à la demande sur l\'accueil ? Ajoutez une playlist ou un fournisseur Xtream quand vous le souhaitez.</string>
     <string name="pin_dialog_title">Entrez le code PIN</string>
     <string name="pin_dialog_cancel">Annuler</string>
     <string name="category_options_set_default">Définir comme groupe par défaut</string>

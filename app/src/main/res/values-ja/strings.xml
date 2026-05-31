@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d 件を再開</string>
     <string name="dashboard_stat_movies">%1$d 本の映画</string>
     <string name="dashboard_stat_series">%1$d 件のシリーズ</string>
-    <string name="dashboard_empty_title">ホーム画面を使うにはプロバイダーを設定してください</string>
-    <string name="dashboard_empty_body">まずプレイリストまたは Xtream ソースを追加してください。プロバイダーが有効になると、ホームにお気に入りチャンネル、視聴再開、最新のライブラリ行が表示されます。</string>
+    <string name="dashboard_empty_title">AfterglowTV へようこそ</string>
+    <string name="dashboard_empty_body">パーソナルガイドやネットワーク共有はいつでも閲覧できます。ホームにライブチャンネルやオンデマンドの行も表示したいですか？お好きなときにプレイリストや Xtream プロバイダーを追加してください。</string>
     <string name="pin_dialog_title">PIN を入力</string>
     <string name="pin_dialog_cancel">キャンセル</string>
     <string name="category_options_set_default">デフォルトグループに設定</string>

@@ -157,6 +157,7 @@ class PreferencesRepository @Inject constructor(
         val STYLE_FOCUS = stringPreferencesKey("style_focus")
         val STYLE_PROGRESS = stringPreferencesKey("style_progress")
         val BACKGROUND_GRADIENTS_ENABLED = booleanPreferencesKey("background_gradients_enabled")
+        val DASHBOARD_WELCOME_SEEN = booleanPreferencesKey("dashboard_welcome_seen")
         val GLOW_INTENSITY = stringPreferencesKey("glow_intensity")
         val GLOW_FOCUS_SPECS = stringPreferencesKey("glow_focus_specs")
         val GLOW_LIVE_SPECS = stringPreferencesKey("glow_live_specs")
@@ -1337,6 +1338,17 @@ class PreferencesRepository @Inject constructor(
     suspend fun setBackgroundGradientsEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.BACKGROUND_GRADIENTS_ENABLED] = enabled
+        }
+    }
+
+    /** Whether the first-launch Home welcome card has been shown to the user. */
+    val dashboardWelcomeSeen: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DASHBOARD_WELCOME_SEEN] ?: false
+    }
+
+    suspend fun setDashboardWelcomeSeen(seen: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DASHBOARD_WELCOME_SEEN] = seen
         }
     }
 

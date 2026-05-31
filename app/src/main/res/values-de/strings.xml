@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d zum Fortsetzen</string>
     <string name="dashboard_stat_movies">%1$d Filme</string>
     <string name="dashboard_stat_series">%1$d-Serie</string>
-    <string name="dashboard_empty_title">Richten Sie einen Anbieter ein, um den Startbildschirm zu entsperren</string>
-    <string name="dashboard_empty_body">Fügen Sie zuerst eine Playlist oder eine Xtream-Quelle hinzu. Sobald ein Anbieter aktiv ist, zeigt Start Favoritenkanäle, Weiterschauen und neue Bibliothekszeilen an.</string>
+    <string name="dashboard_empty_title">Willkommen bei AfterglowTV</string>
+    <string name="dashboard_empty_body">Durchsuchen Sie jederzeit Ihren persönlichen Guide und Netzwerkfreigaben. Möchten Sie auch Live-Kanäle und Abrufzeilen auf der Startseite? Fügen Sie jederzeit eine Playlist oder einen Xtream-Anbieter hinzu.</string>
     <string name="pin_dialog_title">PIN eingeben</string>
     <string name="pin_dialog_cancel">Abbrechen</string>
     <string name="category_options_set_default">Als Standardgruppe festlegen</string>

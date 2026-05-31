@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d k pokračování</string>
     <string name="dashboard_stat_movies">%1$d filmů</string>
     <string name="dashboard_stat_series">série %1$d</string>
-    <string name="dashboard_empty_title">Nastavte poskytovatele pro odemknutí domovské obrazovky</string>
-    <string name="dashboard_empty_body">Nejprve přidejte playlist nebo zdroj Xtream. Jakmile bude poskytovatel aktivní, Domů zobrazí oblíbené kanály, pokračování ve sledování a nové řádky knihovny.</string>
+    <string name="dashboard_empty_title">Vítejte v AfterglowTV</string>
+    <string name="dashboard_empty_body">Procházejte svého osobního průvodce a síťové sdílené složky kdykoli. Chcete na domovské obrazovce i živé kanály a řádky na vyžádání? Kdykoli přidejte playlist nebo poskytovatele Xtream.</string>
     <string name="pin_dialog_title">Zadejte PIN</string>
     <string name="pin_dialog_cancel">Zrušit</string>
     <string name="category_options_set_default">Nastavit jako výchozí skupinu</string>

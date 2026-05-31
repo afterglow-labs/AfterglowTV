@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d כדי לחדש</string>
     <string name="dashboard_stat_movies">%1$d סרטים</string>
     <string name="dashboard_stat_series">%1$d סדרה</string>
-    <string name="dashboard_empty_title">הגדר ספק לביטול נעילת מסך הבית</string>
-    <string name="dashboard_empty_body">הוסף תחילה רשימת השמעה או מקור Xtream. ברגע שספק פעיל, Home יציג ערוצים מועדפים, ימשיך לצפות ושורות ספרייה חדשות.</string>
+    <string name="dashboard_empty_title">ברוכים הבאים ל-AfterglowTV</string>
+    <string name="dashboard_empty_body">עיינו במדריך האישי שלכם ובשיתופי הרשת בכל עת. רוצים גם ערוצים חיים ושורות לפי דרישה במסך הבית? הוסיפו רשימת השמעה או ספק Xtream מתי שתרצו.</string>
     <string name="pin_dialog_title">הזן PIN</string>
     <string name="pin_dialog_cancel">בטל</string>
     <string name="category_options_set_default">הגדר כקבוצת ברירת מחדל</string>

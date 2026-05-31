@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d pentru a relua</string>
     <string name="dashboard_stat_movies">%1$d filme</string>
     <string name="dashboard_stat_series">seria %1$d.</string>
-    <string name="dashboard_empty_title">Configurați un furnizor pentru a debloca ecranul de pornire</string>
-    <string name="dashboard_empty_body">Adăugați mai întâi o listă de redare sau o sursă Xtream. Odată ce un furnizor este activ, Home va afișa canalele favorite, va continua vizionarea și va avea rânduri noi din bibliotecă.</string>
+    <string name="dashboard_empty_title">Bun venit la AfterglowTV</string>
+    <string name="dashboard_empty_body">Răsfoiți Ghidul personal și partajările de rețea oricând. Doriți și canale live și rânduri la cerere pe Acasă? Adăugați o listă de redare sau un furnizor Xtream oricând doriți.</string>
     <string name="pin_dialog_title">Introduceți codul PIN</string>
     <string name="pin_dialog_cancel">Anulează</string>
     <string name="category_options_set_default">Setați ca grup implicit</string>

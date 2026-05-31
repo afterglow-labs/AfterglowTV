@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d για συνέχεια</string>
     <string name="dashboard_stat_movies">%1$d ταινίες</string>
     <string name="dashboard_stat_series">%1$d σειρές</string>
-    <string name="dashboard_empty_title">Ρυθμίστε έναν πάροχο για να ξεκλειδώσετε την αρχική οθόνη</string>
-    <string name="dashboard_empty_body">Προσθέστε πρώτα μια λίστα αναπαραγωγής ή πηγή Xtream. Μόλις ενεργοποιηθεί ένας πάροχος, η Αρχική θα εμφανίσει αγαπημένα κανάλια, συνέχεια προβολής και νέες σειρές βιβλιοθήκης.</string>
+    <string name="dashboard_empty_title">Καλώς ήρθατε στο AfterglowTV</string>
+    <string name="dashboard_empty_body">Περιηγηθείτε στον προσωπικό σας οδηγό και στους κοινόχρηστους πόρους δικτύου ανά πάσα στιγμή. Θέλετε και ζωντανά κανάλια και σειρές κατά παραγγελία στην Αρχική; Προσθέστε μια λίστα αναπαραγωγής ή έναν πάροχο Xtream όποτε θέλετε.</string>
     <string name="pin_dialog_title">Εισαγάγετε PIN</string>
     <string name="pin_dialog_cancel">Ακύρωση</string>
     <string name="category_options_set_default">Ορισμός ως προεπιλεγμένη ομάδα</string>

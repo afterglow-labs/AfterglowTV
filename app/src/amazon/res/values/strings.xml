@@ -7,8 +7,8 @@
 
     <string name="dashboard_provider_xtream">Server Login</string>
     <string name="dashboard_provider_m3u">Playlist Link</string>
-    <string name="dashboard_empty_title">Add a source</string>
-    <string name="dashboard_empty_body">Add a playlist link or local playlist file from Settings to use your own channels and videos.</string>
+    <string name="dashboard_empty_title">Welcome to AfterglowTV</string>
+    <string name="dashboard_empty_body">Browse your personal videos and network shares any time. Want your own channels and on-demand rows on Home too? Add a playlist link or local playlist file from Settings whenever you like.</string>
     <string name="dashboard_library_ready">Your TV library is ready</string>
 
     <string name="local_media_subtitle">Browse your movies, shows, and personal videos.</string>
