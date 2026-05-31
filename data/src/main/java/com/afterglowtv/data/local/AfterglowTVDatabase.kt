@@ -2712,16 +2712,35 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
 
         val MIGRATION_56_57 = object : Migration(56, 57) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN source_type TEXT NOT NULL DEFAULT 'DOCUMENT_TREE'")
-                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_host TEXT")
-                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_port INTEGER")
-                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_share TEXT")
-                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_path TEXT")
-                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_domain TEXT")
-                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_username TEXT")
-                database.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_password TEXT")
+                database.addColumnIfMissing("local_media_libraries", "source_type", "TEXT NOT NULL DEFAULT 'DOCUMENT_TREE'")
+                database.addColumnIfMissing("local_media_libraries", "smb_host", "TEXT")
+                database.addColumnIfMissing("local_media_libraries", "smb_port", "INTEGER")
+                database.addColumnIfMissing("local_media_libraries", "smb_share", "TEXT")
+                database.addColumnIfMissing("local_media_libraries", "smb_path", "TEXT")
+                database.addColumnIfMissing("local_media_libraries", "smb_domain", "TEXT")
+                database.addColumnIfMissing("local_media_libraries", "smb_username", "TEXT")
+                database.addColumnIfMissing("local_media_libraries", "smb_password", "TEXT")
                 validateForeignKeys(database, "local_media_libraries")
             }
         }
+
+        private fun SupportSQLiteDatabase.addColumnIfMissing(
+            tableName: String,
+            columnName: String,
+            columnDefinition: String
+        ) {
+            if (!hasColumn(tableName, columnName)) {
+                execSQL("ALTER TABLE $tableName ADD COLUMN $columnName $columnDefinition")
+            }
+        }
+
+        private fun SupportSQLiteDatabase.hasColumn(tableName: String, columnName: String): Boolean =
+            query("PRAGMA table_info($tableName)").use { cursor ->
+                val nameIndex = cursor.getColumnIndex("name").takeIf { it >= 0 } ?: 1
+                while (cursor.moveToNext()) {
+                    if (cursor.getString(nameIndex) == columnName) return true
+                }
+                false
+            }
     }
 }
