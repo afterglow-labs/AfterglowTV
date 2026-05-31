@@ -1,5 +1,3 @@
-@file:Suppress("UNCHECKED_CAST", "DEPRECATION")
-
 package com.afterglowtv.app.ui.screens.movies
 
 import android.content.Context
@@ -209,24 +207,28 @@ class MoviesViewModel @Inject constructor(
                 .filterNotNull()
                 .flatMapLatest { provider ->
                     activeProviderId = provider.id
-                    combine(
+                    val catalogBaseFlow = combine(
                         favoriteRepository.getFavoritesIncludingGroups(provider.id, ContentType.MOVIE),
                         getCustomCategories(provider.id, ContentType.MOVIE),
                         movieRepository.getCategories(provider.id),
                         movieRepository.getCategoryItemCounts(provider.id),
-                        movieRepository.getLibraryCount(provider.id),
+                        movieRepository.getLibraryCount(provider.id)
+                    ) { allFavorites, customCategories, providerCategories, providerCategoryCounts, libraryCount ->
+                        MovieCatalogBaseDependencies(
+                            allFavorites = allFavorites,
+                            customCategories = customCategories,
+                            providerCategories = providerCategories,
+                            providerCategoryCounts = providerCategoryCounts,
+                            libraryCount = libraryCount
+                        )
+                    }
+                    combine(
+                        catalogBaseFlow,
                         preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.MOVIE),
                         preferencesRepository.getCategorySortMode(provider.id, ContentType.MOVIE)
-                    ) { values ->
-                        val allFavorites = values[0] as List<com.afterglowtv.domain.model.Favorite>
-                        val customCategories = values[1] as List<Category>
-                        val providerCategories = values[2] as List<Category>
-                        val providerCategoryCounts = values[3] as Map<Long, Int>
-                        val libraryCount = values[4] as Int
-                        val hiddenCategoryIds = values[5] as Set<Long>
-                        val sortMode = values[6] as CategorySortMode
+                    ) { baseDependencies, hiddenCategoryIds, sortMode ->
                         val visibleProviderCategories = applyProviderCategoryDisplayPreferences(
-                            categories = providerCategories,
+                            categories = baseDependencies.providerCategories,
                             hiddenCategoryIds = hiddenCategoryIds,
                             sortMode = sortMode
                         ).let { categories ->
@@ -237,11 +239,11 @@ class MoviesViewModel @Inject constructor(
                             }
                         }
                         MovieCatalogDependencies(
-                            allFavorites = allFavorites,
-                            customCategories = customCategories,
+                            allFavorites = baseDependencies.allFavorites,
+                            customCategories = baseDependencies.customCategories,
                             providerCategories = visibleProviderCategories,
-                            providerCategoryCounts = providerCategoryCounts,
-                            libraryCount = libraryCount,
+                            providerCategoryCounts = baseDependencies.providerCategoryCounts,
+                            libraryCount = baseDependencies.libraryCount,
                             hiddenCategoryIds = hiddenCategoryIds,
                             categorySortMode = sortMode
                         )
@@ -392,12 +394,7 @@ class MoviesViewModel @Inject constructor(
                         movieRepository.getCategories(provider.id),
                         preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.MOVIE),
                         preferencesRepository.getCategorySortMode(provider.id, ContentType.MOVIE)
-                    ) { values ->
-                        val allFavorites = values[0] as List<com.afterglowtv.domain.model.Favorite>
-                        val customCategories = values[1] as List<Category>
-                        val providerCategories = values[2] as List<Category>
-                        val hiddenCategoryIds = values[3] as Set<Long>
-                        val sortMode = values[4] as CategorySortMode
+                    ) { allFavorites, customCategories, providerCategories, hiddenCategoryIds, sortMode ->
                         MovieCategorySelectionDependencies(
                             allFavorites = allFavorites,
                             customCategories = customCategories,
@@ -1455,6 +1452,14 @@ private data class MovieCatalogDependencies(
     val libraryCount: Int,
     val hiddenCategoryIds: Set<Long>,
     val categorySortMode: CategorySortMode
+)
+
+private data class MovieCatalogBaseDependencies(
+    val allFavorites: List<com.afterglowtv.domain.model.Favorite>,
+    val customCategories: List<Category>,
+    val providerCategories: List<Category>,
+    val providerCategoryCounts: Map<Long, Int>,
+    val libraryCount: Int
 )
 
 private data class MovieCatalogSnapshot(

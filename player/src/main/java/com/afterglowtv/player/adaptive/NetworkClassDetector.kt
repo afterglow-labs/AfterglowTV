@@ -5,7 +5,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -94,14 +93,12 @@ class NetworkClassDetector @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
-    @Suppress("DEPRECATION")
     private fun classifyCellular(): NetworkClass {
         val telephony = runCatching {
             context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
         }.getOrNull() ?: return NetworkClass.CELLULAR_4G
         val networkType = runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) telephony.dataNetworkType
-            else telephony.networkType
+            telephony.dataNetworkType
         }.getOrNull() ?: return NetworkClass.CELLULAR_4G
 
         return when (networkType) {
@@ -112,20 +109,27 @@ class NetworkClassDetector @Inject constructor(
             TelephonyManager.NETWORK_TYPE_HSUPA,
             TelephonyManager.NETWORK_TYPE_HSPA,
             TelephonyManager.NETWORK_TYPE_HSPAP,
-            TelephonyManager.NETWORK_TYPE_EVDO_0,
-            TelephonyManager.NETWORK_TYPE_EVDO_A,
-            TelephonyManager.NETWORK_TYPE_EVDO_B,
-            TelephonyManager.NETWORK_TYPE_EHRPD -> NetworkClass.CELLULAR_3G
+            NETWORK_TYPE_EVDO_0,
+            NETWORK_TYPE_EVDO_A,
+            NETWORK_TYPE_EVDO_B,
+            NETWORK_TYPE_EHRPD -> NetworkClass.CELLULAR_3G
             TelephonyManager.NETWORK_TYPE_GPRS,
             TelephonyManager.NETWORK_TYPE_EDGE,
-            TelephonyManager.NETWORK_TYPE_CDMA,
-            TelephonyManager.NETWORK_TYPE_1xRTT,
-            TelephonyManager.NETWORK_TYPE_IDEN -> NetworkClass.CELLULAR_2G
+            NETWORK_TYPE_CDMA,
+            NETWORK_TYPE_1XRTT,
+            NETWORK_TYPE_IDEN -> NetworkClass.CELLULAR_2G
             else -> NetworkClass.CELLULAR_4G
         }
     }
 
     companion object {
         private const val TAG = "NetworkClassDetector"
+        private const val NETWORK_TYPE_CDMA = 4
+        private const val NETWORK_TYPE_EVDO_0 = 5
+        private const val NETWORK_TYPE_EVDO_A = 6
+        private const val NETWORK_TYPE_1XRTT = 7
+        private const val NETWORK_TYPE_IDEN = 11
+        private const val NETWORK_TYPE_EVDO_B = 12
+        private const val NETWORK_TYPE_EHRPD = 14
     }
 }

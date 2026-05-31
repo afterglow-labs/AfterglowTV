@@ -75,9 +75,8 @@ internal class DefaultLiveTimeshiftManager @Inject constructor(
         context.registerComponentCallbacks(this)
     }
 
-    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
     override fun onTrimMemory(level: Int) {
-        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) {
+        if (level >= TRIM_MEMORY_RUNNING_CRITICAL) {
             scope.launch {
                 mutex.withLock {
                     val session = activeSession ?: return@withLock
@@ -94,7 +93,7 @@ internal class DefaultLiveTimeshiftManager @Inject constructor(
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) = Unit
-    @Suppress("OVERRIDE_DEPRECATION")
+    @Deprecated("Android framework callback is deprecated; retained for ComponentCallbacks2 compatibility.")
     override fun onLowMemory() = Unit
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -1076,5 +1075,6 @@ internal class DefaultLiveTimeshiftManager @Inject constructor(
         private const val HLS_ERROR_RETRY_DELAY_MS = 2_000L
         private const val DASH_ERROR_RETRY_DELAY_MS = 2_000L
         private const val MIN_FREE_DISK_BYTES = 200L * 1024 * 1024  // 200 MB
+        private const val TRIM_MEMORY_RUNNING_CRITICAL = 15
     }
 }

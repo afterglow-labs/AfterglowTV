@@ -1,5 +1,3 @@
-@file:Suppress("UNCHECKED_CAST", "DEPRECATION")
-
 package com.afterglowtv.app.ui.screens.series
 
 import androidx.lifecycle.ViewModel
@@ -192,24 +190,28 @@ class SeriesViewModel @Inject constructor(
                 .filterNotNull()
                 .flatMapLatest { provider ->
                     activeProviderId = provider.id
-                    combine(
+                    val catalogBaseFlow = combine(
                         favoriteRepository.getFavoritesIncludingGroups(provider.id, ContentType.SERIES),
                         getCustomCategories(provider.id, ContentType.SERIES),
                         seriesRepository.getCategories(provider.id),
                         seriesRepository.getCategoryItemCounts(provider.id),
-                        seriesRepository.getLibraryCount(provider.id),
+                        seriesRepository.getLibraryCount(provider.id)
+                    ) { allFavorites, customCategories, providerCategories, providerCategoryCounts, libraryCount ->
+                        SeriesCatalogBaseDependencies(
+                            allFavorites = allFavorites,
+                            customCategories = customCategories,
+                            providerCategories = providerCategories,
+                            providerCategoryCounts = providerCategoryCounts,
+                            libraryCount = libraryCount
+                        )
+                    }
+                    combine(
+                        catalogBaseFlow,
                         preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.SERIES),
                         preferencesRepository.getCategorySortMode(provider.id, ContentType.SERIES)
-                    ) { values ->
-                        val allFavorites = values[0] as List<com.afterglowtv.domain.model.Favorite>
-                        val customCategories = values[1] as List<Category>
-                        val providerCategories = values[2] as List<Category>
-                        val providerCategoryCounts = values[3] as Map<Long, Int>
-                        val libraryCount = values[4] as Int
-                        val hiddenCategoryIds = values[5] as Set<Long>
-                        val sortMode = values[6] as CategorySortMode
+                    ) { baseDependencies, hiddenCategoryIds, sortMode ->
                         val visibleProviderCategories = applyProviderCategoryDisplayPreferences(
-                            categories = providerCategories,
+                            categories = baseDependencies.providerCategories,
                             hiddenCategoryIds = hiddenCategoryIds,
                             sortMode = sortMode
                         ).let { categories ->
@@ -220,11 +222,11 @@ class SeriesViewModel @Inject constructor(
                             }
                         }
                         SeriesCatalogDependencies(
-                            allFavorites = allFavorites,
-                            customCategories = customCategories,
+                            allFavorites = baseDependencies.allFavorites,
+                            customCategories = baseDependencies.customCategories,
                             providerCategories = visibleProviderCategories,
-                            providerCategoryCounts = providerCategoryCounts,
-                            libraryCount = libraryCount,
+                            providerCategoryCounts = baseDependencies.providerCategoryCounts,
+                            libraryCount = baseDependencies.libraryCount,
                             hiddenCategoryIds = hiddenCategoryIds,
                             categorySortMode = sortMode
                         )
@@ -369,30 +371,35 @@ class SeriesViewModel @Inject constructor(
             activeVodProviderFlow()
                 .filterNotNull()
                 .flatMapLatest { provider ->
-                    combine(
+                    val categorySelectionBaseFlow = combine(
                         favoriteRepository.getFavoritesIncludingGroups(provider.id, ContentType.SERIES),
                         getCustomCategories(provider.id, ContentType.SERIES),
                         seriesRepository.getCategories(provider.id),
                         playbackHistoryRepository.getRecentlyWatchedByProvider(provider.id, limit = 100),
-                        preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.SERIES),
-                        preferencesRepository.getCategorySortMode(provider.id, ContentType.SERIES)
-                    ) { values ->
-                        val allFavorites = values[0] as List<com.afterglowtv.domain.model.Favorite>
-                        val customCategories = values[1] as List<Category>
-                        val providerCategories = values[2] as List<Category>
-                        val history = values[3] as List<PlaybackHistory>
-                        val hiddenCategoryIds = values[4] as Set<Long>
-                        val sortMode = values[5] as CategorySortMode
-                        SeriesCategorySelectionDependencies(
+                        preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.SERIES)
+                    ) { allFavorites, customCategories, providerCategories, history, hiddenCategoryIds ->
+                        SeriesCategorySelectionBaseDependencies(
                             allFavorites = allFavorites,
                             customCategories = customCategories,
-                            providerCategories = applyProviderCategoryDisplayPreferences(
-                                categories = providerCategories,
-                                hiddenCategoryIds = hiddenCategoryIds,
-                                sortMode = sortMode
-                            ),
+                            providerCategories = providerCategories,
                             history = history,
                             hiddenCategoryIds = hiddenCategoryIds
+                        )
+                    }
+                    combine(
+                        categorySelectionBaseFlow,
+                        preferencesRepository.getCategorySortMode(provider.id, ContentType.SERIES)
+                    ) { baseDependencies, sortMode ->
+                        SeriesCategorySelectionDependencies(
+                            allFavorites = baseDependencies.allFavorites,
+                            customCategories = baseDependencies.customCategories,
+                            providerCategories = applyProviderCategoryDisplayPreferences(
+                                categories = baseDependencies.providerCategories,
+                                hiddenCategoryIds = baseDependencies.hiddenCategoryIds,
+                                sortMode = sortMode
+                            ),
+                            history = baseDependencies.history,
+                            hiddenCategoryIds = baseDependencies.hiddenCategoryIds
                         )
                     }.combine(
                         combine(
@@ -1386,6 +1393,14 @@ private data class SeriesCatalogDependencies(
     val categorySortMode: CategorySortMode
 )
 
+private data class SeriesCatalogBaseDependencies(
+    val allFavorites: List<com.afterglowtv.domain.model.Favorite>,
+    val customCategories: List<Category>,
+    val providerCategories: List<Category>,
+    val providerCategoryCounts: Map<Long, Int>,
+    val libraryCount: Int
+)
+
 private data class SeriesCatalogSnapshot(
     val grouped: Map<String, List<Series>>,
     val categoryNames: List<String>,
@@ -1403,6 +1418,14 @@ private data class SeriesLibraryLensDependencies(
 )
 
 private data class SeriesCategorySelectionDependencies(
+    val allFavorites: List<com.afterglowtv.domain.model.Favorite>,
+    val history: List<PlaybackHistory>,
+    val customCategories: List<Category>,
+    val providerCategories: List<Category>,
+    val hiddenCategoryIds: Set<Long>
+)
+
+private data class SeriesCategorySelectionBaseDependencies(
     val allFavorites: List<com.afterglowtv.domain.model.Favorite>,
     val history: List<PlaybackHistory>,
     val customCategories: List<Category>,

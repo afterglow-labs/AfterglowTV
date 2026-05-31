@@ -94,8 +94,6 @@ android {
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
             buildConfigField("boolean", "ENABLE_DVR", "false")
             buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
-            @Suppress("DEPRECATION")
-            resourceConfigurations += listOf("en")
         }
 
         create("corey") {
@@ -160,6 +158,12 @@ android {
 
     testOptions {
         animationsDisabled = true
+    }
+}
+
+androidComponents {
+    onVariants(selector().withFlavor("store", "amazon")) { variant ->
+        variant.androidResources.localeFilters.add("en")
     }
 }
 

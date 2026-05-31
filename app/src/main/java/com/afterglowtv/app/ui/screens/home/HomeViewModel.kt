@@ -1,5 +1,3 @@
-@file:Suppress("UNCHECKED_CAST")
-
 package com.afterglowtv.app.ui.screens.home
 
 import androidx.lifecycle.ViewModel
@@ -518,24 +516,28 @@ class HomeViewModel @Inject constructor(
                     observeAdultGuideCategories(providerId)
                     return@launch
                 }
-                combine(
+                val categoryBaseFlow = combine(
                     channelRepository.getCategories(providerId),
                     getCustomCategories(providerId, ContentType.LIVE),
                     preferencesRepository.defaultCategoryId,
                     preferencesRepository.getLastLiveCategoryId(providerId),
-                    preferencesRepository.getHiddenCategoryIds(providerId, ContentType.LIVE),
+                    preferencesRepository.getHiddenCategoryIds(providerId, ContentType.LIVE)
+                ) { providerCats, customCats, defaultId, lastVisitedCategoryId, hiddenCategoryIds ->
+                    LiveCategoryBaseDependencies(
+                        providerCats = providerCats,
+                        customCats = customCats,
+                        defaultId = defaultId,
+                        lastVisitedCategoryId = lastVisitedCategoryId,
+                        hiddenCategoryIds = hiddenCategoryIds
+                    )
+                }
+                combine(
+                    categoryBaseFlow,
                     preferencesRepository.getCategorySortMode(providerId, ContentType.LIVE),
                     preferencesRepository.getPinnedCategoryIds(providerId, ContentType.LIVE)
-                ) { values ->
-                    val providerCats = values[0] as List<Category>
-                    val customCats = values[1] as List<Category>
-                    val defaultId = values[2] as Long?
-                    val lastVisitedCategoryId = values[3] as Long?
-                    val hiddenCategoryIds = values[4] as Set<Long>
-                    val sortMode = values[5] as CategorySortMode
-                    val pinnedCategoryIds = values[6] as Set<Long>
-                    liveCategoryLookupById = providerCats.associateBy(Category::id)
-                    val visibleProviderCats = providerCats.filter(::isStandardLiveCategoryVisible)
+                ) { baseDependencies, sortMode, pinnedCategoryIds ->
+                    liveCategoryLookupById = baseDependencies.providerCats.associateBy(Category::id)
+                    val visibleProviderCats = baseDependencies.providerCats.filter(::isStandardLiveCategoryVisible)
                     val recentCategory = Category(
                         id = VirtualCategoryIds.RECENT,
                         name = "Recent",
@@ -544,28 +546,28 @@ class HomeViewModel @Inject constructor(
                         count = _uiState.value.recentChannels.size
                     )
                     val allChannelsCategory = visibleProviderCats.firstOrNull { it.id == ChannelRepository.ALL_CHANNELS_ID }
-                        ?.copy(count = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count))
+                        ?.copy(count = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in baseDependencies.hiddenCategoryIds }.sumOf(Category::count))
                         ?: Category(
                             id = ChannelRepository.ALL_CHANNELS_ID,
                             name = "All Channels",
                             type = ContentType.LIVE,
-                            count = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count)
+                            count = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in baseDependencies.hiddenCategoryIds }.sumOf(Category::count)
                         )
                     val visibleProviderCategories = applyProviderCategoryDisplayPreferences(
                         categories = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID },
-                        hiddenCategoryIds = hiddenCategoryIds,
+                        hiddenCategoryIds = baseDependencies.hiddenCategoryIds,
                         sortMode = sortMode
                     )
                     val pinnedProviderCategories = visibleProviderCategories.filter { it.id in pinnedCategoryIds }
                     val unpinnedProviderCategories = visibleProviderCategories.filterNot { it.id in pinnedCategoryIds }
 
                     val orderedCategories = buildList {
-                        val favoritesCategory = customCats.find { it.id == VirtualCategoryIds.FAVORITES }
+                        val favoritesCategory = baseDependencies.customCats.find { it.id == VirtualCategoryIds.FAVORITES }
                         if (favoritesCategory != null) {
                             add(favoritesCategory)
                         }
                         add(recentCategory)
-                        addAll(customCats.filter { it.id != VirtualCategoryIds.FAVORITES })
+                        addAll(baseDependencies.customCats.filter { it.id != VirtualCategoryIds.FAVORITES })
                         add(allChannelsCategory)
                         addAll(pinnedProviderCategories)
                         addAll(unpinnedProviderCategories)
@@ -573,8 +575,8 @@ class HomeViewModel @Inject constructor(
 
                     CategorySelectionContext(
                         categories = orderedCategories,
-                        defaultCategoryId = defaultId,
-                        lastVisitedCategoryId = lastVisitedCategoryId,
+                        defaultCategoryId = baseDependencies.defaultId,
+                        lastVisitedCategoryId = baseDependencies.lastVisitedCategoryId,
                         pinnedCategoryIds = pinnedCategoryIds
                     )
                 }.combine(preferencesRepository.showRecentChannelsCategory) { ctx, showRecent ->
@@ -2265,6 +2267,14 @@ private data class CategorySelectionContext(
     val defaultCategoryId: Long?,
     val lastVisitedCategoryId: Long?,
     val pinnedCategoryIds: Set<Long>
+)
+
+private data class LiveCategoryBaseDependencies(
+    val providerCats: List<Category>,
+    val customCats: List<Category>,
+    val defaultId: Long?,
+    val lastVisitedCategoryId: Long?,
+    val hiddenCategoryIds: Set<Long>
 )
 
 internal data class AdultGuideLiveContext(

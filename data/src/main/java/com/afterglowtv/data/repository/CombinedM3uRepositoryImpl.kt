@@ -1,5 +1,4 @@
 @file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-@file:Suppress("UNCHECKED_CAST")
 
 package com.afterglowtv.data.repository
 
@@ -263,24 +262,20 @@ class CombinedM3uRepositoryImpl @Inject constructor(
                         channelRepository.getCategories(member.providerId),
                         preferencesRepository.getHiddenCategoryIds(member.providerId, ContentType.LIVE)
                     ) { categories, hiddenCategoryIds ->
-                        Triple(member, categories, hiddenCategoryIds)
+                        CombinedCategoryDependencies(member, categories, hiddenCategoryIds)
                     }
                 }
-                combine(categoryFlows) { arrays ->
-                    arrays.toList()
-                        .map { it as Triple<*, *, *> }
-                        .flatMap { triple ->
-                            val member = triple.first as com.afterglowtv.domain.model.CombinedM3uProfileMember
-                            val categories = triple.second as List<Category>
-                            val hiddenCategoryIds = triple.third as Set<Long>
-                            categories
+                combine(categoryFlows) { dependencies ->
+                    dependencies.toList()
+                        .flatMap { dependency ->
+                            dependency.categories
                                 .filter {
                                     !it.isVirtual &&
                                         it.id != com.afterglowtv.domain.repository.ChannelRepository.ALL_CHANNELS_ID &&
-                                        it.id !in hiddenCategoryIds
+                                        it.id !in dependency.hiddenCategoryIds
                                 }
                                 .map { category ->
-                                    Triple(member, category, normalizeCategoryKey(category.name))
+                                    Triple(dependency.member, category, normalizeCategoryKey(category.name))
                                 }
                         }
                         .groupBy { it.third }
@@ -343,14 +338,13 @@ class CombinedM3uRepositoryImpl @Inject constructor(
                     }
                     baseFlow.map { channels ->
                         val priority = enabledProviders[binding.providerId]?.priority ?: Int.MAX_VALUE
-                        priority to channels
+                        CombinedChannelDependencies(priority, channels)
                     }
                 }
-                combine(flows) { arrays ->
-                    arrays.toList()
-                        .map { it as Pair<Int, List<Channel>> }
-                        .sortedBy { it.first }
-                        .flatMap { it.second }
+                combine(flows) { dependencies ->
+                    dependencies.toList()
+                        .sortedBy { it.priority }
+                        .flatMap { it.channels }
                 }
             }
         }
@@ -368,3 +362,14 @@ class CombinedM3uRepositoryImpl @Inject constructor(
         -2_000_000_000L - key.hashCode().toLong().let { kotlin.math.abs(it) }
 
 }
+
+private data class CombinedCategoryDependencies(
+    val member: com.afterglowtv.domain.model.CombinedM3uProfileMember,
+    val categories: List<Category>,
+    val hiddenCategoryIds: Set<Long>
+)
+
+private data class CombinedChannelDependencies(
+    val priority: Int,
+    val channels: List<Channel>
+)

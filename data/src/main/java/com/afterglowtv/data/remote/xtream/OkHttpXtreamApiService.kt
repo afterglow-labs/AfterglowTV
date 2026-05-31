@@ -1,9 +1,8 @@
-@file:Suppress("DEPRECATION")
-
 package com.afterglowtv.data.remote.xtream
 
 import android.util.Log
 import com.google.gson.JsonParser
+import com.google.gson.Strictness
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.afterglowtv.data.remote.dto.XtreamAuthResponse
@@ -434,7 +433,7 @@ class OkHttpXtreamApiService(
             stream.unread(previewBytes)
 
             val reader = JsonReader(InputStreamReader(stream, charset))
-            reader.isLenient = true
+            reader.setStrictness(Strictness.LENIENT)
             return when (reader.peek()) {
                 JsonToken.BEGIN_ARRAY -> {
                     var emittedCount = 0
