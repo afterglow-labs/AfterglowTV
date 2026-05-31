@@ -35,11 +35,15 @@ import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -295,6 +299,10 @@ class PreferencesRepository @Inject constructor(
             )
         }
     }
+
+    private val parentalSessionWriteScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.IO.limitedParallelism(1)
+    )
 
     private val adultGuideCacheJson = Json {
         ignoreUnknownKeys = true
@@ -1226,10 +1234,12 @@ class PreferencesRepository @Inject constructor(
     }
 
     override fun writeSessionState(state: ParentalControlSessionState) {
-        parentalSessionPreferences.edit().apply {
-            remove(ParentalSessionKeys.UNLOCK_TIMEOUT_MS)
-            remove(ParentalSessionKeys.UNLOCK_ENTRIES)
-        }.apply()
+        parentalSessionWriteScope.launch {
+            parentalSessionPreferences.edit().apply {
+                remove(ParentalSessionKeys.UNLOCK_TIMEOUT_MS)
+                remove(ParentalSessionKeys.UNLOCK_ENTRIES)
+            }.apply()
+        }
     }
 
     suspend fun clearDefaultViewMode() {
