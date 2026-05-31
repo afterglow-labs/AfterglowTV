@@ -3,8 +3,10 @@ package com.afterglowtv.data.repository
 import com.google.common.truth.Truth.assertThat
 import com.afterglowtv.data.local.DatabaseTransactionRunner
 import com.afterglowtv.data.local.dao.ChannelDao
+import com.afterglowtv.data.local.dao.EpgSourceDao
 import com.afterglowtv.data.local.dao.ProgramDao
 import com.afterglowtv.data.local.dao.ProgramReminderDao
+import com.afterglowtv.data.local.dao.ProviderEpgSourceDao
 import com.afterglowtv.data.local.dao.ProviderDao
 import com.afterglowtv.data.local.dao.RecordingRunDao
 import com.afterglowtv.data.local.entity.ProviderEntity
@@ -53,6 +55,8 @@ class ProviderRepositoryImplTest {
     private val preferencesRepository: PreferencesRepository = mock()
     private val syncManager: SyncManager = mock()
     private val syncMetadataRepository: SyncMetadataRepository = mock()
+    private val epgSourceDao: EpgSourceDao = mock()
+    private val providerEpgSourceDao: ProviderEpgSourceDao = mock()
     private val recordingAlarmScheduler: RecordingAlarmScheduler = mock()
     private val programReminderAlarmScheduler: ProgramReminderAlarmScheduler = mock()
     private val transactionRunner = object : DatabaseTransactionRunner {
@@ -73,6 +77,8 @@ class ProviderRepositoryImplTest {
         preferencesRepository = preferencesRepository,
         syncManager = syncManager,
         syncMetadataRepository = syncMetadataRepository,
+        epgSourceDao = epgSourceDao,
+        providerEpgSourceDao = providerEpgSourceDao,
         transactionRunner = transactionRunner,
         recordingAlarmScheduler = recordingAlarmScheduler,
         programReminderAlarmScheduler = programReminderAlarmScheduler

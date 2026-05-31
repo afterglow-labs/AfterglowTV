@@ -42,8 +42,17 @@ internal fun LazyListScope.epgSourcesSection(
     uiState: SettingsUiState,
     viewModel: SettingsViewModel
 ) {
-    val epgSources = uiState.epgSources
     val providers = uiState.providers
+    val playlistOwnedSourceIds = providers
+        .flatMap { provider ->
+            val ownedUrl = provider.epgUrl.trim().takeIf { it.isNotBlank() } ?: return@flatMap emptyList()
+            uiState.epgSourceAssignments[provider.id]
+                .orEmpty()
+                .filter { assignment -> assignment.epgSourceUrl.trim() == ownedUrl }
+                .map { assignment -> assignment.epgSourceId }
+        }
+        .toSet()
+    val epgSources = uiState.epgSources.filter { source -> source.id !in playlistOwnedSourceIds }
 
     item {
         Text(
@@ -105,7 +114,9 @@ internal fun LazyListScope.epgSourcesSection(
             )
         }
         items(providers, key = { provider -> "epg-provider-${provider.id}" }) { provider ->
-            val assignments = uiState.epgSourceAssignments[provider.id].orEmpty()
+            val assignments = uiState.epgSourceAssignments[provider.id]
+                .orEmpty()
+                .filter { assignment -> assignment.epgSourceId !in playlistOwnedSourceIds }
             val resolutionSummary = uiState.epgResolutionSummaries[provider.id]
             val assignedSourceIds = assignments.map { it.epgSourceId }.toSet()
             val unassignedSources = epgSources.filter { it.id !in assignedSourceIds }
@@ -127,4 +138,3 @@ internal fun LazyListScope.epgSourcesSection(
         }
     }
 }
-

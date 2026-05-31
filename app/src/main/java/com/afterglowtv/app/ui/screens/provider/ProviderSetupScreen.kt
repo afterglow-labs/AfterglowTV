@@ -473,6 +473,8 @@ fun ProviderSetupScreen(
                         password = password, onPasswordChange = { password = ProviderInputSanitizer.sanitizePasswordForEditing(it) },
                         m3uUrl = m3uUrl, onM3uUrlChange = { m3uUrl = ProviderInputSanitizer.sanitizeUrlForEditing(it) },
                         m3uEpgUrl = m3uEpgUrl, onM3uEpgUrlChange = { m3uEpgUrl = ProviderInputSanitizer.sanitizeUrlForEditing(it) },
+                        m3uEpgUniqueToPlaylist = uiState.m3uEpgUniqueToPlaylist,
+                        onToggleM3uEpgUniqueToPlaylist = { viewModel.updateM3uEpgUniqueToPlaylist(!uiState.m3uEpgUniqueToPlaylist) },
                         httpUserAgent = httpUserAgent, onHttpUserAgentChange = { httpUserAgent = ProviderInputSanitizer.sanitizeHttpUserAgentForEditing(it) },
                         httpHeaders = httpHeaders, onHttpHeadersChange = { httpHeaders = ProviderInputSanitizer.sanitizeHttpHeadersForEditing(it) },
                         stalkerMacAddress = stalkerMacAddress, onStalkerMacAddressChange = { stalkerMacAddress = ProviderInputSanitizer.sanitizeMacAddressForEditing(it) },
@@ -515,6 +517,8 @@ fun ProviderSetupScreen(
                         password = password, onPasswordChange = { password = ProviderInputSanitizer.sanitizePasswordForEditing(it) },
                         m3uUrl = m3uUrl, onM3uUrlChange = { m3uUrl = ProviderInputSanitizer.sanitizeUrlForEditing(it) },
                         m3uEpgUrl = m3uEpgUrl, onM3uEpgUrlChange = { m3uEpgUrl = ProviderInputSanitizer.sanitizeUrlForEditing(it) },
+                        m3uEpgUniqueToPlaylist = uiState.m3uEpgUniqueToPlaylist,
+                        onToggleM3uEpgUniqueToPlaylist = { viewModel.updateM3uEpgUniqueToPlaylist(!uiState.m3uEpgUniqueToPlaylist) },
                         httpUserAgent = httpUserAgent, onHttpUserAgentChange = { httpUserAgent = ProviderInputSanitizer.sanitizeHttpUserAgentForEditing(it) },
                         httpHeaders = httpHeaders, onHttpHeadersChange = { httpHeaders = ProviderInputSanitizer.sanitizeHttpHeadersForEditing(it) },
                         stalkerMacAddress = stalkerMacAddress, onStalkerMacAddressChange = { stalkerMacAddress = ProviderInputSanitizer.sanitizeMacAddressForEditing(it) },
@@ -667,6 +671,8 @@ private fun ProviderFormContent(
     password: String, onPasswordChange: (String) -> Unit,
     m3uUrl: String, onM3uUrlChange: (String) -> Unit,
     m3uEpgUrl: String, onM3uEpgUrlChange: (String) -> Unit,
+    m3uEpgUniqueToPlaylist: Boolean,
+    onToggleM3uEpgUniqueToPlaylist: () -> Unit,
     httpUserAgent: String, onHttpUserAgentChange: (String) -> Unit,
     httpHeaders: String, onHttpHeadersChange: (String) -> Unit,
     stalkerMacAddress: String, onStalkerMacAddressChange: (String) -> Unit,
@@ -909,6 +915,12 @@ private fun ProviderFormContent(
                                     value = m3uEpgUrl, onValueChange = onM3uEpgUrlChange,
                                     placeholder = androidx.compose.ui.res.stringResource(R.string.setup_epg_url_hint),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
+                                )
+                                AdvancedSwitchOption(
+                                    title = stringResource(R.string.setup_m3u_epg_unique_label),
+                                    helper = stringResource(R.string.setup_m3u_epg_unique_helper),
+                                    checked = m3uEpgUniqueToPlaylist,
+                                    onToggle = onToggleM3uEpgUniqueToPlaylist
                                 )
                                 AdvancedProviderOptionsSection(
                                     sourceType = sourceType,

@@ -7,6 +7,7 @@ import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.repository.CombinedM3uRepository
+import com.afterglowtv.domain.repository.EpgSourceRepository
 import com.afterglowtv.domain.repository.ProviderRepository
 import com.afterglowtv.domain.manager.BackupImportPlan
 import com.afterglowtv.domain.manager.BackupImportResult
@@ -40,6 +41,7 @@ class ProviderSetupViewModelTest {
 
     private val providerRepository: ProviderRepository = mock()
     private val combinedM3uRepository: CombinedM3uRepository = mock()
+    private val epgSourceRepository: EpgSourceRepository = mock()
     private val validateAndAddProvider: ValidateAndAddProvider = mock()
     private val importBackup: ImportBackup = mock()
     private val preferencesRepository: PreferencesRepository = mock()
@@ -51,6 +53,7 @@ class ProviderSetupViewModelTest {
         whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(null))
         whenever(providerRepository.getProviders()).thenReturn(flowOf(emptyList()))
         whenever(combinedM3uRepository.getActiveLiveSource()).thenReturn(flowOf(null))
+        whenever(epgSourceRepository.getAssignmentsForProvider(any())).thenReturn(flowOf(emptyList()))
         whenever(preferencesRepository.developerModeEnabled).thenReturn(flowOf(false))
     }
 
@@ -75,6 +78,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -102,6 +106,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -131,6 +136,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -166,6 +172,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -200,6 +207,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -232,6 +240,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -258,6 +267,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -309,6 +319,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -330,6 +341,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -347,6 +359,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -364,6 +377,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -381,6 +395,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -413,6 +428,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -445,6 +461,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository
@@ -469,6 +486,7 @@ class ProviderSetupViewModelTest {
         val viewModel = ProviderSetupViewModel(
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
+            epgSourceRepository = epgSourceRepository,
             validateAndAddProvider = validateAndAddProvider,
             importBackup = importBackup,
             preferencesRepository = preferencesRepository

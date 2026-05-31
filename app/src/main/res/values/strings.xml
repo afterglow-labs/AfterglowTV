@@ -1001,6 +1001,8 @@
     <string name="setup_stalker_epg_sync_mode_skip_description">Do not bulk import guide data automatically. Live guide data can still load on demand when you browse channels.</string>
     <string name="setup_m3u_hint">Playlist URL</string>
     <string name="setup_epg_url_hint">EPG / XMLTV URL (optional)</string>
+    <string name="setup_m3u_epg_unique_label">This EPG is unique to this playlist</string>
+    <string name="setup_m3u_epg_unique_helper">Save it with this playlist and remove it when the playlist is deleted. Turn this off only when sharing one EPG with other playlists.</string>
     <string name="setup_tab_url">URL</string>
     <string name="setup_tab_file">File</string>
     <string name="setup_choose_file">Choose Playlist File</string>

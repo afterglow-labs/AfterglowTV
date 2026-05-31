@@ -52,6 +52,8 @@ class ProviderRepositoryImpl @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
     private val syncManager: SyncManager,
     private val syncMetadataRepository: SyncMetadataRepository,
+    private val epgSourceDao: EpgSourceDao,
+    private val providerEpgSourceDao: ProviderEpgSourceDao,
     private val transactionRunner: DatabaseTransactionRunner,
     private val recordingAlarmScheduler: RecordingAlarmScheduler,
     private val programReminderAlarmScheduler: ProgramReminderAlarmScheduler
@@ -100,11 +102,13 @@ class ProviderRepositoryImpl @Inject constructor(
     override suspend fun deleteProvider(id: Long): Result<Unit> = try {
         val recordingRunIds = recordingRunDao.getIdsByProvider(id)
         val reminderIds = programReminderDao.getIdsByProvider(id)
+        val ownedEpgSourceIds = playlistOwnedEpgSourceIds(id)
         transactionRunner.inTransaction {
             // ProgramEntity still has no provider FK, so it requires explicit cleanup.
             programDao.deleteByProvider(id)
             providerDao.delete(id)
         }
+        deleteUnassignedEpgSources(ownedEpgSourceIds)
         recordingRunIds.forEach { runId ->
             runPostDeleteCleanup("recording alarm $runId") {
                 recordingAlarmScheduler.cancel(runId)
@@ -121,6 +125,24 @@ class ProviderRepositoryImpl @Inject constructor(
         Result.success(Unit)
     } catch (e: Exception) {
         Result.error("Failed to delete provider: ${e.message}", e)
+    }
+
+    private suspend fun playlistOwnedEpgSourceIds(providerId: Long): List<Long> {
+        val provider = providerDao.getById(providerId) ?: return emptyList()
+        val ownedUrl = provider.epgUrl.trim().takeIf { it.isNotBlank() } ?: return emptyList()
+        return providerEpgSourceDao.getForProviderSync(providerId)
+            .mapNotNull { assignment ->
+                val source = epgSourceDao.getById(assignment.epgSourceId) ?: return@mapNotNull null
+                assignment.epgSourceId.takeIf { source.url.trim() == ownedUrl }
+            }
+    }
+
+    private suspend fun deleteUnassignedEpgSources(sourceIds: List<Long>) {
+        sourceIds.distinct().forEach { sourceId ->
+            if (providerEpgSourceDao.getProviderIdsForSourceSync(sourceId).isEmpty()) {
+                epgSourceDao.delete(sourceId)
+            }
+        }
     }
 
     private inline fun runPostDeleteCleanup(step: String, block: () -> Unit) {

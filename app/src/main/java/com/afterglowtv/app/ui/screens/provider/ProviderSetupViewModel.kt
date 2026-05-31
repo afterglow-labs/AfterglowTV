@@ -17,6 +17,7 @@ import com.afterglowtv.domain.model.ProviderEpgSyncMode
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.repository.CombinedM3uRepository
+import com.afterglowtv.domain.repository.EpgSourceRepository
 import com.afterglowtv.domain.repository.ProviderRepository
 import com.afterglowtv.domain.usecase.ImportBackup
 import com.afterglowtv.domain.usecase.ImportBackupCommand
@@ -49,6 +50,7 @@ import javax.net.ssl.SSLPeerUnverifiedException
 class ProviderSetupViewModel @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val combinedM3uRepository: CombinedM3uRepository,
+    private val epgSourceRepository: EpgSourceRepository,
     private val validateAndAddProvider: ValidateAndAddProvider,
     private val importBackup: ImportBackup,
     private val preferencesRepository: PreferencesRepository
@@ -99,6 +101,19 @@ class ProviderSetupViewModel @Inject constructor(
         viewModelScope.launch {
             val provider = providerRepository.getProvider(id)
             if (provider != null) {
+                val m3uEpgUrl = provider.epgUrl.ifBlank {
+                    if (provider.type == ProviderType.M3U) {
+                        epgSourceRepository.getAssignmentsForProvider(id)
+                            .first()
+                            .firstOrNull { it.enabled && it.epgSourceUrl.isNotBlank() }
+                            ?.epgSourceUrl
+                            .orEmpty()
+                    } else {
+                        ""
+                    }
+                }
+                val m3uEpgUniqueToPlaylist = provider.epgUrl.isNotBlank() ||
+                    (provider.type == ProviderType.M3U && m3uEpgUrl.isNotBlank())
                 _uiState.update {
                     it.copy(
                         isEditing = true,
@@ -108,7 +123,8 @@ class ProviderSetupViewModel @Inject constructor(
                         username = provider.username,
                         password = "",
                         m3uUrl = provider.m3uUrl,
-                        m3uEpgUrl = provider.epgUrl,
+                        m3uEpgUrl = m3uEpgUrl,
+                        m3uEpgUniqueToPlaylist = m3uEpgUniqueToPlaylist,
                         httpUserAgent = provider.httpUserAgent,
                         httpHeaders = provider.httpHeaders,
                         stalkerMacAddress = provider.stalkerMacAddress,
@@ -138,6 +154,10 @@ class ProviderSetupViewModel @Inject constructor(
 
     fun updateM3uVodClassificationEnabled(enabled: Boolean) {
         _uiState.update { it.copy(m3uVodClassificationEnabled = enabled) }
+    }
+
+    fun updateM3uEpgUniqueToPlaylist(enabled: Boolean) {
+        _uiState.update { it.copy(m3uEpgUniqueToPlaylist = enabled) }
     }
 
     fun updateEpgSyncMode(mode: ProviderEpgSyncMode) {
@@ -359,7 +379,8 @@ class ProviderSetupViewModel @Inject constructor(
                     epgSyncMode = _uiState.value.epgSyncMode,
                     m3uVodClassificationEnabled = _uiState.value.m3uVodClassificationEnabled,
                     existingProviderId = existingId,
-                    epgUrl = epgUrl.takeIf { it.isNotBlank() }
+                    epgUrl = epgUrl.takeIf { it.isNotBlank() },
+                    epgUniqueToPlaylist = _uiState.value.m3uEpgUniqueToPlaylist
                 ),
                 onProgress = { msg -> _uiState.update { it.copy(syncProgress = msg) } }
             )) {
@@ -711,6 +732,7 @@ data class ProviderSetupState(
     val password: String = "",
     val m3uUrl: String = "",
     val m3uEpgUrl: String = "",
+    val m3uEpgUniqueToPlaylist: Boolean = true,
     val httpUserAgent: String = "",
     val httpHeaders: String = "",
     val stalkerMacAddress: String = "",

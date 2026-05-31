@@ -36,6 +36,7 @@ data class M3uProviderSetupCommand(
     val existingProviderId: Long? = null,
     /** Optional XMLTV / EPG URL to attach to the newly-created provider. */
     val epgUrl: String? = null,
+    val epgUniqueToPlaylist: Boolean = true,
 )
 
 data class StalkerProviderSetupCommand(
@@ -207,7 +208,12 @@ class ValidateAndAddProvider @Inject constructor(
                             onProgress = onProgress,
                             id = command.existingProviderId
                         ).toUseCaseResult()
-                        attachOptionalEpgSource(mapped, command.epgUrl, validatedInput.name)
+                        attachOptionalEpgSource(
+                            addResult = mapped,
+                            epgUrl = command.epgUrl,
+                            providerName = validatedInput.name,
+                            epgUniqueToPlaylist = command.epgUniqueToPlaylist
+                        )
                         mapped
                     }
                 }
@@ -260,6 +266,7 @@ class ValidateAndAddProvider @Inject constructor(
         addResult: ValidateAndAddProviderResult,
         epgUrl: String?,
         providerName: String,
+        epgUniqueToPlaylist: Boolean,
     ) {
         if (epgUrl.isNullOrBlank()) return
         val provider: Provider = when (addResult) {
@@ -268,7 +275,13 @@ class ValidateAndAddProvider @Inject constructor(
             else -> return
         }
         val sourceName = if (providerName.isNotBlank()) "$providerName EPG" else "EPG for ${provider.id}"
-        val added = epgSourceRepository.addSource(name = sourceName, url = epgUrl.trim())
+        val trimmedEpgUrl = epgUrl.trim()
+        runCatching {
+            providerRepository.updateProvider(
+                provider.copy(epgUrl = if (epgUniqueToPlaylist) trimmedEpgUrl else "")
+            )
+        }
+        val added = epgSourceRepository.addSource(name = sourceName, url = trimmedEpgUrl)
         if (added is Result.Success) {
             epgSourceRepository.assignSourceToProvider(
                 providerId = provider.id,
