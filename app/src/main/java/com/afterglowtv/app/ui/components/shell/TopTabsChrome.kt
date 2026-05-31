@@ -36,7 +36,6 @@ fun defaultTopTabs(
     add(TopTab("live_tv", "Live TV"))
     add(TopTab("epg", "TV Guide"))
     if (developerModeEnabled) {
-        add(TopTab("vod_guide", "VOD Guide"))
         if (showAdultGuideTab) {
             add(TopTab("adult_guide", "Adult Guide"))
         }

@@ -297,7 +297,11 @@ class AppStartupDestinationViewModel @Inject constructor(
 }
 
 internal fun resolveStartupRoute(destination: StartupDestination, developerModeEnabled: Boolean): String =
-    if (destination.requiresDeveloperMode && !developerModeEnabled) Routes.HOME else destination.route
+    if (!destination.visibleInSettings || (destination.requiresDeveloperMode && !developerModeEnabled)) {
+        Routes.HOME
+    } else {
+        destination.route
+    }
 
 private fun isDeveloperRoute(route: String): Boolean =
     route == Routes.VOD_GUIDE || route == Routes.ADULT_GUIDE || route == Routes.LOCAL_MEDIA
@@ -439,12 +443,6 @@ fun AppNavigation(mainActivity: MainActivity) {
                         )
                     )
                 },
-                onMovieClick = { movie ->
-                    navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.HOME))
-                },
-                onSeriesClick = { series ->
-                    navController.navigateIfResumed(Routes.seriesDetail(series.id, Routes.HOME))
-                },
                 onPlaybackHistoryClick = { history ->
                     val route = when (history.contentType) {
                         com.afterglowtv.domain.model.ContentType.LIVE -> {
@@ -566,29 +564,12 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
 
         composable(Routes.VOD_GUIDE) {
-            if (!developerModeEnabled) {
-                LaunchedEffect(Unit) {
-                    navController.navigate(Routes.HOME) {
-                        launchSingleTop = true
-                    }
+            LaunchedEffect(developerModeEnabled) {
+                navController.navigate(if (developerModeEnabled) Routes.MOVIES else Routes.HOME) {
+                    popUpTo(Routes.VOD_GUIDE) { inclusive = true }
+                    launchSingleTop = true
                 }
-                return@composable
             }
-            MoviesScreen(
-                onMovieClick = { movie ->
-                    navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.VOD_GUIDE))
-                },
-                onContinueWatchingPlay = { history ->
-                    navController.navigateToPlayer(
-                        history.toPlayerNavigationRequest().copy(returnRoute = Routes.VOD_GUIDE)
-                    )
-                },
-                onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.VOD_GUIDE,
-                initialGuideMode = true,
-                wordmark = "VOD Guide",
-                tagline = "Provider VOD in guide-style rows."
-            )
         }
 
         composable(Routes.ADULT_GUIDE) {

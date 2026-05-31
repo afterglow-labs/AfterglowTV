@@ -16,6 +16,7 @@ import com.afterglowtv.domain.usecase.M3uProviderSetupCommand
 import com.afterglowtv.domain.usecase.XtreamProviderSetupCommand
 import com.afterglowtv.domain.usecase.ValidateAndAddProvider
 import com.afterglowtv.domain.usecase.ValidateAndAddProviderResult
+import com.afterglowtv.data.preferences.PreferencesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -41,6 +42,7 @@ class ProviderSetupViewModelTest {
     private val combinedM3uRepository: CombinedM3uRepository = mock()
     private val validateAndAddProvider: ValidateAndAddProvider = mock()
     private val importBackup: ImportBackup = mock()
+    private val preferencesRepository: PreferencesRepository = mock()
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
@@ -49,6 +51,7 @@ class ProviderSetupViewModelTest {
         whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(null))
         whenever(providerRepository.getProviders()).thenReturn(flowOf(emptyList()))
         whenever(combinedM3uRepository.getActiveLiveSource()).thenReturn(flowOf(null))
+        whenever(preferencesRepository.developerModeEnabled).thenReturn(flowOf(false))
     }
 
     @After
@@ -73,7 +76,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.loadProvider(21L)
@@ -99,7 +103,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.loginXtream("https://example.com", "alice", "secret", "Premium", "", "")
@@ -127,7 +132,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.addM3u("https://example.com/list.m3u", "Playlist 7", "", "")
@@ -161,7 +167,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.addM3u("https://example.com/list.m3u", "Playlist 7", "", "")
@@ -194,7 +201,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.loginXtream("https://example.com", "alice", "secret", "Premium", "", "")
@@ -225,7 +233,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
         val field = ProviderSetupViewModel::class.java.getDeclaredField("_uiState").apply { isAccessible = true }
         @Suppress("UNCHECKED_CAST")
@@ -250,7 +259,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         val seededState = viewModel.uiState.value.copy(
@@ -300,7 +310,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.addM3u("https://example.com/list.m3u", "Playlist 7", "", "")
@@ -320,7 +331,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.applySourceDefaults(ProviderSetupViewModel.SetupSourceType.STALKER)
@@ -336,7 +348,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.applySourceDefaults(ProviderSetupViewModel.SetupSourceType.XTREAM)
@@ -352,7 +365,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.applySourceDefaults(ProviderSetupViewModel.SetupSourceType.M3U)
@@ -368,7 +382,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.updateEpgSyncMode(ProviderEpgSyncMode.SKIP)
@@ -399,7 +414,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         // Simulate being in edit mode for provider 7.
@@ -430,7 +446,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.addM3u("https://example.com/list.m3u", "Playlist", "", "")
@@ -453,7 +470,8 @@ class ProviderSetupViewModelTest {
             providerRepository = providerRepository,
             combinedM3uRepository = combinedM3uRepository,
             validateAndAddProvider = validateAndAddProvider,
-            importBackup = importBackup
+            importBackup = importBackup,
+            preferencesRepository = preferencesRepository
         )
 
         viewModel.loginStalker(

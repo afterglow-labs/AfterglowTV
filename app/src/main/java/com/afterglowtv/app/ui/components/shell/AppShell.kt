@@ -833,7 +833,6 @@ private fun buildDestinationItems(
     add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
     add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
     if (developerModeEnabled) {
-        add(DestinationItem(Routes.VOD_GUIDE, R.string.nav_vod_guide, Icons.Default.Star))
         if (showAdultGuideTab) {
             add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info))
         }

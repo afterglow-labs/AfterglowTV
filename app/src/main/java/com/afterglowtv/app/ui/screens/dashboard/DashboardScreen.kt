@@ -55,9 +55,7 @@ import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.ui.components.CategoryRow
 import com.afterglowtv.app.ui.components.ChannelCard
 import com.afterglowtv.app.ui.components.ContinueWatchingRow
-import com.afterglowtv.app.ui.components.MovieCard
 import com.afterglowtv.app.ui.components.rememberCrossfadeImageModel
-import com.afterglowtv.app.ui.components.SeriesCard
 import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
 import com.afterglowtv.app.ui.components.shell.AppHeroHeader
@@ -75,9 +73,7 @@ import com.afterglowtv.app.ui.design.AppColors.TextPrimary as TextPrimary
 import com.afterglowtv.app.ui.design.AppColors.TextTertiary as OnSurfaceDim
 import com.afterglowtv.app.ui.design.AppColors.TextTertiary as TextTertiary
 import com.afterglowtv.domain.model.Channel
-import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.model.PlaybackHistory
-import com.afterglowtv.domain.model.Series
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.BorderStroke
 import java.text.SimpleDateFormat
@@ -93,8 +89,6 @@ fun DashboardScreen(
     onAddProvider: () -> Unit,
     onRecentChannelClick: (Channel, Long?) -> Unit,
     onFavoriteChannelClick: (Channel, Long?) -> Unit,
-    onMovieClick: (Movie) -> Unit,
-    onSeriesClick: (Series) -> Unit,
     onPlaybackHistoryClick: (PlaybackHistory) -> Unit,
     currentRoute: String,
     viewModel: DashboardViewModel = hiltViewModel()
@@ -222,30 +216,6 @@ fun DashboardScreen(
                         onItemClick = onPlaybackHistoryClick
                     )
 
-                    DashboardHomeSection.RECENT_MOVIES -> CategoryRow(
-                        title = stringResource(R.string.dashboard_recent_movies),
-                        items = uiState.recentMovies,
-                        keySelector = { it.id },
-                        onSeeAll = { onNavigate(Routes.MOVIES) }
-                    ) { movie ->
-                        MovieCard(
-                            movie = movie,
-                            onClick = { onMovieClick(movie) }
-                        )
-                    }
-
-                    DashboardHomeSection.RECENT_SERIES -> CategoryRow(
-                        title = stringResource(R.string.dashboard_recent_series),
-                        items = uiState.recentSeries,
-                        keySelector = { it.id },
-                        onSeeAll = { onNavigate(Routes.SERIES) }
-                    ) { series ->
-                        SeriesCard(
-                            series = series,
-                            subtitle = series.releaseDate ?: stringResource(R.string.dashboard_updated_series_badge),
-                            onClick = { onSeriesClick(series) }
-                        )
-                    }
                 }
             }
             }
@@ -357,9 +327,7 @@ private fun DashboardStatRow(
         stringResource(R.string.dashboard_stat_live, stats.liveChannelCount),
         stringResource(R.string.dashboard_stat_favorites, stats.favoriteChannelCount),
         stringResource(R.string.dashboard_stat_recent, stats.recentChannelCount),
-        stringResource(R.string.dashboard_stat_resume, stats.continueWatchingCount),
-        stringResource(R.string.dashboard_stat_movies, stats.movieLibraryCount),
-        stringResource(R.string.dashboard_stat_series, stats.seriesLibraryCount)
+        stringResource(R.string.dashboard_stat_resume, stats.continueWatchingCount)
     )
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -809,17 +777,13 @@ private fun rememberDashboardSections(
         uiState.liveShortcuts,
         uiState.favoriteChannels,
         uiState.recentChannels,
-        uiState.continueWatching,
-        uiState.recentMovies,
-        uiState.recentSeries
+        uiState.continueWatching
     ) {
         val preferred = listOf(
             DashboardHomeSection.FAVORITE_CHANNELS,
             DashboardHomeSection.RECENT_CHANNELS,
             DashboardHomeSection.LIVE_SHORTCUTS,
-            DashboardHomeSection.CONTINUE_WATCHING,
-            DashboardHomeSection.RECENT_MOVIES,
-            DashboardHomeSection.RECENT_SERIES
+            DashboardHomeSection.CONTINUE_WATCHING
         )
 
         preferred.filter { section ->
@@ -828,8 +792,6 @@ private fun rememberDashboardSections(
                 DashboardHomeSection.FAVORITE_CHANNELS -> uiState.favoriteChannels.isNotEmpty()
                 DashboardHomeSection.RECENT_CHANNELS -> uiState.recentChannels.isNotEmpty()
                 DashboardHomeSection.CONTINUE_WATCHING -> uiState.continueWatching.isNotEmpty()
-                DashboardHomeSection.RECENT_MOVIES -> uiState.recentMovies.isNotEmpty()
-                DashboardHomeSection.RECENT_SERIES -> uiState.recentSeries.isNotEmpty()
             }
         }
     }
@@ -839,9 +801,7 @@ private enum class DashboardHomeSection {
     LIVE_SHORTCUTS,
     FAVORITE_CHANNELS,
     RECENT_CHANNELS,
-    CONTINUE_WATCHING,
-    RECENT_MOVIES,
-    RECENT_SERIES
+    CONTINUE_WATCHING
 }
 
 @Composable
