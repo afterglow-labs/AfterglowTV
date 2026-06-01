@@ -189,13 +189,17 @@ class MoviesViewModel @Inject constructor(
                             } else {
                                 categories
                             }
-                        }
+                        }.withoutAdultVodCategories()
                         MovieCatalogDependencies(
                             allFavorites = allFavorites,
                             customCategories = customCategories,
                             providerCategories = visibleProviderCategories,
                             providerCategoryCounts = providerCategoryCounts,
-                            libraryCount = libraryCount,
+                            libraryCount = normalMovieLibraryCount(
+                                providerCategoryCounts = providerCategoryCounts,
+                                normalProviderCategories = visibleProviderCategories,
+                                fallback = libraryCount
+                            ),
                             hiddenCategoryIds = hiddenCategoryIds,
                             categorySortMode = sortMode
                         )
@@ -254,6 +258,7 @@ class MoviesViewModel @Inject constructor(
                         } else {
                             flow {
                                 val searchResults = movieRepository.searchMovies(params.providerId, params.query).first()
+                                    .withoutAdultVodMovies(params.providerCategories)
                                 emit(PreviewLoadResult(
                                     buildSearchCatalog(
                                         movies = searchResults,
@@ -471,7 +476,7 @@ class MoviesViewModel @Inject constructor(
                         emptyList()
                     } else {
                         movieRepository.getMoviesByIds(favoriteIds).first().orderByIds(favoriteIds)
-                    }.let { movies ->
+                    }.withoutAdultVodMovies().let { movies ->
                         markVodFavorites(movies, globalFavoriteIds, Movie::id) { movie, isFavorite ->
                             movie.copy(isFavorite = isFavorite)
                         }
@@ -480,7 +485,7 @@ class MoviesViewModel @Inject constructor(
                         emptyList()
                     } else {
                         movieRepository.getMoviesByIds(continueIds).first().orderByIds(continueIds)
-                    }.let { movies ->
+                    }.withoutAdultVodMovies().let { movies ->
                         markVodFavorites(movies, globalFavoriteIds, Movie::id) { movie, isFavorite ->
                             movie.copy(isFavorite = isFavorite)
                         }
@@ -491,10 +496,10 @@ class MoviesViewModel @Inject constructor(
                             libraryLensRows = mapOf(
                                 MovieLibraryLens.FAVORITES to favoritePreview,
                                 MovieLibraryLens.CONTINUE to continuePreview,
-                                MovieLibraryLens.TOP_RATED to markVodFavorites(dependencies.topRated, globalFavoriteIds, Movie::id) { movie, isFavorite ->
+                                MovieLibraryLens.TOP_RATED to markVodFavorites(dependencies.topRated.withoutAdultVodMovies(), globalFavoriteIds, Movie::id) { movie, isFavorite ->
                                     movie.copy(isFavorite = isFavorite)
                                 },
-                                MovieLibraryLens.FRESH to markVodFavorites(dependencies.fresh, globalFavoriteIds, Movie::id) { movie, isFavorite ->
+                                MovieLibraryLens.FRESH to markVodFavorites(dependencies.fresh.withoutAdultVodMovies(), globalFavoriteIds, Movie::id) { movie, isFavorite ->
                                     movie.copy(isFavorite = isFavorite)
                                 }
                             ).filterValues { rows -> rows.isNotEmpty() }
@@ -1198,8 +1203,8 @@ class MoviesViewModel @Inject constructor(
             providerCategoryCounts = params.providerCategoryCounts,
             libraryCount = params.libraryCount,
             hiddenProviderCategoryIds = params.hiddenCategoryIds,
-            loadItemsByIds = { ids -> movieRepository.getMoviesByIds(ids).first() },
-            providerPreviews = providerPreviews,
+            loadItemsByIds = { ids -> movieRepository.getMoviesByIds(ids).first().withoutAdultVodMovies(params.providerCategories) },
+            providerPreviews = providerPreviews.mapValues { (_, movies) -> movies.withoutAdultVodMovies(params.providerCategories) },
             itemId = Movie::id,
             itemCategoryId = Movie::categoryId,
             copyWithFavorite = { movie, isFavorite -> movie.copy(isFavorite = isFavorite) }
@@ -1283,7 +1288,9 @@ class MoviesViewModel @Inject constructor(
                         )
                         .first()
                     Triple(
-                        result.items.filterNot { movie -> movie.categoryId in request.hiddenCategoryIds },
+                        result.items
+                            .filterNot { movie -> movie.categoryId in request.hiddenCategoryIds }
+                            .withoutAdultVodMovies(request.providerCategories),
                         result.totalCount,
                         result.hasMoreRemote
                     )
@@ -1306,6 +1313,7 @@ class MoviesViewModel @Inject constructor(
                 } else {
                     movieRepository.getMoviesByIds(fetchIds).first()
                         .filterNot { movie -> movie.categoryId in request.hiddenCategoryIds }
+                        .filterForAdultVodMode(request.adultOnly, request.providerCategories)
                         .orderByIds(fetchIds)
                 }
                 val filteredItems = applyLocalBrowseToMovies(
@@ -1339,6 +1347,7 @@ class MoviesViewModel @Inject constructor(
                     } else {
                         movieRepository.getMoviesByIds(fetchIds).first()
                             .filterNot { movie -> movie.categoryId in request.hiddenCategoryIds }
+                            .filterForAdultVodMode(request.adultOnly, request.providerCategories)
                             .orderByIds(fetchIds)
                     }
                     val filteredItems = applyLocalBrowseToMovies(
@@ -1353,7 +1362,12 @@ class MoviesViewModel @Inject constructor(
                         false
                     )
                 } else {
-                    val providerCategory = request.providerCategories.firstOrNull { it.name == request.selectedCategory }
+                    val selectableProviderCategories = if (request.adultOnly) {
+                        request.providerCategories
+                    } else {
+                        request.providerCategories.withoutAdultVodCategories()
+                    }
+                    val providerCategory = selectableProviderCategories.firstOrNull { it.name == request.selectedCategory }
                     if (providerCategory != null) {
                         val result = movieRepository
                             .browseMovies(
@@ -1368,7 +1382,11 @@ class MoviesViewModel @Inject constructor(
                                 )
                             )
                             .first()
-                        Triple(result.items, result.totalCount, result.hasMoreRemote)
+                        Triple(
+                            result.items.filterForAdultVodMode(request.adultOnly, request.providerCategories),
+                            result.totalCount,
+                            result.hasMoreRemote
+                        )
                     } else {
                         Triple(emptyList<Movie>(), 0, false)
                     }
@@ -1492,6 +1510,35 @@ class MoviesViewModel @Inject constructor(
             ?: movie.year?.toLongOrNull()
             ?: 0L
     }
+}
+
+internal fun List<Category>.withoutAdultVodCategories(): List<Category> =
+    filterNot(::isAdultGuideCategory)
+
+internal fun List<Movie>.withoutAdultVodMovies(providerCategories: List<Category> = emptyList()): List<Movie> {
+    val categoriesById = providerCategories.associateBy { kotlin.math.abs(it.id) }
+    return filterNot { movie ->
+        isAdultVodMovie(movie, movie.categoryId?.let { categoriesById[kotlin.math.abs(it)] })
+    }
+}
+
+internal fun List<Movie>.onlyAdultVodMovies(providerCategories: List<Category> = emptyList()): List<Movie> {
+    val categoriesById = providerCategories.associateBy { kotlin.math.abs(it.id) }
+    return filter { movie ->
+        isAdultVodMovie(movie, movie.categoryId?.let { categoriesById[kotlin.math.abs(it)] })
+    }
+}
+
+internal fun List<Movie>.filterForAdultVodMode(adultOnly: Boolean, providerCategories: List<Category>): List<Movie> =
+    if (adultOnly) onlyAdultVodMovies(providerCategories) else withoutAdultVodMovies(providerCategories)
+
+internal fun normalMovieLibraryCount(
+    providerCategoryCounts: Map<Long, Int>,
+    normalProviderCategories: List<Category>,
+    fallback: Int
+): Int {
+    val visibleCount = normalProviderCategories.sumOf { category -> providerCategoryCounts[category.id] ?: 0 }
+    return visibleCount.takeIf { it > 0 } ?: fallback
 }
 
 private data class MovieCatalogParams(

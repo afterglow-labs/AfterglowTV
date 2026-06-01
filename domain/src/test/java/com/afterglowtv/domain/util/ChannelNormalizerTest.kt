@@ -116,4 +116,13 @@ class ChannelNormalizerTest {
         assertThat(fiveSeventySix.attributes.declaredHeight).isEqualTo(576)
         assertThat(fiveForty.attributes.declaredHeight).isEqualTo(540)
     }
+
+    @Test
+    fun `classify only recognizes standalone codec tokens`() {
+        val standalone = ChannelNormalizer.classify("Cinema H265", 1L)
+        val embedded = ChannelNormalizer.classify("Cinema H265ish", 1L)
+
+        assertThat(standalone.attributes.codecLabel).isEqualTo("HEVC")
+        assertThat(embedded.attributes.codecLabel).isNull()
+    }
 }

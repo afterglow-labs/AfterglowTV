@@ -699,20 +699,22 @@ class HomeViewModel @Inject constructor(
                                 flowOf(CategorySelectionContext(emptyList(), null, null, emptySet()))
                             } else {
                                 combine(channelFlows) { channelArrays ->
-                                    val channels = channelArrays.toList()
-                                        .flatMap { it }
-                                        .distinctBy { it.providerId to it.id }
-                                    val adultContext = buildAdultGuideLiveContextFromChannels(
-                                        providerCategories = combinedCategories.map { it.category },
-                                        channels = channels
-                                    )
-                                    adultGuideChannelIdsByCategoryId = adultContext.channelIdsByCategoryId
-                                    CategorySelectionContext(
-                                        categories = adultContext.categories,
-                                        defaultCategoryId = null,
-                                        lastVisitedCategoryId = null,
-                                        pinnedCategoryIds = emptySet()
-                                    )
+                                    withContext(Dispatchers.Default) {
+                                        val channels = channelArrays.toList()
+                                            .flatMap { it }
+                                            .distinctBy { it.providerId to it.id }
+                                        val adultContext = buildAdultGuideLiveContextFromChannels(
+                                            providerCategories = combinedCategories.map { it.category },
+                                            channels = channels
+                                        )
+                                        adultGuideChannelIdsByCategoryId = adultContext.channelIdsByCategoryId
+                                        CategorySelectionContext(
+                                            categories = adultContext.categories,
+                                            defaultCategoryId = null,
+                                            lastVisitedCategoryId = null,
+                                            pinnedCategoryIds = emptySet()
+                                        )
+                                    }
                                 }
                             }
                         }.collect { selectionContext ->
@@ -1000,30 +1002,32 @@ class HomeViewModel @Inject constructor(
                     _uiState.map { it.selectedCombinedSourceProviderId }.distinctUntilChanged(),
                     _uiState.map { it.parentalControlLevel }.distinctUntilChanged()
                 ) { channels, numberingMode, selectedCombinedSourceProviderId, level ->
-                    val byProvider = selectedCombinedSourceProviderId?.let { selectedProviderId ->
-                        channels.filter { it.providerId == selectedProviderId }
-                    } ?: channels
-                    val liveTvVisible = if (_adultGuideMode.value) {
-                        byProvider
-                    } else {
-                        byProvider.filterNotLiveTvAdultContent()
-                    }
-                    val numbered = when (numberingMode) {
-                        ChannelNumberingMode.GROUP -> liveTvVisible.mapIndexed { index, channel ->
-                            channel.copy(number = index + 1)
+                    withContext(Dispatchers.Default) {
+                        val byProvider = selectedCombinedSourceProviderId?.let { selectedProviderId ->
+                            channels.filter { it.providerId == selectedProviderId }
+                        } ?: channels
+                        val liveTvVisible = if (_adultGuideMode.value) {
+                            byProvider
+                        } else {
+                            byProvider.filterNotLiveTvAdultContent()
                         }
-                        ChannelNumberingMode.PROVIDER -> liveTvVisible
-                        ChannelNumberingMode.HIDDEN -> liveTvVisible.map { it.copy(number = 0) }
+                        val numbered = when (numberingMode) {
+                            ChannelNumberingMode.GROUP -> liveTvVisible.mapIndexed { index, channel ->
+                                channel.copy(number = index + 1)
+                            }
+                            ChannelNumberingMode.PROVIDER -> liveTvVisible
+                            ChannelNumberingMode.HIDDEN -> liveTvVisible.map { it.copy(number = 0) }
+                        }
+                        val isAggregatedSurface = category.id == ChannelRepository.ALL_CHANNELS_ID ||
+                            category.id == VirtualCategoryIds.RECENT
+                        if (_adultGuideMode.value) {
+                            numbered
+                        } else if (isAggregatedSurface) {
+                            AdultContentVisibilityPolicy.filterForAggregatedSurface(
+                                numbered, level
+                            ) { isUserProtected }
+                        } else numbered
                     }
-                    val isAggregatedSurface = category.id == ChannelRepository.ALL_CHANNELS_ID ||
-                        category.id == VirtualCategoryIds.RECENT
-                    if (_adultGuideMode.value) {
-                        numbered
-                    } else if (isAggregatedSurface) {
-                        AdultContentVisibilityPolicy.filterForAggregatedSurface(
-                            numbered, level
-                        ) { isUserProtected }
-                    } else numbered
                 }.collect { displayedChannels ->
                     val currentQuery = _uiState.value.channelSearchQuery.trim()
                     val currentLimit = if (currentQuery.length < MIN_CHANNEL_SEARCH_QUERY_LENGTH) {
