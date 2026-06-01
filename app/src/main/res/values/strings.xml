@@ -8,10 +8,10 @@
     <string name="nav_movies">Movies</string>
     <string name="nav_series">Series</string>
     <string name="nav_local_media">Local Media</string>
-    <string name="nav_personal_guide">Personal Guide</string>
+    <string name="nav_personal_guide">Personal Library</string>
     <string name="nav_epg">Guide</string>
     <string name="nav_iptv_guide">IPTV Guide</string>
-    <string name="nav_vod_guide">VOD Guide</string>
+    <string name="nav_vod_container">VOD</string>
     <string name="nav_adult_guide">XXX Guide</string>
     <string name="nav_settings">Settings</string>
 
@@ -133,7 +133,7 @@
     <string name="dashboard_stat_movies">%1$d movies</string>
     <string name="dashboard_stat_series">%1$d series</string>
     <string name="dashboard_empty_title">Welcome to AfterglowTV</string>
-    <string name="dashboard_empty_body">Browse your Personal Guide and network shares any time. Want live channels and on-demand rows on Home too? Add a playlist or Xtream provider whenever you like.</string>
+    <string name="dashboard_empty_body">Browse your Personal Library and network shares any time. Want live channels and on-demand rows on Home too? Add a playlist or Xtream provider whenever you like.</string>
 
     
     <string name="pin_dialog_title">Enter PIN</string>
@@ -244,9 +244,9 @@
     <string name="movies_reorder_subtitle">Use the remote to move posters, then save the shelf order for this group.</string>
     <string name="library_full_browse_title_movies">Browse Full Movie Library</string>
     <string name="library_full_browse_subtitle">%1$d titles available in the current provider</string>
-    <string name="vod_guide_title">VOD Guide</string>
-    <string name="vod_guide_detail">Guide-style VOD browsing</string>
-    <string name="xxx_vod_guide_title">XXX VOD Guide</string>
+    <string name="vod_guide_title">VOD</string>
+    <string name="vod_guide_detail">VOD browsing</string>
+    <string name="xxx_vod_guide_title">XXX VOD</string>
     <string name="xxx_vod_guide_detail">Adult VOD only</string>
 
     
@@ -521,8 +521,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_guide">VOD</string>
+    <string name="settings_vod_view_mode_guide_desc">Category rail with VOD results on the right.</string>
     <string name="settings_vod_infinite_scroll">Infinite scroll</string>
     <string name="settings_vod_infinite_scroll_on">Auto-load more category rows as you scroll near the end.</string>
     <string name="settings_vod_infinite_scroll_off">Show a Load more button to fetch the next batch of category rows.</string>

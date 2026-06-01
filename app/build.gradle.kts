@@ -102,7 +102,7 @@ android {
             versionNameSuffix = "-corey"
             buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "false")
             buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"Plex\"")
-            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"//192.168.1.8/Plex/\"")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\\\\\\\\192.168.1.8\\\\Plex\"")
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")

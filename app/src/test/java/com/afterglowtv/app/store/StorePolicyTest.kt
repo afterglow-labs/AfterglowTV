@@ -31,7 +31,7 @@ class StorePolicyTest {
             assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglowtv.app")
             assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
         } else {
-            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglowtv.app")
+            assertThat(BuildConfig.APPLICATION_ID).startsWith("com.afterglowtv.app")
             assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
         }
     }

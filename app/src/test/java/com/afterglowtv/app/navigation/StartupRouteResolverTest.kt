@@ -9,7 +9,7 @@ class StartupRouteResolverTest {
     fun `startup route uses configured destination without provider setup redirect`() {
         assertThat(resolveStartupRoute(StartupDestination.HOME, developerModeEnabled = false)).isEqualTo(Routes.HOME)
         assertThat(resolveStartupRoute(StartupDestination.IPTV_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.EPG)
-        assertThat(resolveStartupRoute(StartupDestination.VOD_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.VOD_GUIDE)
+        assertThat(resolveStartupRoute(StartupDestination.VOD_CONTAINER, developerModeEnabled = false)).isEqualTo(Routes.VOD_CONTAINER)
         assertThat(resolveStartupRoute(StartupDestination.PERSONAL_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.LOCAL_MEDIA)
         assertThat(resolveStartupRoute(StartupDestination.XXX_GUIDE, developerModeEnabled = true)).isEqualTo(
             if (StorePolicy.current.showAdultSurfaces) Routes.ADULT_GUIDE else Routes.HOME
@@ -27,7 +27,7 @@ class StartupRouteResolverTest {
             StartupDestination.XXX_GUIDE
         )
         assertThat(StartupDestination.visibleEntries(developerModeEnabled = false)).containsAtLeast(
-            StartupDestination.VOD_GUIDE,
+            StartupDestination.VOD_CONTAINER,
             StartupDestination.PERSONAL_GUIDE
         )
         val developerModeEntries = StartupDestination.visibleEntries(developerModeEnabled = true)

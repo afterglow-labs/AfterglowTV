@@ -13,10 +13,8 @@ enum class StartupDestination(
     HOME("home", Routes.HOME, R.string.nav_home),
     LIVE_TV("live_tv", Routes.LIVE_TV, R.string.nav_live_tv),
     IPTV_GUIDE("iptv_guide", Routes.EPG, R.string.nav_iptv_guide),
-    VOD_GUIDE("vod_guide", Routes.VOD_GUIDE, R.string.nav_vod_guide),
+    VOD_CONTAINER("vod_container", Routes.VOD_CONTAINER, R.string.nav_vod_container),
     XXX_GUIDE("xxx_guide", Routes.ADULT_GUIDE, R.string.nav_adult_guide, requiresDeveloperMode = true),
-    MOVIES("movies", Routes.MOVIES, R.string.nav_movies),
-    SERIES("series", Routes.SERIES, R.string.nav_series),
     PERSONAL_GUIDE("personal_guide", Routes.LOCAL_MEDIA, R.string.nav_personal_guide),
     SETTINGS("settings", Routes.SETTINGS, R.string.nav_settings);
 

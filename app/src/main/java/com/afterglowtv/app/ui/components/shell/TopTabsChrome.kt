@@ -23,9 +23,7 @@ import com.afterglowtv.app.ui.design.afterglowFocus
 
 /**
  * AfterglowTV top tabs row. Alternative chrome to the existing left rail —
- * meant for the Home / Live TV / Guide / Movies / Series / Recordings /
- * Search / Settings landing screens. The player route ignores this and
- * renders full-bleed.
+ * meant for the main landing screens. The player route ignores this and renders full-bleed.
  */
 data class TopTab(val id: String, val label: String)
 
@@ -36,13 +34,11 @@ fun defaultTopTabs(
     add(TopTab("home", "Home"))
     add(TopTab("live_tv", "Live TV"))
     add(TopTab("epg", if (StorePolicy.current.amazonReviewBuild) "TV Guide" else "IPTV Guide"))
-    add(TopTab("vod_guide", if (StorePolicy.current.amazonReviewBuild) "Video Guide" else "VOD Guide"))
+    add(TopTab("vod_container", if (StorePolicy.current.amazonReviewBuild) "Video" else "VOD"))
     if (StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultGuideTab) {
         add(TopTab("adult_guide", "XXX Guide"))
     }
-    add(TopTab("movies", "Movies"))
-    add(TopTab("series", "Series"))
-    add(TopTab("local_media", "Personal Guide"))
+    add(TopTab("local_media", "Personal Library"))
     add(TopTab("favorites", "Favorites"))
     add(TopTab("search", "Search"))
     add(TopTab("settings", "Settings"))

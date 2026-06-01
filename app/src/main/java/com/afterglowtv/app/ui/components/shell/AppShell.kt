@@ -817,12 +817,10 @@ private fun buildDestinationItems(showAdultGuideTab: Boolean = false): List<Dest
     add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))
     add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
     add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
-    add(DestinationItem(Routes.VOD_GUIDE, R.string.nav_vod_guide, Icons.Default.Star))
+    add(DestinationItem(Routes.VOD_CONTAINER, R.string.nav_vod_container, Icons.Default.Star))
     if (showAdultGuideTab) {
         add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info))
     }
-    add(DestinationItem(Routes.MOVIES, R.string.nav_movies, Icons.Default.Star))
-    add(DestinationItem(Routes.SERIES, R.string.nav_series, Icons.Default.Menu))
     add(DestinationItem(Routes.LOCAL_MEDIA, R.string.nav_personal_guide, Icons.Default.Menu))
     add(DestinationItem(Routes.SEARCH, R.string.search_title, Icons.Default.Search))
     add(DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings))

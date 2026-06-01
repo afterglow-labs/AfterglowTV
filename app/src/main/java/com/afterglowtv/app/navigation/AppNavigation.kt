@@ -31,11 +31,10 @@ import com.afterglowtv.app.ui.screens.dashboard.DashboardScreen
 import com.afterglowtv.app.ui.screens.multiview.MultiViewScreen
 import com.afterglowtv.app.ui.screens.home.HomeScreen
 import com.afterglowtv.app.ui.screens.local.LocalMediaScreen
-import com.afterglowtv.app.ui.screens.movies.MoviesScreen
 import com.afterglowtv.app.ui.screens.player.PlayerScreen
 import com.afterglowtv.app.ui.screens.provider.ProviderSetupScreen
-import com.afterglowtv.app.ui.screens.series.SeriesScreen
 import com.afterglowtv.app.ui.screens.settings.SettingsScreen
+import com.afterglowtv.app.ui.screens.vod.VodScreen
 import com.afterglowtv.app.ui.screens.welcome.WelcomeScreen
 import com.afterglowtv.app.MainActivity
 import com.afterglowtv.data.preferences.PreferencesRepository
@@ -79,10 +78,8 @@ object Routes {
     const val HOME = "home"
     const val LIVE_TV = "live_tv"
     const val LIVE_TV_DESTINATION = "live_tv?categoryId={categoryId}"
-    const val MOVIES = "movies"
-    const val SERIES = "series"
     const val LOCAL_MEDIA = "local_media"
-    const val VOD_GUIDE = "vod_guide"
+    const val VOD_CONTAINER = "vod_container"
     const val ADULT_GUIDE = "adult_guide"
     const val EPG = "epg"
     const val EPG_DESTINATION = "epg?categoryId={categoryId}&anchorTime={anchorTime}&favoritesOnly={favoritesOnly}"
@@ -94,8 +91,6 @@ object Routes {
     const val PLAYER = "player"
     const val SEARCH = "search"
     const val SEARCH_DESTINATION = "search?query={query}"
-    const val MOVIE_DETAIL = "movie_detail/{movieId}?returnRoute={returnRoute}"
-    const val SERIES_DETAIL = "series_detail/{seriesId}?returnRoute={returnRoute}"
     const val WELCOME = "welcome"
     const val PARENTAL_CONTROL_GROUPS = "parental_control_groups/{providerId}"
     const val MULTI_VIEW = "multi_view"
@@ -234,10 +229,6 @@ object Routes {
         )
     }
 
-    fun movieDetail(movieId: Long, returnRoute: String? = null) =
-        "movie_detail/$movieId?returnRoute=${Uri.encode(returnRoute ?: "")}"
-    fun seriesDetail(seriesId: Long, returnRoute: String? = null) =
-        "series_detail/$seriesId?returnRoute=${Uri.encode(returnRoute ?: "")}"
     fun parentalControlGroups(providerId: Long) = "parental_control_groups/$providerId"
 }
 
@@ -461,12 +452,6 @@ fun AppNavigation(mainActivity: MainActivity) {
                         )
                     )
                 },
-                onMovieClick = { movie ->
-                    navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.HOME))
-                },
-                onSeriesClick = { series ->
-                    navController.navigateIfResumed(Routes.seriesDetail(series.id, Routes.HOME))
-                },
                 onPlaybackHistoryClick = { history ->
                     val route = when (history.contentType) {
                         com.afterglowtv.domain.model.ContentType.LIVE -> {
@@ -490,7 +475,15 @@ fun AppNavigation(mainActivity: MainActivity) {
                             )
                         }
                         com.afterglowtv.domain.model.ContentType.SERIES -> {
-                            Routes.seriesDetail(history.contentId, Routes.HOME)
+                            Routes.player(
+                                streamUrl = history.streamUrl,
+                                title = history.title,
+                                internalId = history.contentId,
+                                providerId = history.providerId,
+                                contentType = history.contentType.name,
+                                returnRoute = Routes.HOME,
+                                seriesId = history.seriesId
+                            )
                         }
                         com.afterglowtv.domain.model.ContentType.SERIES_EPISODE -> {
                             Routes.player(
@@ -506,11 +499,7 @@ fun AppNavigation(mainActivity: MainActivity) {
                             )
                         }
                     }
-                    if (route is PlayerNavigationRequest) {
-                        navController.navigateToPlayer(route)
-                    } else {
-                        navController.navigateIfResumed(route as String) { launchSingleTop = true }
-                    }
+                    navController.navigateToPlayer(route)
                 },
                 currentRoute = Routes.HOME
             )
@@ -544,31 +533,6 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
 // ... (rest of file)
 
-        composable(Routes.MOVIES) {
-            MoviesScreen(
-                onMovieClick = { movie ->
-                    navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.MOVIES))
-                },
-                onContinueWatchingPlay = { history ->
-                    navController.navigateToPlayer(
-                        history.toPlayerNavigationRequest().copy(returnRoute = Routes.MOVIES)
-                    )
-                },
-                onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.MOVIES
-            )
-        }
-
-        composable(Routes.SERIES) {
-            SeriesScreen(
-                onSeriesClick = { seriesId ->
-                    navController.navigateIfResumed(Routes.seriesDetail(seriesId, Routes.SERIES))
-                },
-                onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.SERIES
-            )
-        }
-
         composable(Routes.LOCAL_MEDIA) {
             LocalMediaScreen(
                 onPlayItem = { item ->
@@ -579,25 +543,10 @@ fun AppNavigation(mainActivity: MainActivity) {
             )
         }
 
-        composable(Routes.VOD_GUIDE) {
-            MoviesScreen(
-                onMovieClick = { movie ->
-                    navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.VOD_GUIDE))
-                },
-                onContinueWatchingPlay = { history ->
-                    navController.navigateToPlayer(
-                        history.toPlayerNavigationRequest().copy(returnRoute = Routes.VOD_GUIDE)
-                    )
-                },
+        composable(Routes.VOD_CONTAINER) {
+            VodScreen(
                 onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.VOD_GUIDE,
-                initialGuideMode = true,
-                wordmark = if (StorePolicy.current.amazonReviewBuild) "Video Guide" else "VOD Guide",
-                tagline = if (StorePolicy.current.amazonReviewBuild) {
-                    "On-demand videos in guide-style rows."
-                } else {
-                    "Provider VOD in guide-style rows."
-                }
+                currentRoute = Routes.VOD_CONTAINER
             )
         }
 
@@ -762,15 +711,13 @@ fun AppNavigation(mainActivity: MainActivity) {
                     )
                 },
                 onMovieClick = { movie ->
-                     navController.navigateIfResumed(
-                         Routes.movieDetail(movie.id, Routes.search(backStackEntry.arguments?.getString("query").orEmpty()))
-                     )
+                    navController.navigateToPlayer(
+                        Routes.moviePlayer(movie).copy(
+                            returnRoute = Routes.search(backStackEntry.arguments?.getString("query").orEmpty())
+                        )
+                    )
                 },
-                onSeriesClick = { series ->
-                     navController.navigateIfResumed(
-                         Routes.seriesDetail(series.id, Routes.search(backStackEntry.arguments?.getString("query").orEmpty()))
-                     )
-                },
+                onSeriesClick = { _ -> Unit },
                 onNavigate = { route -> tabNavigate(route) },
                 currentRoute = Routes.SEARCH
             )
@@ -823,72 +770,6 @@ fun AppNavigation(mainActivity: MainActivity) {
                         if (route == Routes.MULTI_VIEW) {
                             popUpTo(Routes.PLAYER) { inclusive = true }
                         }
-                    }
-                }
-            )
-        }
-
-        composable(
-            route = Routes.MOVIE_DETAIL,
-            arguments = listOf(
-                navArgument("movieId") { type = NavType.LongType },
-                navArgument("returnRoute") { type = NavType.StringType; defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val returnRoute = backStackEntry.arguments?.getString("returnRoute").orEmpty().takeIf { it.isNotBlank() }
-            val movieId = backStackEntry.arguments?.getLong("movieId") ?: -1L
-            com.afterglowtv.app.ui.screens.movies.MovieDetailScreen(
-                onPlay = { movie ->
-                    navController.navigateToPlayer(
-                        Routes.moviePlayer(movie).copy(
-                            returnRoute = Routes.movieDetail(
-                                movieId = movie.id.takeIf { it > 0L } ?: movieId,
-                                returnRoute = returnRoute
-                            )
-                        )
-                    )
-                },
-                onBack = {
-                    if (!returnRoute.isNullOrBlank()) {
-                        navController.navigate(returnRoute) {
-                            popUpTo(backStackEntry.destination.route ?: Routes.MOVIE_DETAIL) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    } else {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
-
-        composable(
-            route = Routes.SERIES_DETAIL,
-            arguments = listOf(
-                navArgument("seriesId") { type = NavType.LongType },
-                navArgument("returnRoute") { type = NavType.StringType; defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val returnRoute = backStackEntry.arguments?.getString("returnRoute").orEmpty().takeIf { it.isNotBlank() }
-            val seriesId = backStackEntry.arguments?.getLong("seriesId") ?: -1L
-            com.afterglowtv.app.ui.screens.series.SeriesDetailScreen(
-                onEpisodeClick = { episode ->
-                     navController.navigateToPlayer(
-                         Routes.episodePlayer(episode).copy(
-                             returnRoute = Routes.seriesDetail(
-                                 seriesId = episode.seriesId.takeIf { it > 0L } ?: seriesId,
-                                 returnRoute = returnRoute
-                             )
-                         )
-                     )
-                },
-                onBack = {
-                    if (!returnRoute.isNullOrBlank()) {
-                        navController.navigate(returnRoute) {
-                            popUpTo(backStackEntry.destination.route ?: Routes.SERIES_DETAIL) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    } else {
-                        navController.popBackStack()
                     }
                 }
             )

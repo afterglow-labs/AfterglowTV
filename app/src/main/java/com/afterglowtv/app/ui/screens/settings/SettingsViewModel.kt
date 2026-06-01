@@ -1053,9 +1053,16 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun addSmbLocalMediaLibrary(config: SmbShareConfig) {
-        val target = listOf(config.host, config.shareName, config.path)
-            .filter { it.isNotBlank() }
-            .joinToString("/")
+        val target = buildString {
+            append("\\\\")
+            append(config.host)
+            append("\\")
+            append(config.shareName)
+            config.path.takeIf { it.isNotBlank() }?.let { path ->
+                append("\\")
+                append(path.replace('/', '\\'))
+            }
+        }
         startLocalMediaScan("Trying to connect to $target...") {
             localMediaRepository.addSmbLibrary(config)
         }

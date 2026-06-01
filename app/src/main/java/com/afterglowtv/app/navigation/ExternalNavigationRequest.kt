@@ -12,21 +12,9 @@ sealed class ExternalDestination : Serializable {
         val importUri: String? = null
     ) : ExternalDestination()
 
-    data class MovieDetail(
-        val movieId: Long,
-        val returnRoute: String? = null
-    ) : ExternalDestination()
-
-    data class SeriesDetail(
-        val seriesId: Long,
-        val returnRoute: String? = null
-    ) : ExternalDestination()
-
     fun toRoute(): String = when (this) {
         Home -> Routes.HOME
         is ProviderSetup -> Routes.providerSetup(providerId = providerId, importUri = importUri)
-        is MovieDetail -> Routes.movieDetail(movieId = movieId, returnRoute = returnRoute)
-        is SeriesDetail -> Routes.seriesDetail(seriesId = seriesId, returnRoute = returnRoute)
     }
 
     companion object {
@@ -46,33 +34,11 @@ sealed class ExternalDestination : Serializable {
                     ProviderSetup(providerId = providerId, importUri = importUri)
                 }
 
-                normalizedRoute.startsWith("movie_detail/") -> {
-                    val pathSegments = normalizedRoute.pathSegments()
-                    val movieId = pathSegments.getOrNull(1)?.toLongOrNull() ?: return null
-                    MovieDetail(
-                        movieId = movieId,
-                        returnRoute = normalizedRoute.queryParameters()["returnRoute"]
-                            ?.takeIf { it.isNotBlank() }
-                    )
-                }
-
-                normalizedRoute.startsWith("series_detail/") -> {
-                    val pathSegments = normalizedRoute.pathSegments()
-                    val seriesId = pathSegments.getOrNull(1)?.toLongOrNull() ?: return null
-                    SeriesDetail(
-                        seriesId = seriesId,
-                        returnRoute = normalizedRoute.queryParameters()["returnRoute"]
-                            ?.takeIf { it.isNotBlank() }
-                    )
-                }
-
                 else -> null
             }
         }
     }
 }
-
-private fun String.pathSegments(): List<String> = substringBefore('?').split('/').filter { it.isNotBlank() }
 
 private fun String.queryParameters(): Map<String, String> {
     val query = substringAfter('?', missingDelimiterValue = "")

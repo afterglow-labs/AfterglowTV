@@ -13,21 +13,17 @@ import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.Favorite
-import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.model.PlaybackHistory
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderStatus
 import com.afterglowtv.domain.model.ProviderType
-import com.afterglowtv.domain.model.Series
 import com.afterglowtv.domain.model.SyncState
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.domain.repository.CombinedM3uRepository
 import com.afterglowtv.domain.repository.FavoriteRepository
-import com.afterglowtv.domain.repository.MovieRepository
 import com.afterglowtv.domain.repository.PlaybackHistoryRepository
 import com.afterglowtv.domain.repository.ProviderRepository
-import com.afterglowtv.domain.repository.SeriesRepository
 import com.afterglowtv.domain.usecase.ContinueWatchingResult
 import com.afterglowtv.domain.usecase.ContinueWatchingScope
 import com.afterglowtv.domain.usecase.GetContinueWatching
@@ -38,9 +34,6 @@ import android.content.Context
 import com.afterglowtv.app.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.time.LocalDate
-import java.time.Year
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -70,8 +63,6 @@ class DashboardViewModel @Inject constructor(
     private val favoriteRepository: FavoriteRepository,
     private val channelRepository: ChannelRepository,
     private val playbackHistoryRepository: PlaybackHistoryRepository,
-    private val movieRepository: MovieRepository,
-    private val seriesRepository: SeriesRepository,
     private val preferencesRepository: PreferencesRepository,
     private val getContinueWatching: GetContinueWatching,
     private val getCustomCategories: GetCustomCategories,
@@ -83,8 +74,6 @@ class DashboardViewModel @Inject constructor(
         const val FAVORITE_CHANNEL_LIMIT = 12
         const val RECENT_CHANNEL_LIMIT = 12
         const val CONTINUE_WATCHING_LIMIT = 12
-        const val MOVIE_SHELF_LIMIT = 12
-        const val SERIES_SHELF_LIMIT = 12
         const val HOME_SHORTCUT_LIMIT = 4
         const val PROVIDER_SETTLE_DELAY_MS = 750L
     }
@@ -179,36 +168,16 @@ class DashboardViewModel @Inject constructor(
         liveProviderIds: List<Long>,
         combinedProfileId: Long?
     ): Flow<DashboardUiState> {
-        val movieShelf = combine(
-            movieRepository.getFreshPreview(provider.id, MOVIE_SHELF_LIMIT),
-            preferencesRepository.parentalControlLevel
-        ) { movies, level ->
-            movies
-                .filter { !shouldHideVodFromHome(it, level) }
-                .take(MOVIE_SHELF_LIMIT)
-        }
-        val seriesShelf = combine(
-            seriesRepository.getFreshPreview(provider.id, SERIES_SHELF_LIMIT),
-            preferencesRepository.parentalControlLevel
-        ) { series, level ->
-            series
-                .filter { !shouldHideVodFromHome(it, level) }
-                .take(SERIES_SHELF_LIMIT)
-        }
         val contentShelves = combine(
             observeFavoriteChannels(liveProviderIds).onStart { emit(emptyList()) },
             observeRecentChannels(liveProviderIds).onStart { emit(emptyList()) },
-            observeContinueWatching(liveProviderIds.toSet()).onStart { emit(ContinueWatchingShelf()) },
-            movieShelf.onStart { emit(emptyList()) },
-            seriesShelf.onStart { emit(emptyList()) }
-        ) { favoriteChannels, recentChannels, continueWatchingShelf, recentMovies, recentSeries ->
+            observeContinueWatching(liveProviderIds.toSet()).onStart { emit(ContinueWatchingShelf()) }
+        ) { favoriteChannels, recentChannels, continueWatchingShelf ->
             DashboardContentShelves(
                 favoriteChannels = favoriteChannels,
                 recentChannels = recentChannels,
                 continueWatching = continueWatchingShelf.items,
-                continueWatchingDegraded = continueWatchingShelf.isDegraded,
-                recentMovies = recentMovies,
-                recentSeries = recentSeries
+                continueWatchingDegraded = continueWatchingShelf.isDegraded
             )
         }
 
@@ -220,16 +189,12 @@ class DashboardViewModel @Inject constructor(
             ).onStart {
                 emit(DashboardLiveContext(lastVisitedCategory = null, shortcuts = emptyList()))
             },
-            observeLiveChannelCount(liveProviderIds).onStart { emit(0) },
-            movieRepository.getLibraryCount(provider.id).onStart { emit(0) },
-            seriesRepository.getLibraryCount(provider.id).onStart { emit(0) }
-        ) { shelves, liveContext, liveChannelCount, movieCount, seriesCount ->
+            observeLiveChannelCount(liveProviderIds).onStart { emit(0) }
+        ) { shelves, liveContext, liveChannelCount ->
             DashboardSnapshot(
                 shelves = shelves,
                 liveContext = liveContext,
                 liveChannelCount = liveChannelCount,
-                movieCount = movieCount,
-                seriesCount = seriesCount,
                 updateNotice = null
             )
         }.combine(observeUpdateNotice().onStart { emit(null) }) { snapshot, updateNotice ->
@@ -244,8 +209,6 @@ class DashboardViewModel @Inject constructor(
                 recentChannels = snapshot.shelves.recentChannels,
                 continueWatching = snapshot.shelves.continueWatching,
                 continueWatchingDegraded = snapshot.shelves.continueWatchingDegraded,
-                recentMovies = snapshot.shelves.recentMovies,
-                recentSeries = snapshot.shelves.recentSeries,
                 lastLiveCategory = snapshot.liveContext.lastVisitedCategory,
                 liveShortcuts = snapshot.liveContext.shortcuts,
                 currentCombinedProfileId = combinedProfileId,
@@ -253,17 +216,13 @@ class DashboardViewModel @Inject constructor(
                     liveChannelCount = snapshot.liveChannelCount,
                     favoriteChannelCount = snapshot.shelves.favoriteChannels.size,
                     recentChannelCount = snapshot.shelves.recentChannels.size,
-                    continueWatchingCount = snapshot.shelves.continueWatching.size,
-                    movieLibraryCount = snapshot.movieCount,
-                    seriesLibraryCount = snapshot.seriesCount
+                    continueWatchingCount = snapshot.shelves.continueWatching.size
                 ),
                 feature = buildFeature(
                     providerName = providerDisplayName,
                     recentChannels = snapshot.shelves.recentChannels,
                     continueWatching = snapshot.shelves.continueWatching,
-                    continueWatchingDegraded = snapshot.shelves.continueWatchingDegraded,
-                    recentMovies = snapshot.shelves.recentMovies,
-                    recentSeries = snapshot.shelves.recentSeries
+                    continueWatchingDegraded = snapshot.shelves.continueWatchingDegraded
                 ),
                 providerHealth = visibleProvider?.let {
                     DashboardProviderHealth(
@@ -464,9 +423,7 @@ class DashboardViewModel @Inject constructor(
         providerName: String,
         recentChannels: List<Channel>,
         continueWatching: List<PlaybackHistory>,
-        continueWatchingDegraded: Boolean,
-        recentMovies: List<Movie>,
-        recentSeries: List<Series>
+        continueWatchingDegraded: Boolean
     ): DashboardFeature {
         // When continue-watching is empty due to a transient IO failure, do not silently
         // fall through to an unrelated hero — surface an explicit degraded state instead.
@@ -512,26 +469,6 @@ class DashboardViewModel @Inject constructor(
             )
         }
 
-        recentMovies.firstOrNull()?.let { movie ->
-            return DashboardFeature(
-                title = movie.name,
-                summary = movie.year ?: appContext.getString(R.string.dashboard_fresh_movie_pick),
-                artworkUrl = movie.backdropUrl ?: movie.posterUrl,
-                actionLabel = appContext.getString(R.string.dashboard_open_movies),
-                actionType = DashboardFeatureAction.MOVIES
-            )
-        }
-
-        recentSeries.firstOrNull()?.let { series ->
-            return DashboardFeature(
-                title = series.name,
-                summary = appContext.getString(R.string.dashboard_updated_series),
-                artworkUrl = series.backdropUrl ?: series.posterUrl,
-                actionLabel = appContext.getString(R.string.dashboard_open_series),
-                actionType = DashboardFeatureAction.SERIES
-            )
-        }
-
         return DashboardFeature(
             title = providerName,
             summary = appContext.getString(R.string.dashboard_library_ready),
@@ -539,40 +476,6 @@ class DashboardViewModel @Inject constructor(
             actionLabel = appContext.getString(R.string.dashboard_open_live_tv),
             actionType = DashboardFeatureAction.LIVE
         )
-    }
-
-    private fun movieFreshnessScore(movie: Movie): Long {
-        return parseDateScore(movie.releaseDate)
-            ?: movie.year?.toIntOrNull()?.toLong()
-            ?: movie.id
-    }
-
-    private fun seriesFreshnessScore(series: Series): Long {
-        return series.lastModified
-            .takeIf { it > 0L }
-            ?: parseDateScore(series.releaseDate)
-            ?: series.id
-    }
-
-    private fun shouldHideVodFromHome(movie: Movie, level: Int): Boolean {
-        if (AdultContentVisibilityPolicy.showInAggregatedSurfaces(level)) return false
-        return movie.isUserProtected
-    }
-
-    private fun shouldHideVodFromHome(series: Series, level: Int): Boolean {
-        if (AdultContentVisibilityPolicy.showInAggregatedSurfaces(level)) return false
-        return series.isUserProtected
-    }
-
-    private fun parseDateScore(raw: String?): Long? {
-        if (raw.isNullOrBlank()) return null
-
-        return runCatching {
-            LocalDate.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE).toEpochDay()
-        }.getOrNull()
-            ?: runCatching {
-                Year.parse(raw, DateTimeFormatter.ofPattern("yyyy")).atDay(1).toEpochDay()
-            }.getOrNull()
     }
 
     private fun compareVersionNames(left: String, right: String): Int {
@@ -624,17 +527,13 @@ private data class DashboardContentShelves(
     val favoriteChannels: List<Channel>,
     val recentChannels: List<Channel>,
     val continueWatching: List<PlaybackHistory>,
-    val continueWatchingDegraded: Boolean = false,
-    val recentMovies: List<Movie>,
-    val recentSeries: List<Series>
+    val continueWatchingDegraded: Boolean = false
 )
 
 private data class DashboardSnapshot(
     val shelves: DashboardContentShelves,
     val liveContext: DashboardLiveContext,
     val liveChannelCount: Int,
-    val movieCount: Int,
-    val seriesCount: Int,
     val updateNotice: DashboardUpdateNotice?
 )
 
@@ -645,8 +544,6 @@ data class DashboardUiState(
     val recentChannels: List<Channel> = emptyList(),
     val continueWatching: List<PlaybackHistory> = emptyList(),
     val continueWatchingDegraded: Boolean = false,
-    val recentMovies: List<Movie> = emptyList(),
-    val recentSeries: List<Series> = emptyList(),
     val lastLiveCategory: Category? = null,
     val liveShortcuts: List<DashboardLiveShortcut> = emptyList(),
     val feature: DashboardFeature = DashboardFeature(),
@@ -676,9 +573,7 @@ data class DashboardStats(
     val liveChannelCount: Int = 0,
     val favoriteChannelCount: Int = 0,
     val recentChannelCount: Int = 0,
-    val continueWatchingCount: Int = 0,
-    val movieLibraryCount: Int = 0,
-    val seriesLibraryCount: Int = 0
+    val continueWatchingCount: Int = 0
 )
 
 data class DashboardFeature(
@@ -691,9 +586,7 @@ data class DashboardFeature(
 
 enum class DashboardFeatureAction {
     LIVE,
-    CONTINUE_WATCHING,
-    MOVIES,
-    SERIES
+    CONTINUE_WATCHING
 }
 
 data class DashboardLiveShortcut(
