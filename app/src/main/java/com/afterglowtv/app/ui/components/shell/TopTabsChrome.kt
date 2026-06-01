@@ -44,7 +44,7 @@ fun defaultTopTabs(
     add(TopTab("movies", "Movies"))
     add(TopTab("series", "Series"))
     if (developerModeEnabled) {
-        add(TopTab("local_media", "Personal Guide"))
+        add(TopTab("local_media", "Personal Library"))
     }
     add(TopTab("favorites", "Favorites"))
     add(TopTab("search", "Search"))

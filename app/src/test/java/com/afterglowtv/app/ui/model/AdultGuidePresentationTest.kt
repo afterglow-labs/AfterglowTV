@@ -145,7 +145,7 @@ class AdultGuidePresentationTest {
     }
 
     @Test
-    fun `unmatched adult channels use provider category before other`() {
+    fun `unmatched adult channels use unsorted category`() {
         val channel = Channel(
             id = 3L,
             name = "Channel 888",
@@ -160,7 +160,35 @@ class AdultGuidePresentationTest {
             providerCategories = listOf(Category(id = 30L, name = "Adult Premium", isAdult = true))
         )
 
-        assertThat(categories.category("Adult Premium").channels).containsExactly(channel)
+        assertThat(categories.category("Unsorted").channels).containsExactly(channel)
+    }
+
+    @Test
+    fun `unsorted adult category only contains adult channels without generated matches`() {
+        val unsorted = Channel(
+            id = 4L,
+            name = "Channel 999",
+            providerId = 7L,
+            categoryId = 30L,
+            categoryName = "XXX",
+            isAdult = true
+        )
+        val sorted = Channel(
+            id = 5L,
+            name = "MILF Channel",
+            providerId = 7L,
+            categoryId = 30L,
+            categoryName = "XXX",
+            isAdult = true
+        )
+
+        val categories = AdultGuideCategoryBuilder.build(
+            channels = listOf(unsorted, sorted),
+            providerCategories = listOf(Category(id = 30L, name = "XXX", isAdult = true))
+        )
+
+        assertThat(categories.category("Unsorted").channels).containsExactly(unsorted)
+        assertThat(categories.category("MILF").channels).containsExactly(sorted)
     }
 
     private fun List<AdultGuideCategory>.category(title: String): AdultGuideCategory =

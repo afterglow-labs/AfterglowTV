@@ -5,7 +5,7 @@ import com.afterglowtv.domain.repository.AdultGuideCacheSnapshot
 import com.afterglowtv.domain.repository.AdultGuideCachedCategory
 
 private const val ADULT_GUIDE_CATEGORY_ID_BASE = -10_000_000L
-private const val ADULT_GUIDE_SORT_VERSION = 2
+private const val ADULT_GUIDE_SORT_VERSION = 3
 
 internal fun adultGuideCategoryId(key: String): Long =
     if (key == AdultGuideCategoryBuilder.ALL_CATEGORY_KEY) {

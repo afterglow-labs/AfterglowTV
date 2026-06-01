@@ -8,7 +8,7 @@
     <string name="nav_movies">Movies</string>
     <string name="nav_series">Series</string>
     <string name="nav_local_media">Local Media</string>
-    <string name="nav_personal_guide">Personal Guide</string>
+    <string name="nav_personal_guide">Personal Library</string>
     <string name="nav_epg">Guide</string>
     <string name="nav_iptv_guide">TV Guide</string>
     <string name="nav_vod_guide">VOD Guide</string>

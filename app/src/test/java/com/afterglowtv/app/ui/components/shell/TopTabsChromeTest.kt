@@ -6,22 +6,21 @@ import org.junit.Test
 class TopTabsChromeTest {
 
     @Test
-    fun `program guide destinations are separate top level tabs`() {
+    fun `program guide and personal library are separate top level tabs`() {
         val guideTabs = defaultTopTabs(
             developerModeEnabled = true,
             showAdultGuideTab = true
         ).filter { tab ->
             tab.label.contains("Guide", ignoreCase = true)
         }
+        val localMediaTab = defaultTopTabs(
+            developerModeEnabled = true,
+            showAdultGuideTab = true
+        ).first { it.id == "local_media" }
 
-        assertThat(guideTabs.map { it.id }).containsExactly(
-            "epg",
-            "local_media"
-        ).inOrder()
-        assertThat(guideTabs.map { it.label }).containsExactly(
-            "TV Guide",
-            "Personal Guide"
-        ).inOrder()
+        assertThat(guideTabs.map { it.id }).containsExactly("epg")
+        assertThat(guideTabs.map { it.label }).containsExactly("TV Guide")
+        assertThat(localMediaTab.label).isEqualTo("Personal Library")
         assertThat(
             defaultTopTabs(
                 developerModeEnabled = true,
@@ -50,10 +49,7 @@ class TopTabsChromeTest {
             tab.label.contains("Guide", ignoreCase = true)
         }
 
-        assertThat(guideTabs.map { it.id }).containsExactly(
-            "epg",
-            "local_media"
-        ).inOrder()
+        assertThat(guideTabs.map { it.id }).containsExactly("epg")
     }
 
     @Test

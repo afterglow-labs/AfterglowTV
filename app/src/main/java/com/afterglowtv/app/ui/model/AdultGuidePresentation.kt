@@ -15,8 +15,8 @@ data class AdultGuideCategory(
 
 object AdultGuideCategoryBuilder {
     const val ALL_CATEGORY_KEY = "all"
+    const val UNSORTED_CATEGORY_KEY = "unsorted"
 
-    private const val OTHER_CATEGORY_KEY = "other"
     private val explicitAdultSignals = listOf(
         "milf",
         "milfs",
@@ -189,20 +189,8 @@ object AdultGuideCategoryBuilder {
             if (matches.isEmpty()) {
                 val sourceCategory = channel.categoryId?.let(providerCategoryById::get)
                 if (isAdultGuideChannel(channel, sourceCategory)) {
-                    val fallbackCategory = sourceCategory?.takeIf(::isAdultGuideCategory)
-                        ?: channel.categoryName
-                            ?.takeIf(::isAdultGuideText)
-                            ?.let { Category(id = Long.MIN_VALUE, name = it, isAdult = true) }
-                    val key = fallbackCategory?.name
-                        ?.let(::adultGuideCategoryKey)
-                        ?.takeIf(String::isNotBlank)
-                        ?: OTHER_CATEGORY_KEY
-                    val title = fallbackCategory?.name
-                        ?.trim()
-                        ?.takeIf(String::isNotBlank)
-                        ?: "Other"
-                    grouped.getOrPut(key) {
-                        AdultGuideMutableCategory(key, title, mutableListOf())
+                    grouped.getOrPut(UNSORTED_CATEGORY_KEY) {
+                        AdultGuideMutableCategory(UNSORTED_CATEGORY_KEY, "Unsorted", mutableListOf())
                     }.channels.add(channel)
                 }
             } else {
@@ -369,6 +357,3 @@ private fun normalizeAdultGuideText(value: String?): String =
         .replace(Regex("""[^a-z0-9]+"""), " ")
         .replace(Regex("""\s+"""), " ")
         .trim()
-
-private fun adultGuideCategoryKey(value: String): String =
-    normalizeAdultGuideText(value).replace(" ", "_")
