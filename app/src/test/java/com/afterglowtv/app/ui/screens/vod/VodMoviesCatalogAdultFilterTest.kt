@@ -36,4 +36,38 @@ class VodMoviesCatalogAdultFilterTest {
         assertThat(movies.onlyAdultVodMovies(categories).map { it.id })
             .containsExactly(11L, 12L)
     }
+
+    @Test
+    fun `movies mode excludes tv vod categories and tv mode keeps them`() {
+        val categories = listOf(
+            Category(id = 1L, name = "Movie VOD", type = ContentType.MOVIE),
+            Category(id = 2L, name = "TV VOD", type = ContentType.MOVIE),
+            Category(id = 3L, name = "Series VOD", type = ContentType.MOVIE)
+        )
+
+        assertThat(categories.filterForVodContainerMode(VodContainerMode.MOVIES).map { it.name })
+            .containsExactly("Movie VOD")
+        assertThat(categories.filterForVodContainerMode(VodContainerMode.TV).map { it.name })
+            .containsExactly("TV VOD", "Series VOD")
+            .inOrder()
+    }
+
+    @Test
+    fun `movies mode excludes movie shaped tv vod rows and tv mode keeps them`() {
+        val categories = listOf(
+            Category(id = 1L, name = "Movie VOD", type = ContentType.MOVIE),
+            Category(id = 2L, name = "TV VOD", type = ContentType.MOVIE)
+        )
+        val movies = listOf(
+            Movie(id = 10L, name = "Feature", providerId = 7L, categoryId = 1L),
+            Movie(id = 11L, name = "Episode One", providerId = 7L, categoryId = 2L),
+            Movie(id = 12L, name = "Episode Two", providerId = 7L, categoryName = "TV VOD")
+        )
+
+        assertThat(movies.filterForVodContainerMode(VodContainerMode.MOVIES, categories).map { it.id })
+            .containsExactly(10L)
+        assertThat(movies.filterForVodContainerMode(VodContainerMode.TV, categories).map { it.id })
+            .containsExactly(11L, 12L)
+            .inOrder()
+    }
 }

@@ -13,8 +13,6 @@ import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.components.shell.VodActionChip
 import com.afterglowtv.app.ui.components.shell.VodActionChipRow
-import com.afterglowtv.app.ui.screens.vod.VodMoviesScreen
-import com.afterglowtv.app.ui.screens.vod.VodTvScreen
 import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.model.PlaybackHistory
 
@@ -46,8 +44,9 @@ fun VodScreen(
             onContainerModeChange = { selectedMode = it }
         )
 
-        VodContainerMode.TV -> VodTvScreen(
-            onSeriesClick = onSeriesClick,
+        VodContainerMode.TV -> VodMoviesScreen(
+            onMovieClick = onMovieClick,
+            onContinueWatchingPlay = onContinueWatchingPlay,
             onNavigate = onNavigate,
             currentRoute = currentRoute,
             initialContainerMode = true,

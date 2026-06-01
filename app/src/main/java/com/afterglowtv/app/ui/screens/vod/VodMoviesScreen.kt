@@ -139,6 +139,9 @@ fun VodMoviesScreen(
             viewModel.openVodContainer()
         }
     }
+    LaunchedEffect(containerMode) {
+        containerMode?.let(viewModel::setVodContainerMode)
+    }
 
     HandleVodUserMessage(
         userMessage = uiState.userMessage,

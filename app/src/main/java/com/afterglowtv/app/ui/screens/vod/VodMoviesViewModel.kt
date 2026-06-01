@@ -118,6 +118,7 @@ class VodMoviesViewModel @Inject constructor(
     private val _selectedLibraryFilterType = MutableStateFlow(LibraryFilterType.ALL)
     private val _selectedLibrarySortBy = MutableStateFlow(LibrarySortBy.LIBRARY)
     private val _previewBatchSize = MutableStateFlow(INITIAL_PREVIEW_BATCH_SIZE)
+    private val _vodContainerMode = MutableStateFlow(VodContainerMode.MOVIES)
     private var activeProviderId: Long? = null
     private var adultVodPreviewEngine: PlayerEngine? = null
     private var adultVodPreviewPlaybackJob: Job? = null
@@ -170,7 +171,8 @@ class VodMoviesViewModel @Inject constructor(
                         movieRepository.getCategoryItemCounts(provider.id),
                         movieRepository.getLibraryCount(provider.id),
                         preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.MOVIE),
-                        preferencesRepository.getCategorySortMode(provider.id, ContentType.MOVIE)
+                        preferencesRepository.getCategorySortMode(provider.id, ContentType.MOVIE),
+                        _vodContainerMode
                     ) { values ->
                         val allFavorites = values[0] as List<com.afterglowtv.domain.model.Favorite>
                         val customCategories = values[1] as List<Category>
@@ -179,6 +181,7 @@ class VodMoviesViewModel @Inject constructor(
                         val libraryCount = values[4] as Int
                         val hiddenCategoryIds = values[5] as Set<Long>
                         val sortMode = values[6] as CategorySortMode
+                        val containerMode = values[7] as VodContainerMode
                         val visibleProviderCategories = applyProviderCategoryDisplayPreferences(
                             categories = providerCategories,
                             hiddenCategoryIds = hiddenCategoryIds,
@@ -189,15 +192,18 @@ class VodMoviesViewModel @Inject constructor(
                             } else {
                                 categories
                             }
-                        }.withoutAdultVodCategories()
+                        }
+                            .withoutAdultVodCategories()
+                        val modeProviderCategories = visibleProviderCategories.filterForVodContainerMode(containerMode)
                         MovieCatalogDependencies(
                             allFavorites = allFavorites,
                             customCategories = customCategories,
-                            providerCategories = visibleProviderCategories,
+                            providerCategories = modeProviderCategories,
+                            allProviderCategories = visibleProviderCategories,
                             providerCategoryCounts = providerCategoryCounts,
                             libraryCount = normalMovieLibraryCount(
                                 providerCategoryCounts = providerCategoryCounts,
-                                normalProviderCategories = visibleProviderCategories,
+                                normalProviderCategories = modeProviderCategories,
                                 fallback = libraryCount
                             ),
                             hiddenCategoryIds = hiddenCategoryIds,
@@ -209,10 +215,12 @@ class VodMoviesViewModel @Inject constructor(
                             allFavorites = dependencies.allFavorites,
                             customCategories = dependencies.customCategories,
                             providerCategories = dependencies.providerCategories,
+                            allProviderCategories = dependencies.allProviderCategories,
                             providerCategoryCounts = dependencies.providerCategoryCounts,
                             libraryCount = dependencies.libraryCount,
                             hiddenCategoryIds = dependencies.hiddenCategoryIds,
                             categorySortMode = dependencies.categorySortMode,
+                            containerMode = _vodContainerMode.value,
                             query = query
                         )
                     }
@@ -258,7 +266,8 @@ class VodMoviesViewModel @Inject constructor(
                         } else {
                             flow {
                                 val searchResults = movieRepository.searchMovies(params.providerId, params.query).first()
-                                    .withoutAdultVodMovies(params.providerCategories)
+                                    .withoutAdultVodMovies(params.allProviderCategories)
+                                    .filterForVodContainerMode(params.containerMode, params.allProviderCategories)
                                 emit(PreviewLoadResult(
                                     buildSearchCatalog(
                                         movies = searchResults,
@@ -339,21 +348,27 @@ class VodMoviesViewModel @Inject constructor(
                         getCustomCategories(provider.id, ContentType.MOVIE),
                         movieRepository.getCategories(provider.id),
                         preferencesRepository.getHiddenCategoryIds(provider.id, ContentType.MOVIE),
-                        preferencesRepository.getCategorySortMode(provider.id, ContentType.MOVIE)
+                        preferencesRepository.getCategorySortMode(provider.id, ContentType.MOVIE),
+                        _vodContainerMode
                     ) { values ->
                         val allFavorites = values[0] as List<com.afterglowtv.domain.model.Favorite>
                         val customCategories = values[1] as List<Category>
                         val providerCategories = values[2] as List<Category>
                         val hiddenCategoryIds = values[3] as Set<Long>
                         val sortMode = values[4] as CategorySortMode
+                        val containerMode = values[5] as VodContainerMode
+                        val visibleProviderCategories = applyProviderCategoryDisplayPreferences(
+                            categories = providerCategories,
+                            hiddenCategoryIds = hiddenCategoryIds,
+                            sortMode = sortMode
+                        )
                         MovieCategorySelectionDependencies(
                             allFavorites = allFavorites,
                             customCategories = customCategories,
-                            providerCategories = applyProviderCategoryDisplayPreferences(
-                                categories = providerCategories,
-                                hiddenCategoryIds = hiddenCategoryIds,
-                                sortMode = sortMode
-                            ),
+                            providerCategories = visibleProviderCategories
+                                .withoutAdultVodCategories()
+                                .filterForVodContainerMode(containerMode),
+                            allProviderCategories = visibleProviderCategories,
                             hiddenCategoryIds = hiddenCategoryIds
                         )
                     }.combine(
@@ -362,11 +377,19 @@ class VodMoviesViewModel @Inject constructor(
                             _selectedCategoryLoadLimit,
                             searchQueryForBrowse,
                             _selectedLibraryFilterType,
-                            _selectedLibrarySortBy
-                        ) { selectedCategoryState, loadLimit, query, filterType, sortBy ->
+                            _selectedLibrarySortBy,
+                            _vodContainerMode
+                        ) { values ->
+                            val selectedCategoryState = values[0] as Pair<String?, Boolean>
+                            val loadLimit = values[1] as Int
+                            val query = values[2] as String
+                            val filterType = values[3] as LibraryFilterType
+                            val sortBy = values[4] as LibrarySortBy
+                            val containerMode = values[5] as VodContainerMode
                             SelectedMovieBrowseSelection(
                                 selectedCategory = selectedCategoryState.first,
                                 adultOnly = selectedCategoryState.second,
+                                containerMode = containerMode,
                                 loadLimit = loadLimit,
                                 query = query,
                                 filterType = filterType,
@@ -378,6 +401,7 @@ class VodMoviesViewModel @Inject constructor(
                             providerId = provider.id,
                             selectedCategory = selection.selectedCategory,
                             adultOnly = selection.adultOnly,
+                            containerMode = selection.containerMode,
                             loadLimit = selection.loadLimit,
                             query = selection.query,
                             filterType = selection.filterType,
@@ -385,6 +409,7 @@ class VodMoviesViewModel @Inject constructor(
                             allFavorites = dependencies.allFavorites,
                             customCategories = dependencies.customCategories,
                             providerCategories = dependencies.providerCategories,
+                            allProviderCategories = dependencies.allProviderCategories,
                             hiddenCategoryIds = dependencies.hiddenCategoryIds
                         )
                     }
@@ -570,6 +595,11 @@ class VodMoviesViewModel @Inject constructor(
 
     fun openVodContainer() {
         openVodContainer(adultOnly = false)
+    }
+
+    fun setVodContainerMode(mode: VodContainerMode) {
+        _vodContainerMode.value = mode
+        _uiState.update { it.copy(vodContainerMode = mode) }
     }
 
     fun openAdultVodGuide() {
@@ -1203,8 +1233,16 @@ class VodMoviesViewModel @Inject constructor(
             providerCategoryCounts = params.providerCategoryCounts,
             libraryCount = params.libraryCount,
             hiddenProviderCategoryIds = params.hiddenCategoryIds,
-            loadItemsByIds = { ids -> movieRepository.getMoviesByIds(ids).first().withoutAdultVodMovies(params.providerCategories) },
-            providerPreviews = providerPreviews.mapValues { (_, movies) -> movies.withoutAdultVodMovies(params.providerCategories) },
+            loadItemsByIds = { ids ->
+                movieRepository.getMoviesByIds(ids).first()
+                    .withoutAdultVodMovies(params.allProviderCategories)
+                    .filterForVodContainerMode(params.containerMode, params.allProviderCategories)
+            },
+            providerPreviews = providerPreviews.mapValues { (_, movies) ->
+                movies
+                    .withoutAdultVodMovies(params.allProviderCategories)
+                    .filterForVodContainerMode(params.containerMode, params.allProviderCategories)
+            },
             itemId = Movie::id,
             itemCategoryId = Movie::categoryId,
             copyWithFavorite = { movie, isFavorite -> movie.copy(isFavorite = isFavorite) }
@@ -1290,7 +1328,8 @@ class VodMoviesViewModel @Inject constructor(
                     Triple(
                         result.items
                             .filterNot { movie -> movie.categoryId in request.hiddenCategoryIds }
-                            .withoutAdultVodMovies(request.providerCategories),
+                            .withoutAdultVodMovies(request.allProviderCategories)
+                            .filterForVodContainerMode(request.containerMode, request.allProviderCategories),
                         result.totalCount,
                         result.hasMoreRemote
                     )
@@ -1313,7 +1352,14 @@ class VodMoviesViewModel @Inject constructor(
                 } else {
                     movieRepository.getMoviesByIds(fetchIds).first()
                         .filterNot { movie -> movie.categoryId in request.hiddenCategoryIds }
-                        .filterForAdultVodMode(request.adultOnly, request.providerCategories)
+                        .filterForAdultVodMode(request.adultOnly, request.allProviderCategories)
+                        .let { movies ->
+                            if (request.adultOnly) {
+                                movies
+                            } else {
+                                movies.filterForVodContainerMode(request.containerMode, request.allProviderCategories)
+                            }
+                        }
                         .orderByIds(fetchIds)
                 }
                 val filteredItems = applyLocalBrowseToMovies(
@@ -1347,7 +1393,14 @@ class VodMoviesViewModel @Inject constructor(
                     } else {
                         movieRepository.getMoviesByIds(fetchIds).first()
                             .filterNot { movie -> movie.categoryId in request.hiddenCategoryIds }
-                            .filterForAdultVodMode(request.adultOnly, request.providerCategories)
+                            .filterForAdultVodMode(request.adultOnly, request.allProviderCategories)
+                            .let { movies ->
+                                if (request.adultOnly) {
+                                    movies
+                                } else {
+                                    movies.filterForVodContainerMode(request.containerMode, request.allProviderCategories)
+                                }
+                            }
                             .orderByIds(fetchIds)
                     }
                     val filteredItems = applyLocalBrowseToMovies(
@@ -1363,7 +1416,7 @@ class VodMoviesViewModel @Inject constructor(
                     )
                 } else {
                     val selectableProviderCategories = if (request.adultOnly) {
-                        request.providerCategories
+                        request.allProviderCategories
                     } else {
                         request.providerCategories.withoutAdultVodCategories()
                     }
@@ -1383,7 +1436,15 @@ class VodMoviesViewModel @Inject constructor(
                             )
                             .first()
                         Triple(
-                            result.items.filterForAdultVodMode(request.adultOnly, request.providerCategories),
+                            result.items
+                                .filterForAdultVodMode(request.adultOnly, request.allProviderCategories)
+                                .let { movies ->
+                                    if (request.adultOnly) {
+                                        movies
+                                    } else {
+                                        movies.filterForVodContainerMode(request.containerMode, request.allProviderCategories)
+                                    }
+                                },
                             result.totalCount,
                             result.hasMoreRemote
                         )
@@ -1409,8 +1470,8 @@ class VodMoviesViewModel @Inject constructor(
         request: SelectedMovieCategoryRequest,
         effectiveQuery: String
     ): Triple<List<Movie>, Int, Boolean> {
-        val providerCategoriesById = request.providerCategories.associateBy { kotlin.math.abs(it.id) }
-        val adultCategoryIds = request.providerCategories
+        val providerCategoriesById = request.allProviderCategories.associateBy { kotlin.math.abs(it.id) }
+        val adultCategoryIds = request.allProviderCategories
             .asSequence()
             .filter(::isAdultGuideCategory)
             .map { kotlin.math.abs(it.id) }
@@ -1515,10 +1576,34 @@ class VodMoviesViewModel @Inject constructor(
 internal fun List<Category>.withoutAdultVodCategories(): List<Category> =
     filterNot(::isAdultGuideCategory)
 
+internal fun List<Category>.filterForVodContainerMode(mode: VodContainerMode): List<Category> =
+    filter { category ->
+        val isTvCategory = category.isTvVodCategory()
+        when (mode) {
+            VodContainerMode.MOVIES -> !isTvCategory
+            VodContainerMode.TV -> isTvCategory
+        }
+    }
+
 internal fun List<Movie>.withoutAdultVodMovies(providerCategories: List<Category> = emptyList()): List<Movie> {
     val categoriesById = providerCategories.associateBy { kotlin.math.abs(it.id) }
     return filterNot { movie ->
         isAdultVodMovie(movie, movie.categoryId?.let { categoriesById[kotlin.math.abs(it)] })
+    }
+}
+
+internal fun List<Movie>.filterForVodContainerMode(
+    mode: VodContainerMode,
+    providerCategories: List<Category> = emptyList()
+): List<Movie> {
+    val categoriesById = providerCategories.associateBy { kotlin.math.abs(it.id) }
+    return filter { movie ->
+        val category = movie.categoryId?.let { categoriesById[kotlin.math.abs(it)] }
+        val isTvEntry = category?.isTvVodCategory() ?: movie.categoryName.isTvVodCategoryName()
+        when (mode) {
+            VodContainerMode.MOVIES -> !isTvEntry
+            VodContainerMode.TV -> isTvEntry
+        }
     }
 }
 
@@ -1531,6 +1616,19 @@ internal fun List<Movie>.onlyAdultVodMovies(providerCategories: List<Category> =
 
 internal fun List<Movie>.filterForAdultVodMode(adultOnly: Boolean, providerCategories: List<Category>): List<Movie> =
     if (adultOnly) onlyAdultVodMovies(providerCategories) else withoutAdultVodMovies(providerCategories)
+
+private fun Category.isTvVodCategory(): Boolean =
+    name.isTvVodCategoryName()
+
+private fun String?.isTvVodCategoryName(): Boolean {
+    val tokens = this
+        ?.lowercase()
+        ?.split(Regex("[^a-z0-9]+"))
+        ?.filter { it.isNotBlank() }
+        ?.toSet()
+        .orEmpty()
+    return "tv" in tokens || "series" in tokens || "show" in tokens || "shows" in tokens
+}
 
 internal fun normalMovieLibraryCount(
     providerCategoryCounts: Map<Long, Int>,
@@ -1546,10 +1644,12 @@ private data class MovieCatalogParams(
     val allFavorites: List<com.afterglowtv.domain.model.Favorite>,
     val customCategories: List<Category>,
     val providerCategories: List<Category>,
+    val allProviderCategories: List<Category>,
     val providerCategoryCounts: Map<Long, Int>,
     val libraryCount: Int,
     val hiddenCategoryIds: Set<Long>,
     val categorySortMode: CategorySortMode,
+    val containerMode: VodContainerMode,
     val query: String
 )
 
@@ -1557,6 +1657,7 @@ private data class MovieCatalogDependencies(
     val allFavorites: List<com.afterglowtv.domain.model.Favorite>,
     val customCategories: List<Category>,
     val providerCategories: List<Category>,
+    val allProviderCategories: List<Category>,
     val providerCategoryCounts: Map<Long, Int>,
     val libraryCount: Int,
     val hiddenCategoryIds: Set<Long>,
@@ -1583,6 +1684,7 @@ private data class MovieCategorySelectionDependencies(
     val allFavorites: List<com.afterglowtv.domain.model.Favorite>,
     val customCategories: List<Category>,
     val providerCategories: List<Category>,
+    val allProviderCategories: List<Category>,
     val hiddenCategoryIds: Set<Long>
 )
 
@@ -1590,6 +1692,7 @@ private data class SelectedMovieCategoryRequest(
     val providerId: Long,
     val selectedCategory: String?,
     val adultOnly: Boolean,
+    val containerMode: VodContainerMode,
     val loadLimit: Int,
     val query: String,
     val filterType: LibraryFilterType,
@@ -1597,12 +1700,14 @@ private data class SelectedMovieCategoryRequest(
     val allFavorites: List<com.afterglowtv.domain.model.Favorite>,
     val customCategories: List<Category>,
     val providerCategories: List<Category>,
+    val allProviderCategories: List<Category>,
     val hiddenCategoryIds: Set<Long>
 )
 
 private data class SelectedMovieBrowseSelection(
     val selectedCategory: String?,
     val adultOnly: Boolean,
+    val containerMode: VodContainerMode,
     val loadLimit: Int,
     val query: String,
     val filterType: LibraryFilterType,
@@ -1634,6 +1739,7 @@ data class VodMoviesUiState(
     val selectedLibraryFilterType: LibraryFilterType = LibraryFilterType.ALL,
     val selectedLibrarySortBy: LibrarySortBy = LibrarySortBy.LIBRARY,
     val vodViewMode: VodViewMode = VodViewMode.SHELVES,
+    val vodContainerMode: VodContainerMode = VodContainerMode.MOVIES,
     val showAdultVodGuide: Boolean = false,
     val vodInfiniteScroll: Boolean = true,
     val continueWatching: List<PlaybackHistory> = emptyList(),
