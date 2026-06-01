@@ -34,6 +34,7 @@ class UrlSecurityPolicyTest {
         assertThat(UrlSecurityPolicy.validatePlaylistSourceUrl("file:///storage/emulated/0/playlist.m3u")).isNull()
         assertThat(UrlSecurityPolicy.validatePlaylistSourceUrl("https://example.com/playlist.m3u")).isNull()
         assertThat(UrlSecurityPolicy.validatePlaylistSourceUrl("http://example.com/playlist.m3u")).isNull()
+        assertThat(UrlSecurityPolicy.validatePlaylistSourceUrl("https://example.com/get.php?username=a&password=b&type=m3u_plus")).isNull()
         assertThat(UrlSecurityPolicy.validatePlaylistSourceUrl("ftp://example.com/playlist.m3u"))
             .isEqualTo("Playlist sources must use HTTP, HTTPS, or point to a local file.")
     }

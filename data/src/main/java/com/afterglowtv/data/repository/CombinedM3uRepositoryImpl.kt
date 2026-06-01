@@ -348,6 +348,7 @@ class CombinedM3uRepositoryImpl @Inject constructor(
                         .map { it as Pair<Int, List<Channel>> }
                         .sortedBy { it.first }
                         .flatMap { it.second }
+                        .let(::dedupeCombinedChannels)
                 }
             }
         }
@@ -365,3 +366,31 @@ class CombinedM3uRepositoryImpl @Inject constructor(
         -2_000_000_000L - key.hashCode().toLong().let { kotlin.math.abs(it) }
 
 }
+
+internal fun dedupeCombinedChannels(channels: List<Channel>): List<Channel> {
+    val seenKeys = mutableSetOf<String>()
+    return channels.filter { channel ->
+        seenKeys.add(channel.combinedDedupeKey())
+    }
+}
+
+private fun Channel.combinedDedupeKey(): String {
+    val normalizedStreamUrl = streamUrl.trim()
+    if (normalizedStreamUrl.isNotBlank()) {
+        return "url:$normalizedStreamUrl"
+    }
+    val normalizedName = normalizeCombinedDedupeText(canonicalName.ifBlank { name })
+    if (normalizedName.isBlank()) {
+        return "channel:$providerId:$id"
+    }
+    val normalizedGroup = normalizeCombinedDedupeText(categoryName ?: groupTitle)
+    return "fallback:$normalizedName:$normalizedGroup"
+}
+
+private fun normalizeCombinedDedupeText(value: String?): String =
+    value
+        .orEmpty()
+        .lowercase(Locale.ROOT)
+        .replace(Regex("""[^a-z0-9]+"""), " ")
+        .replace(Regex("""\s+"""), " ")
+        .trim()

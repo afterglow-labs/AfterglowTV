@@ -2,6 +2,7 @@ package com.afterglowtv.app.ui.model
 
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.Channel
+import com.google.common.truth.Truth.assertWithMessage
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -142,6 +143,70 @@ class AdultGuidePresentationTest {
             "Taboo"
         )
         assertThat(categories.any { it.title == "XXX" }).isFalse()
+    }
+
+    @Test
+    fun `requested adult playlist labels become generated categories`() {
+        val expected = listOf(
+            "Gangbang" to "Group",
+            "Brazzers" to "Brazzers",
+            "Blacked" to "Blacked",
+            "Tiny" to "Petite",
+            "Daughter" to "Taboo",
+            "Cinema" to "Cinema",
+            "Tushy" to "Anal",
+            "Mouth" to "Oral",
+            "Sis" to "Taboo",
+            "Amateurs" to "Amateur",
+            "Moms" to "Taboo",
+            "Teach" to "Taboo",
+            "Russian" to "International",
+            "Czech" to "International",
+            "Wife" to "MILF",
+            "Futanari" to "Gonzo / Bizarre",
+            "BBC" to "Interracial",
+            "Playboy" to "Playboy",
+            "MYLF" to "MILF",
+            "Fisting" to "Gonzo / Bizarre",
+            "Cum4K" to "4K",
+            "Fam" to "Taboo",
+            "Masturbation" to "Solo",
+            "German" to "International",
+            "Office" to "Office",
+            "Boss" to "Office",
+            "Erotic4k" to "4K",
+            "Studio *4K" to "4K",
+            "Handjob" to "Handjob",
+            "Private Society" to "Private Society",
+            "Pornbox" to "Pornbox",
+            "Mom" to "MILF",
+            "Les" to "Lesbian"
+        )
+        val channels = expected.mapIndexed { index, (title, _) ->
+            Channel(
+                id = 100L + index,
+                name = title,
+                providerId = 7L,
+                categoryId = 30L,
+                categoryName = "XXX",
+                isAdult = true
+            )
+        }
+
+        val categories = AdultGuideCategoryBuilder.build(
+            channels = channels,
+            providerCategories = listOf(Category(id = 30L, name = "XXX", isAdult = true)),
+            includeAllCategory = false
+        )
+
+        expected.forEach { (title, categoryTitle) ->
+            val category = categories.firstOrNull { it.title == categoryTitle }
+            assertWithMessage("Missing category $categoryTitle for $title. Categories: ${categories.map { it.title }}")
+                .that(category)
+                .isNotNull()
+            assertThat(category!!.channels.map { it.name }).contains(title)
+        }
+        assertThat(categories.category("Taboo").channels.map { it.name }).contains("Mom")
     }
 
     @Test

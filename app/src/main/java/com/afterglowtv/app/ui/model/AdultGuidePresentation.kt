@@ -48,8 +48,8 @@ object AdultGuideCategoryBuilder {
         AdultGuideRule(
             "milf",
             "MILF",
-            listOf("milf", "milfs", "milfy", "stepmom", "step mom"),
-            embeddedAliases = listOf("milf", "milfy")
+            listOf("milf", "milfs", "milfy", "mylf", "stepmom", "step mom", "mom", "wife"),
+            embeddedAliases = listOf("milf", "milfy", "mylf")
         ),
         AdultGuideRule(
             "taboo",
@@ -81,7 +81,12 @@ object AdultGuideCategoryBuilder {
                 "dad",
                 "father",
                 "sister",
-                "brother"
+                "brother",
+                "daughter",
+                "sis",
+                "moms",
+                "teach",
+                "fam"
             ),
             embeddedAliases = listOf(
                 "stepmom",
@@ -94,10 +99,11 @@ object AdultGuideCategoryBuilder {
                 "schoolgirl",
                 "cousin",
                 "mother",
-                "father"
+                "father",
+                "daughter"
             )
         ),
-        AdultGuideRule("interracial", "Interracial", listOf("interracial", "ir")),
+        AdultGuideRule("interracial", "Interracial", listOf("interracial", "ir", "bbc")),
         AdultGuideRule(
             "teen",
             "Teen",
@@ -107,8 +113,8 @@ object AdultGuideCategoryBuilder {
         AdultGuideRule(
             "anal",
             "Anal",
-            listOf("anal", "anal 4k", "anal only", "anal mom", "analized"),
-            embeddedAliases = listOf("anal", "anal4k", "analonly", "analmom", "analized")
+            listOf("anal", "anal 4k", "anal only", "anal mom", "analized", "tushy"),
+            embeddedAliases = listOf("anal", "anal4k", "analonly", "analmom", "analized", "tushy")
         ),
         AdultGuideRule(
             "blowjob",
@@ -116,7 +122,8 @@ object AdultGuideCategoryBuilder {
             listOf("blowjob", "blowjobs", "bj", "deep throat", "deepthroat"),
             embeddedAliases = listOf("blowjob", "blowjobs", "deepthroat")
         ),
-        AdultGuideRule("oral", "Oral", listOf("oral"), embeddedAliases = listOf("oral")),
+        AdultGuideRule("oral", "Oral", listOf("oral", "mouth"), embeddedAliases = listOf("oral")),
+        AdultGuideRule("handjob", "Handjob", listOf("handjob", "hand job"), embeddedAliases = listOf("handjob")),
         AdultGuideRule(
             "big_tits",
             "Big Tits",
@@ -133,13 +140,31 @@ object AdultGuideCategoryBuilder {
             listOf("compilation", "compilations"),
             embeddedAliases = listOf("compilation", "compilations")
         ),
+        AdultGuideRule("brazzers", "Brazzers", listOf("brazzers"), embeddedAliases = listOf("brazzers")),
+        AdultGuideRule("blacked", "Blacked", listOf("blacked"), embeddedAliases = listOf("blacked")),
+        AdultGuideRule("cinema", "Cinema", listOf("cinema"), embeddedAliases = listOf("cinema")),
+        AdultGuideRule("playboy", "Playboy", listOf("playboy"), embeddedAliases = listOf("playboy")),
+        AdultGuideRule("private_society", "Private Society", listOf("private society"), embeddedAliases = listOf("privatesociety")),
+        AdultGuideRule("pornbox", "Pornbox", listOf("pornbox"), embeddedAliases = listOf("pornbox")),
+        AdultGuideRule(
+            "gonzo_bizarre",
+            "Gonzo / Bizarre",
+            listOf("gonzo", "bizarre", "futanari", "fisting"),
+            embeddedAliases = listOf("futanari", "fisting")
+        ),
         AdultGuideRule("parody", "Parody", listOf("parody", "parodies"), embeddedAliases = listOf("parody")),
         AdultGuideRule("pornstar", "Pornstar", listOf("pornstar", "pornstars"), embeddedAliases = listOf("pornstar")),
         AdultGuideRule("cartoon", "Cartoon", listOf("cartoon", "cartoons", "toon", "animated"), embeddedAliases = listOf("cartoon")),
         AdultGuideRule("hentai", "Hentai", listOf("hentai", "anime"), embeddedAliases = listOf("hentai", "anime")),
-        AdultGuideRule("solo", "Solo", listOf("solo", "solo girl", "solo girls"), embeddedAliases = listOf("solo")),
+        AdultGuideRule(
+            "solo",
+            "Solo",
+            listOf("solo", "solo girl", "solo girls", "masturbation"),
+            embeddedAliases = listOf("solo", "masturbation")
+        ),
         AdultGuideRule("onlyfans", "OnlyFans", listOf("onlyfans", "only fans"), embeddedAliases = listOf("onlyfans")),
         AdultGuideRule("tiktok", "TikTok", listOf("tiktok", "tik tok"), embeddedAliases = listOf("tiktok")),
+        AdultGuideRule("petite", "Petite", listOf("petite", "tiny")),
         AdultGuideRule("blondes", "Blonde", listOf("blonde", "blondes"), embeddedAliases = listOf("blonde", "blondessa")),
         AdultGuideRule("brunettes", "Brunettes", listOf("brunette", "brunettes")),
         AdultGuideRule("trans", "Trans", listOf("trans", "transgender", "tg", "ts")),
@@ -151,17 +176,19 @@ object AdultGuideCategoryBuilder {
             embeddedAliases = listOf("asian", "japanese", "korean", "chinese", "japanhdv")
         ),
         AdultGuideRule("ebony", "Ebony", listOf("ebony", "black")),
-        AdultGuideRule("amateur", "Amateur", listOf("amateur", "homemade")),
-        AdultGuideRule("lesbian", "Lesbian", listOf("lesbian", "lesbians")),
+        AdultGuideRule("amateur", "Amateur", listOf("amateur", "amateurs", "homemade")),
+        AdultGuideRule("lesbian", "Lesbian", listOf("lesbian", "lesbians", "les")),
         AdultGuideRule("gay", "Gay", listOf("gay")),
         AdultGuideRule("bbw", "BBW", listOf("bbw")),
         AdultGuideRule("mature", "Mature", listOf("mature", "cougar", "cougars")),
         AdultGuideRule("pov", "POV", listOf("pov")),
-        AdultGuideRule("group", "Group", listOf("group", "threesome", "orgy")),
+        AdultGuideRule("group", "Group", listOf("group", "threesome", "orgy", "gangbang"), embeddedAliases = listOf("gangbang")),
         AdultGuideRule("fetish", "Fetish", listOf("fetish", "bdsm", "bondage")),
         AdultGuideRule("reality", "Reality", listOf("reality", "casting", "audition")),
+        AdultGuideRule("international", "International", listOf("international", "russian", "czech", "german")),
+        AdultGuideRule("office", "Office", listOf("office", "boss")),
         AdultGuideRule("vr", "VR", listOf("vr", "virtual reality")),
-        AdultGuideRule("4k", "4K", listOf("4k", "uhd"))
+        AdultGuideRule("4k", "4K", listOf("4k", "uhd"), embeddedAliases = listOf("4k"))
     )
 
     fun build(
