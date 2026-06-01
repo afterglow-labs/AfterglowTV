@@ -433,8 +433,14 @@ class M3uParser {
             "url-xml"
         )
 
-        /** Exposed for callers outside M3uParser (e.g. SyncManager) to avoid duplicate logic. */
-        fun isVodEntry(entry: M3uEntry): Boolean {
+        /**
+         * Returns true only for concrete VOD signals supplied by the playlist itself.
+         *
+         * This deliberately excludes adult-title/category heuristics. Mixed M3U providers
+         * often include adult live loops beside real /movie/ or /series/ VOD URLs, and the
+         * adult heuristic should only run when the user marks the playlist as VOD.
+         */
+        fun isExplicitVodEntry(entry: M3uEntry): Boolean {
             val url = entry.url.lowercase()
             val path = url.substringBefore('?').substringBefore('#')
             val group = entry.groupTitle.lowercase()
@@ -474,9 +480,31 @@ class M3uParser {
                     group.contains("vod") ||
                     group.contains("film") ||
                     group.contains("series") ||
-                    group.contains("season") ||
+                    group.contains("season")
+        }
+
+        /** Exposed for callers outside M3uParser (e.g. SyncManager) to avoid duplicate logic. */
+        fun isVodEntry(entry: M3uEntry): Boolean {
+            if (isExplicitVodEntry(entry)) return true
+            return !hasLiveHint(entry) && (
                     AdultContentClassifier.isAdultCategoryName(entry.groupTitle) ||
-                    AdultContentClassifier.isAdultCategoryName(entry.name)
+                            AdultContentClassifier.isAdultCategoryName(entry.name)
+                    )
+        }
+
+        private fun hasLiveHint(entry: M3uEntry): Boolean {
+            val url = entry.url.lowercase()
+            val path = url.substringBefore('?').substringBefore('#')
+            val group = entry.groupTitle.lowercase()
+            val livePathHint = path.contains("/live/") ||
+                    path.contains("/live.php") ||
+                    path.contains("/live-tv/") ||
+                    path.contains("/livetv/")
+            val liveGroupHint = group.contains("live tv") ||
+                    group.contains("live channel") ||
+                    group.contains("live channels") ||
+                    group.contains("linear tv")
+            return livePathHint || liveGroupHint
         }
 
         val knownAttributes = setOf(

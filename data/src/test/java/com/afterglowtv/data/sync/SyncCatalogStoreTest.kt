@@ -28,6 +28,7 @@ import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -549,7 +550,7 @@ class SyncCatalogStoreTest {
         )
 
         verify(catalogSyncDao).rebuildChannelFts()
-        verify(catalogSyncDao).rebuildMovieFts()
+        verify(catalogSyncDao, times(1)).rebuildMovieFts()
         verify(movieDao).restoreWatchProgress(7L)
     }
 

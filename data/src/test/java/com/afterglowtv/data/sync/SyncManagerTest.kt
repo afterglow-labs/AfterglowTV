@@ -1755,6 +1755,45 @@ class SyncManagerTest {
     }
 
     @Test
+    fun `sync_m3u_mixedPlaylist_keeps_explicit_vod_out_of_live_tv`() = runTest {
+        val playlist = tempFolder.newFile("mixed-vod-live.m3u")
+        playlist.writeText(
+            """
+            #EXTM3U
+            #EXTINF:-1 group-title="USA Premium",US News
+            https://live.example.com/news.ts
+            #EXTINF:-1 group-title="XXX",Adult Live Loop
+            https://live.example.com/adult-loop.ts
+            #EXTINF:-1 group-title="Movie VOD",Strange Things H265
+            https://vod.example.com/movie/user/pass/strange-things-h265
+            #EXTINF:-1 group-title="TV VOD",Episode One
+            https://vod.example.com/series/user/pass/episode-one
+            """.trimIndent()
+        )
+        val provider = sampleProvider(ProviderType.M3U).copy(
+            serverUrl = playlist.toURI().toString(),
+            m3uUrl = playlist.toURI().toString(),
+            m3uVodClassificationEnabled = false
+        )
+        val mgr = buildManager(providerType = ProviderType.M3U, providerEntity = provider)
+
+        val result = mgr.sync(1L, force = true)
+        advanceUntilIdle()
+
+        if (result is Result.Error) {
+            error(result.message)
+        }
+        assertThat(result.isSuccess).isTrue()
+        val insertedChannels = argumentCaptor<List<com.afterglowtv.data.local.entity.ChannelImportStageEntity>>()
+        val insertedMovies = argumentCaptor<List<com.afterglowtv.data.local.entity.MovieImportStageEntity>>()
+        verify(catalogSyncDao, atLeastOnce()).insertChannelStages(insertedChannels.capture())
+        verify(catalogSyncDao, atLeastOnce()).insertMovieStages(insertedMovies.capture())
+
+        assertThat(insertedChannels.allValues.flatten().map { it.categoryName }).containsExactly("USA Premium", "XXX")
+        assertThat(insertedMovies.allValues.flatten().map { it.categoryName }).containsExactly("Movie VOD", "TV VOD")
+    }
+
+    @Test
     fun `sync_m3u_accepts_http_header_epg_and_ignores_insecure_streams`() = runTest {
         // HTTP EPG URLs in the playlist header are now accepted (same policy as playlist sources).
         // Only stream entry URLs with unsupported schemes (e.g. ftp://) are silently dropped.

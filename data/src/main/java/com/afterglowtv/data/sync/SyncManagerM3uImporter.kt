@@ -89,7 +89,9 @@ internal class SyncManagerM3uImporter(
                         // placeholders intact so runtime substitution can fill them in.
                         val safeCatchUpSource = UrlSecurityPolicy.sanitizeImportedTemplateUrl(entry.catchUpSource)
 
-                        if (provider.m3uVodClassificationEnabled && M3uParser.isVodEntry(entry)) {
+                        val isVodEntry = M3uParser.isExplicitVodEntry(entry) ||
+                            (provider.m3uVodClassificationEnabled && M3uParser.isVodEntry(entry))
+                        if (isVodEntry) {
                             if (!includeMovies) return@parseStreaming
                             val groupTitle = entry.groupTitle.ifBlank { "Uncategorized" }
                             val stableStreamId = stableId(
