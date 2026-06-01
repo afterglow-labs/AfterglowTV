@@ -180,7 +180,19 @@ class AdultGuidePresentationTest {
             "Private Society" to "Private Society",
             "Pornbox" to "Pornbox",
             "Mom" to "MILF",
-            "Les" to "Lesbian"
+            "Les" to "Lesbian",
+            "Parasited" to "Gonzo / Bizarre",
+            "Africa" to "International",
+            "Spy" to "Hidden Camera",
+            "GenderX" to "Trans",
+            "Arab" to "International",
+            "Work" to "Office",
+            "Feet" to "Fetish",
+            "Twink" to "Gay",
+            "PureTaboo" to "Taboo",
+            "TabooHeat" to "Taboo",
+            "MommysGirl" to "Taboo",
+            "AdultTime" to "AdultTime"
         )
         val channels = expected.mapIndexed { index, (title, _) ->
             Channel(
