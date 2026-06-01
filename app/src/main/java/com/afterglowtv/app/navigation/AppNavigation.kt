@@ -36,8 +36,8 @@ import com.afterglowtv.app.ui.screens.local.LocalMediaScreen
 import com.afterglowtv.app.ui.screens.movies.MoviesScreen
 import com.afterglowtv.app.ui.screens.player.PlayerScreen
 import com.afterglowtv.app.ui.screens.provider.ProviderSetupScreen
-import com.afterglowtv.app.ui.screens.series.SeriesScreen
 import com.afterglowtv.app.ui.screens.settings.SettingsScreen
+import com.afterglowtv.app.ui.screens.vod.VodScreen
 import com.afterglowtv.app.ui.screens.welcome.WelcomeScreen
 import com.afterglowtv.app.MainActivity
 import com.afterglowtv.data.preferences.PreferencesRepository
@@ -84,10 +84,8 @@ object Routes {
     const val HOME = "home"
     const val LIVE_TV = "live_tv"
     const val LIVE_TV_DESTINATION = "live_tv?categoryId={categoryId}"
-    const val MOVIES = "movies"
-    const val SERIES = "series"
     const val LOCAL_MEDIA = "local_media"
-    const val VOD_GUIDE = "vod_guide"
+    const val VOD_CONTAINER = "vod_container"
     const val ADULT_GUIDE = "adult_guide"
     const val ADULT_VOD = "adult_vod"
     const val EPG = "epg"
@@ -365,7 +363,7 @@ internal class AdultGuideEntryViewModel @Inject constructor(
 }
 
 private fun isDeveloperRoute(route: String): Boolean =
-    route == Routes.VOD_GUIDE || route == Routes.ADULT_GUIDE || route == Routes.LOCAL_MEDIA
+    route == Routes.ADULT_GUIDE || route == Routes.LOCAL_MEDIA
 
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
@@ -581,21 +579,6 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
 // ... (rest of file)
 
-        composable(Routes.MOVIES) {
-            MoviesScreen(
-                onMovieClick = { movie ->
-                    navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.MOVIES))
-                },
-                onContinueWatchingPlay = { history ->
-                    navController.navigateToPlayer(
-                        history.toPlayerNavigationRequest().copy(returnRoute = Routes.MOVIES)
-                    )
-                },
-                onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.MOVIES
-            )
-        }
-
         composable(Routes.ADULT_VOD) {
             if (!developerModeEnabled) {
                 LaunchedEffect(Unit) {
@@ -624,16 +607,6 @@ fun AppNavigation(mainActivity: MainActivity) {
             )
         }
 
-        composable(Routes.SERIES) {
-            SeriesScreen(
-                onSeriesClick = { seriesId ->
-                    navController.navigateIfResumed(Routes.seriesDetail(seriesId, Routes.SERIES))
-                },
-                onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.SERIES
-            )
-        }
-
         composable(Routes.LOCAL_MEDIA) {
             if (!developerModeEnabled) {
                 LaunchedEffect(Unit) {
@@ -652,13 +625,22 @@ fun AppNavigation(mainActivity: MainActivity) {
             )
         }
 
-        composable(Routes.VOD_GUIDE) {
-            LaunchedEffect(developerModeEnabled) {
-                navController.navigate(if (developerModeEnabled) Routes.MOVIES else Routes.HOME) {
-                    popUpTo(Routes.VOD_GUIDE) { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
+        composable(Routes.VOD_CONTAINER) {
+            VodScreen(
+                onMovieClick = { movie ->
+                    navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.VOD_CONTAINER))
+                },
+                onContinueWatchingPlay = { history ->
+                    navController.navigateToPlayer(
+                        history.toPlayerNavigationRequest().copy(returnRoute = Routes.VOD_CONTAINER)
+                    )
+                },
+                onSeriesClick = { seriesId ->
+                    navController.navigateIfResumed(Routes.seriesDetail(seriesId, Routes.VOD_CONTAINER))
+                },
+                onNavigate = { route -> tabNavigate(route) },
+                currentRoute = Routes.VOD_CONTAINER
+            )
         }
 
         composable(Routes.ADULT_GUIDE) {

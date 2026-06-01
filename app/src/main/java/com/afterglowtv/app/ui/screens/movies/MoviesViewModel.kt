@@ -101,7 +101,7 @@ class MoviesViewModel @Inject constructor(
         const val INITIAL_PREVIEW_BATCH_SIZE = 6
         const val ADULT_VOD_PREVIEW_START_MS = 5 * 60 * 1000L
         const val SHORT_ADULT_VOD_PREVIEW_START_MS = 2 * 60 * 1000L
-        const val ADULT_VOD_GUIDE_PAGE_SIZE = 1_000
+        const val ADULT_VOD_CONTAINER_PAGE_SIZE = 1_000
     }
 
     private val _uiState = MutableStateFlow(MoviesUiState())
@@ -568,12 +568,12 @@ class MoviesViewModel @Inject constructor(
         selectCategory(VodBrowseDefaults.FULL_LIBRARY_CATEGORY)
     }
 
-    fun openVodGuide() {
-        openVodGuide(adultOnly = false)
+    fun openVodContainer() {
+        openVodContainer(adultOnly = false)
     }
 
     fun openAdultVodGuide() {
-        openVodGuide(adultOnly = true)
+        openVodContainer(adultOnly = true)
     }
 
     fun previewAdultVodMovie(movie: Movie) {
@@ -713,7 +713,7 @@ class MoviesViewModel @Inject constructor(
         }
     }
 
-    private fun openVodGuide(adultOnly: Boolean) {
+    private fun openVodContainer(adultOnly: Boolean) {
         if (!adultOnly) {
             clearAdultVodPreview()
         }
@@ -723,7 +723,7 @@ class MoviesViewModel @Inject constructor(
             selectedLibraryFilterType = _selectedLibraryFilterType,
             selectedLibrarySortBy = _selectedLibrarySortBy,
             uiState = _uiState,
-            loadLimit = if (adultOnly) ADULT_VOD_GUIDE_PAGE_SIZE else VodBrowseDefaults.SELECTED_CATEGORY_PAGE_SIZE
+            loadLimit = if (adultOnly) ADULT_VOD_CONTAINER_PAGE_SIZE else VodBrowseDefaults.SELECTED_CATEGORY_PAGE_SIZE
         ) { selectedCategory, filterType, sortBy, isLoadingSelectedCategory ->
             copy(
                 selectedCategory = selectedCategory,
@@ -788,7 +788,7 @@ class MoviesViewModel @Inject constructor(
 
     fun loadMoreSelectedCategory() {
         val pageSize = if (_uiState.value.showAdultVodGuide) {
-            ADULT_VOD_GUIDE_PAGE_SIZE
+            ADULT_VOD_CONTAINER_PAGE_SIZE
         } else {
             VodBrowseDefaults.SELECTED_CATEGORY_PAGE_SIZE
         }

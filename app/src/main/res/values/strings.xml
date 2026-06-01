@@ -11,7 +11,7 @@
     <string name="nav_personal_guide">Personal Library</string>
     <string name="nav_epg">Guide</string>
     <string name="nav_iptv_guide">TV Guide</string>
-    <string name="nav_vod_guide">VOD Guide</string>
+    <string name="nav_vod">VOD</string>
     <string name="nav_adult_guide">Adult</string>
     <string name="nav_settings">Settings</string>
 
@@ -244,8 +244,8 @@
     <string name="movies_reorder_subtitle">Use the remote to move posters, then save the shelf order for this group.</string>
     <string name="library_full_browse_title_movies">Browse Full Movie Library</string>
     <string name="library_full_browse_subtitle">%1$d titles available in the current provider</string>
-    <string name="vod_guide_title">VOD Guide</string>
-    <string name="vod_guide_detail">Guide-style VOD browsing</string>
+    <string name="vod_container_title">VOD</string>
+    <string name="vod_container_detail">VOD browsing</string>
     <string name="adult_on_demand_title">On Demand</string>
     <string name="adult_on_demand_detail">Adult titles</string>
 
@@ -525,13 +525,13 @@
     <string name="settings_live_channel_numbering_hidden">Hidden</string>
     <string name="settings_live_channel_numbering_hidden_desc">Never show channel numbers anywhere in the app.</string>
     <string name="settings_vod_view_mode">VOD layout</string>
-    <string name="settings_vod_view_mode_subtitle">Choose shelf rows, a poster grid, or the VOD guide.</string>
+    <string name="settings_vod_view_mode_subtitle">Choose shelf rows, a poster grid, or VOD.</string>
     <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="settings_vod_infinite_scroll">Infinite scroll</string>
     <string name="settings_vod_infinite_scroll_on">Auto-load more category rows as you scroll near the end.</string>
     <string name="settings_vod_infinite_scroll_off">Show a Load more button to fetch the next batch of category rows.</string>

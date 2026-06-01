@@ -67,7 +67,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.components.shell.BrowseSearchLaunchCard
 import com.afterglowtv.app.ui.components.shell.LoadMoreCard
 import com.afterglowtv.app.ui.components.shell.InfiniteScrollEffect
@@ -97,6 +96,8 @@ import com.afterglowtv.app.ui.model.VodTitleFormatter
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.screens.vod.HandleVodUserMessage
 import com.afterglowtv.app.ui.screens.vod.ProtectedVodPinDialog
+import com.afterglowtv.app.ui.screens.vod.VodContainerHeader
+import com.afterglowtv.app.ui.screens.vod.VodContainerMode
 import com.afterglowtv.app.ui.screens.vod.VodBrowseDefaults
 import com.afterglowtv.app.ui.screens.vod.vodActiveFilterSortDetail
 import com.afterglowtv.player.PlayerRenderSurfaceType
@@ -111,10 +112,12 @@ fun MoviesScreen(
     onContinueWatchingPlay: (PlaybackHistory) -> Unit,
     onNavigate: (String) -> Unit,
     currentRoute: String,
-    initialGuideMode: Boolean = false,
+    initialContainerMode: Boolean = false,
     initialAdultGuideMode: Boolean = false,
     wordmark: String? = null,
     tagline: String? = null,
+    containerMode: VodContainerMode? = null,
+    onContainerModeChange: (VodContainerMode) -> Unit = {},
     viewModel: MoviesViewModel = hiltViewModel()
 ) {
     remember(viewModel) {
@@ -129,11 +132,11 @@ fun MoviesScreen(
     var pendingCategory by remember { mutableStateOf<Category?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    LaunchedEffect(initialGuideMode, initialAdultGuideMode) {
+    LaunchedEffect(initialContainerMode, initialAdultGuideMode) {
         if (initialAdultGuideMode) {
             viewModel.openAdultVodGuide()
-        } else if (initialGuideMode) {
-            viewModel.openVodGuide()
+        } else if (initialContainerMode) {
+            viewModel.openVodContainer()
         }
     }
 
@@ -194,9 +197,11 @@ fun MoviesScreen(
             compactHeader = true,
             showScreenHeader = false
         ) {
-        AfterglowBrandStrip(
+        VodContainerHeader(
             wordmark = wordmark ?: "Movies",
             tagline = tagline ?: "Your VOD library, sorted and ready.",
+            selectedMode = containerMode,
+            onModeSelected = onContainerModeChange,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
         )
         if (uiState.isReorderMode && uiState.reorderCategory != null) {
@@ -309,7 +314,7 @@ fun MoviesScreen(
 	                    viewModel.setSelectedLibrarySortBy(LibrarySortBy.RELEASE)
 	                    viewModel.selectFullLibraryBrowse()
 	                },
-	                onOpenVodGuide = viewModel::openVodGuide,
+	                onOpenVodContainer = viewModel::openVodContainer,
 	                onOpenAdultVodGuide = viewModel::openAdultVodGuide,
 	                onLoadMore = viewModel::loadMoreSelectedCategory,
                 onPreviewAdultVodMovie = viewModel::previewAdultVodMovie,
@@ -406,7 +411,7 @@ private fun MoviesVodContent(
     onOpenContinueWatching: () -> Unit,
     onOpenTopRated: () -> Unit,
     onOpenFresh: () -> Unit,
-    onOpenVodGuide: () -> Unit,
+    onOpenVodContainer: () -> Unit,
     onOpenAdultVodGuide: () -> Unit,
     onLoadMore: () -> Unit,
     onPreviewAdultVodMovie: (Movie) -> Unit,
@@ -545,7 +550,7 @@ private fun MoviesVodContent(
             onProtectedMovieClick = onProtectedMovieClick,
             onShowDialog = onShowDialog,
             onSelectFullLibraryBrowse = onSelectFullLibraryBrowse,
-            onOpenVodGuide = onOpenVodGuide,
+            onOpenVodContainer = onOpenVodContainer,
             onOpenAdultVodGuide = onOpenAdultVodGuide,
             onLoadMore = onLoadMore,
             onPreviewAdultVodMovie = onPreviewAdultVodMovie,
@@ -613,15 +618,15 @@ private fun MoviesVodContent(
 	                        )
 	                        add(
 	                            VodActionChip(
-	                                key = "vod_guide",
-	                                label = stringResource(R.string.vod_guide_title),
-	                                detail = stringResource(R.string.vod_guide_detail),
-	                                onClick = onOpenVodGuide
+	                                key = "vod_container",
+	                                label = stringResource(R.string.vod_container_title),
+	                                detail = stringResource(R.string.vod_container_detail),
+	                                onClick = onOpenVodContainer
 	                            )
 	                        )
 	                        add(
 	                            VodActionChip(
-	                                key = "xxx_vod_guide",
+	                                key = "adult_vod_container",
 	                                label = stringResource(R.string.adult_on_demand_title),
 	                                detail = stringResource(R.string.adult_on_demand_detail),
 	                                onClick = onOpenAdultVodGuide
@@ -1004,7 +1009,7 @@ private fun MoviesVodGuideContent(
     onProtectedMovieClick: (Movie) -> Unit,
     onShowDialog: (Movie) -> Unit,
     onSelectFullLibraryBrowse: () -> Unit,
-    onOpenVodGuide: () -> Unit,
+    onOpenVodContainer: () -> Unit,
     onOpenAdultVodGuide: () -> Unit,
     onLoadMore: () -> Unit,
     onPreviewAdultVodMovie: (Movie) -> Unit,
@@ -1037,7 +1042,7 @@ private fun MoviesVodGuideContent(
 
     if (showBrowseOptions) {
         VodBrowseOptionsDialog(
-            title = stringResource(R.string.settings_vod_view_mode_guide),
+            title = stringResource(R.string.settings_vod_view_mode_container),
             filterTitle = stringResource(R.string.library_filter_title),
             filterChips = movieFilterChips(),
             selectedFilterKey = selectedFilterType.name,
@@ -1098,17 +1103,17 @@ private fun MoviesVodGuideContent(
 	        val hasActiveFilterSort = selectedFilterType != LibraryFilterType.ALL || selectedSortBy != LibrarySortBy.LIBRARY
 	        VodClassicContentHeader(
 	            title = stringResource(
-	                if (uiState.showAdultVodGuide) R.string.nav_adult_guide else R.string.vod_guide_title
+	                if (uiState.showAdultVodGuide) R.string.nav_adult_guide else R.string.vod_container_title
 	            ),
 	            subtitle = stringResource(R.string.vod_classic_results_count, uiState.selectedCategoryTotalCount),
 	            actions = buildList {
 	                add(
 	                    VodActionChip(
-	                        key = if (uiState.showAdultVodGuide) "vod_guide" else "xxx_vod_guide",
+	                        key = if (uiState.showAdultVodGuide) "vod_container" else "adult_vod_container",
 	                        label = stringResource(
 	                            if (uiState.showAdultVodGuide) R.string.nav_movies else R.string.adult_on_demand_title
 	                        ),
-	                        onClick = if (uiState.showAdultVodGuide) onOpenVodGuide else onOpenAdultVodGuide
+	                        onClick = if (uiState.showAdultVodGuide) onOpenVodContainer else onOpenAdultVodGuide
 	                    )
 	                )
 	                add(

@@ -843,8 +843,7 @@ private fun buildDestinationItems(
             add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info, adultGuideLabel.ifBlank { "Adult" }))
         }
     }
-    add(DestinationItem(Routes.MOVIES, R.string.nav_movies, Icons.Default.Star))
-    add(DestinationItem(Routes.SERIES, R.string.nav_series, Icons.Default.Menu))
+    add(DestinationItem(Routes.VOD_CONTAINER, R.string.nav_vod, Icons.Default.Star))
     if (developerModeEnabled) {
         add(DestinationItem(Routes.LOCAL_MEDIA, R.string.nav_personal_guide, Icons.Default.Menu))
     }

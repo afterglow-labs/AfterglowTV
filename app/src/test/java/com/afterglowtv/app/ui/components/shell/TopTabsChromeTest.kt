@@ -18,8 +18,8 @@ class TopTabsChromeTest {
             showAdultGuideTab = true
         ).first { it.id == "local_media" }
 
-        assertThat(guideTabs.map { it.id }).containsExactly("epg")
-        assertThat(guideTabs.map { it.label }).containsExactly("TV Guide")
+        assertThat(guideTabs.map { it.id }).containsExactly("epg").inOrder()
+        assertThat(guideTabs.map { it.label }).containsExactly("TV Guide").inOrder()
         assertThat(localMediaTab.label).isEqualTo("Personal Library")
         assertThat(
             defaultTopTabs(
@@ -49,18 +49,23 @@ class TopTabsChromeTest {
             tab.label.contains("Guide", ignoreCase = true)
         }
 
-        assertThat(guideTabs.map { it.id }).containsExactly("epg")
+        assertThat(guideTabs.map { it.id }).containsExactly("epg").inOrder()
     }
 
     @Test
-    fun `vod guide is not a top level tab`() {
+    fun `vod replaces movies and series as a top level tab`() {
         val tabIds = defaultTopTabs(
             developerModeEnabled = true,
             showAdultGuideTab = true
         ).map { it.id }
+        val vodTab = defaultTopTabs(
+            developerModeEnabled = true,
+            showAdultGuideTab = true
+        ).first { it.id == "vod_container" }
 
-        assertThat(tabIds).doesNotContain("vod_guide")
-        assertThat(tabIds).contains("movies")
-        assertThat(tabIds).contains("series")
+        assertThat(tabIds).contains("vod_container")
+        assertThat(tabIds).doesNotContain("movies")
+        assertThat(tabIds).doesNotContain("series")
+        assertThat(vodTab.label).isEqualTo("VOD")
     }
 }

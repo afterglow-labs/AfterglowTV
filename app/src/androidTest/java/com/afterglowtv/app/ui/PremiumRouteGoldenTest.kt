@@ -169,7 +169,7 @@ class PremiumRouteGoldenTest {
                         .testTag("golden")
                 ) {
                     LibraryBrowseScaffold(
-                        currentRoute = Routes.MOVIES,
+                        currentRoute = Routes.VOD_CONTAINER,
                         onNavigate = {},
                         title = "Movies",
                         subtitle = "Curated shelves, fast category jumps, and large-library-safe browsing.",
@@ -227,7 +227,7 @@ class PremiumRouteGoldenTest {
                         .testTag("golden")
                 ) {
                     AppScreenScaffold(
-                        currentRoute = Routes.SERIES,
+                        currentRoute = Routes.VOD_CONTAINER,
                         onNavigate = {},
                         title = "Series Detail",
                         subtitle = "Backdrop hero, metadata, and progress-aware episode rows."

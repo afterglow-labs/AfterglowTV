@@ -551,15 +551,15 @@ class SeriesViewModel @Inject constructor(
         selectCategory(VodBrowseDefaults.FULL_LIBRARY_CATEGORY)
     }
 
-    fun openVodGuide() {
-        openVodGuide(adultOnly = false)
+    fun openVodContainer() {
+        openVodContainer(adultOnly = false)
     }
 
     fun openAdultVodGuide() {
-        openVodGuide(adultOnly = true)
+        openVodContainer(adultOnly = true)
     }
 
-    private fun openVodGuide(adultOnly: Boolean) {
+    private fun openVodContainer(adultOnly: Boolean) {
         selectCategory(VodBrowseDefaults.FULL_LIBRARY_CATEGORY)
         _uiState.update {
             it.copy(

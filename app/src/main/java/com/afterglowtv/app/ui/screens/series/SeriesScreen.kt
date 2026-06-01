@@ -67,7 +67,6 @@ import androidx.compose.material3.SnackbarHostState
 import com.afterglowtv.app.ui.components.ReorderTopBar
 import com.afterglowtv.app.ui.components.dialogs.DeleteGroupDialog
 import com.afterglowtv.app.ui.components.dialogs.RenameGroupDialog
-import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.components.shell.BrowseHeroPanel
 import com.afterglowtv.app.ui.components.shell.BrowseSearchLaunchCard
 import com.afterglowtv.app.ui.components.shell.LoadMoreCard
@@ -97,6 +96,8 @@ import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.screens.vod.HandleVodUserMessage
 import com.afterglowtv.app.ui.screens.vod.ProtectedVodPinDialog
 import com.afterglowtv.app.ui.screens.vod.VodBrowseDefaults
+import com.afterglowtv.app.ui.screens.vod.VodContainerHeader
+import com.afterglowtv.app.ui.screens.vod.VodContainerMode
 import com.afterglowtv.app.ui.screens.vod.vodActiveFilterSortDetail
 import kotlinx.coroutines.delay
 
@@ -106,6 +107,11 @@ fun SeriesScreen(
     onSeriesClick: (Long) -> Unit,
     onNavigate: (String) -> Unit,
     currentRoute: String,
+    initialContainerMode: Boolean = false,
+    wordmark: String = "Series",
+    tagline: String = "Shows, seasons, and what's still on the queue.",
+    containerMode: VodContainerMode? = null,
+    onContainerModeChange: (VodContainerMode) -> Unit = {},
     viewModel: SeriesViewModel = hiltViewModel()
 ) {
     remember(viewModel) {
@@ -119,6 +125,12 @@ fun SeriesScreen(
     var pendingSeriesId by remember { mutableStateOf<Long?>(null) }
     var pendingCategory by remember { mutableStateOf<Category?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    LaunchedEffect(initialContainerMode) {
+        if (initialContainerMode) {
+            viewModel.openVodContainer()
+        }
+    }
 
     HandleVodUserMessage(
         userMessage = uiState.userMessage,
@@ -177,9 +189,11 @@ fun SeriesScreen(
             compactHeader = true,
             showScreenHeader = false
         ) {
-        AfterglowBrandStrip(
-            wordmark = "Series",
-            tagline = "Shows, seasons, and what's still on the queue.",
+        VodContainerHeader(
+            wordmark = wordmark,
+            tagline = tagline,
+            selectedMode = containerMode,
+            onModeSelected = onContainerModeChange,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
         )
         if (uiState.isReorderMode && uiState.reorderCategory != null) {
@@ -291,7 +305,7 @@ fun SeriesScreen(
 	                    viewModel.setSelectedLibrarySortBy(LibrarySortBy.UPDATED)
 	                    viewModel.selectFullLibraryBrowse()
 	                },
-	                onOpenVodGuide = viewModel::openVodGuide,
+	                onOpenVodContainer = viewModel::openVodContainer,
 	                onOpenAdultVodGuide = viewModel::openAdultVodGuide,
 	                onLoadMore = viewModel::loadMoreSelectedCategory,
                 onLoadMorePreviewRows = viewModel::loadMorePreviewRows,
@@ -383,7 +397,7 @@ private fun SeriesVodContent(
     onOpenContinueWatching: () -> Unit,
     onOpenTopRated: () -> Unit,
     onOpenFresh: () -> Unit,
-    onOpenVodGuide: () -> Unit,
+    onOpenVodContainer: () -> Unit,
     onOpenAdultVodGuide: () -> Unit,
     onLoadMore: () -> Unit,
     onLoadMorePreviewRows: () -> Unit,
@@ -520,7 +534,7 @@ private fun SeriesVodContent(
             onProtectedSeriesClick = onProtectedSeriesClick,
             onShowDialog = onShowDialog,
             onSelectFullLibraryBrowse = onSelectFullLibraryBrowse,
-            onOpenVodGuide = onOpenVodGuide,
+            onOpenVodContainer = onOpenVodContainer,
             onOpenAdultVodGuide = onOpenAdultVodGuide,
             onLoadMore = onLoadMore,
             initialFocusRequester = initialFocusRequester
@@ -586,15 +600,15 @@ private fun SeriesVodContent(
 	                        )
 	                        add(
 	                            VodActionChip(
-	                                key = "vod_guide",
-	                                label = stringResource(R.string.vod_guide_title),
-	                                detail = stringResource(R.string.vod_guide_detail),
-	                                onClick = onOpenVodGuide
+	                                key = "vod_container",
+	                                label = stringResource(R.string.vod_container_title),
+	                                detail = stringResource(R.string.vod_container_detail),
+	                                onClick = onOpenVodContainer
 	                            )
 	                        )
 	                        add(
 	                            VodActionChip(
-	                                key = "xxx_vod_guide",
+	                                key = "adult_vod_container",
 	                                label = stringResource(R.string.adult_on_demand_title),
 	                                detail = stringResource(R.string.adult_on_demand_detail),
 	                                onClick = onOpenAdultVodGuide
@@ -974,7 +988,7 @@ private fun SeriesVodGuideContent(
     onProtectedSeriesClick: (Long) -> Unit,
     onShowDialog: (Series) -> Unit,
     onSelectFullLibraryBrowse: () -> Unit,
-    onOpenVodGuide: () -> Unit,
+    onOpenVodContainer: () -> Unit,
     onOpenAdultVodGuide: () -> Unit,
     onLoadMore: () -> Unit,
     initialFocusRequester: FocusRequester
@@ -1005,7 +1019,7 @@ private fun SeriesVodGuideContent(
 
     if (showBrowseOptions) {
         VodBrowseOptionsDialog(
-            title = stringResource(R.string.settings_vod_view_mode_guide),
+            title = stringResource(R.string.settings_vod_view_mode_container),
             filterTitle = stringResource(R.string.library_filter_title),
             filterChips = seriesFilterChips(),
             selectedFilterKey = selectedFilterType.name,
@@ -1066,17 +1080,17 @@ private fun SeriesVodGuideContent(
 	        val hasActiveFilterSort = selectedFilterType != LibraryFilterType.ALL || selectedSortBy != LibrarySortBy.LIBRARY
 	        VodClassicContentHeader(
 	            title = stringResource(
-	                if (uiState.showAdultVodGuide) R.string.nav_adult_guide else R.string.vod_guide_title
+	                if (uiState.showAdultVodGuide) R.string.nav_adult_guide else R.string.vod_container_title
 	            ),
 	            subtitle = stringResource(R.string.vod_classic_results_count, uiState.selectedCategoryTotalCount),
 	            actions = buildList {
 	                add(
 	                    VodActionChip(
-	                        key = if (uiState.showAdultVodGuide) "vod_guide" else "xxx_vod_guide",
+	                        key = if (uiState.showAdultVodGuide) "vod_container" else "adult_vod_container",
 	                        label = stringResource(
 	                            if (uiState.showAdultVodGuide) R.string.nav_series else R.string.adult_on_demand_title
 	                        ),
-	                        onClick = if (uiState.showAdultVodGuide) onOpenVodGuide else onOpenAdultVodGuide
+	                        onClick = if (uiState.showAdultVodGuide) onOpenVodContainer else onOpenAdultVodGuide
 	                    )
 	                )
 	                add(
