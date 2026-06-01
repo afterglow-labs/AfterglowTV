@@ -1,4 +1,4 @@
-package com.afterglowtv.app.ui.screens.movies
+package com.afterglowtv.app.ui.screens.vod
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -81,7 +81,7 @@ enum class MovieLibraryLens {
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-class MoviesViewModel @Inject constructor(
+class VodMoviesViewModel @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val movieRepository: MovieRepository,
     private val preferencesRepository: PreferencesRepository,
@@ -104,8 +104,8 @@ class MoviesViewModel @Inject constructor(
         const val ADULT_VOD_CONTAINER_PAGE_SIZE = 1_000
     }
 
-    private val _uiState = MutableStateFlow(MoviesUiState())
-    val uiState: StateFlow<MoviesUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(VodMoviesUiState())
+    val uiState: StateFlow<VodMoviesUiState> = _uiState.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     private val searchQueryForBrowse = _searchQuery
@@ -1616,7 +1616,7 @@ private data class SelectedMovieCategorySnapshot(
     val canLoadMore: Boolean = false
 )
 
-data class MoviesUiState(
+data class VodMoviesUiState(
     val moviesByCategory: Map<String, List<Movie>> = emptyMap(),
     val categoryNames: List<String> = emptyList(),
     val categoryCounts: Map<String, Int> = emptyMap(),

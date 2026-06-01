@@ -33,7 +33,7 @@ import com.afterglowtv.app.ui.screens.dashboard.DashboardScreen
 import com.afterglowtv.app.ui.screens.multiview.MultiViewScreen
 import com.afterglowtv.app.ui.screens.home.HomeScreen
 import com.afterglowtv.app.ui.screens.local.LocalMediaScreen
-import com.afterglowtv.app.ui.screens.movies.MoviesScreen
+import com.afterglowtv.app.ui.screens.vod.VodMoviesScreen
 import com.afterglowtv.app.ui.screens.player.PlayerScreen
 import com.afterglowtv.app.ui.screens.provider.ProviderSetupScreen
 import com.afterglowtv.app.ui.screens.settings.SettingsScreen
@@ -588,7 +588,7 @@ fun AppNavigation(mainActivity: MainActivity) {
                 }
                 return@composable
             }
-            MoviesScreen(
+            VodMoviesScreen(
                 onMovieClick = { movie ->
                     navController.navigateToPlayer(
                         Routes.moviePlayer(movie).copy(returnRoute = Routes.ADULT_VOD)
@@ -655,7 +655,7 @@ fun AppNavigation(mainActivity: MainActivity) {
             val adultGuideEntryViewModel: AdultGuideEntryViewModel = hiltViewModel()
             val entryState = adultGuideEntryViewModel.state.collectAsStateWithLifecycle().value
             if (entryState.startMode == AdultGuideStartMode.VOD) {
-                MoviesScreen(
+                VodMoviesScreen(
                     onMovieClick = { movie ->
                         navController.navigateToPlayer(
                             Routes.moviePlayer(movie).copy(returnRoute = Routes.ADULT_GUIDE)

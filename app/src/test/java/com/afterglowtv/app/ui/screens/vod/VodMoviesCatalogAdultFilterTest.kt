@@ -1,4 +1,4 @@
-package com.afterglowtv.app.ui.screens.movies
+package com.afterglowtv.app.ui.screens.vod
 
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.ContentType
@@ -6,7 +6,7 @@ import com.afterglowtv.domain.model.Movie
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class MoviesCatalogAdultFilterTest {
+class VodMoviesCatalogAdultFilterTest {
     @Test
     fun `normal movie categories exclude adult vod categories`() {
         val categories = listOf(

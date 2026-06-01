@@ -1,4 +1,4 @@
-package com.afterglowtv.app.ui.screens.series
+package com.afterglowtv.app.ui.screens.vod
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -73,7 +73,7 @@ enum class SeriesLibraryLens {
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-class SeriesViewModel @Inject constructor(
+class VodTvViewModel @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val seriesRepository: SeriesRepository,
     private val preferencesRepository: PreferencesRepository,
@@ -90,8 +90,8 @@ class SeriesViewModel @Inject constructor(
         const val INITIAL_PREVIEW_BATCH_SIZE = 6
     }
 
-    private val _uiState = MutableStateFlow(SeriesUiState())
-    val uiState: StateFlow<SeriesUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(VodTvUiState())
+    val uiState: StateFlow<VodTvUiState> = _uiState.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     private val searchQueryForBrowse = _searchQuery
@@ -1375,7 +1375,7 @@ private data class SelectedSeriesCategorySnapshot(
     val canLoadMore: Boolean = false
 )
 
-data class SeriesUiState(
+data class VodTvUiState(
     val seriesByCategory: Map<String, List<Series>> = emptyMap(),
     val categoryNames: List<String> = emptyList(),
     val categoryCounts: Map<String, Int> = emptyMap(),
