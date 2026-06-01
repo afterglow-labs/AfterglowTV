@@ -49,6 +49,8 @@ data class VodGuideProgramCard(
     val imageUrl: String?,
     val badge: String?,
     val isLocked: Boolean = false,
+    val textFirst: Boolean = false,
+    val topLabel: String? = null,
     val onClick: () -> Unit,
     val onLongClick: (() -> Unit)? = null
 )
@@ -60,7 +62,8 @@ fun VodGuideLane(
     programs: List<VodGuideProgramCard>,
     modifier: Modifier = Modifier,
     initialFocusRequester: FocusRequester? = null,
-    rowHeight: Dp = 118.dp
+    rowHeight: Dp = 118.dp,
+    programWidth: Dp = 300.dp
 ) {
     Row(
         modifier = modifier
@@ -88,7 +91,7 @@ fun VodGuideLane(
                 VodGuideProgramSurface(
                     program = program,
                     modifier = Modifier
-                        .width(300.dp)
+                        .width(programWidth)
                         .fillMaxHeight()
                         .then(
                             if (index == 0 && initialFocusRequester != null) {
@@ -177,17 +180,36 @@ private fun VodGuideProgramSurface(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            VodGuideThumbnail(
-                imageUrl = program.imageUrl,
-                title = program.title,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(16f / 9f)
-            )
+            val hasArtwork = !program.imageUrl.isNullOrBlank()
+            if (!program.textFirst || hasArtwork) {
+                VodGuideThumbnail(
+                    imageUrl = program.imageUrl,
+                    title = program.title,
+                    showFallbackInitial = !program.textFirst,
+                    modifier = if (program.textFirst) {
+                        Modifier
+                            .fillMaxHeight()
+                            .width(76.dp)
+                    } else {
+                        Modifier
+                            .fillMaxHeight()
+                            .aspectRatio(16f / 9f)
+                    }
+                )
+            }
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                program.topLabel?.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = AppColors.Warning,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 Text(
                     text = program.title,
                     style = MaterialTheme.typography.titleSmall,
@@ -224,6 +246,7 @@ private fun VodGuideProgramSurface(
 private fun VodGuideThumbnail(
     imageUrl: String?,
     title: String,
+    showFallbackInitial: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -239,11 +262,13 @@ private fun VodGuideThumbnail(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = title.take(1).uppercase(),
-            style = MaterialTheme.typography.headlineSmall,
-            color = AppColors.TextSecondary
-        )
+        if (showFallbackInitial) {
+            Text(
+                text = title.take(1).uppercase(),
+                style = MaterialTheme.typography.headlineSmall,
+                color = AppColors.TextSecondary
+            )
+        }
         if (!imageUrl.isNullOrBlank()) {
             AsyncImage(
                 model = rememberCrossfadeImageModel(imageUrl),

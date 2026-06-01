@@ -1,5 +1,6 @@
 package com.afterglowtv.data.parser
 
+import com.afterglowtv.data.util.AdultContentClassifier
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.util.ChannelNormalizer
@@ -473,7 +474,9 @@ class M3uParser {
                     group.contains("vod") ||
                     group.contains("film") ||
                     group.contains("series") ||
-                    group.contains("season")
+                    group.contains("season") ||
+                    AdultContentClassifier.isAdultCategoryName(entry.groupTitle) ||
+                    AdultContentClassifier.isAdultCategoryName(entry.name)
         }
 
         val knownAttributes = setOf(

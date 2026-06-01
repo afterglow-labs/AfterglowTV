@@ -89,6 +89,7 @@ import com.afterglowtv.app.ui.components.shell.VodHeroStrip
 import com.afterglowtv.app.ui.components.shell.VodSectionHeader
 import com.afterglowtv.app.ui.design.FocusRestoreHost
 import com.afterglowtv.app.ui.design.requestFocusSafely
+import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.model.VodGuideItem
 import com.afterglowtv.app.ui.model.VodGuideRowBuilder
 import com.afterglowtv.app.ui.model.VodTitleFormatter
@@ -1029,8 +1030,16 @@ private fun SeriesVodGuideContent(
                 VodGuideItem(
                     id = series.id.toString(),
                     title = displayTitle.title,
-                    providerCategory = series.categoryName
-                        ?: series.categoryId?.let { categoryById[kotlin.math.abs(it)] }
+                    providerCategory = if (uiState.showAdultVodGuide) {
+                        AdultGuideCategoryBuilder.resolveVodCategoryTitle(
+                            title = series.name,
+                            providerCategory = series.categoryName
+                                ?: series.categoryId?.let { categoryById[kotlin.math.abs(it)] }
+                        )
+                    } else {
+                        series.categoryName
+                            ?: series.categoryId?.let { categoryById[kotlin.math.abs(it)] }
+                    }
                 )
             },
             uncategorizedTitle = "Other"
@@ -1142,6 +1151,8 @@ private fun SeriesVodGuideContent(
                                 imageUrl = series.backdropUrl ?: series.posterUrl,
                                 badge = series.genre?.substringBefore(",")?.trim()?.takeIf(String::isNotBlank),
                                 isLocked = isSeriesLocked(series),
+                                textFirst = uiState.showAdultVodGuide,
+                                topLabel = if (uiState.showAdultVodGuide) "VOD" else null,
                                 onClick = {
                                     if (isSeriesLocked(series)) onProtectedSeriesClick(series.id) else onSeriesClick(series.id)
                                 },
@@ -1153,6 +1164,8 @@ private fun SeriesVodGuideContent(
                             subtitle = "${programs.size} series",
                             programs = programs,
                             initialFocusRequester = if (!showSearchBar && rowIndex == 0) initialFocusRequester else null,
+                            rowHeight = if (uiState.showAdultVodGuide) 86.dp else 118.dp,
+                            programWidth = if (uiState.showAdultVodGuide) 250.dp else 300.dp,
                             modifier = Modifier.padding(start = 20.dp)
                         )
                     }

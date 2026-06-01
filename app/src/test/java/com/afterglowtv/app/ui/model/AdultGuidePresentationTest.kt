@@ -63,6 +63,26 @@ class AdultGuidePresentationTest {
     }
 
     @Test
+    fun `adult vod category prefers title match over generic adult group`() {
+        assertThat(
+            AdultGuideCategoryBuilder.resolveVodCategoryTitle(
+                title = "Some MILF Scene",
+                providerCategory = "XXX Movies"
+            )
+        ).isEqualTo("MILF")
+    }
+
+    @Test
+    fun `adult vod category falls back to adult provider group for generic title`() {
+        assertThat(
+            AdultGuideCategoryBuilder.resolveVodCategoryTitle(
+                title = "Unknown Clip",
+                providerCategory = "XXX Movies"
+            )
+        ).isEqualTo("XXX Movies")
+    }
+
+    @Test
     fun `adult category builder uses provider category context when title is generic`() {
         val channel = Channel(
             id = 2L,

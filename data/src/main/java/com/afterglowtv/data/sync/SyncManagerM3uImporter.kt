@@ -116,6 +116,7 @@ internal class SyncManagerM3uImporter(
                                     rating = entry.rating?.toFloatOrNull() ?: 0f,
                                     year = entry.year,
                                     genre = entry.genre,
+                                    durationSeconds = entry.durationSeconds?.takeIf { it > 0 } ?: 0,
                                     isAdult = isAdult
                                 )
                             )

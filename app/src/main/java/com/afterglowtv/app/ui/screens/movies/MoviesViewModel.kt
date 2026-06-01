@@ -2,6 +2,8 @@ package com.afterglowtv.app.ui.screens.movies
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.afterglowtv.app.di.AuxiliaryPlayerEngine
+import com.afterglowtv.app.player.LivePreviewHandoffManager
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
@@ -45,10 +47,14 @@ import com.afterglowtv.app.ui.screens.vod.setVodFavorite
 import com.afterglowtv.app.ui.screens.vod.updateVodGroupMembership
 import com.afterglowtv.app.ui.screens.vod.VodBrowseDefaults
 import com.afterglowtv.app.util.isPlaybackComplete
+import com.afterglowtv.player.PlaybackState
+import com.afterglowtv.player.PlayerEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import javax.inject.Provider as InjectProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -82,13 +88,18 @@ class MoviesViewModel @Inject constructor(
     private val favoriteRepository: FavoriteRepository,
     private val getContinueWatching: GetContinueWatching,
     private val getCustomCategories: GetCustomCategories,
-    private val parentalControlManager: ParentalControlManager
+    private val parentalControlManager: ParentalControlManager,
+    private val livePreviewHandoffManager: LivePreviewHandoffManager,
+    @param:AuxiliaryPlayerEngine
+    private val playerEngineProvider: InjectProvider<PlayerEngine>
 ) : ViewModel() {
     private companion object {
         const val UNCATEGORIZED = "Uncategorized"
         const val MIN_SEARCH_QUERY_LENGTH = 2
         const val FAVORITE_ID_FETCH_BUFFER = 80
         const val INITIAL_PREVIEW_BATCH_SIZE = 6
+        const val ADULT_VOD_PREVIEW_START_MS = 5 * 60 * 1000L
+        const val SHORT_ADULT_VOD_PREVIEW_START_MS = 2 * 60 * 1000L
     }
 
     private val _uiState = MutableStateFlow(MoviesUiState())
@@ -106,6 +117,10 @@ class MoviesViewModel @Inject constructor(
     private val _selectedLibrarySortBy = MutableStateFlow(LibrarySortBy.LIBRARY)
     private val _previewBatchSize = MutableStateFlow(INITIAL_PREVIEW_BATCH_SIZE)
     private var activeProviderId: Long? = null
+    private var adultVodPreviewEngine: PlayerEngine? = null
+    private var adultVodPreviewPlaybackJob: Job? = null
+    private var adultVodPreviewErrorJob: Job? = null
+    private var adultVodPreviewSessionVersion: Long = 0L
 
     private data class PreviewLoadResult(
         val snapshot: MovieCatalogSnapshot,
@@ -554,7 +569,147 @@ class MoviesViewModel @Inject constructor(
         openVodGuide(adultOnly = true)
     }
 
+    fun previewAdultVodMovie(movie: Movie) {
+        if (!_uiState.value.showAdultVodGuide) return
+        if (_uiState.value.adultVodPreviewMovieId == movie.id && _uiState.value.adultVodPreviewPlayerEngine != null) return
+
+        val previewVersion = ++adultVodPreviewSessionVersion
+        val engine = adultVodPreviewEngine ?: playerEngineProvider.get().also { adultVodPreviewEngine = it }
+        adultVodPreviewPlaybackJob?.cancel()
+        adultVodPreviewErrorJob?.cancel()
+
+        _uiState.update {
+            it.copy(
+                adultVodPreviewMovieId = movie.id,
+                adultVodPreviewPlayerEngine = engine,
+                isAdultVodPreviewLoading = true,
+                adultVodPreviewErrorMessage = null
+            )
+        }
+
+        adultVodPreviewPlaybackJob = viewModelScope.launch {
+            engine.playbackState.collectLatest { playbackState ->
+                if (!isActiveAdultVodPreviewSession(previewVersion, movie.id)) return@collectLatest
+                _uiState.update { state ->
+                    state.copy(
+                        isAdultVodPreviewLoading = playbackState == PlaybackState.IDLE || playbackState == PlaybackState.BUFFERING,
+                        adultVodPreviewErrorMessage = when {
+                            playbackState == PlaybackState.ERROR && state.adultVodPreviewErrorMessage.isNullOrBlank() ->
+                                "Preview unavailable"
+                            playbackState != PlaybackState.ERROR -> null
+                            else -> state.adultVodPreviewErrorMessage
+                        }
+                    )
+                }
+            }
+        }
+
+        adultVodPreviewErrorJob = viewModelScope.launch {
+            engine.error.collectLatest { error ->
+                if (!isActiveAdultVodPreviewSession(previewVersion, movie.id)) return@collectLatest
+                if (error != null) {
+                    _uiState.update {
+                        it.copy(
+                            isAdultVodPreviewLoading = false,
+                            adultVodPreviewErrorMessage = error.message.ifBlank { "Preview unavailable" }
+                        )
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            when (val result = movieRepository.getStreamInfo(movie)) {
+                is Result.Success -> {
+                    if (!isActiveAdultVodPreviewSession(previewVersion, movie.id)) return@launch
+                    engine.stop()
+                    engine.setDecoderMode(preferencesRepository.playerDecoderMode.first())
+                    engine.setSurfaceMode(preferencesRepository.playerSurfaceMode.first())
+                    engine.prepare(result.data)
+                    previewStartPositionMs(movie)?.let(engine::seekTo)
+                    engine.setVolume(1f)
+                    engine.play()
+                    livePreviewHandoffManager.registerPreviewSession(
+                        contentId = movie.id,
+                        providerId = movie.providerId,
+                        contentType = ContentType.MOVIE,
+                        streamInfo = result.data,
+                        engine = engine
+                    )
+                }
+                is Result.Error -> {
+                    if (!isActiveAdultVodPreviewSession(previewVersion, movie.id)) return@launch
+                    _uiState.update {
+                        it.copy(
+                            isAdultVodPreviewLoading = false,
+                            adultVodPreviewErrorMessage = result.message
+                        )
+                    }
+                }
+                Result.Loading -> Unit
+            }
+        }
+    }
+
+    fun beginAdultVodPreviewHandoff(movie: Movie): Boolean {
+        val engine = adultVodPreviewEngine ?: return false
+        if (_uiState.value.adultVodPreviewMovieId != movie.id) return false
+        if (!livePreviewHandoffManager.beginFullscreenHandoff(movie.id, engine)) return false
+
+        adultVodPreviewSessionVersion++
+        adultVodPreviewPlaybackJob?.cancel()
+        adultVodPreviewErrorJob?.cancel()
+        adultVodPreviewPlaybackJob = null
+        adultVodPreviewErrorJob = null
+        adultVodPreviewEngine = null
+        _uiState.update {
+            it.copy(
+                adultVodPreviewMovieId = null,
+                adultVodPreviewPlayerEngine = null,
+                isAdultVodPreviewLoading = false,
+                adultVodPreviewErrorMessage = null
+            )
+        }
+        return true
+    }
+
+    fun clearAdultVodPreview() {
+        val engine = adultVodPreviewEngine ?: return
+        adultVodPreviewSessionVersion++
+        adultVodPreviewPlaybackJob?.cancel()
+        adultVodPreviewErrorJob?.cancel()
+        adultVodPreviewPlaybackJob = null
+        adultVodPreviewErrorJob = null
+        livePreviewHandoffManager.clear(engine)
+        engine.stop()
+        engine.release()
+        adultVodPreviewEngine = null
+        _uiState.update {
+            it.copy(
+                adultVodPreviewMovieId = null,
+                adultVodPreviewPlayerEngine = null,
+                isAdultVodPreviewLoading = false,
+                adultVodPreviewErrorMessage = null
+            )
+        }
+    }
+
+    private fun isActiveAdultVodPreviewSession(version: Long, movieId: Long): Boolean =
+        version == adultVodPreviewSessionVersion && _uiState.value.adultVodPreviewMovieId == movieId
+
+    private fun previewStartPositionMs(movie: Movie): Long? {
+        val durationMs = movie.durationSeconds.takeIf { it > 0 }?.times(1000L)
+        return when {
+            durationMs == null || durationMs > ADULT_VOD_PREVIEW_START_MS + 60_000L -> ADULT_VOD_PREVIEW_START_MS
+            durationMs > SHORT_ADULT_VOD_PREVIEW_START_MS + 30_000L -> SHORT_ADULT_VOD_PREVIEW_START_MS
+            else -> null
+        }
+    }
+
     private fun openVodGuide(adultOnly: Boolean) {
+        if (!adultOnly) {
+            clearAdultVodPreview()
+        }
         selectCategory(VodBrowseDefaults.FULL_LIBRARY_CATEGORY)
         _uiState.update {
             it.copy(
@@ -566,6 +721,11 @@ class MoviesViewModel @Inject constructor(
         viewModelScope.launch {
             preferencesRepository.setVodViewMode(VodViewMode.GUIDE.storageValue)
         }
+    }
+
+    override fun onCleared() {
+        clearAdultVodPreview()
+        super.onCleared()
     }
 
     fun refreshProviderVodLibrary() {
@@ -1403,5 +1563,9 @@ data class MoviesUiState(
     val isReorderMode: Boolean = false,
     val reorderCategory: Category? = null,
     val filteredMovies: List<Movie> = emptyList(),
+    val adultVodPreviewMovieId: Long? = null,
+    val adultVodPreviewPlayerEngine: PlayerEngine? = null,
+    val isAdultVodPreviewLoading: Boolean = false,
+    val adultVodPreviewErrorMessage: String? = null,
     val errorMessage: String? = null
 )

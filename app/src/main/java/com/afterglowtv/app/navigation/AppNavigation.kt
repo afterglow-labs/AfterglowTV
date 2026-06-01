@@ -18,6 +18,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.afterglowtv.app.R
+import com.afterglowtv.app.ui.model.isAdultGuideCategory
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Episode
@@ -25,6 +26,9 @@ import com.afterglowtv.domain.model.LocalMediaItem
 import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
+import com.afterglowtv.domain.repository.MovieRepository
+import com.afterglowtv.domain.repository.ProviderRepository
+import com.afterglowtv.domain.repository.SeriesRepository
 import com.afterglowtv.app.ui.screens.dashboard.DashboardScreen
 import com.afterglowtv.app.ui.screens.multiview.MultiViewScreen
 import com.afterglowtv.app.ui.screens.home.HomeScreen
@@ -40,7 +44,10 @@ import com.afterglowtv.data.preferences.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.Serializable
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -82,6 +89,7 @@ object Routes {
     const val LOCAL_MEDIA = "local_media"
     const val VOD_GUIDE = "vod_guide"
     const val ADULT_GUIDE = "adult_guide"
+    const val ADULT_VOD = "adult_vod"
     const val EPG = "epg"
     const val EPG_DESTINATION = "epg?categoryId={categoryId}&anchorTime={anchorTime}&favoritesOnly={favoritesOnly}"
     const val SETTINGS = "settings"
@@ -302,6 +310,59 @@ internal fun resolveStartupRoute(destination: StartupDestination, developerModeE
     } else {
         destination.route
     }
+
+internal enum class AdultGuideStartMode {
+    LIVE,
+    VOD
+}
+
+internal fun resolveAdultGuideStartMode(
+    hasAdultLive: Boolean,
+    hasAdultVod: Boolean
+): AdultGuideStartMode =
+    if (!hasAdultLive && hasAdultVod) AdultGuideStartMode.VOD else AdultGuideStartMode.LIVE
+
+internal data class AdultGuideEntryState(
+    val startMode: AdultGuideStartMode = AdultGuideStartMode.LIVE
+)
+
+@HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
+internal class AdultGuideEntryViewModel @Inject constructor(
+    providerRepository: ProviderRepository,
+    channelRepository: ChannelRepository,
+    movieRepository: MovieRepository,
+    seriesRepository: SeriesRepository
+) : ViewModel() {
+    val state: StateFlow<AdultGuideEntryState> = providerRepository.getActiveProvider()
+        .flatMapLatest { provider ->
+            if (provider == null) {
+                flowOf(AdultGuideEntryState())
+            } else {
+                combine(
+                    channelRepository.getCategories(provider.id),
+                    movieRepository.getCategories(provider.id),
+                    seriesRepository.getCategories(provider.id)
+                ) { liveCategories, movieCategories, seriesCategories ->
+                    val hasAdultLive = liveCategories.any(::isAdultGuideCategory)
+                    val hasAdultVod =
+                        movieCategories.any(::isAdultGuideCategory) ||
+                            seriesCategories.any(::isAdultGuideCategory)
+                    AdultGuideEntryState(
+                        startMode = resolveAdultGuideStartMode(
+                            hasAdultLive = hasAdultLive,
+                            hasAdultVod = hasAdultVod
+                        )
+                    )
+                }
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = AdultGuideEntryState()
+        )
+}
 
 private fun isDeveloperRoute(route: String): Boolean =
     route == Routes.VOD_GUIDE || route == Routes.ADULT_GUIDE || route == Routes.LOCAL_MEDIA
@@ -535,6 +596,34 @@ fun AppNavigation(mainActivity: MainActivity) {
             )
         }
 
+        composable(Routes.ADULT_VOD) {
+            if (!developerModeEnabled) {
+                LaunchedEffect(Unit) {
+                    navController.navigate(Routes.HOME) {
+                        launchSingleTop = true
+                    }
+                }
+                return@composable
+            }
+            MoviesScreen(
+                onMovieClick = { movie ->
+                    navController.navigateToPlayer(
+                        Routes.moviePlayer(movie).copy(returnRoute = Routes.ADULT_VOD)
+                    )
+                },
+                onContinueWatchingPlay = { history ->
+                    navController.navigateToPlayer(
+                        history.toPlayerNavigationRequest().copy(returnRoute = Routes.ADULT_VOD)
+                    )
+                },
+                onNavigate = { route -> tabNavigate(route) },
+                currentRoute = Routes.ADULT_GUIDE,
+                initialAdultGuideMode = true,
+                wordmark = "Adult VOD",
+                tagline = "On-demand titles from adult playlists."
+            )
+        }
+
         composable(Routes.SERIES) {
             SeriesScreen(
                 onSeriesClick = { seriesId ->
@@ -581,25 +670,47 @@ fun AppNavigation(mainActivity: MainActivity) {
                 }
                 return@composable
             }
-            HomeScreen(
-                onChannelClick = { channel, category, provider, combinedProfileId, combinedSourceFilterProviderId ->
-                    navController.navigateToPlayer(
-                        Routes.livePlayer(
-                            channel = channel,
-                            categoryId = adultGuidePlaybackCategoryId(category),
-                            providerId = provider?.id ?: channel.providerId,
-                            isVirtual = true,
-                            combinedProfileId = combinedProfileId,
-                            combinedSourceFilterProviderId = combinedSourceFilterProviderId,
-                            returnRoute = Routes.ADULT_GUIDE
+            val adultGuideEntryViewModel: AdultGuideEntryViewModel = hiltViewModel()
+            val entryState = adultGuideEntryViewModel.state.collectAsStateWithLifecycle().value
+            if (entryState.startMode == AdultGuideStartMode.VOD) {
+                MoviesScreen(
+                    onMovieClick = { movie ->
+                        navController.navigateToPlayer(
+                            Routes.moviePlayer(movie).copy(returnRoute = Routes.ADULT_GUIDE)
                         )
-                    )
-                },
-                onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.ADULT_GUIDE,
-                adultGuideMode = true,
-                titleRes = R.string.nav_adult_guide
-            )
+                    },
+                    onContinueWatchingPlay = { history ->
+                        navController.navigateToPlayer(
+                            history.toPlayerNavigationRequest().copy(returnRoute = Routes.ADULT_GUIDE)
+                        )
+                    },
+                    onNavigate = { route -> tabNavigate(route) },
+                    currentRoute = Routes.ADULT_GUIDE,
+                    initialAdultGuideMode = true,
+                    wordmark = "Adult VOD",
+                    tagline = "On-demand titles from adult playlists."
+                )
+            } else {
+                HomeScreen(
+                    onChannelClick = { channel, category, provider, combinedProfileId, combinedSourceFilterProviderId ->
+                        navController.navigateToPlayer(
+                            Routes.livePlayer(
+                                channel = channel,
+                                categoryId = adultGuidePlaybackCategoryId(category),
+                                providerId = provider?.id ?: channel.providerId,
+                                isVirtual = true,
+                                combinedProfileId = combinedProfileId,
+                                combinedSourceFilterProviderId = combinedSourceFilterProviderId,
+                                returnRoute = Routes.ADULT_GUIDE
+                            )
+                        )
+                    },
+                    onNavigate = { route -> tabNavigate(route) },
+                    currentRoute = Routes.ADULT_GUIDE,
+                    adultGuideMode = true,
+                    titleRes = R.string.nav_adult_guide
+                )
+            }
         }
 
         composable(

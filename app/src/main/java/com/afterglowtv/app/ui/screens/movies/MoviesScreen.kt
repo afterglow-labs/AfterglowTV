@@ -35,6 +35,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import com.afterglowtv.app.ui.components.PlayerRenderView
 import com.afterglowtv.app.ui.components.SearchInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalConfiguration
@@ -89,6 +90,7 @@ import com.afterglowtv.app.ui.components.shell.VodHeroStrip
 import com.afterglowtv.app.ui.components.shell.VodSectionHeader
 import com.afterglowtv.app.ui.design.FocusRestoreHost
 import com.afterglowtv.app.ui.design.requestFocusSafely
+import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.model.VodGuideItem
 import com.afterglowtv.app.ui.model.VodGuideRowBuilder
 import com.afterglowtv.app.ui.model.VodTitleFormatter
@@ -97,6 +99,9 @@ import com.afterglowtv.app.ui.screens.vod.HandleVodUserMessage
 import com.afterglowtv.app.ui.screens.vod.ProtectedVodPinDialog
 import com.afterglowtv.app.ui.screens.vod.VodBrowseDefaults
 import com.afterglowtv.app.ui.screens.vod.vodActiveFilterSortDetail
+import com.afterglowtv.player.PlayerRenderSurfaceType
+import com.afterglowtv.player.PlayerEngine
+import com.afterglowtv.player.PlayerSurfaceResizeMode
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -107,6 +112,7 @@ fun MoviesScreen(
     onNavigate: (String) -> Unit,
     currentRoute: String,
     initialGuideMode: Boolean = false,
+    initialAdultGuideMode: Boolean = false,
     wordmark: String? = null,
     tagline: String? = null,
     viewModel: MoviesViewModel = hiltViewModel()
@@ -123,8 +129,10 @@ fun MoviesScreen(
     var pendingCategory by remember { mutableStateOf<Category?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    LaunchedEffect(initialGuideMode) {
-        if (initialGuideMode) {
+    LaunchedEffect(initialGuideMode, initialAdultGuideMode) {
+        if (initialAdultGuideMode) {
+            viewModel.openAdultVodGuide()
+        } else if (initialGuideMode) {
             viewModel.openVodGuide()
         }
     }
@@ -304,6 +312,8 @@ fun MoviesScreen(
 	                onOpenVodGuide = viewModel::openVodGuide,
 	                onOpenAdultVodGuide = viewModel::openAdultVodGuide,
 	                onLoadMore = viewModel::loadMoreSelectedCategory,
+                onPreviewAdultVodMovie = viewModel::previewAdultVodMovie,
+                onBeginAdultVodPreviewHandoff = viewModel::beginAdultVodPreviewHandoff,
                 onLoadMorePreviewRows = viewModel::loadMorePreviewRows,
                 onDismissReorder = viewModel::exitCategoryReorderMode,
                 initialFocusRequester = initialContentFocusRequester
@@ -399,6 +409,8 @@ private fun MoviesVodContent(
     onOpenVodGuide: () -> Unit,
     onOpenAdultVodGuide: () -> Unit,
     onLoadMore: () -> Unit,
+    onPreviewAdultVodMovie: (Movie) -> Unit,
+    onBeginAdultVodPreviewHandoff: (Movie) -> Boolean,
     onLoadMorePreviewRows: () -> Unit,
     onDismissReorder: () -> Unit,
     initialFocusRequester: FocusRequester
@@ -536,6 +548,8 @@ private fun MoviesVodContent(
             onOpenVodGuide = onOpenVodGuide,
             onOpenAdultVodGuide = onOpenAdultVodGuide,
             onLoadMore = onLoadMore,
+            onPreviewAdultVodMovie = onPreviewAdultVodMovie,
+            onBeginAdultVodPreviewHandoff = onBeginAdultVodPreviewHandoff,
             initialFocusRequester = initialFocusRequester
         )
         return
@@ -993,6 +1007,8 @@ private fun MoviesVodGuideContent(
     onOpenVodGuide: () -> Unit,
     onOpenAdultVodGuide: () -> Unit,
     onLoadMore: () -> Unit,
+    onPreviewAdultVodMovie: (Movie) -> Unit,
+    onBeginAdultVodPreviewHandoff: (Movie) -> Boolean,
     initialFocusRequester: FocusRequester
 ) {
     var showBrowseOptions by rememberSaveable { mutableStateOf(false) }
@@ -1046,8 +1062,16 @@ private fun MoviesVodGuideContent(
                 VodGuideItem(
                     id = movie.id.toString(),
                     title = displayTitle.title,
-                    providerCategory = movie.categoryName
-                        ?: movie.categoryId?.let { categoryById[kotlin.math.abs(it)] }
+                    providerCategory = if (uiState.showAdultVodGuide) {
+                        AdultGuideCategoryBuilder.resolveVodCategoryTitle(
+                            title = movie.name,
+                            providerCategory = movie.categoryName
+                                ?: movie.categoryId?.let { categoryById[kotlin.math.abs(it)] }
+                        )
+                    } else {
+                        movie.categoryName
+                            ?: movie.categoryId?.let { categoryById[kotlin.math.abs(it)] }
+                    }
                 )
             },
             uncategorizedTitle = "Other"
@@ -1120,9 +1144,17 @@ private fun MoviesVodGuideContent(
             )
         }
 
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(end = if (uiState.showAdultVodGuide) 12.dp else 0.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
         LazyColumn(
             state = guideListState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .weight(if (uiState.showAdultVodGuide) 1.08f else 1f)
+                .fillMaxHeight(),
             contentPadding = PaddingValues(bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -1155,13 +1187,26 @@ private fun MoviesVodGuideContent(
                             VodGuideProgramCard(
                                 key = movie.id.toString(),
                                 title = displayTitle.title,
-                                subtitle = vodMetadata(displayTitle.year ?: movie.year, movie.duration),
+                                subtitle = vodMetadata(
+                                    displayTitle.year ?: movie.year,
+                                    movie.duration ?: formatDurationSeconds(movie.durationSeconds)
+                                ),
                                 imageUrl = movie.backdropUrl ?: movie.posterUrl,
                                 badge = movie.genre?.substringBefore(",")?.trim()?.takeIf(String::isNotBlank)
                                     ?: movie.containerExtension?.uppercase(),
                                 isLocked = isMovieLocked(movie),
+                                textFirst = uiState.showAdultVodGuide,
+                                topLabel = if (uiState.showAdultVodGuide) "VOD" else null,
                                 onClick = {
-                                    if (isMovieLocked(movie)) onProtectedMovieClick(movie) else onMovieClick(movie)
+                                    when {
+                                        isMovieLocked(movie) -> onProtectedMovieClick(movie)
+                                        uiState.showAdultVodGuide && uiState.adultVodPreviewMovieId == movie.id -> {
+                                            val handedOff = onBeginAdultVodPreviewHandoff(movie)
+                                            if (handedOff) onMovieClick(movie) else onPreviewAdultVodMovie(movie)
+                                        }
+                                        uiState.showAdultVodGuide -> onPreviewAdultVodMovie(movie)
+                                        else -> onMovieClick(movie)
+                                    }
                                 },
                                 onLongClick = { onShowDialog(movie) }
                             )
@@ -1171,6 +1216,8 @@ private fun MoviesVodGuideContent(
                             subtitle = "${programs.size} titles",
                             programs = programs,
                             initialFocusRequester = if (!showSearchBar && rowIndex == 0) initialFocusRequester else null,
+                            rowHeight = if (uiState.showAdultVodGuide) 86.dp else 118.dp,
+                            programWidth = if (uiState.showAdultVodGuide) 250.dp else 300.dp,
                             modifier = Modifier.padding(start = 20.dp)
                         )
                     }
@@ -1188,6 +1235,136 @@ private fun MoviesVodGuideContent(
                         }
                     }
                 }
+            }
+        }
+        if (uiState.showAdultVodGuide) {
+            AdultVodPreviewPane(
+                movie = guideMovies.firstOrNull { it.id == uiState.adultVodPreviewMovieId },
+                playerEngine = uiState.adultVodPreviewPlayerEngine,
+                isLoading = uiState.isAdultVodPreviewLoading,
+                errorMessage = uiState.adultVodPreviewErrorMessage,
+                modifier = Modifier
+                    .weight(0.92f)
+                    .fillMaxHeight()
+            )
+        }
+        }
+    }
+}
+
+@Composable
+private fun AdultVodPreviewPane(
+    movie: Movie?,
+    playerEngine: PlayerEngine?,
+    isLoading: Boolean,
+    errorMessage: String?,
+    modifier: Modifier = Modifier
+) {
+    val renderSurfaceType by (playerEngine?.renderSurfaceType)?.collectAsStateWithLifecycle(
+        initialValue = PlayerRenderSurfaceType.SURFACE_VIEW
+    ) ?: remember { mutableStateOf(PlayerRenderSurfaceType.SURFACE_VIEW) }
+
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        colors = SurfaceDefaults.colors(containerColor = SurfaceElevated.copy(alpha = 0.72f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "VOD Preview",
+                style = MaterialTheme.typography.titleSmall,
+                color = Primary
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .background(Color.Black, RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (movie != null && playerEngine != null && errorMessage == null) {
+                    PlayerRenderView(
+                        playerEngine = playerEngine,
+                        resizeMode = PlayerSurfaceResizeMode.FIT,
+                        surfaceType = renderSurfaceType,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(horizontal = 20.dp)
+                    ) {
+                        Text(
+                            text = "Select a VOD to preview",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = OnBackground
+                        )
+                        Text(
+                            text = errorMessage ?: "First OK starts a 5-minute preview. Second OK opens VOD controls.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = OnSurfaceDim
+                        )
+                    }
+                }
+
+                if (isLoading && movie != null) {
+                    Row(
+                        modifier = Modifier
+                            .background(Color.Black.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            color = Primary,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Loading preview...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+
+            if (movie != null) {
+                val displayTitle = VodTitleFormatter.format(movie.name, movie.year)
+                Text(
+                    text = displayTitle.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = OnBackground,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                vodMetadata(displayTitle.year ?: movie.year, movie.duration ?: formatDurationSeconds(movie.durationSeconds))
+                    ?.let { metadata ->
+                        Text(
+                            text = metadata,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = OnSurfaceDim,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                Text(
+                    text = "VOD",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = AccentAmber
+                )
+                Text(
+                    text = "Press OK again for VOD controls",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Primary
+                )
             }
         }
     }
@@ -1568,4 +1745,16 @@ private fun vodMetadata(vararg values: String?): String? {
         .mapNotNull { it?.takeIf(String::isNotBlank) }
         .joinToString(" | ")
         .takeIf(String::isNotBlank)
+}
+
+private fun formatDurationSeconds(seconds: Int): String? {
+    if (seconds <= 0) return null
+    val totalMinutes = (seconds + 59) / 60
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return if (hours > 0) {
+        "${hours}h ${minutes}m"
+    } else {
+        "${minutes}m"
+    }
 }

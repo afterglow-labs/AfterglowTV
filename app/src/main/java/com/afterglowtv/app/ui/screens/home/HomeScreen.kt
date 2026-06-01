@@ -958,6 +958,16 @@ fun HomeScreen(
                                     )
                                     if (adultGuideMode) {
                                         TvButton(
+                                            onClick = { onNavigate(Routes.ADULT_VOD) },
+                                            enabled = !isReorderMode,
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.xxx_vod_guide_title),
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
+                                        }
+                                        TvButton(
                                             onClick = { viewModel.resyncAdultGuideCache() },
                                             enabled = !uiState.isAdultGuideCacheRefreshing && !isReorderMode,
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)

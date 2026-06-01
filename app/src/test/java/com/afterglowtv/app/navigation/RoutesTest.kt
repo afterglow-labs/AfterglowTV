@@ -147,6 +147,31 @@ class RoutesTest {
     }
 
     @Test
+    fun `adult vod has a dedicated adult browsing route`() {
+        assertThat(Routes.ADULT_VOD).isEqualTo("adult_vod")
+    }
+
+    @Test
+    fun `adult route opens vod when provider has adult vod without adult live`() {
+        assertThat(
+            resolveAdultGuideStartMode(
+                hasAdultLive = false,
+                hasAdultVod = true
+            )
+        ).isEqualTo(AdultGuideStartMode.VOD)
+    }
+
+    @Test
+    fun `adult route keeps live guide when adult live exists`() {
+        assertThat(
+            resolveAdultGuideStartMode(
+                hasAdultLive = true,
+                hasAdultVod = true
+            )
+        ).isEqualTo(AdultGuideStartMode.LIVE)
+    }
+
+    @Test
     fun `player route preserves return route back to guide`() {
         val returnRoute = Routes.epg(
             categoryId = 9L,

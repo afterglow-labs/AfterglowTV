@@ -1,6 +1,7 @@
 package com.afterglowtv.app.player
 
 import com.afterglowtv.domain.model.Channel
+import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.StreamInfo
 import com.afterglowtv.player.PlayerEngine
 import javax.inject.Inject
@@ -23,12 +24,29 @@ class LivePreviewHandoffManager @Inject constructor() {
         streamInfo: StreamInfo,
         engine: PlayerEngine
     ) {
+        registerPreviewSession(
+            contentId = channel.id,
+            providerId = channel.providerId,
+            contentType = ContentType.LIVE,
+            streamInfo = streamInfo,
+            engine = engine
+        )
+    }
+
+    fun registerPreviewSession(
+        contentId: Long,
+        providerId: Long,
+        contentType: ContentType,
+        streamInfo: StreamInfo,
+        engine: PlayerEngine
+    ) {
         val previous = session
         pendingReleaseJob?.cancel()
         session = LivePreviewHandoffSession(
             engine = engine,
-            channelId = channel.id,
-            providerId = channel.providerId,
+            contentId = contentId,
+            providerId = providerId,
+            contentType = contentType,
             streamInfo = streamInfo,
             pendingFullscreen = false
         )
@@ -37,9 +55,9 @@ class LivePreviewHandoffManager @Inject constructor() {
         }
     }
 
-    fun beginFullscreenHandoff(channelId: Long, engine: PlayerEngine?): Boolean {
+    fun beginFullscreenHandoff(contentId: Long, engine: PlayerEngine?): Boolean {
         val current = session ?: return false
-        if (engine == null || current.engine !== engine || current.channelId != channelId) return false
+        if (engine == null || current.engine !== engine || current.contentId != contentId) return false
         pendingReleaseJob?.cancel()
         session = current.copy(
             pendingFullscreen = true,
@@ -57,10 +75,23 @@ class LivePreviewHandoffManager @Inject constructor() {
     }
 
     fun consumeFullscreenHandoff(channelId: Long, providerId: Long?): LivePreviewHandoffSession? {
+        return consumeFullscreenHandoff(
+            contentId = channelId,
+            providerId = providerId,
+            contentType = ContentType.LIVE
+        )
+    }
+
+    fun consumeFullscreenHandoff(
+        contentId: Long,
+        providerId: Long?,
+        contentType: ContentType
+    ): LivePreviewHandoffSession? {
         val current = session ?: return null
         if (!current.pendingFullscreen) return null
-        if (current.channelId != channelId) return null
+        if (current.contentId != contentId) return null
         if (providerId != null && providerId > 0L && current.providerId != providerId) return null
+        if (current.contentType != contentType) return null
         pendingReleaseJob?.cancel()
         session = null
         return current
@@ -75,8 +106,9 @@ class LivePreviewHandoffManager @Inject constructor() {
 
     data class LivePreviewHandoffSession(
         val engine: PlayerEngine,
-        val channelId: Long,
+        val contentId: Long,
         val providerId: Long,
+        val contentType: ContentType,
         val streamInfo: StreamInfo,
         val pendingFullscreen: Boolean,
         val updatedAtMs: Long = System.currentTimeMillis()

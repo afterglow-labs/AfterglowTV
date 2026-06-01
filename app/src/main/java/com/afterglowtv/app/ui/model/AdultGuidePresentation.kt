@@ -150,6 +150,20 @@ object AdultGuideCategoryBuilder {
     fun matchesGeneratedCategory(value: String?): Boolean =
         categoryRules.any { it.matches(value) }
 
+    fun resolveVodCategoryTitle(title: String?, providerCategory: String?): String? {
+        categoryRules.firstOrNull { rule -> rule.matches(title) }?.let { rule ->
+            return rule.title
+        }
+        providerCategory
+            ?.trim()
+            ?.takeIf { it.isNotBlank() && (isAdultGuideText(it) || matchesExplicitAdultSignal(it)) }
+            ?.let { return it }
+        categoryRules.firstOrNull { rule -> rule.matches(providerCategory) }?.let { rule ->
+            return rule.title
+        }
+        return providerCategory?.trim()?.takeIf(String::isNotBlank)
+    }
+
     fun matchesExplicitAdultSignal(value: String?): Boolean {
         val normalized = normalizeAdultGuideText(value)
         if (normalized.isBlank()) return false

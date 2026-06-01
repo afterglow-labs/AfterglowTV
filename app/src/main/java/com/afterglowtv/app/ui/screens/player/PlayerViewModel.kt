@@ -1081,14 +1081,15 @@ class PlayerViewModel @Inject constructor(
 
     private suspend fun tryAdoptPreviewHandoff(
         requestVersion: Long,
-        internalChannelId: Long,
+        internalContentId: Long,
         providerId: Long
     ): Boolean {
-        if (currentContentType != ContentType.LIVE) return false
+        if (currentContentType != ContentType.LIVE && currentContentType != ContentType.MOVIE) return false
 
         val session = livePreviewHandoffManager.consumeFullscreenHandoff(
-            channelId = internalChannelId,
-            providerId = providerId.takeIf { it > 0L }
+            contentId = internalContentId,
+            providerId = providerId.takeIf { it > 0L },
+            contentType = currentContentType
         ) ?: return false
 
         val adoptedEngine = session.engine
@@ -1121,7 +1122,9 @@ class PlayerViewModel @Inject constructor(
                 )
                 playerEngine.play()
                 startTokenRenewalMonitoring(session.streamInfo.expirationTime)
-                maybeStartLiveTimeshift(session.streamInfo)
+                if (currentContentType == ContentType.LIVE) {
+                    maybeStartLiveTimeshift(session.streamInfo)
+                }
                 true
             }
         }.getOrElse {
