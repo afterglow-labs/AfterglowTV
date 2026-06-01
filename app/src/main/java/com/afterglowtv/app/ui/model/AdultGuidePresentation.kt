@@ -45,7 +45,12 @@ object AdultGuideCategoryBuilder {
         "orgy"
     )
     private val categoryRules = listOf(
-        AdultGuideRule("milf", "MILF", listOf("milf", "milfs", "stepmom", "step mom")),
+        AdultGuideRule(
+            "milf",
+            "MILF",
+            listOf("milf", "milfs", "milfy", "stepmom", "step mom"),
+            embeddedAliases = listOf("milf", "milfy")
+        ),
         AdultGuideRule(
             "taboo",
             "Taboo",
@@ -61,17 +66,90 @@ object AdultGuideCategoryBuilder {
                 "step sister",
                 "stepbrother",
                 "step brother",
+                "family",
+                "teacher",
+                "student",
+                "school",
+                "schoolgirl",
+                "school girl",
+                "college",
                 "cousin",
                 "aunt",
-                "uncle"
+                "uncle",
+                "mom",
+                "mother",
+                "dad",
+                "father",
+                "sister",
+                "brother"
+            ),
+            embeddedAliases = listOf(
+                "stepmom",
+                "stepdad",
+                "stepsister",
+                "stepbrother",
+                "family",
+                "teacher",
+                "student",
+                "schoolgirl",
+                "cousin",
+                "mother",
+                "father"
             )
         ),
         AdultGuideRule("interracial", "Interracial", listOf("interracial", "ir")),
-        AdultGuideRule("blondes", "Blondes", listOf("blonde", "blondes")),
+        AdultGuideRule(
+            "teen",
+            "Teen",
+            listOf("teen", "teens", "eighteen", "18 plus", "barely legal", "nubile"),
+            embeddedAliases = listOf("teen", "teens", "realteens", "eighteen", "barelylegal", "nubile")
+        ),
+        AdultGuideRule(
+            "anal",
+            "Anal",
+            listOf("anal", "anal 4k", "anal only", "anal mom", "analized"),
+            embeddedAliases = listOf("anal", "anal4k", "analonly", "analmom", "analized")
+        ),
+        AdultGuideRule(
+            "blowjob",
+            "Blowjob",
+            listOf("blowjob", "blowjobs", "bj", "deep throat", "deepthroat"),
+            embeddedAliases = listOf("blowjob", "blowjobs", "deepthroat")
+        ),
+        AdultGuideRule("oral", "Oral", listOf("oral"), embeddedAliases = listOf("oral")),
+        AdultGuideRule(
+            "big_tits",
+            "Big Tits",
+            listOf("big tits", "big titty", "bigtitty", "busty", "boobs"),
+            embeddedAliases = listOf("bigtits", "bigtitty", "busty")
+        ),
+        AdultGuideRule("hardcore", "Hardcore", listOf("hardcore", "rough"), embeddedAliases = listOf("hardcore")),
+        AdultGuideRule("bondage", "Bondage", listOf("bondage", "bdsm"), embeddedAliases = listOf("bondage", "bdsm")),
+        AdultGuideRule("babes", "Babes", listOf("babes", "babe"), embeddedAliases = listOf("babes")),
+        AdultGuideRule("cuckold", "Cuckold", listOf("cuckold", "cuck"), embeddedAliases = listOf("cuckold")),
+        AdultGuideRule(
+            "compilation",
+            "Compilation",
+            listOf("compilation", "compilations"),
+            embeddedAliases = listOf("compilation", "compilations")
+        ),
+        AdultGuideRule("parody", "Parody", listOf("parody", "parodies"), embeddedAliases = listOf("parody")),
+        AdultGuideRule("pornstar", "Pornstar", listOf("pornstar", "pornstars"), embeddedAliases = listOf("pornstar")),
+        AdultGuideRule("cartoon", "Cartoon", listOf("cartoon", "cartoons", "toon", "animated"), embeddedAliases = listOf("cartoon")),
+        AdultGuideRule("hentai", "Hentai", listOf("hentai", "anime"), embeddedAliases = listOf("hentai", "anime")),
+        AdultGuideRule("solo", "Solo", listOf("solo", "solo girl", "solo girls"), embeddedAliases = listOf("solo")),
+        AdultGuideRule("onlyfans", "OnlyFans", listOf("onlyfans", "only fans"), embeddedAliases = listOf("onlyfans")),
+        AdultGuideRule("tiktok", "TikTok", listOf("tiktok", "tik tok"), embeddedAliases = listOf("tiktok")),
+        AdultGuideRule("blondes", "Blonde", listOf("blonde", "blondes"), embeddedAliases = listOf("blonde", "blondessa")),
         AdultGuideRule("brunettes", "Brunettes", listOf("brunette", "brunettes")),
         AdultGuideRule("trans", "Trans", listOf("trans", "transgender", "tg", "ts")),
         AdultGuideRule("latina", "Latina", listOf("latina", "latinas", "latin")),
-        AdultGuideRule("asian", "Asian", listOf("asian", "japanese", "korean", "chinese")),
+        AdultGuideRule(
+            "asian",
+            "Asian",
+            listOf("asian", "japanese", "korean", "chinese", "thai", "japan", "japanhdv"),
+            embeddedAliases = listOf("asian", "japanese", "korean", "chinese", "japanhdv")
+        ),
         AdultGuideRule("ebony", "Ebony", listOf("ebony", "black")),
         AdultGuideRule("amateur", "Amateur", listOf("amateur", "homemade")),
         AdultGuideRule("lesbian", "Lesbian", listOf("lesbian", "lesbians")),
@@ -247,17 +325,22 @@ private data class AdultGuideMutableCategory(
 private data class AdultGuideRule(
     val key: String,
     val title: String,
-    val aliases: List<String>
+    val aliases: List<String>,
+    val embeddedAliases: List<String> = emptyList()
 ) {
     fun matches(value: String?): Boolean {
         val normalized = normalizeAdultGuideText(value)
         if (normalized.isBlank()) return false
+        val compact = normalized.replace(" ", "")
         return aliases.any { alias ->
             val normalizedAlias = normalizeAdultGuideText(alias)
             normalized == normalizedAlias ||
                 normalized.startsWith("$normalizedAlias ") ||
                 normalized.endsWith(" $normalizedAlias") ||
                 normalized.contains(" $normalizedAlias ")
+        } || embeddedAliases.any { alias ->
+            val compactAlias = normalizeAdultGuideText(alias).replace(" ", "")
+            compactAlias.isNotBlank() && compact.contains(compactAlias)
         }
     }
 }

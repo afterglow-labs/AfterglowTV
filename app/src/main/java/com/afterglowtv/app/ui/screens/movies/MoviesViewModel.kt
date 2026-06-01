@@ -7,6 +7,7 @@ import com.afterglowtv.app.player.LivePreviewHandoffManager
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
+import com.afterglowtv.app.ui.model.isAdultGuideCategory
 import com.afterglowtv.app.ui.model.isAdultVodMovie
 import com.afterglowtv.domain.manager.ParentalControlManager
 import com.afterglowtv.domain.model.Category
@@ -1267,29 +1268,7 @@ class MoviesViewModel @Inject constructor(
         val (selectedItems, totalCount, hasMoreRemote) = when (request.selectedCategory) {
             VodBrowseDefaults.FULL_LIBRARY_CATEGORY -> {
                 if (request.adultOnly) {
-                    val providerCategoriesById = request.providerCategories.associateBy { kotlin.math.abs(it.id) }
-                    val result = movieRepository
-                        .browseMovies(
-                            LibraryBrowseQuery(
-                                providerId = request.providerId,
-                                sortBy = request.sortBy,
-                                filterBy = LibraryFilterBy(type = request.filterType),
-                                searchQuery = effectiveQuery,
-                                limit = request.loadLimit,
-                                offset = 0
-                            )
-                        )
-                        .first()
-                    val filteredItems = result.items
-                        .filterNot { movie -> movie.categoryId in request.hiddenCategoryIds }
-                        .filter { movie ->
-                            isAdultVodMovie(movie, movie.categoryId?.let { providerCategoriesById[kotlin.math.abs(it)] })
-                        }
-                    Triple(
-                        filteredItems,
-                        result.totalCount,
-                        result.hasMoreRemote
-                    )
+                    loadAdultVodCategoryItems(request, effectiveQuery)
                 } else {
                     val result = movieRepository
                         .browseMovies(
@@ -1406,6 +1385,49 @@ class MoviesViewModel @Inject constructor(
             totalCount = totalCount,
             canLoadMore = totalCount > enrichedItems.size || hasMoreRemote
         )
+    }
+
+    private suspend fun loadAdultVodCategoryItems(
+        request: SelectedMovieCategoryRequest,
+        effectiveQuery: String
+    ): Triple<List<Movie>, Int, Boolean> {
+        val providerCategoriesById = request.providerCategories.associateBy { kotlin.math.abs(it.id) }
+        val adultCategoryIds = request.providerCategories
+            .asSequence()
+            .filter(::isAdultGuideCategory)
+            .map { kotlin.math.abs(it.id) }
+            .filterNot { categoryId ->
+                categoryId in request.hiddenCategoryIds || -categoryId in request.hiddenCategoryIds
+            }
+            .distinct()
+            .toList()
+
+        if (adultCategoryIds.isEmpty()) {
+            return Triple(emptyList(), 0, false)
+        }
+
+        val items = adultCategoryIds.flatMap { categoryId ->
+            movieRepository.getMoviesByCategoryPage(
+                providerId = request.providerId,
+                categoryId = categoryId,
+                limit = request.loadLimit,
+                offset = 0
+            ).first()
+        }.filter { movie ->
+            isAdultVodMovie(movie, movie.categoryId?.let { providerCategoriesById[kotlin.math.abs(it)] })
+        }
+        val filteredItems = applyLocalBrowseToMovies(
+            items = items,
+            filterType = request.filterType,
+            sortBy = request.sortBy,
+            query = effectiveQuery
+        )
+        val categoryCounts = movieRepository.getCategoryItemCounts(request.providerId).first()
+        val totalCount = adultCategoryIds.sumOf { categoryId -> categoryCounts[categoryId] ?: 0 }
+            .takeIf { it > 0 }
+            ?: filteredItems.size
+
+        return Triple(filteredItems.take(request.loadLimit), totalCount, false)
     }
 
     private fun validateGroupName(name: String, currentGroupId: Long? = null): String? {

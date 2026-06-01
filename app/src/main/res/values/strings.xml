@@ -75,7 +75,7 @@
     <string name="live_channel_results">%1$d channels in view</string>
     <string name="live_preview_title">Channel Preview</string>
     <string name="live_preview_placeholder_title">Select a channel to preview</string>
-    <string name="live_preview_placeholder_subtitle">In Pro mode, first click previews the stream and second click opens full playback.</string>
+    <string name="live_preview_placeholder_subtitle">Press OK to load a preview. Press OK again for full screen.</string>
     <string name="live_preview_no_epg">No schedule information</string>
     <string name="live_preview_open_hint">Press OK again to open this channel</string>
     <string name="live_preview_loading">Loading preview…</string>

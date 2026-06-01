@@ -24,12 +24,12 @@ class AdultGuidePresentationTest {
         assertThat(categories.map { it.title }).containsAtLeast(
             "All",
             "MILF",
-            "Blondes",
+            "Blonde",
             "Trans",
             "Taboo"
         )
         assertThat(categories.category("MILF").channels).containsExactly(channel)
-        assertThat(categories.category("Blondes").channels).containsExactly(channel)
+        assertThat(categories.category("Blonde").channels).containsExactly(channel)
         assertThat(categories.category("Trans").channels).containsExactly(channel)
         assertThat(categories.category("Taboo").channels).containsExactly(channel)
     }
@@ -98,6 +98,50 @@ class AdultGuidePresentationTest {
         )
 
         assertThat(categories.category("Trans").channels).containsExactly(channel)
+    }
+
+    @Test
+    fun `common adult playlist title labels become generated categories`() {
+        val channels = listOf(
+            Channel(id = 10L, name = "Adult Blowjob", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 11L, name = "GENRE 25: Blonde", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 12L, name = "PH 21: Anal 4K", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 13L, name = "Adult TEENS  (P)", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 14L, name = "Adult Big Tits", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 15L, name = "Adult Hardcore", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 16L, name = "XXM: REALTEENS", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 17L, name = "PH 240: Milfy", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 18L, name = "OnlyFans TikTok Solo", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 19L, name = "Bondage Cartoon Hentai", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 20L, name = "Adult Compilation Oral", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
+            Channel(id = 21L, name = "Teacher Student Family", providerId = 7L, categoryId = 30L, categoryName = "XXX")
+        )
+
+        val categories = AdultGuideCategoryBuilder.build(
+            channels = channels,
+            providerCategories = listOf(Category(id = 30L, name = "XXX", isAdult = true)),
+            includeAllCategory = false
+        )
+
+        assertThat(categories.map { it.title }).containsAtLeast(
+            "Blowjob",
+            "Blonde",
+            "Anal",
+            "Teen",
+            "Big Tits",
+            "Hardcore",
+            "MILF",
+            "OnlyFans",
+            "TikTok",
+            "Solo",
+            "Bondage",
+            "Cartoon",
+            "Hentai",
+            "Compilation",
+            "Oral",
+            "Taboo"
+        )
+        assertThat(categories.any { it.title == "XXX" }).isFalse()
     }
 
     @Test

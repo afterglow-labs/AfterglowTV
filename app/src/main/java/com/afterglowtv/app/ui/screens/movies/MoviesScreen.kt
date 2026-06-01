@@ -1307,7 +1307,7 @@ private fun AdultVodPreviewPane(
                             color = OnBackground
                         )
                         Text(
-                            text = errorMessage ?: "First OK starts a 5-minute preview. Second OK opens playback.",
+                            text = errorMessage ?: "Press OK to load a preview. Press OK again for full screen.",
                             style = MaterialTheme.typography.bodySmall,
                             color = OnSurfaceDim
                         )
