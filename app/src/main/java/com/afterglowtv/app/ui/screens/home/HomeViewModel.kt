@@ -8,6 +8,7 @@ import com.afterglowtv.app.tvinput.TvInputChannelSyncManager
 import com.afterglowtv.app.ui.model.AdultGuideCategory
 import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.model.adultGuideCategoryId
+import com.afterglowtv.app.ui.model.filterAdultGuideCategoriesForHiddenIds
 import com.afterglowtv.app.ui.model.isAdultGuideGeneratedCategoryId
 import com.afterglowtv.app.ui.model.adultGuidePlaylistFingerprint
 import com.afterglowtv.app.ui.screens.multiview.MultiViewManager
@@ -2035,15 +2036,14 @@ class HomeViewModel @Inject constructor(
         hiddenCategoryIds: Set<Long> = emptySet()
     ): AdultGuideLiveContext {
         val channelIdsByCategoryId = linkedMapOf<Long, List<Long>>()
-        val hiddenAdultChannelIds = generatedCategories
-            .filter { category -> adultGuideCategoryId(category.key) in hiddenCategoryIds }
-            .flatMap { category -> category.channels.map(Channel::id) }
-            .toSet()
-        val categoryItems = generatedCategories
-            .filterNot { category -> adultGuideCategoryId(category.key) in hiddenCategoryIds }
-            .map { category ->
+        val visibleCategories = filterAdultGuideCategoriesForHiddenIds(
+            generatedCategories = generatedCategories,
+            adultChannelIds = adultChannelIds,
+            hiddenCategoryIds = hiddenCategoryIds
+        )
+        val categoryItems = visibleCategories.categories.map { category ->
             val id = adultGuideCategoryId(category.key)
-            val channelIds = category.channels.map(Channel::id).distinct()
+            val channelIds = category.channelIds
             channelIdsByCategoryId[id] = channelIds
             Category(
                 id = id,
@@ -2055,7 +2055,7 @@ class HomeViewModel @Inject constructor(
             )
         }.toMutableList()
 
-        val visibleAdultChannelIds = adultChannelIds.filterNot(hiddenAdultChannelIds::contains)
+        val visibleAdultChannelIds = visibleCategories.allChannelIds
         if (visibleAdultChannelIds.isNotEmpty()) {
             channelIdsByCategoryId[VirtualCategoryIds.ADULT_GUIDE] = visibleAdultChannelIds
             categoryItems.add(
