@@ -619,8 +619,8 @@ fun AppNavigation(mainActivity: MainActivity) {
                 onNavigate = { route -> tabNavigate(route) },
                 currentRoute = Routes.ADULT_GUIDE,
                 initialAdultGuideMode = true,
-                wordmark = "Adult VOD",
-                tagline = "On-demand titles from adult playlists."
+                wordmark = "Adult",
+                tagline = "Adult titles from your playlists."
             )
         }
 
@@ -687,8 +687,8 @@ fun AppNavigation(mainActivity: MainActivity) {
                     onNavigate = { route -> tabNavigate(route) },
                     currentRoute = Routes.ADULT_GUIDE,
                     initialAdultGuideMode = true,
-                    wordmark = "Adult VOD",
-                    tagline = "On-demand titles from adult playlists."
+                    wordmark = "Adult",
+                    tagline = "Adult titles from your playlists."
                 )
             } else {
                 HomeScreen(

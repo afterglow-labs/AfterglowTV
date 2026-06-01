@@ -595,8 +595,8 @@ private fun SeriesVodContent(
 	                        add(
 	                            VodActionChip(
 	                                key = "xxx_vod_guide",
-	                                label = stringResource(R.string.xxx_vod_guide_title),
-	                                detail = stringResource(R.string.xxx_vod_guide_detail),
+	                                label = stringResource(R.string.adult_on_demand_title),
+	                                detail = stringResource(R.string.adult_on_demand_detail),
 	                                onClick = onOpenAdultVodGuide
 	                            )
 	                        )
@@ -1066,7 +1066,7 @@ private fun SeriesVodGuideContent(
 	        val hasActiveFilterSort = selectedFilterType != LibraryFilterType.ALL || selectedSortBy != LibrarySortBy.LIBRARY
 	        VodClassicContentHeader(
 	            title = stringResource(
-	                if (uiState.showAdultVodGuide) R.string.xxx_vod_guide_title else R.string.vod_guide_title
+	                if (uiState.showAdultVodGuide) R.string.nav_adult_guide else R.string.vod_guide_title
 	            ),
 	            subtitle = stringResource(R.string.vod_classic_results_count, uiState.selectedCategoryTotalCount),
 	            actions = buildList {
@@ -1074,7 +1074,7 @@ private fun SeriesVodGuideContent(
 	                    VodActionChip(
 	                        key = if (uiState.showAdultVodGuide) "vod_guide" else "xxx_vod_guide",
 	                        label = stringResource(
-	                            if (uiState.showAdultVodGuide) R.string.vod_guide_title else R.string.xxx_vod_guide_title
+	                            if (uiState.showAdultVodGuide) R.string.nav_series else R.string.adult_on_demand_title
 	                        ),
 	                        onClick = if (uiState.showAdultVodGuide) onOpenVodGuide else onOpenAdultVodGuide
 	                    )

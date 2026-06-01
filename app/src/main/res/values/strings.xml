@@ -246,8 +246,8 @@
     <string name="library_full_browse_subtitle">%1$d titles available in the current provider</string>
     <string name="vod_guide_title">VOD Guide</string>
     <string name="vod_guide_detail">Guide-style VOD browsing</string>
-    <string name="xxx_vod_guide_title">Adult VOD Guide</string>
-    <string name="xxx_vod_guide_detail">Adult VOD only</string>
+    <string name="adult_on_demand_title">On Demand</string>
+    <string name="adult_on_demand_detail">Adult titles</string>
 
     
     <string name="series_incorrect_pin">Incorrect PIN</string>

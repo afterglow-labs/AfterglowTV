@@ -963,7 +963,7 @@ fun HomeScreen(
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                         ) {
                                             Text(
-                                                text = stringResource(R.string.xxx_vod_guide_title),
+                                                text = stringResource(R.string.adult_on_demand_title),
                                                 style = MaterialTheme.typography.labelMedium
                                             )
                                         }

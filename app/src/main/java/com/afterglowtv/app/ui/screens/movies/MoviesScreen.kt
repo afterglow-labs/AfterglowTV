@@ -622,8 +622,8 @@ private fun MoviesVodContent(
 	                        add(
 	                            VodActionChip(
 	                                key = "xxx_vod_guide",
-	                                label = stringResource(R.string.xxx_vod_guide_title),
-	                                detail = stringResource(R.string.xxx_vod_guide_detail),
+	                                label = stringResource(R.string.adult_on_demand_title),
+	                                detail = stringResource(R.string.adult_on_demand_detail),
 	                                onClick = onOpenAdultVodGuide
 	                            )
 	                        )
@@ -1098,7 +1098,7 @@ private fun MoviesVodGuideContent(
 	        val hasActiveFilterSort = selectedFilterType != LibraryFilterType.ALL || selectedSortBy != LibrarySortBy.LIBRARY
 	        VodClassicContentHeader(
 	            title = stringResource(
-	                if (uiState.showAdultVodGuide) R.string.xxx_vod_guide_title else R.string.vod_guide_title
+	                if (uiState.showAdultVodGuide) R.string.nav_adult_guide else R.string.vod_guide_title
 	            ),
 	            subtitle = stringResource(R.string.vod_classic_results_count, uiState.selectedCategoryTotalCount),
 	            actions = buildList {
@@ -1106,7 +1106,7 @@ private fun MoviesVodGuideContent(
 	                    VodActionChip(
 	                        key = if (uiState.showAdultVodGuide) "vod_guide" else "xxx_vod_guide",
 	                        label = stringResource(
-	                            if (uiState.showAdultVodGuide) R.string.vod_guide_title else R.string.xxx_vod_guide_title
+	                            if (uiState.showAdultVodGuide) R.string.nav_movies else R.string.adult_on_demand_title
 	                        ),
 	                        onClick = if (uiState.showAdultVodGuide) onOpenVodGuide else onOpenAdultVodGuide
 	                    )
@@ -1276,7 +1276,7 @@ private fun AdultVodPreviewPane(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
-                text = "VOD Preview",
+                text = "Preview",
                 style = MaterialTheme.typography.titleSmall,
                 color = Primary
             )
@@ -1302,12 +1302,12 @@ private fun AdultVodPreviewPane(
                         modifier = Modifier.padding(horizontal = 20.dp)
                     ) {
                         Text(
-                            text = "Select a VOD to preview",
+                            text = "Select a title to preview",
                             style = MaterialTheme.typography.titleSmall,
                             color = OnBackground
                         )
                         Text(
-                            text = errorMessage ?: "First OK starts a 5-minute preview. Second OK opens VOD controls.",
+                            text = errorMessage ?: "First OK starts a 5-minute preview. Second OK opens playback.",
                             style = MaterialTheme.typography.bodySmall,
                             color = OnSurfaceDim
                         )
@@ -1361,7 +1361,7 @@ private fun AdultVodPreviewPane(
                     color = AccentAmber
                 )
                 Text(
-                    text = "Press OK again for VOD controls",
+                    text = "Press OK again to open playback",
                     style = MaterialTheme.typography.labelMedium,
                     color = Primary
                 )

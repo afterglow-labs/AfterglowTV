@@ -100,6 +100,7 @@ class MoviesViewModel @Inject constructor(
         const val INITIAL_PREVIEW_BATCH_SIZE = 6
         const val ADULT_VOD_PREVIEW_START_MS = 5 * 60 * 1000L
         const val SHORT_ADULT_VOD_PREVIEW_START_MS = 2 * 60 * 1000L
+        const val ADULT_VOD_GUIDE_PAGE_SIZE = 1_000
     }
 
     private val _uiState = MutableStateFlow(MoviesUiState())
@@ -710,7 +711,26 @@ class MoviesViewModel @Inject constructor(
         if (!adultOnly) {
             clearAdultVodPreview()
         }
-        selectCategory(VodBrowseDefaults.FULL_LIBRARY_CATEGORY)
+        selectVodCategory(
+            categoryName = VodBrowseDefaults.FULL_LIBRARY_CATEGORY,
+            selectedCategoryLoadLimit = _selectedCategoryLoadLimit,
+            selectedLibraryFilterType = _selectedLibraryFilterType,
+            selectedLibrarySortBy = _selectedLibrarySortBy,
+            uiState = _uiState,
+            loadLimit = if (adultOnly) ADULT_VOD_GUIDE_PAGE_SIZE else VodBrowseDefaults.SELECTED_CATEGORY_PAGE_SIZE
+        ) { selectedCategory, filterType, sortBy, isLoadingSelectedCategory ->
+            copy(
+                selectedCategory = selectedCategory,
+                selectedLibraryFilterType = filterType,
+                selectedLibrarySortBy = sortBy,
+                selectedCategoryItems = emptyList(),
+                selectedCategoryLoadedCount = 0,
+                selectedCategoryTotalCount = 0,
+                canLoadMoreSelectedCategory = false,
+                isLoadingSelectedCategory = isLoadingSelectedCategory,
+                showAdultVodGuide = adultOnly
+            )
+        }
         _uiState.update {
             it.copy(
                 vodViewMode = VodViewMode.GUIDE,
@@ -761,9 +781,15 @@ class MoviesViewModel @Inject constructor(
     }
 
     fun loadMoreSelectedCategory() {
+        val pageSize = if (_uiState.value.showAdultVodGuide) {
+            ADULT_VOD_GUIDE_PAGE_SIZE
+        } else {
+            VodBrowseDefaults.SELECTED_CATEGORY_PAGE_SIZE
+        }
         incrementVodSelectedCategoryLoadLimit(
             canLoadMore = _uiState.value.canLoadMoreSelectedCategory,
-            selectedCategoryLoadLimit = _selectedCategoryLoadLimit
+            selectedCategoryLoadLimit = _selectedCategoryLoadLimit,
+            incrementBy = pageSize
         )
     }
 
@@ -1242,25 +1268,27 @@ class MoviesViewModel @Inject constructor(
             VodBrowseDefaults.FULL_LIBRARY_CATEGORY -> {
                 if (request.adultOnly) {
                     val providerCategoriesById = request.providerCategories.associateBy { kotlin.math.abs(it.id) }
-                    val filteredItems = movieRepository.getMovies(request.providerId).first()
-                        .asSequence()
+                    val result = movieRepository
+                        .browseMovies(
+                            LibraryBrowseQuery(
+                                providerId = request.providerId,
+                                sortBy = request.sortBy,
+                                filterBy = LibraryFilterBy(type = request.filterType),
+                                searchQuery = effectiveQuery,
+                                limit = request.loadLimit,
+                                offset = 0
+                            )
+                        )
+                        .first()
+                    val filteredItems = result.items
                         .filterNot { movie -> movie.categoryId in request.hiddenCategoryIds }
                         .filter { movie ->
                             isAdultVodMovie(movie, movie.categoryId?.let { providerCategoriesById[kotlin.math.abs(it)] })
                         }
-                        .toList()
-                        .let { items ->
-                            applyLocalBrowseToMovies(
-                                items,
-                                request.filterType,
-                                request.sortBy,
-                                effectiveQuery
-                            )
-                        }
                     Triple(
-                        filteredItems.take(request.loadLimit),
-                        filteredItems.size,
-                        false
+                        filteredItems,
+                        result.totalCount,
+                        result.hasMoreRemote
                     )
                 } else {
                     val result = movieRepository
