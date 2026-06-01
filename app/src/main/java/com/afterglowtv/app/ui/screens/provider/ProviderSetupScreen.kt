@@ -78,6 +78,7 @@ import com.afterglowtv.app.ui.screens.settings.BackupImportPreviewDialog
 import com.afterglowtv.app.ui.theme.*
 import com.afterglowtv.data.util.ProviderInputSanitizer
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -87,13 +88,15 @@ import android.widget.Toast
 
 // Source type
 
-private enum class SourceType { XTREAM, STALKER, M3U_URL, M3U_FILE }
+private enum class SourceType { XTREAM, STALKER, M3U_URL, M3U_FILE, M3U_VOD_URL, M3U_VOD_FILE }
 
 internal enum class ProviderSetupSourceType {
     SERVER_LOGIN,
     PORTAL_LOGIN,
     PLAYLIST_URL,
-    PLAYLIST_FILE
+    PLAYLIST_FILE,
+    VOD_PLAYLIST_URL,
+    VOD_PLAYLIST_FILE
 }
 
 internal fun visibleProviderSetupSourceTypes(policy: StorePolicySnapshot): List<ProviderSetupSourceType> =
@@ -102,12 +105,16 @@ internal fun visibleProviderSetupSourceTypes(policy: StorePolicySnapshot): List<
             ProviderSetupSourceType.SERVER_LOGIN,
             ProviderSetupSourceType.PORTAL_LOGIN,
             ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
+            ProviderSetupSourceType.PLAYLIST_FILE,
+            ProviderSetupSourceType.VOD_PLAYLIST_URL,
+            ProviderSetupSourceType.VOD_PLAYLIST_FILE
         )
     } else {
         listOf(
             ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
+            ProviderSetupSourceType.PLAYLIST_FILE,
+            ProviderSetupSourceType.VOD_PLAYLIST_URL,
+            ProviderSetupSourceType.VOD_PLAYLIST_FILE
         )
     }
 
@@ -116,6 +123,8 @@ private fun ProviderSetupSourceType.toUiSourceType(): SourceType = when (this) {
     ProviderSetupSourceType.PORTAL_LOGIN -> SourceType.STALKER
     ProviderSetupSourceType.PLAYLIST_URL -> SourceType.M3U_URL
     ProviderSetupSourceType.PLAYLIST_FILE -> SourceType.M3U_FILE
+    ProviderSetupSourceType.VOD_PLAYLIST_URL -> SourceType.M3U_VOD_URL
+    ProviderSetupSourceType.VOD_PLAYLIST_FILE -> SourceType.M3U_VOD_FILE
 }
 
 internal fun shouldInlineProviderSetupActions(
@@ -282,6 +291,8 @@ fun ProviderSetupScreen(
     val rawSourceType = when {
         selectedTab == 0 -> SourceType.XTREAM
         selectedTab == 1 -> SourceType.STALKER
+        uiState.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD && uiState.m3uTab == 1 -> SourceType.M3U_VOD_FILE
+        uiState.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD -> SourceType.M3U_VOD_URL
         uiState.m3uTab == 1 -> SourceType.M3U_FILE
         else -> SourceType.M3U_URL
     }
@@ -305,12 +316,26 @@ fun ProviderSetupScreen(
             SourceType.M3U_URL -> {
                 selectedTab = 2
                 viewModel.updateM3uTab(0)
+                viewModel.updateM3uPlaylistKind(ProviderM3uPlaylistKind.LIVE)
                 viewModel.applySourceDefaults(ProviderSetupViewModel.SetupSourceType.M3U)
             }
             SourceType.M3U_FILE-> {
                 selectedTab = 2
                 viewModel.updateM3uTab(1)
+                viewModel.updateM3uPlaylistKind(ProviderM3uPlaylistKind.LIVE)
                 viewModel.applySourceDefaults(ProviderSetupViewModel.SetupSourceType.M3U)
+            }
+            SourceType.M3U_VOD_URL -> {
+                selectedTab = 2
+                viewModel.updateM3uTab(0)
+                viewModel.updateM3uPlaylistKind(ProviderM3uPlaylistKind.VOD)
+                viewModel.applySourceDefaults(ProviderSetupViewModel.SetupSourceType.M3U_VOD)
+            }
+            SourceType.M3U_VOD_FILE -> {
+                selectedTab = 2
+                viewModel.updateM3uTab(1)
+                viewModel.updateM3uPlaylistKind(ProviderM3uPlaylistKind.VOD)
+                viewModel.applySourceDefaults(ProviderSetupViewModel.SetupSourceType.M3U_VOD)
             }
         }
     }
@@ -728,7 +753,9 @@ private fun ProviderFormContent(
             else -> androidx.compose.ui.res.stringResource(R.string.setup_login)
         }
         SourceType.M3U_URL,
-        SourceType.M3U_FILE -> when {
+        SourceType.M3U_FILE,
+        SourceType.M3U_VOD_URL,
+        SourceType.M3U_VOD_FILE -> when {
             uiState.isLoading -> androidx.compose.ui.res.stringResource(R.string.setup_validating)
             uiState.isEditing -> androidx.compose.ui.res.stringResource(R.string.setup_save)
             else -> androidx.compose.ui.res.stringResource(R.string.setup_add)
@@ -738,7 +765,9 @@ private fun ProviderFormContent(
         SourceType.XTREAM -> onLoginXtream
         SourceType.STALKER -> onLoginStalker
         SourceType.M3U_URL,
-        SourceType.M3U_FILE -> onAddM3u
+        SourceType.M3U_FILE,
+        SourceType.M3U_VOD_URL,
+        SourceType.M3U_VOD_FILE -> onAddM3u
     }
 
     Surface(
@@ -900,7 +929,8 @@ private fun ProviderFormContent(
                                 )
                                 }
 
-                                SourceType.M3U_URL -> {
+                                SourceType.M3U_URL,
+                                SourceType.M3U_VOD_URL -> {
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     com.afterglowtv.app.ui.components.ClipboardPasteButton(
                                         onPaste = { onM3uUrlChange(it) },
@@ -918,29 +948,37 @@ private fun ProviderFormContent(
                                 }
                                 ProviderTextField(
                                     value = m3uUrl, onValueChange = onM3uUrlChange,
-                                    placeholder = androidx.compose.ui.res.stringResource(R.string.setup_m3u_hint),
+                                    placeholder = androidx.compose.ui.res.stringResource(
+                                        if (sourceType == SourceType.M3U_VOD_URL) {
+                                            R.string.setup_vod_m3u_hint
+                                        } else {
+                                            R.string.setup_m3u_hint
+                                        }
+                                    ),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next)
                                 )
-                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    com.afterglowtv.app.ui.components.ClipboardPasteButton(
-                                        onPaste = { onM3uEpgUrlChange(it) },
-                                        label = "Paste EPG URL",
-                                    )
-                                    com.afterglowtv.app.ui.components.ClipboardCopyButton(
-                                        text = m3uEpgUrl,
-                                        label = "Copy"
-                                    )
-                                    com.afterglowtv.app.ui.components.ClipboardClearButton(
-                                        onClear = { onM3uEpgUrlChange("") },
-                                        label = "Clear",
-                                        enabled = m3uEpgUrl.isNotEmpty()
+                                if (sourceType == SourceType.M3U_URL) {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        com.afterglowtv.app.ui.components.ClipboardPasteButton(
+                                            onPaste = { onM3uEpgUrlChange(it) },
+                                            label = "Paste EPG URL",
+                                        )
+                                        com.afterglowtv.app.ui.components.ClipboardCopyButton(
+                                            text = m3uEpgUrl,
+                                            label = "Copy"
+                                        )
+                                        com.afterglowtv.app.ui.components.ClipboardClearButton(
+                                            onClear = { onM3uEpgUrlChange("") },
+                                            label = "Clear",
+                                            enabled = m3uEpgUrl.isNotEmpty()
+                                        )
+                                    }
+                                    ProviderTextField(
+                                        value = m3uEpgUrl, onValueChange = onM3uEpgUrlChange,
+                                        placeholder = androidx.compose.ui.res.stringResource(R.string.setup_epg_url_hint),
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
                                     )
                                 }
-                                ProviderTextField(
-                                    value = m3uEpgUrl, onValueChange = onM3uEpgUrlChange,
-                                    placeholder = androidx.compose.ui.res.stringResource(R.string.setup_epg_url_hint),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
-                                )
                                 AdvancedProviderOptionsSection(
                                     sourceType = sourceType,
                                     uiState = uiState,
@@ -961,12 +999,19 @@ private fun ProviderFormContent(
                                 )
                                 }
 
-                                SourceType.M3U_FILE -> {
+                                SourceType.M3U_FILE,
+                                SourceType.M3U_VOD_FILE -> {
                                 FileSelectorCard(
                                     fileName = if (m3uUrl.startsWith("file://")) m3uUrl.substringAfterLast("/") else null,
                                     fileSelectedHint = androidx.compose.ui.res.stringResource(R.string.setup_file_replace_hint),
                                     emptySelectionTitle = androidx.compose.ui.res.stringResource(R.string.setup_file_select_title),
-                                    emptySelectionHint = androidx.compose.ui.res.stringResource(R.string.setup_file_browse_hint),
+                                    emptySelectionHint = androidx.compose.ui.res.stringResource(
+                                        if (sourceType == SourceType.M3U_VOD_FILE) {
+                                            R.string.setup_vod_file_browse_hint
+                                        } else {
+                                            R.string.setup_file_browse_hint
+                                        }
+                                    ),
                                     onClick = onFilePick
                                 )
                                 fileImportError?.let {
@@ -1136,12 +1181,16 @@ private fun SetupSummaryStrip(
         SourceType.STALKER -> stringResource(R.string.setup_stalker)
         SourceType.M3U_URL,
         SourceType.M3U_FILE -> stringResource(R.string.setup_info_m3u_title)
+        SourceType.M3U_VOD_URL,
+        SourceType.M3U_VOD_FILE -> stringResource(R.string.setup_info_vod_playlist_title)
     }
     val subtitle = when (sourceType) {
         SourceType.XTREAM -> stringResource(R.string.setup_info_xtream_body)
         SourceType.STALKER -> stringResource(R.string.setup_info_stalker_body)
         SourceType.M3U_URL -> stringResource(R.string.setup_info_m3u_body)
         SourceType.M3U_FILE -> stringResource(R.string.setup_file_browse_hint)
+        SourceType.M3U_VOD_URL -> stringResource(R.string.setup_info_vod_playlist_body)
+        SourceType.M3U_VOD_FILE -> stringResource(R.string.setup_vod_file_browse_hint)
     }
     val badges = when (sourceType) {
         SourceType.XTREAM -> listOf(
@@ -1163,6 +1212,16 @@ private fun SetupSummaryStrip(
             R.string.setup_badge_local_file,
             R.string.setup_badge_vod_sorting,
             R.string.setup_badge_epg
+        )
+        SourceType.M3U_VOD_URL -> listOf(
+            R.string.setup_badge_vod,
+            R.string.setup_badge_playlist,
+            R.string.setup_badge_no_epg
+        )
+        SourceType.M3U_VOD_FILE -> listOf(
+            R.string.setup_badge_vod,
+            R.string.setup_badge_local_file,
+            R.string.setup_badge_no_epg
         )
     }
 
@@ -1241,8 +1300,8 @@ private fun AdvancedProviderOptionsSection(
         val hasNonDefaultSelection = ((sourceType == SourceType.XTREAM || sourceType == SourceType.STALKER) && uiState.epgSyncMode != defaultEpgSyncMode) ||
             (sourceType == SourceType.XTREAM && !uiState.xtreamFastSyncEnabled) ||
             (sourceType == SourceType.XTREAM && uiState.xtreamLiveSyncMode != ProviderXtreamLiveSyncMode.AUTO) ||
-            ((sourceType == SourceType.M3U_URL || sourceType == SourceType.M3U_FILE) && uiState.m3uVodClassificationEnabled) ||
-            ((sourceType == SourceType.XTREAM || sourceType == SourceType.M3U_URL || sourceType == SourceType.M3U_FILE) &&
+            (isLiveM3uSource(sourceType) && uiState.m3uVodClassificationEnabled) ||
+            ((sourceType == SourceType.XTREAM || isM3uSource(sourceType)) &&
                 (httpUserAgent.isNotBlank() || httpHeaders.isNotBlank())) ||
             (sourceType == SourceType.STALKER && (stalkerDeviceProfile.isNotBlank() || stalkerDeviceTimezone.isNotBlank() || stalkerDeviceLocale.isNotBlank()))
         if (uiState.isEditing && hasNonDefaultSelection) {
@@ -1306,7 +1365,7 @@ private fun AdvancedProviderOptionsSection(
 
         AnimatedVisibility(visible = showAdvancedOptions) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (sourceType == SourceType.M3U_URL || sourceType == SourceType.M3U_FILE) {
+                if (isLiveM3uSource(sourceType)) {
                     AdvancedSwitchOption(
                         title = stringResource(R.string.setup_m3u_vod_classification_label),
                         helper = stringResource(R.string.setup_m3u_vod_classification_helper),
@@ -1315,7 +1374,7 @@ private fun AdvancedProviderOptionsSection(
                     )
                 }
 
-                if (sourceType == SourceType.XTREAM || sourceType == SourceType.M3U_URL || sourceType == SourceType.M3U_FILE) {
+                if (sourceType == SourceType.XTREAM || isM3uSource(sourceType)) {
                     ProviderTextField(
                         value = httpUserAgent,
                         onValueChange = onHttpUserAgentChange,
@@ -1706,6 +1765,24 @@ private fun SourceTypeSelectorPanel(
                     onClick = { onSelect(SourceType.M3U_FILE) }
                 )
             }
+            if (shouldShowProviderSetupSourceType(SourceType.M3U_VOD_URL, visibleSourceTypes, sourceType, isEditing)) {
+                SourceTypeCard(
+                    title = androidx.compose.ui.res.stringResource(R.string.setup_tab_vod_url),
+                    subtitle = androidx.compose.ui.res.stringResource(R.string.setup_info_vod_playlist_body),
+                    selected = sourceType == SourceType.M3U_VOD_URL,
+                    enabled = !isEditing,
+                    onClick = { onSelect(SourceType.M3U_VOD_URL) }
+                )
+            }
+            if (shouldShowProviderSetupSourceType(SourceType.M3U_VOD_FILE, visibleSourceTypes, sourceType, isEditing)) {
+                SourceTypeCard(
+                    title = androidx.compose.ui.res.stringResource(R.string.setup_tab_vod_file),
+                    subtitle = androidx.compose.ui.res.stringResource(R.string.setup_vod_file_browse_hint),
+                    selected = sourceType == SourceType.M3U_VOD_FILE,
+                    enabled = !isEditing,
+                    onClick = { onSelect(SourceType.M3U_VOD_FILE) }
+                )
+            }
         }
     }
 }
@@ -1812,6 +1889,20 @@ private fun SourceTypeTabRow(
                 onClick = { if (!isEditing) onSelect(SourceType.M3U_FILE) }
             )
         }
+        if (shouldShowProviderSetupSourceType(SourceType.M3U_VOD_URL, visibleSourceTypes, sourceType, isEditing)) {
+            TabButton(
+                text = androidx.compose.ui.res.stringResource(R.string.setup_tab_vod_url),
+                isSelected = sourceType == SourceType.M3U_VOD_URL,
+                onClick = { if (!isEditing) onSelect(SourceType.M3U_VOD_URL) }
+            )
+        }
+        if (shouldShowProviderSetupSourceType(SourceType.M3U_VOD_FILE, visibleSourceTypes, sourceType, isEditing)) {
+            TabButton(
+                text = androidx.compose.ui.res.stringResource(R.string.setup_tab_vod_file),
+                isSelected = sourceType == SourceType.M3U_VOD_FILE,
+                onClick = { if (!isEditing) onSelect(SourceType.M3U_VOD_FILE) }
+            )
+        }
     }
 }
 
@@ -1826,6 +1917,15 @@ private fun shouldShowProviderSetupSourceType(
     } else {
         candidate in visibleSourceTypes
     }
+
+private fun isM3uSource(sourceType: SourceType): Boolean =
+    sourceType == SourceType.M3U_URL ||
+        sourceType == SourceType.M3U_FILE ||
+        sourceType == SourceType.M3U_VOD_URL ||
+        sourceType == SourceType.M3U_VOD_FILE
+
+private fun isLiveM3uSource(sourceType: SourceType): Boolean =
+    sourceType == SourceType.M3U_URL || sourceType == SourceType.M3U_FILE
 
 // ProviderTextField
 //

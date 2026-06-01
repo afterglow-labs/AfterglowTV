@@ -5,6 +5,7 @@ import com.afterglowtv.domain.manager.ProviderSyncStateReader
 import com.afterglowtv.domain.model.Program
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderStatus
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
@@ -125,6 +126,7 @@ private class FakeSyncProviderRepository(
         httpHeaders: String,
         epgSyncMode: ProviderEpgSyncMode,
         m3uVodClassificationEnabled: Boolean,
+        m3uPlaylistKind: ProviderM3uPlaylistKind,
         onProgress: ((String) -> Unit)?,
         id: Long?
     ): Result<Provider> = error("Not used in test")

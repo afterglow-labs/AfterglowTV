@@ -12,6 +12,7 @@ import com.afterglowtv.data.util.AdultContentClassifier
 import com.afterglowtv.data.util.UrlSecurityPolicy
 import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -89,7 +90,10 @@ internal class SyncManagerM3uImporter(
                         // placeholders intact so runtime substitution can fill them in.
                         val safeCatchUpSource = UrlSecurityPolicy.sanitizeImportedTemplateUrl(entry.catchUpSource)
 
-                        if (provider.m3uVodClassificationEnabled && M3uParser.isVodEntry(entry)) {
+                        val importAsMovie = provider.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD ||
+                            (provider.m3uVodClassificationEnabled && M3uParser.isVodEntry(entry))
+
+                        if (importAsMovie) {
                             if (!includeMovies) return@parseStreaming
                             val groupTitle = entry.groupTitle.ifBlank { "Uncategorized" }
                             val stableStreamId = stableId(

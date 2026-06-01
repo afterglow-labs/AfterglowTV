@@ -3,6 +3,7 @@ package com.afterglowtv.domain.usecase
 import com.afterglowtv.domain.manager.ProviderSetupInputValidator
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import com.afterglowtv.domain.model.ProviderSavedWithSyncErrorException
 import com.afterglowtv.domain.model.Result
@@ -33,6 +34,7 @@ data class M3uProviderSetupCommand(
     val httpHeaders: String = "",
     val epgSyncMode: ProviderEpgSyncMode = ProviderEpgSyncMode.BACKGROUND,
     val m3uVodClassificationEnabled: Boolean = false,
+    val m3uPlaylistKind: ProviderM3uPlaylistKind = ProviderM3uPlaylistKind.LIVE,
     val existingProviderId: Long? = null,
     /** Optional XMLTV / EPG URL to attach to the newly-created provider. */
     val epgUrl: String? = null,
@@ -177,7 +179,7 @@ class ValidateAndAddProvider @Inject constructor(
         ) {
             is Result.Success -> {
                 val validatedInput = validated.data
-                val parsedXtream = if (command.allowXtreamPlaylistAutoDetection) {
+                val parsedXtream = if (command.allowXtreamPlaylistAutoDetection && command.m3uPlaylistKind != ProviderM3uPlaylistKind.VOD) {
                     parseXtreamPlaylistUrl(validatedInput.url)
                 } else {
                     ParsedXtreamPlaylistUrlResult.NotXtreamPlaylist
@@ -209,7 +211,8 @@ class ValidateAndAddProvider @Inject constructor(
                             httpUserAgent = validatedInput.httpUserAgent,
                             httpHeaders = validatedInput.httpHeaders,
                             epgSyncMode = command.epgSyncMode,
-                            m3uVodClassificationEnabled = command.m3uVodClassificationEnabled,
+                            m3uVodClassificationEnabled = command.m3uVodClassificationEnabled || command.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD,
+                            m3uPlaylistKind = command.m3uPlaylistKind,
                             onProgress = onProgress,
                             id = command.existingProviderId
                         ).toUseCaseResult()

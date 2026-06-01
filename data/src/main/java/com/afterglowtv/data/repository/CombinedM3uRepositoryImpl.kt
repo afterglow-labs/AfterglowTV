@@ -18,6 +18,7 @@ import com.afterglowtv.domain.model.CombinedCategoryBinding
 import com.afterglowtv.domain.model.CombinedM3uProfile
 import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.repository.ChannelRepository
@@ -74,8 +75,8 @@ class CombinedM3uRepositoryImpl @Inject constructor(
         val providers = distinctProviderIds.mapNotNull { providerId ->
             providersById[providerId]?.toDomain()
         }
-        if (providers.size != distinctProviderIds.size || providers.any { it.type != ProviderType.M3U }) {
-            return Result.error("Combined profiles support M3U providers only.")
+        if (providers.size != distinctProviderIds.size || providers.any { it.type != ProviderType.M3U || it.m3uPlaylistKind != ProviderM3uPlaylistKind.LIVE }) {
+            return Result.error("Combined profiles support Live TV M3U providers only.")
         }
         val now = System.currentTimeMillis()
         val profileId = profileDao.insert(
@@ -134,8 +135,8 @@ class CombinedM3uRepositoryImpl @Inject constructor(
         val profile = profileDao.getById(profileId) ?: return Result.error("Combined profile not found.")
         val provider = providerDao.getById(providerId)?.toDomain()
             ?: return Result.error("Provider not found.")
-        if (provider.type != ProviderType.M3U) {
-            return Result.error("Only M3U providers can be added to a combined profile.")
+        if (provider.type != ProviderType.M3U || provider.m3uPlaylistKind != ProviderM3uPlaylistKind.LIVE) {
+            return Result.error("Only Live TV M3U providers can be added to a combined profile.")
         }
         if (memberDao.getMember(profileId, providerId) != null) {
             return Result.success(Unit)
@@ -207,7 +208,7 @@ class CombinedM3uRepositoryImpl @Inject constructor(
     override fun getAvailableM3uProviders(): Flow<List<Provider>> =
         providerDao.getAll().map { providers ->
             providers.map { it.toDomain().copy(password = "") }
-                .filter { it.type == ProviderType.M3U }
+                .filter { it.type == ProviderType.M3U && it.m3uPlaylistKind == ProviderM3uPlaylistKind.LIVE }
         }
 
     override fun getActiveLiveSource(): Flow<ActiveLiveSource?> =

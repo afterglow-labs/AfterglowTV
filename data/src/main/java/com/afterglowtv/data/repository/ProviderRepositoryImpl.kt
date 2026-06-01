@@ -244,6 +244,7 @@ class ProviderRepositoryImpl @Inject constructor(
         httpHeaders: String,
         epgSyncMode: ProviderEpgSyncMode,
         m3uVodClassificationEnabled: Boolean,
+        m3uPlaylistKind: ProviderM3uPlaylistKind,
         onProgress: ((String) -> Unit)?,
         id: Long?
     ): Result<Provider> = try {
@@ -281,7 +282,8 @@ class ProviderRepositoryImpl @Inject constructor(
                 httpUserAgent = httpUserAgent,
                 httpHeaders = httpHeaders,
                 epgSyncMode = epgSyncMode,
-                m3uVodClassificationEnabled = m3uVodClassificationEnabled,
+                m3uVodClassificationEnabled = m3uVodClassificationEnabled || m3uPlaylistKind == ProviderM3uPlaylistKind.VOD,
+                m3uPlaylistKind = m3uPlaylistKind,
                 isActive = false,
                 status = ProviderStatus.PARTIAL,
                 lastSyncedAt = 0
@@ -297,7 +299,8 @@ class ProviderRepositoryImpl @Inject constructor(
                 httpUserAgent = httpUserAgent,
                 httpHeaders = httpHeaders,
                 epgSyncMode = epgSyncMode,
-                m3uVodClassificationEnabled = m3uVodClassificationEnabled,
+                m3uVodClassificationEnabled = m3uVodClassificationEnabled || m3uPlaylistKind == ProviderM3uPlaylistKind.VOD,
+                m3uPlaylistKind = m3uPlaylistKind,
                 isActive = false,
                 status = ProviderStatus.PARTIAL
             )

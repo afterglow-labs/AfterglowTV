@@ -30,6 +30,7 @@ import com.afterglowtv.data.security.CredentialCrypto
 import com.afterglowtv.domain.model.SyncState
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.SyncMetadata
@@ -71,6 +72,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import java.util.zip.GZIPOutputStream
@@ -1729,6 +1731,39 @@ class SyncManagerTest {
         }
         assertThat(result.isSuccess).isTrue()
         verify(catalogSyncDao, atLeast(3)).insertChannelStages(any())
+        verify(catalogSyncDao, atLeastOnce()).insertMovieStages(any())
+    }
+
+    @Test
+    fun `sync_m3u_vodPlaylist_imports_all_entries_as_movies`() = runTest {
+        val playlist = tempFolder.newFile("vod-playlist.m3u")
+        playlist.writeText(
+            """
+            #EXTM3U
+            #EXTINF:-1 group-title="XXX",Clip One
+            https://cdn.example.com/stream/one
+            #EXTINF:-1 group-title="Studio",Clip Two
+            https://cdn.example.com/stream/two
+            """.trimIndent()
+        )
+        val url = playlist.toURI().toString()
+        val provider = sampleProvider(ProviderType.M3U).copy(
+            serverUrl = url,
+            m3uUrl = url,
+            epgUrl = "",
+            m3uVodClassificationEnabled = true,
+            m3uPlaylistKind = ProviderM3uPlaylistKind.VOD
+        )
+        val mgr = buildManager(providerType = ProviderType.M3U, providerEntity = provider)
+
+        val result = mgr.sync(1L, force = true)
+        advanceUntilIdle()
+
+        if (result is Result.Error) {
+            error(result.message)
+        }
+        assertThat(result.isSuccess).isTrue()
+        verify(catalogSyncDao, never()).insertChannelStages(any())
         verify(catalogSyncDao, atLeastOnce()).insertMovieStages(any())
     }
 

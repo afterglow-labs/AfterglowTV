@@ -5,6 +5,7 @@ import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.LocalMediaKind
 import com.afterglowtv.domain.model.LocalMediaLibrarySourceType
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderStatus
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
@@ -41,6 +42,13 @@ class RoomEnumConverters {
     @TypeConverter
     fun toProviderXtreamLiveSyncMode(value: String?): ProviderXtreamLiveSyncMode? =
         enumValueOrDefault(value, ProviderXtreamLiveSyncMode.AUTO, providerXtreamLiveSyncModeAliases())
+
+    @TypeConverter
+    fun fromProviderM3uPlaylistKind(value: ProviderM3uPlaylistKind?): String? = value?.name
+
+    @TypeConverter
+    fun toProviderM3uPlaylistKind(value: String?): ProviderM3uPlaylistKind? =
+        enumValueOrDefault(value, ProviderM3uPlaylistKind.LIVE, providerM3uPlaylistKindAliases())
 
     @TypeConverter
     fun fromContentType(value: ContentType?): String? = value?.name
@@ -101,6 +109,14 @@ class RoomEnumConverters {
         "FULL" to ProviderXtreamLiveSyncMode.STREAM_ALL,
         "FULL_CATALOG" to ProviderXtreamLiveSyncMode.STREAM_ALL,
         "STREAM" to ProviderXtreamLiveSyncMode.STREAM_ALL
+    )
+
+    private fun providerM3uPlaylistKindAliases(): Map<String, ProviderM3uPlaylistKind> = mapOf(
+        "TV" to ProviderM3uPlaylistKind.LIVE,
+        "LIVE_TV" to ProviderM3uPlaylistKind.LIVE,
+        "MOVIE" to ProviderM3uPlaylistKind.VOD,
+        "MOVIES" to ProviderM3uPlaylistKind.VOD,
+        "ON_DEMAND" to ProviderM3uPlaylistKind.VOD
     )
 
     private fun contentTypeAliases(): Map<String, ContentType> = mapOf(

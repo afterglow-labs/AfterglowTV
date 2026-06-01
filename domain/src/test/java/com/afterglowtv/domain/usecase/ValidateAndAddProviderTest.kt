@@ -8,6 +8,7 @@ import com.afterglowtv.domain.manager.ValidatedStalkerProviderInput
 import com.afterglowtv.domain.manager.ValidatedXtreamProviderInput
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderSavedWithSyncErrorException
 import com.afterglowtv.domain.model.ProviderStatus
 import com.afterglowtv.domain.model.ProviderType
@@ -318,6 +319,7 @@ class ValidateAndAddProviderTest {
                 httpHeaders = "Referer: https://example.com",
                 epgSyncMode = ProviderEpgSyncMode.SKIP,
                 m3uVodClassificationEnabled = false,
+                m3uPlaylistKind = ProviderM3uPlaylistKind.LIVE,
                 id = 11L
             )
         )
@@ -366,6 +368,38 @@ class ValidateAndAddProviderTest {
                 id = 19L
             )
         )
+    }
+
+    @Test
+    fun vod_playlist_url_stays_m3u_even_when_it_looks_like_xtream() = runTest {
+        val repository = FakeProviderRepository()
+        val useCase = ValidateAndAddProvider(
+            providerSetupInputValidator = FakeProviderSetupInputValidator(
+                m3uResult = Result.success(
+                    ValidatedM3uProviderInput(
+                        url = "http://extapk2302.shop:8080/get.php?username=Hakan1605&password=wg9daUwzfV&type=m3u_plus",
+                        name = "Imported VOD Playlist",
+                        httpUserAgent = "",
+                        httpHeaders = ""
+                    )
+                )
+            ),
+            providerRepository = repository,
+            epgSourceRepository = FakeEpgSourceRepository()
+        )
+
+        val result = useCase.addM3u(
+            M3uProviderSetupCommand(
+                url = "http://extapk2302.shop:8080/get.php?username=Hakan1605&password=wg9daUwzfV&type=m3u_plus",
+                name = "Imported VOD Playlist",
+                m3uPlaylistKind = ProviderM3uPlaylistKind.VOD
+            )
+        )
+
+        assertThat(result).isInstanceOf(ValidateAndAddProviderResult.Success::class.java)
+        assertThat(repository.lastXtreamCall).isNull()
+        assertThat(repository.lastM3uCall?.m3uVodClassificationEnabled).isTrue()
+        assertThat(repository.lastM3uCall?.m3uPlaylistKind).isEqualTo(ProviderM3uPlaylistKind.VOD)
     }
 
     @Test
@@ -559,6 +593,7 @@ private data class M3uCall(
     val httpHeaders: String,
     val epgSyncMode: ProviderEpgSyncMode,
     val m3uVodClassificationEnabled: Boolean,
+    val m3uPlaylistKind: ProviderM3uPlaylistKind,
     val id: Long?
 )
 
@@ -619,11 +654,12 @@ private class FakeProviderRepository : ProviderRepository {
         httpHeaders: String,
         epgSyncMode: ProviderEpgSyncMode,
         m3uVodClassificationEnabled: Boolean,
+        m3uPlaylistKind: ProviderM3uPlaylistKind,
         onProgress: ((String) -> Unit)?,
         id: Long?
     ): Result<Provider> {
-        lastM3uCall = M3uCall(url, name, httpUserAgent, httpHeaders, epgSyncMode, m3uVodClassificationEnabled, id)
-        return m3uResult ?: Result.success(provider(id = id ?: 2L, name = name, type = ProviderType.M3U, m3uUrl = url))
+        lastM3uCall = M3uCall(url, name, httpUserAgent, httpHeaders, epgSyncMode, m3uVodClassificationEnabled, m3uPlaylistKind, id)
+        return m3uResult ?: Result.success(provider(id = id ?: 2L, name = name, type = ProviderType.M3U, m3uUrl = url, m3uPlaylistKind = m3uPlaylistKind))
     }
 
     override suspend fun loginStalker(
@@ -679,7 +715,8 @@ private class FakeProviderRepository : ProviderRepository {
         id: Long,
         name: String,
         type: ProviderType,
-        m3uUrl: String = ""
+        m3uUrl: String = "",
+        m3uPlaylistKind: ProviderM3uPlaylistKind = ProviderM3uPlaylistKind.LIVE
     ) = Provider(
         id = id,
         name = name,
@@ -687,6 +724,7 @@ private class FakeProviderRepository : ProviderRepository {
         serverUrl = if (type == ProviderType.M3U) m3uUrl else "https://example.com",
         username = if (type == ProviderType.XTREAM_CODES) "user" else "",
         m3uUrl = m3uUrl,
+        m3uPlaylistKind = m3uPlaylistKind,
         status = ProviderStatus.ACTIVE
     )
 }
