@@ -13,6 +13,10 @@ import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.CategorySortMode
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.ChannelNumberingMode
+import com.afterglowtv.domain.model.CombinedCategory
+import com.afterglowtv.domain.model.CombinedCategoryBinding
+import com.afterglowtv.domain.model.CombinedM3uProfile
+import com.afterglowtv.domain.model.CombinedM3uProfileMember
 import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.PlaybackHistory
 import com.afterglowtv.domain.model.Provider
@@ -292,6 +296,122 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `regular live tv excludes adult provider categories and all channels`() = runTest {
+        val provider = Provider(
+            id = 15L,
+            name = "Provider",
+            type = ProviderType.M3U,
+            serverUrl = "http://test"
+        )
+        val newsCategory = Category(id = 10L, name = "News", count = 1)
+        val adultCategory = Category(id = 90L, name = "XXX", count = 1, isAdult = true)
+        val newsChannel = Channel(
+            id = 1L,
+            name = "Local News",
+            providerId = provider.id,
+            categoryId = newsCategory.id,
+            categoryName = newsCategory.name,
+            streamUrl = "http://stream/news"
+        )
+        val adultChannel = Channel(
+            id = 2L,
+            name = "XXX Live",
+            providerId = provider.id,
+            categoryId = adultCategory.id,
+            categoryName = adultCategory.name,
+            streamUrl = "http://stream/adult",
+            isAdult = true
+        )
+        whenever(preferencesRepository.showRecentChannelsCategory).thenReturn(flowOf(false))
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
+        whenever(channelRepository.getCategories(provider.id)).thenReturn(flowOf(listOf(newsCategory, adultCategory)))
+        whenever(channelRepository.getChannelsByCategoryPage(eq(provider.id), eq(ChannelRepository.ALL_CHANNELS_ID), any()))
+            .thenReturn(flowOf(listOf(newsChannel, adultChannel)))
+        whenever(channelRepository.getChannelsByCategoryPage(eq(provider.id), eq(newsCategory.id), any()))
+            .thenReturn(flowOf(listOf(newsChannel)))
+        whenever(getCustomCategories.invoke(eq(provider.id), eq(ContentType.LIVE))).thenReturn(flowOf(emptyList()))
+        whenever(playbackHistoryRepository.getRecentlyWatchedByProvider(eq(provider.id), any())).thenReturn(flowOf(emptyList()))
+        whenever(favoriteRepository.getFavorites(provider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.categories.map(Category::name)).doesNotContain("XXX")
+        assertThat(state.categories.first { it.id == ChannelRepository.ALL_CHANNELS_ID }.count).isEqualTo(1)
+        assertThat(state.filteredChannels.map(Channel::id)).containsExactly(newsChannel.id)
+    }
+
+    @Test
+    fun `combined live tv excludes adult source categories and all channels`() = runTest {
+        val profileId = 44L
+        val liveProviderId = 100L
+        val adultProviderId = 200L
+        val profile = CombinedM3uProfile(
+            id = profileId,
+            name = "Merged",
+            members = listOf(
+                CombinedM3uProfileMember(
+                    id = 1L,
+                    profileId = profileId,
+                    providerId = liveProviderId,
+                    priority = 0,
+                    providerName = "Live"
+                ),
+                CombinedM3uProfileMember(
+                    id = 2L,
+                    profileId = profileId,
+                    providerId = adultProviderId,
+                    priority = 1,
+                    providerName = "Adult"
+                )
+            )
+        )
+        val newsCombined = CombinedCategory(
+            category = Category(id = 10_000L, name = "News", count = 1),
+            bindings = listOf(CombinedCategoryBinding(liveProviderId, "Live", 10L))
+        )
+        val adultCombined = CombinedCategory(
+            category = Category(id = 90_000L, name = "XXX", count = 1, isAdult = true),
+            bindings = listOf(CombinedCategoryBinding(adultProviderId, "Adult", 90L))
+        )
+        val newsChannel = Channel(
+            id = 1L,
+            name = "Local News",
+            providerId = liveProviderId,
+            categoryName = "News",
+            streamUrl = "http://stream/news"
+        )
+        val adultChannel = Channel(
+            id = 2L,
+            name = "XXX Live",
+            providerId = adultProviderId,
+            categoryName = "XXX",
+            streamUrl = "http://stream/adult",
+            isAdult = true
+        )
+        whenever(preferencesRepository.showRecentChannelsCategory).thenReturn(flowOf(false))
+        whenever(combinedM3uRepository.getActiveLiveSource()).thenReturn(flowOf(ActiveLiveSource.CombinedM3uSource(profileId)))
+        whenever(combinedM3uRepository.getProfile(profileId)).thenReturn(profile)
+        whenever(combinedM3uRepository.getCombinedCategories(profileId)).thenReturn(flowOf(listOf(newsCombined, adultCombined)))
+        whenever(combinedM3uRepository.getCombinedChannels(profileId, newsCombined)).thenReturn(flowOf(listOf(newsChannel)))
+        whenever(combinedM3uRepository.getCombinedChannels(profileId, adultCombined)).thenReturn(flowOf(listOf(adultChannel)))
+        whenever(getCustomCategories.invoke(eq(listOf(liveProviderId, adultProviderId)), eq(ContentType.LIVE))).thenReturn(flowOf(emptyList()))
+        whenever(playbackHistoryRepository.getRecentlyWatchedByProviders(eq(setOf(liveProviderId, adultProviderId)), any()))
+            .thenReturn(flowOf(emptyList()))
+        whenever(favoriteRepository.getFavorites(eq(listOf(liveProviderId, adultProviderId)), eq(ContentType.LIVE)))
+            .thenReturn(flowOf(emptyList()))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.categories.map(Category::name)).doesNotContain("XXX")
+        assertThat(state.categories.first { it.id == ChannelRepository.ALL_CHANNELS_ID }.count).isEqualTo(1)
+        assertThat(state.filteredChannels.map(Channel::id)).containsExactly(newsChannel.id)
+    }
+
+    @Test
     fun `last visited live category is exposed for quick return`() = runTest {
         val provider = Provider(
             id = 14L,
@@ -396,7 +516,7 @@ class HomeViewModelTest {
             streamUrl = "https://adult/1",
             categoryId = adultProviderCategory.id
         )
-        val playlistFingerprint = "provider:29:live:1234:2"
+        val playlistFingerprint = "provider:29:live:v5:1234:2"
         whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
         whenever(channelRepository.getCategories(provider.id)).thenReturn(
             flowOf(listOf(adultProviderCategory, Category(id = 10L, name = "News")))
@@ -464,7 +584,7 @@ class HomeViewModelTest {
             streamUrl = "https://adult/11",
             categoryId = adultProviderCategory.id
         )
-        val playlistFingerprint = "provider:39:live:2000:1"
+        val playlistFingerprint = "provider:39:live:v5:2000:1"
         whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(provider))
         whenever(channelRepository.getCategories(provider.id)).thenReturn(flowOf(listOf(adultProviderCategory)))
         whenever(channelRepository.getChannelCount(provider.id)).thenReturn(flowOf(1))
@@ -490,7 +610,7 @@ class HomeViewModelTest {
             argThat {
                 any { it.title == "MILF" && it.channelIds == listOf(adultChannel.id) } &&
                     any { it.title == "Trans" && it.channelIds == listOf(adultChannel.id) } &&
-                    any { it.title == "Blondes" && it.channelIds == listOf(adultChannel.id) }
+                    any { it.title == "Blonde" && it.channelIds == listOf(adultChannel.id) }
             }
         )
     }

@@ -15,7 +15,9 @@ import com.afterglowtv.app.ui.screens.multiview.MultiViewManager
 import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
 import com.afterglowtv.app.ui.model.guideLookupKey
+import com.afterglowtv.app.ui.model.isAdultGuideCategory
 import com.afterglowtv.app.ui.model.isAdultGuideChannel
+import com.afterglowtv.app.ui.model.isExplicitAdultGuideChannel
 import com.afterglowtv.app.ui.model.LiveTvChannelMode
 import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.data.preferences.PreferencesRepository
@@ -165,6 +167,7 @@ class HomeViewModel @Inject constructor(
     private var previewPlayerEngine: PlayerEngine? = null
     private var previewSessionVersion: Long = 0L
     private var combinedCategoriesById: Map<Long, CombinedCategory> = emptyMap()
+    private var liveTvSourceCategoriesById: Map<Long, Category> = emptyMap()
     private var adultGuideChannelIdsByCategoryId: Map<Long, List<Long>> = emptyMap()
 
     init {
@@ -201,6 +204,7 @@ class HomeViewModel @Inject constructor(
                     is ActiveLiveSource.CombinedM3uSource -> {
                         val profile = combinedM3uRepository.getProfile(activeSource.profileId)
                         combinedCategoriesById = emptyMap()
+                        liveTvSourceCategoriesById = emptyMap()
                         _uiState.update {
                             it.copy(
                                 provider = null,
@@ -232,6 +236,7 @@ class HomeViewModel @Inject constructor(
                             ?: return@collectLatest
                         parentalControlManager.clearUnlockedCategories(provider.id)
                         combinedCategoriesById = emptyMap()
+                        liveTvSourceCategoriesById = emptyMap()
                         _uiState.update {
                             it.copy(
                                 provider = provider,
@@ -260,6 +265,7 @@ class HomeViewModel @Inject constructor(
                         recentChannelsJob?.cancel()
                         recentChannelsJob = null
                         combinedCategoriesById = emptyMap()
+                        liveTvSourceCategoriesById = emptyMap()
                         _localChannels.value = emptyList()
                         _uiState.update {
                             it.copy(
@@ -561,6 +567,10 @@ class HomeViewModel @Inject constructor(
                     val hiddenCategoryIds = values[4] as Set<Long>
                     val sortMode = values[5] as CategorySortMode
                     val pinnedCategoryIds = values[6] as Set<Long>
+                    liveTvSourceCategoriesById = providerCats.associateBy(Category::id)
+                    val liveTvProviderCats = providerCats.filterNot { category ->
+                        category.id != ChannelRepository.ALL_CHANNELS_ID && isAdultGuideCategory(category)
+                    }
                     val recentCategory = Category(
                         id = VirtualCategoryIds.RECENT,
                         name = "Recent",
@@ -568,16 +578,16 @@ class HomeViewModel @Inject constructor(
                         isVirtual = true,
                         count = _uiState.value.recentChannels.size
                     )
-                    val allChannelsCategory = providerCats.firstOrNull { it.id == ChannelRepository.ALL_CHANNELS_ID }
-                        ?.copy(count = providerCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count))
+                    val allChannelsCategory = liveTvProviderCats.firstOrNull { it.id == ChannelRepository.ALL_CHANNELS_ID }
+                        ?.copy(count = liveTvProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count))
                         ?: Category(
                             id = ChannelRepository.ALL_CHANNELS_ID,
                             name = "All Channels",
                             type = ContentType.LIVE,
-                            count = providerCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count)
+                            count = liveTvProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count)
                         )
                     val visibleProviderCategories = applyProviderCategoryDisplayPreferences(
-                        categories = providerCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID },
+                        categories = liveTvProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID },
                         hiddenCategoryIds = hiddenCategoryIds,
                         sortMode = sortMode
                     )
@@ -734,7 +744,8 @@ class HomeViewModel @Inject constructor(
                     combinedM3uRepository.getCombinedCategories(profileId),
                     getCustomCategories(providerIds, ContentType.LIVE)
                 ) { combinedCategories, customCats ->
-                    combinedCategoriesById = combinedCategories.associateBy { it.category.id }
+                    val liveTvCombinedCategories = combinedCategories.filterNot { isAdultGuideCategory(it.category) }
+                    combinedCategoriesById = liveTvCombinedCategories.associateBy { it.category.id }
                     val recentCategory = Category(
                         id = VirtualCategoryIds.RECENT,
                         name = "Recent",
@@ -746,7 +757,7 @@ class HomeViewModel @Inject constructor(
                         id = ChannelRepository.ALL_CHANNELS_ID,
                         name = "All Channels",
                         type = ContentType.LIVE,
-                        count = combinedCategories.sumOf { it.category.count }
+                        count = liveTvCombinedCategories.sumOf { it.category.count }
                     )
                     CategorySelectionContext(
                         categories = buildList {
@@ -755,7 +766,7 @@ class HomeViewModel @Inject constructor(
                             add(recentCategory)
                             addAll(customCats.filter { it.id != VirtualCategoryIds.FAVORITES })
                             add(allChannelsCategory)
-                            addAll(combinedCategories.map { it.category })
+                            addAll(liveTvCombinedCategories.map { it.category })
                         },
                         defaultCategoryId = null,
                         lastVisitedCategoryId = null,
@@ -992,12 +1003,17 @@ class HomeViewModel @Inject constructor(
                     val byProvider = selectedCombinedSourceProviderId?.let { selectedProviderId ->
                         channels.filter { it.providerId == selectedProviderId }
                     } ?: channels
+                    val liveTvVisible = if (_adultGuideMode.value) {
+                        byProvider
+                    } else {
+                        byProvider.filterNotLiveTvAdultContent()
+                    }
                     val numbered = when (numberingMode) {
-                        ChannelNumberingMode.GROUP -> byProvider.mapIndexed { index, channel ->
+                        ChannelNumberingMode.GROUP -> liveTvVisible.mapIndexed { index, channel ->
                             channel.copy(number = index + 1)
                         }
-                        ChannelNumberingMode.PROVIDER -> byProvider
-                        ChannelNumberingMode.HIDDEN -> byProvider.map { it.copy(number = 0) }
+                        ChannelNumberingMode.PROVIDER -> liveTvVisible
+                        ChannelNumberingMode.HIDDEN -> liveTvVisible.map { it.copy(number = 0) }
                     }
                     val isAggregatedSurface = category.id == ChannelRepository.ALL_CHANNELS_ID ||
                         category.id == VirtualCategoryIds.RECENT
@@ -1886,6 +1902,12 @@ class HomeViewModel @Inject constructor(
             unsorted.orderedByRequestedRawIds(ids)
         }
     }
+
+    private fun List<Channel>.filterNotLiveTvAdultContent(): List<Channel> =
+        filterNot { channel ->
+            val sourceCategory = channel.categoryId?.let(liveTvSourceCategoriesById::get)
+            isAdultGuideCategory(sourceCategory) || isExplicitAdultGuideChannel(channel)
+        }
 
     private suspend fun loadReorderChannels(category: Category): List<Channel> {
         if (!category.isVirtual || category.id == VirtualCategoryIds.RECENT) return emptyList()
