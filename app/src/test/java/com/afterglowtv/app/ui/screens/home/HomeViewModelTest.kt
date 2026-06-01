@@ -16,6 +16,7 @@ import com.afterglowtv.domain.model.ChannelNumberingMode
 import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.PlaybackHistory
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.SyncState
 import com.afterglowtv.domain.model.VirtualCategoryIds
@@ -180,6 +181,38 @@ class HomeViewModelTest {
     fun `updateChannelSearchQuery updates state and triggers filtering`() = runTest {
         viewModel.updateChannelSearchQuery("CNN")
         assertThat(viewModel.uiState.value.channelSearchQuery).isEqualTo("CNN")
+    }
+
+    @Test
+    fun `live tv fallback ignores globally active vod playlist`() = runTest {
+        val vodProvider = Provider(
+            id = 1L,
+            name = "VOD Playlist",
+            type = ProviderType.M3U,
+            serverUrl = "https://example.com/vod.m3u",
+            m3uUrl = "https://example.com/vod.m3u",
+            m3uPlaylistKind = ProviderM3uPlaylistKind.VOD
+        )
+        val liveProvider = Provider(
+            id = 2L,
+            name = "Live Playlist",
+            type = ProviderType.M3U,
+            serverUrl = "https://example.com/live.m3u",
+            m3uUrl = "https://example.com/live.m3u"
+        )
+        whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(vodProvider))
+        whenever(providerRepository.getProviders()).thenReturn(flowOf(listOf(vodProvider, liveProvider)))
+        whenever(providerRepository.getProvider(liveProvider.id)).thenReturn(liveProvider)
+        whenever(channelRepository.getCategories(liveProvider.id)).thenReturn(flowOf(emptyList()))
+        whenever(playbackHistoryRepository.getRecentlyWatchedByProvider(eq(liveProvider.id), any())).thenReturn(flowOf(emptyList()))
+        whenever(favoriteRepository.getFavorites(liveProvider.id, ContentType.LIVE)).thenReturn(flowOf(emptyList()))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.provider?.id).isEqualTo(liveProvider.id)
+        verify(channelRepository, atLeastOnce()).getCategories(liveProvider.id)
+        verify(channelRepository, never()).getCategories(vodProvider.id)
     }
 
     @Test

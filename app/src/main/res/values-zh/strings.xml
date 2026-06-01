@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">控制在提供商设置和刷新期间如何获取节目指南数据。</string>
     <string name="setup_advanced_options_show">显示</string>
     <string name="setup_advanced_options_hide">隐藏</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD 分类</string>
-    <string name="setup_m3u_vod_classification_helper">仅适用于 M3U。使用播放列表 URL 和 group-title 规则将匹配项归类到电影而非直播电视。</string>
     <string name="setup_epg_sync_mode_label">EPG 同步</string>
     <string name="setup_epg_sync_mode_helper">立即执行会保持当前行为。后台会先完成设置，而跳过则将节目指南刷新留待以后。</string>
     <string name="setup_epg_sync_mode_upfront_title">立即获取完整 EPG</string>

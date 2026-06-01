@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Controlați cum sunt preluate datele ghidului în timpul configurării și actualizării furnizorului.</string>
     <string name="setup_advanced_options_show">Afișează</string>
     <string name="setup_advanced_options_hide">Ascunde</string>
-    <string name="setup_m3u_vod_classification_label">Clasificare VOD M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Doar M3U. Folosiți URL-ul playlistului și euristicile group-title pentru a sorta intrările potrivite în Filme, nu în Live TV.</string>
     <string name="setup_epg_sync_mode_label">Sincronizare EPG</string>
     <string name="setup_epg_sync_mode_helper">Modul Imediat păstrează comportamentul actual. În fundal finalizează mai întâi configurarea, iar Omite lasă actualizarea ghidului pentru mai târziu.</string>
     <string name="setup_epg_sync_mode_upfront_title">EPG complet acum</string>

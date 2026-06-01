@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Kontroluj, jak pobierane są dane przewodnika podczas konfiguracji i odświeżania dostawcy.</string>
     <string name="setup_advanced_options_show">Pokaż</string>
     <string name="setup_advanced_options_hide">Ukryj</string>
-    <string name="setup_m3u_vod_classification_label">Klasyfikacja VOD M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Tylko M3U. Użyj adresu URL playlisty i heurystyki group-title, aby sortować pasujące pozycje do Filmów zamiast Telewizji na żywo.</string>
     <string name="setup_epg_sync_mode_label">Synchronizacja EPG</string>
     <string name="setup_epg_sync_mode_helper">Tryb natychmiastowy zachowuje obecne działanie. Tryb w tle kończy najpierw konfigurację, a Pomiń zostawia odświeżanie przewodnika na później.</string>
     <string name="setup_epg_sync_mode_upfront_title">Pełne EPG teraz</string>

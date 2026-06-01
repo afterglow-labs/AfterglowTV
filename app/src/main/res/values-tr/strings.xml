@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Sağlayıcı kurulumu ve yenileme sırasında rehber verilerinin nasıl alındığını kontrol edin.</string>
     <string name="setup_advanced_options_show">Göster</string>
     <string name="setup_advanced_options_hide">Gizle</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD Sınıflandırması</string>
-    <string name="setup_m3u_vod_classification_helper">Yalnızca M3U. Eşleşen girişleri Canlı TV yerine Filmler\'e ayırmak için oynatma listesi URL\'si ve group-title sezgisel kurallarını kullanın.</string>
     <string name="setup_epg_sync_mode_label">EPG Senkronizasyonu</string>
     <string name="setup_epg_sync_mode_helper">Upfront, bugünkü davranışı korur. Arka planda önce kurulumu tamamlar, Skip ise rehber yenilemeyi sonraya bırakır.</string>
     <string name="setup_epg_sync_mode_upfront_title">Tam EPG şimdi</string>

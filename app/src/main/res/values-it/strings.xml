@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Controlla come vengono recuperati i dati della guida durante la configurazione e l\'aggiornamento del provider.</string>
     <string name="setup_advanced_options_show">Mostra</string>
     <string name="setup_advanced_options_hide">Nascondi</string>
-    <string name="setup_m3u_vod_classification_label">Classificazione VOD M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Solo M3U. Usa l\'URL della playlist e le euristiche di group-title per ordinare le voci corrispondenti in Film invece che in Live TV.</string>
     <string name="setup_epg_sync_mode_label">Sincronizzazione EPG</string>
     <string name="setup_epg_sync_mode_helper">In anticipo mantiene il comportamento attuale. In background completa prima la configurazione, mentre Salta lascia l\'aggiornamento della guida per dopo.</string>
     <string name="setup_epg_sync_mode_upfront_title">EPG completo ora</string>

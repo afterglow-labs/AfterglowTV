@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Керуйте тим, як завантажуються дані телегіда під час налаштування та оновлення провайдера.</string>
     <string name="setup_advanced_options_show">Показати</string>
     <string name="setup_advanced_options_hide">Сховати</string>
-    <string name="setup_m3u_vod_classification_label">Класифікація VOD у M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Лише M3U. Використовуйте URL плейлиста та евристику group-title, щоб сортувати відповідні записи в Фільми замість Live TV.</string>
     <string name="setup_epg_sync_mode_label">Синхронізація EPG</string>
     <string name="setup_epg_sync_mode_helper">Режим «Одразу» зберігає поточну поведінку. «У фоновому режимі» спершу завершує налаштування, а «Пропустити» відкладає оновлення телегіда на потім.</string>
     <string name="setup_epg_sync_mode_upfront_title">Повний EPG зараз</string>

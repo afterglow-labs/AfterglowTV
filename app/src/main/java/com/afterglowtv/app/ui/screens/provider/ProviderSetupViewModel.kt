@@ -3,6 +3,7 @@ package com.afterglowtv.app.ui.screens.provider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.data.remote.xtream.XtreamAuthenticationException
 import com.afterglowtv.data.remote.xtream.XtreamNetworkException
 import com.afterglowtv.data.remote.xtream.XtreamParsingException
@@ -15,6 +16,7 @@ import com.afterglowtv.domain.manager.BackupPreview
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
 import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.repository.CombinedM3uRepository
@@ -50,6 +52,7 @@ import javax.net.ssl.SSLPeerUnverifiedException
 class ProviderSetupViewModel @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val combinedM3uRepository: CombinedM3uRepository,
+    private val preferencesRepository: PreferencesRepository,
     private val validateAndAddProvider: ValidateAndAddProvider,
     private val importBackup: ImportBackup
 ) : ViewModel() {
@@ -63,8 +66,7 @@ class ProviderSetupViewModel @Inject constructor(
     enum class SetupSourceType {
         XTREAM,
         STALKER,
-        M3U,
-        M3U_VOD
+        M3U
     }
 
     private val _uiState = MutableStateFlow(ProviderSetupState())
@@ -382,6 +384,7 @@ class ProviderSetupViewModel @Inject constructor(
                 onProgress = { msg -> _uiState.update { it.copy(syncProgress = msg) } }
             )) {
                 is ValidateAndAddProviderResult.Success -> {
+                    activateVodSourceIfNeeded(result.provider.id)
                     // Only prompt to attach to the active combined profile for newly created
                     // providers; edits should never re-trigger the attach dialog because the
                     // decision was already made when the provider was first onboarded.
@@ -410,6 +413,7 @@ class ProviderSetupViewModel @Inject constructor(
                     }
                 }
                 is ValidateAndAddProviderResult.SavedWithWarning -> {
+                    activateVodSourceIfNeeded(result.provider.id)
                     // Same combined-attach guard: only for new providers, not edits.
                     val activeCombinedProfileId = if (existingId == null && _uiState.value.m3uPlaylistKind != ProviderM3uPlaylistKind.VOD) {
                         (combinedM3uRepository.getActiveLiveSource().first()
@@ -452,6 +456,15 @@ class ProviderSetupViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun activateVodSourceIfNeeded(providerId: Long) {
+        if (_uiState.value.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD) {
+            preferencesRepository.setActiveSource(
+                ProviderSourceSlot.VOD,
+                ActiveLiveSource.ProviderSource(providerId)
+            )
         }
     }
 
@@ -757,5 +770,4 @@ private fun defaultEpgSyncModeFor(sourceType: ProviderSetupViewModel.SetupSource
     ProviderSetupViewModel.SetupSourceType.STALKER,
     ProviderSetupViewModel.SetupSourceType.XTREAM,
     ProviderSetupViewModel.SetupSourceType.M3U -> ProviderEpgSyncMode.BACKGROUND
-    ProviderSetupViewModel.SetupSourceType.M3U_VOD -> ProviderEpgSyncMode.SKIP
 }

@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Kontroller hvordan guide-data hentes under oppsett og oppdatering av leverandøren.</string>
     <string name="setup_advanced_options_show">Vis</string>
     <string name="setup_advanced_options_hide">Skjul</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD-klassifisering</string>
-    <string name="setup_m3u_vod_classification_helper">Kun M3U. Bruk spilleliste-URL og group-title-heuristikk for å sortere treff i Filmer i stedet for direktesendt TV.</string>
     <string name="setup_epg_sync_mode_label">EPG-synk</string>
     <string name="setup_epg_sync_mode_helper">Umiddelbar beholder dagens oppførsel. Bakgrunn fullfører oppsettet først, og Hopp over lar guideoppdatering vente til senere.</string>
     <string name="setup_epg_sync_mode_upfront_title">Full EPG nå</string>

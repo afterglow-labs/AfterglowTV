@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Contrôlez la façon dont les données du guide sont récupérées lors de la configuration et de l’actualisation du fournisseur.</string>
     <string name="setup_advanced_options_show">Afficher</string>
     <string name="setup_advanced_options_hide">Masquer</string>
-    <string name="setup_m3u_vod_classification_label">Classification VOD M3U</string>
-    <string name="setup_m3u_vod_classification_helper">M3U uniquement. Utilise l’URL de la playlist et les heuristiques group-title pour classer les entrées correspondantes dans Films au lieu de TV en direct.</string>
     <string name="setup_epg_sync_mode_label">Synchronisation EPG</string>
     <string name="setup_epg_sync_mode_helper">Le mode Immédiat conserve le comportement actuel. En arrière-plan termine d’abord la configuration, et Ignorer laisse l’actualisation du guide pour plus tard.</string>
     <string name="setup_epg_sync_mode_upfront_title">EPG complet maintenant</string>

@@ -21,9 +21,7 @@ class StorePolicyTest {
 
         assertThat(sourceTypes).containsExactly(
             ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE,
-            ProviderSetupSourceType.VOD_PLAYLIST_URL,
-            ProviderSetupSourceType.VOD_PLAYLIST_FILE
+            ProviderSetupSourceType.PLAYLIST_FILE
         ).inOrder()
     }
 
@@ -46,9 +44,7 @@ class StorePolicyTest {
             ProviderSetupSourceType.SERVER_LOGIN,
             ProviderSetupSourceType.PORTAL_LOGIN,
             ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE,
-            ProviderSetupSourceType.VOD_PLAYLIST_URL,
-            ProviderSetupSourceType.VOD_PLAYLIST_FILE
+            ProviderSetupSourceType.PLAYLIST_FILE
         ).inOrder()
     }
 

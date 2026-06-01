@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Szabályozza, hogyan történjen az útmutatóadatok lekérése a szolgáltató beállítása és frissítése során.</string>
     <string name="setup_advanced_options_show">Megjelenítés</string>
     <string name="setup_advanced_options_hide">Elrejtés</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD besorolás</string>
-    <string name="setup_m3u_vod_classification_helper">Csak M3U. A playlist URL és a group-title heurisztikák alapján a megfelelő elemeket a Filmek közé sorolja az Élő TV helyett.</string>
     <string name="setup_epg_sync_mode_label">EPG szinkronizálás</string>
     <string name="setup_epg_sync_mode_helper">Az Előre mód megtartja a jelenlegi viselkedést. A Háttérben előbb befejezi a beállítást, a Kihagyás pedig későbbre hagyja az útmutató frissítését.</string>
     <string name="setup_epg_sync_mode_upfront_title">Teljes EPG most</string>

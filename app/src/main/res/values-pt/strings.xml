@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Controle como os dados do guia são obtidos durante a configuração e atualização do provedor.</string>
     <string name="setup_advanced_options_show">Mostrar</string>
     <string name="setup_advanced_options_hide">Ocultar</string>
-    <string name="setup_m3u_vod_classification_label">Classificação de VOD M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Somente M3U. Use a URL da playlist e heurísticas de group-title para classificar entradas correspondentes em Filmes em vez de TV ao vivo.</string>
     <string name="setup_epg_sync_mode_label">Sincronização do EPG</string>
     <string name="setup_epg_sync_mode_helper">A opção imediata mantém o comportamento atual. A opção em segundo plano conclui a configuração primeiro, e Pular deixa a atualização do guia para depois.</string>
     <string name="setup_epg_sync_mode_upfront_title">EPG completo agora</string>

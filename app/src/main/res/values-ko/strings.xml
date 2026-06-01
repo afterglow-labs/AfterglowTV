@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">공급자 설정 및 새로고침 중 가이드 데이터를 가져오는 방식을 제어합니다.</string>
     <string name="setup_advanced_options_show">표시</string>
     <string name="setup_advanced_options_hide">숨기기</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD 분류</string>
-    <string name="setup_m3u_vod_classification_helper">M3U 전용. 재생목록 URL과 group-title 휴리스틱을 사용해 일치하는 항목을 라이브 TV 대신 영화로 분류합니다.</string>
     <string name="setup_epg_sync_mode_label">EPG 동기화</string>
     <string name="setup_epg_sync_mode_helper">즉시 모드는 현재 동작을 유지합니다. 백그라운드는 설정을 먼저 완료하고, 건너뛰기는 가이드 새로고침을 나중으로 미룹니다.</string>
     <string name="setup_epg_sync_mode_upfront_title">지금 전체 EPG</string>

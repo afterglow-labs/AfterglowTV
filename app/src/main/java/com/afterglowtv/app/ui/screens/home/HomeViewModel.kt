@@ -35,6 +35,7 @@ import com.afterglowtv.domain.model.Favorite
 import com.afterglowtv.domain.model.PlaybackHistory
 import com.afterglowtv.domain.model.Program
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Result
@@ -201,7 +202,8 @@ class HomeViewModel @Inject constructor(
                     providerRepository.getActiveProvider(),
                     providerRepository.getProviders()
                 ) { activeSource, activeProvider, providers ->
-                    val fallbackProvider = activeProvider ?: providers.firstOrNull()
+                    val fallbackProvider = activeProvider?.takeIf { it.isLiveTvSourceProvider() }
+                        ?: providers.firstOrNull { it.isLiveTvSourceProvider() }
                     Pair(
                         activeSource ?: fallbackProvider?.id?.let { ActiveLiveSource.ProviderSource(it) },
                         activeProvider
@@ -2209,6 +2211,9 @@ class HomeViewModel @Inject constructor(
         super.onCleared()
     }
 }
+
+private fun Provider.isLiveTvSourceProvider(): Boolean =
+    type != ProviderType.M3U || m3uPlaylistKind != ProviderM3uPlaylistKind.VOD
 
 data class HomeUiState(
     val provider: Provider? = null,

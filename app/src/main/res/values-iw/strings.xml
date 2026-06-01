@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">שליטה באופן שבו נתוני המדריך נשלפים במהלך הגדרת הספק ורענון.</string>
     <string name="setup_advanced_options_show">הצג</string>
     <string name="setup_advanced_options_hide">הסתר</string>
-    <string name="setup_m3u_vod_classification_label">סיווג VOD של M3U</string>
-    <string name="setup_m3u_vod_classification_helper">ל-M3U בלבד. השתמשו בכתובת ה-URL של הפלייליסט ובכללי group-title כדי למיין פריטים תואמים לסרטים במקום ל-Live TV.</string>
     <string name="setup_epg_sync_mode_label">סנכרון EPG</string>
     <string name="setup_epg_sync_mode_helper">מצב מיידי שומר על ההתנהגות הנוכחית. מצב ברקע מסיים קודם את ההגדרה, ו-דלג משאיר את רענון המדריך למועד מאוחר יותר.</string>
     <string name="setup_epg_sync_mode_upfront_title">EPG מלא עכשיו</string>

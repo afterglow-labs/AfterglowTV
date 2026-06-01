@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Määritä, miten opastiedot haetaan palveluntarjoajan asetuksissa ja päivityksessä.</string>
     <string name="setup_advanced_options_show">Näytä</string>
     <string name="setup_advanced_options_hide">Piilota</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD -luokittelu</string>
-    <string name="setup_m3u_vod_classification_helper">Vain M3U. Käytä soittolistan URL-osoitetta ja group-title-heuristiikkaa lajitellaksesi vastaavat kohteet Elokuvat-kategoriaan Live TV:n sijaan.</string>
     <string name="setup_epg_sync_mode_label">EPG-synkronointi</string>
     <string name="setup_epg_sync_mode_helper">Alkuun-vaihtoehto säilyttää nykyisen toiminnan. Taustalla viimeistelee asetukset ensin, ja Ohita jättää opaspäivityksen myöhemmäksi.</string>
     <string name="setup_epg_sync_mode_upfront_title">Koko EPG nyt</string>

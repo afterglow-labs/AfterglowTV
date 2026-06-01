@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Kiểm soát cách dữ liệu hướng dẫn được tải trong quá trình thiết lập và làm mới nhà cung cấp.</string>
     <string name="setup_advanced_options_show">Hiện</string>
     <string name="setup_advanced_options_hide">Ẩn</string>
-    <string name="setup_m3u_vod_classification_label">Phân loại VOD M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Chỉ dành cho M3U. Dùng URL playlist và các quy tắc group-title để sắp xếp các mục phù hợp vào Phim thay vì Truyền hình trực tiếp.</string>
     <string name="setup_epg_sync_mode_label">Đồng bộ EPG</string>
     <string name="setup_epg_sync_mode_helper">Chế độ Trước mắt giữ nguyên hành vi hiện tại. Chế độ Nền hoàn tất thiết lập trước, còn Bỏ qua sẽ để làm mới hướng dẫn sau.</string>
     <string name="setup_epg_sync_mode_upfront_title">Tải EPG đầy đủ ngay</string>

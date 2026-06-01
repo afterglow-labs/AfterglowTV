@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">تحكم في كيفية جلب بيانات الدليل أثناء إعداد المزوّد وتحديثه.</string>
     <string name="setup_advanced_options_show">إظهار</string>
     <string name="setup_advanced_options_hide">إخفاء</string>
-    <string name="setup_m3u_vod_classification_label">تصنيف VOD في M3U</string>
-    <string name="setup_m3u_vod_classification_helper">M3U فقط. استخدم رابط قائمة التشغيل واستدلالات group-title لفرز الإدخالات المطابقة ضمن الأفلام بدلًا من البث المباشر.</string>
     <string name="setup_epg_sync_mode_label">مزامنة EPG</string>
     <string name="setup_epg_sync_mode_helper">الخيار الفوري يحافظ على السلوك الحالي. الخلفية تُنهي الإعداد أولًا، وSkip تؤجل تحديث الدليل إلى وقت لاحق.</string>
     <string name="setup_epg_sync_mode_upfront_title">التحميل الكامل الآن</string>

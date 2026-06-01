@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">プロバイダー設定と更新時の番組表データ取得方法を管理します。</string>
     <string name="setup_advanced_options_show">表示</string>
     <string name="setup_advanced_options_hide">非表示</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD分類</string>
-    <string name="setup_m3u_vod_classification_helper">M3Uのみ。プレイリストURLとgroup-titleの条件で一致する項目をライブTVではなく映画に分類します。</string>
     <string name="setup_epg_sync_mode_label">EPG同期</string>
     <string name="setup_epg_sync_mode_helper">即時は従来どおり。バックグラウンドはセットアップを先に完了し、スキップは番組表更新を後回しにします。</string>
     <string name="setup_epg_sync_mode_upfront_title">今すぐEPGを完全取得</string>

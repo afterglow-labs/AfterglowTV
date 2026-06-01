@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Steuere, wie Guide-Daten während der Anbieter-Einrichtung und Aktualisierung abgerufen werden.</string>
     <string name="setup_advanced_options_show">Anzeigen</string>
     <string name="setup_advanced_options_hide">Ausblenden</string>
-    <string name="setup_m3u_vod_classification_label">M3U-VOD-Klassifizierung</string>
-    <string name="setup_m3u_vod_classification_helper">Nur M3U. Verwende die Playlist-URL und group-title-Heuristiken, um passende Einträge statt Live-TV in Filme einzuordnen.</string>
     <string name="setup_epg_sync_mode_label">EPG-Synchronisierung</string>
     <string name="setup_epg_sync_mode_helper">„Sofort“ behält das aktuelle Verhalten bei. „Im Hintergrund“ schließt zuerst die Einrichtung ab, und „Überspringen“ verschiebt die Guide-Aktualisierung auf später.</string>
     <string name="setup_epg_sync_mode_upfront_title">Vollständiges EPG jetzt</string>

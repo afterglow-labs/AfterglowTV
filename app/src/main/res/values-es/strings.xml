@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Controla cómo se obtienen los datos de la guía durante la configuración y actualización del proveedor.</string>
     <string name="setup_advanced_options_show">Mostrar</string>
     <string name="setup_advanced_options_hide">Ocultar</string>
-    <string name="setup_m3u_vod_classification_label">Clasificación VOD de M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Solo M3U. Usa la URL de la lista y heurísticas de group-title para clasificar las entradas coincidentes en Películas en lugar de TV en directo.</string>
     <string name="setup_epg_sync_mode_label">Sincronización de EPG</string>
     <string name="setup_epg_sync_mode_helper">Inmediato mantiene el comportamiento actual. En segundo plano termina la configuración primero, y Omitir deja la actualización de la guía para más tarde.</string>
     <string name="setup_epg_sync_mode_upfront_title">EPG completa ahora</string>

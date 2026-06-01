@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Styr, hvordan guide-data hentes under opsætning og opdatering af udbyder.</string>
     <string name="setup_advanced_options_show">Vis</string>
     <string name="setup_advanced_options_hide">Skjul</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD-klassificering</string>
-    <string name="setup_m3u_vod_classification_helper">Kun M3U. Brug playlist-URL og group-title-heuristik til at sortere matchende poster i Film i stedet for Live TV.</string>
     <string name="setup_epg_sync_mode_label">EPG-synkronisering</string>
     <string name="setup_epg_sync_mode_helper">Forudindlæsning bevarer den nuværende adfærd. Baggrund afslutter opsætningen først, og Spring over lader guideopdatering vente til senere.</string>
     <string name="setup_epg_sync_mode_upfront_title">Fuld EPG nu</string>

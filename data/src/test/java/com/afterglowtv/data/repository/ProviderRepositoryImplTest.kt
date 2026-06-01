@@ -19,6 +19,7 @@ import com.afterglowtv.data.remote.xtream.XtreamApiService
 import com.afterglowtv.data.security.CredentialCrypto
 import com.afterglowtv.data.sync.SyncManager
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderSavedWithSyncErrorException
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.model.SyncState
@@ -311,6 +312,41 @@ class ProviderRepositoryImplTest {
         verify(providerDao).insert(insertedProviders.capture())
         assertThat(insertedProviders.firstValue.isActive).isFalse()
         verify(providerDao).setActive(9L)
+    }
+
+    @Test
+    fun `validateM3u vod playlist does not activate live provider slot after successful sync`() = runTest {
+        whenever(providerDao.getByUrlAndUser("https://example.com/vod.m3u", "", "")).thenReturn(null)
+        whenever(credentialCrypto.encryptIfNeeded("")).thenReturn("")
+        whenever(providerDao.insert(any())).thenReturn(19L)
+        whenever(providerDao.getById(19L)).thenReturn(
+            ProviderEntity(
+                id = 19L,
+                name = "VOD",
+                type = ProviderType.M3U,
+                serverUrl = "https://example.com/vod.m3u",
+                m3uUrl = "https://example.com/vod.m3u",
+                m3uPlaylistKind = ProviderM3uPlaylistKind.VOD,
+                isActive = false,
+                status = ProviderStatus.PARTIAL
+            )
+        )
+        whenever(syncManager.sync(19L, false, null)).thenReturn(Result.success(Unit))
+        whenever(syncManager.currentSyncState(19L)).thenReturn(SyncState.Success(123L))
+
+        val result = repository.validateM3u(
+            url = "https://example.com/vod.m3u",
+            name = "VOD",
+            epgSyncMode = ProviderEpgSyncMode.SKIP,
+            m3uVodClassificationEnabled = true,
+            m3uPlaylistKind = ProviderM3uPlaylistKind.VOD,
+            onProgress = null,
+            id = null
+        )
+
+        assertThat(result.isSuccess).isTrue()
+        assertThat(result.getOrNull()?.isActive).isFalse()
+        verify(providerDao, never()).setActive(19L)
     }
 
     @Test

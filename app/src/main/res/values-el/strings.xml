@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Ελέγξτε πώς γίνεται η λήψη των δεδομένων οδηγού κατά την εγκατάσταση και την ανανέωση του παρόχου.</string>
     <string name="setup_advanced_options_show">Εμφάνιση</string>
     <string name="setup_advanced_options_hide">Απόκρυψη</string>
-    <string name="setup_m3u_vod_classification_label">Ταξινόμηση VOD M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Μόνο για M3U. Χρησιμοποιεί τη διεύθυνση URL της playlist και ευρετικές με βάση το group-title για να ταξινομεί τις αντίστοιχες εγγραφές στις Ταινίες αντί για Ζωντανή TV.</string>
     <string name="setup_epg_sync_mode_label">Συγχρονισμός EPG</string>
     <string name="setup_epg_sync_mode_helper">Η επιλογή Άμεσα διατηρεί την τρέχουσα συμπεριφορά. Η επιλογή Στο παρασκήνιο ολοκληρώνει πρώτα τη ρύθμιση, και η επιλογή Παράλειψη αφήνει την ανανέωση του οδηγού για αργότερα.</string>
     <string name="setup_epg_sync_mode_upfront_title">Πλήρες EPG τώρα</string>

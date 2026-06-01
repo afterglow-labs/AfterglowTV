@@ -311,7 +311,8 @@ class ProviderRepositoryImpl @Inject constructor(
         handleInitialOnboardingSync(
             providerData = providerData,
             syncResult = syncManager.sync(providerData.id, force = false, onProgress = onProgress),
-            syncFailurePrefix = "Playlist saved, but initial sync failed. The provider was saved and can be retried from Settings"
+            syncFailurePrefix = "Playlist saved, but initial sync failed. The provider was saved and can be retried from Settings",
+            activateLiveProvider = m3uPlaylistKind != ProviderM3uPlaylistKind.VOD
         )
     } catch (e: Exception) {
         Result.error("Failed to add M3U provider: ${e.message}", e)
@@ -422,7 +423,8 @@ class ProviderRepositoryImpl @Inject constructor(
     private suspend fun handleInitialOnboardingSync(
         providerData: Provider,
         syncResult: Result<Unit>,
-        syncFailurePrefix: String
+        syncFailurePrefix: String,
+        activateLiveProvider: Boolean = true
     ): Result<Provider> = when (syncResult) {
         is Result.Success -> {
             val finalStatus = if (syncManager.currentSyncState(providerData.id) is SyncState.Partial) {
@@ -430,6 +432,15 @@ class ProviderRepositoryImpl @Inject constructor(
             } else {
                 ProviderStatus.ACTIVE
             }
+            if (!activateLiveProvider) {
+                updateProviderSyncStatus(
+                    providerData.id,
+                    finalStatus,
+                    lastSyncedAt = System.currentTimeMillis(),
+                    isActive = false
+                )
+                Result.success(providerData.copy(status = finalStatus, isActive = false))
+            } else
             if (!hasUsableLiveCatalogForActivation(providerData.id, providerData.type, channelDao)) {
                 updateProviderSyncStatus(
                     providerData.id,
