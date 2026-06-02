@@ -24,15 +24,6 @@ import com.afterglowtv.app.ui.theme.OnSurface
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderType
 
-private fun availableSyncSelections(provider: Provider): List<ProviderSyncSelection> = buildList {
-    add(ProviderSyncSelection.TV)
-    add(ProviderSyncSelection.MOVIES)
-    if (provider.type == ProviderType.XTREAM_CODES) {
-        add(ProviderSyncSelection.SERIES)
-    }
-    add(ProviderSyncSelection.EPG)
-}
-
 @Composable
 internal fun ProviderSyncOptionsDialog(
     provider: Provider,
@@ -57,7 +48,7 @@ internal fun ProviderSyncOptionsDialog(
                         onSelect(ProviderSyncSelection.REBUILD_INDEX)
                     }
                 }
-                availableSyncSelections(provider).forEach { option ->
+                provider.availableSyncSelections().forEach { option ->
                     SyncOptionButton(text = syncSelectionLabel(option)) {
                         onSelect(option)
                     }
@@ -91,7 +82,7 @@ internal fun ProviderCustomSyncDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     color = OnSurface
                 )
-                availableSyncSelections(provider).forEach { option ->
+                provider.availableSyncSelections().forEach { option ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -150,6 +141,7 @@ private fun syncSelectionLabel(selection: ProviderSyncSelection): String = when 
     ProviderSyncSelection.SYNC_NOW -> stringResource(R.string.settings_sync_option_sync_now)
     ProviderSyncSelection.REBUILD_INDEX -> stringResource(R.string.settings_sync_option_rebuild_index)
     ProviderSyncSelection.TV -> stringResource(R.string.settings_sync_option_tv)
+    ProviderSyncSelection.VOD -> stringResource(R.string.settings_sync_option_vod)
     ProviderSyncSelection.MOVIES -> stringResource(R.string.settings_sync_option_movies)
     ProviderSyncSelection.SERIES -> stringResource(R.string.settings_sync_option_series)
     ProviderSyncSelection.EPG -> stringResource(R.string.settings_sync_option_epg)

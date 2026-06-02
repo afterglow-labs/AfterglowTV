@@ -233,7 +233,7 @@ internal fun rememberSettingsScreenDialogState(): SettingsScreenDialogState {
         mutableStateOf(
             setOf(
                 ProviderSyncSelection.TV,
-                ProviderSyncSelection.MOVIES,
+                ProviderSyncSelection.VOD,
                 ProviderSyncSelection.EPG
             )
         )

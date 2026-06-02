@@ -425,8 +425,18 @@ fun AppNavigation(mainActivity: MainActivity) {
                 initialM3uPlaylistKind = m3uKind,
                 onBack = { navController.popBackStack() },
                 onProviderAdded = dropUnlessResumed {
-                    navController.navigate(startupRoute) {
-                        popUpTo(Routes.PROVIDER_SETUP) { inclusive = true }
+                    val previousRoute = navController.previousBackStackEntry?.destination?.route
+                    if (
+                        previousRoute != null &&
+                        previousRoute != Routes.HOME &&
+                        previousRoute != Routes.WELCOME
+                    ) {
+                        navController.popBackStack()
+                    } else {
+                        navController.navigate(Routes.SETTINGS) {
+                            popUpTo(Routes.PROVIDER_SETUP) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 }
             )
@@ -557,7 +567,12 @@ fun AppNavigation(mainActivity: MainActivity) {
         composable(Routes.VOD_CONTAINER) {
             VodScreen(
                 onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.VOD_CONTAINER
+                currentRoute = Routes.VOD_CONTAINER,
+                onMovieClick = { movie ->
+                    navController.navigateToPlayer(
+                        Routes.moviePlayer(movie).copy(returnRoute = Routes.VOD_CONTAINER)
+                    )
+                }
             )
         }
 

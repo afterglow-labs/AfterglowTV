@@ -634,6 +634,7 @@
     <string name="settings_syncing_preparing">Preparing sync...</string>
     <string name="settings_syncing_section">Syncing %1$s...</string>
     <string name="settings_sync_option_tv">Live TV</string>
+    <string name="settings_sync_option_vod">VOD</string>
     <string name="settings_sync_option_movies">Movies</string>
     <string name="settings_sync_option_series">Series</string>
     <string name="settings_sync_option_epg">EPG</string>
@@ -945,7 +946,7 @@
     <string name="setup_info_xtream_body">Server URL + username + password.</string>
     <string name="setup_info_stalker_body">Portal URL + registered MAC address.</string>
     <string name="setup_info_m3u_title">M3U Playlist</string>
-    <string name="setup_info_m3u_body">A playlist link from your provider.</string>
+    <string name="setup_info_m3u_body">Playlist URL</string>
     <string name="setup_info_manage_title">Manage later</string>
     <string name="setup_info_manage_body">Edit, refresh, or replace from Settings whenever.</string>
     <string name="setup_import_backup">Restore from backup</string>

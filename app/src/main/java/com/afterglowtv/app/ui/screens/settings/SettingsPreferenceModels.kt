@@ -27,6 +27,7 @@ enum class ProviderSyncSelection {
     SYNC_NOW,
     REBUILD_INDEX,
     TV,
+    VOD,
     MOVIES,
     SERIES,
     EPG
@@ -110,6 +111,7 @@ internal fun ProviderSyncSelection.label(application: Application): String = whe
     ProviderSyncSelection.SYNC_NOW -> application.getString(R.string.settings_sync_option_sync_now)
     ProviderSyncSelection.REBUILD_INDEX -> application.getString(R.string.settings_sync_option_rebuild_index)
     ProviderSyncSelection.TV -> application.getString(R.string.settings_sync_option_tv)
+    ProviderSyncSelection.VOD -> application.getString(R.string.settings_sync_option_vod)
     ProviderSyncSelection.MOVIES -> application.getString(R.string.settings_sync_option_movies)
     ProviderSyncSelection.SERIES -> application.getString(R.string.settings_sync_option_series)
     ProviderSyncSelection.EPG -> application.getString(R.string.settings_sync_option_epg)

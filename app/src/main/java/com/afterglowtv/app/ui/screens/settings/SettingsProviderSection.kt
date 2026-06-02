@@ -230,14 +230,7 @@ private fun ProviderSettingsContainer(
                 onConnect = { viewModel.setActiveProvider(selectedProvider.id) },
                 onRefresh = {
                     providerState.pendingSyncProviderId = selectedProvider.id
-                    providerState.customSyncSelections = buildSet {
-                        add(ProviderSyncSelection.TV)
-                        add(ProviderSyncSelection.MOVIES)
-                        add(ProviderSyncSelection.EPG)
-                        if (selectedProvider.type == ProviderType.XTREAM_CODES) {
-                            add(ProviderSyncSelection.SERIES)
-                        }
-                    }
+                    providerState.customSyncSelections = selectedProvider.defaultCustomSyncSelections()
                     providerState.showProviderSyncDialog = true
                 },
                 onDelete = { providerState.pendingDeleteProviderId = selectedProvider.id },

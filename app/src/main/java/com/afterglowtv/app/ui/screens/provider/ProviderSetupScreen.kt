@@ -508,8 +508,6 @@ fun ProviderSetupScreen(
                         sourceType = sourceType,
                         visibleSourceTypes = visibleSourceTypes,
                         isEditing = uiState.isEditing,
-                        isEditLabel = if (uiState.isEditing) androidx.compose.ui.res.stringResource(R.string.setup_edit_provider)
-                                      else androidx.compose.ui.res.stringResource(R.string.setup_provider_title),
                         onSelect = ::onSourceTypeSelected,
                         modifier = Modifier.width(240.dp).fillMaxHeight()
                     )
@@ -1201,8 +1199,7 @@ private fun SetupSummaryStrip(
         )
         SourceType.STALKER -> listOf(
             R.string.setup_badge_live_tv,
-            R.string.setup_badge_portal,
-            R.string.badge_beta
+            R.string.setup_badge_portal
         )
         SourceType.M3U_URL -> listOf(
             R.string.setup_badge_live_tv,
@@ -1783,7 +1780,6 @@ private fun SourceTypeSelectorPanel(
     sourceType: SourceType,
     visibleSourceTypes: Set<SourceType>,
     isEditing: Boolean,
-    isEditLabel: String,
     onSelect: (SourceType) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -1800,21 +1796,6 @@ private fun SourceTypeSelectorPanel(
                 .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = isEditLabel,
-                style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary
-            )
-            Text(
-                text = androidx.compose.ui.res.stringResource(R.string.setup_shell_subtitle),
-                style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceDim
-            )
-            Text(
-                text = androidx.compose.ui.res.stringResource(R.string.setup_source_type_label),
-                style = MaterialTheme.typography.labelSmall,
-                color = TextTertiary
-            )
             if (shouldShowProviderSetupSourceType(SourceType.XTREAM, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_xtream),
@@ -1827,7 +1808,6 @@ private fun SourceTypeSelectorPanel(
             if (shouldShowProviderSetupSourceType(SourceType.STALKER, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_stalker),
-                    badge = androidx.compose.ui.res.stringResource(R.string.badge_beta),
                     subtitle = androidx.compose.ui.res.stringResource(R.string.setup_info_stalker_body),
                     selected = sourceType == SourceType.STALKER,
                     enabled = !isEditing,
@@ -1942,7 +1922,6 @@ private fun SourceTypeTabRow(
         if (shouldShowProviderSetupSourceType(SourceType.STALKER, visibleSourceTypes, sourceType, isEditing)) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_stalker),
-                badge = androidx.compose.ui.res.stringResource(R.string.badge_beta),
                 isSelected = sourceType == SourceType.STALKER,
                 onClick = { if (!isEditing) onSelect(SourceType.STALKER) }
             )

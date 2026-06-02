@@ -34,12 +34,7 @@ internal class SettingsSyncActions(
 
     fun syncProviderCustom(scope: CoroutineScope, providerId: Long, selections: Set<ProviderSyncSelection>) {
         scope.launch {
-            val orderedSelections = listOf(
-                ProviderSyncSelection.TV,
-                ProviderSyncSelection.MOVIES,
-                ProviderSyncSelection.SERIES,
-                ProviderSyncSelection.EPG
-            ).filter { it in selections }
+            val orderedSelections = orderedProviderSyncSelections(selections)
             if (orderedSelections.isEmpty()) {
                 uiState.update {
                     it.copy(userMessage = appContext.getString(R.string.settings_sync_custom_required))
@@ -125,6 +120,7 @@ internal class SettingsSyncActions(
             selections.forEach { selection ->
                 val section = when (selection) {
                     ProviderSyncSelection.TV -> SyncRepairSection.LIVE
+                    ProviderSyncSelection.VOD -> SyncRepairSection.MOVIES
                     ProviderSyncSelection.MOVIES -> SyncRepairSection.MOVIES
                     ProviderSyncSelection.SERIES -> SyncRepairSection.SERIES
                     ProviderSyncSelection.EPG -> SyncRepairSection.EPG
@@ -192,17 +188,11 @@ internal class SettingsSyncActions(
 
     private fun syncNowSelections(providerId: Long): List<ProviderSyncSelection> {
         val provider = uiState.value.providers.firstOrNull { it.id == providerId }
-        return buildList {
-            add(ProviderSyncSelection.TV)
-            add(ProviderSyncSelection.MOVIES)
-            if (provider?.type == ProviderType.XTREAM_CODES) {
-                add(ProviderSyncSelection.SERIES)
-            }
-            add(ProviderSyncSelection.EPG)
-        }
+        return provider.syncNowSelections()
     }
 
     private fun ProviderSyncSelection.completionLabel(isXtream: Boolean): String = when {
+        this == ProviderSyncSelection.VOD -> appContext.getString(R.string.settings_sync_option_vod)
         isXtream && this == ProviderSyncSelection.MOVIES -> "Movies index queued"
         isXtream && this == ProviderSyncSelection.SERIES -> "Series index queued"
         else -> label(appContext)
