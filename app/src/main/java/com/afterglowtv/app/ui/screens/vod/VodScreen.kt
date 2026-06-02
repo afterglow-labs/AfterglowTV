@@ -60,6 +60,19 @@ import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.player.PlayerRenderSurfaceType
 import com.afterglowtv.player.PlayerSurfaceResizeMode
 
+@Suppress("PropertyName")
+internal object VodLayoutMetrics {
+    val ShelfRowHeight = 58.dp
+    val ShelfHeaderWidth = 88.dp
+    val ShelfTileWidth = 188.dp
+    val ShelfRowSpacing = 6.dp
+    val ShelfItemSpacing = 6.dp
+    val GridMinTileWidth = 210.dp
+    val GridTileHeight = 58.dp
+    val TilePadding = 5.dp
+    val TileArtworkWidth = 48.dp
+}
+
 @Composable
 fun VodScreen(
     onNavigate: (String) -> Unit,
@@ -369,7 +382,7 @@ private fun VodShelfRows(
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(VodLayoutMetrics.ShelfRowSpacing)
     ) {
         items(sections, key = { it.key }) { section ->
             VodShelfSectionRow(
@@ -390,30 +403,30 @@ private fun VodShelfSectionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(78.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .height(VodLayoutMetrics.ShelfRowHeight),
+        horizontalArrangement = Arrangement.spacedBy(VodLayoutMetrics.ShelfItemSpacing),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
             modifier = Modifier
-                .width(112.dp)
+                .width(VodLayoutMetrics.ShelfHeaderWidth)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(8.dp))
                 .background(AppColors.SurfaceElevated)
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Box(
                 modifier = Modifier
-                    .width(28.dp)
-                    .height(3.dp)
+                    .width(24.dp)
+                    .height(2.dp)
                     .clip(RoundedCornerShape(999.dp))
                     .background(AppColors.BrandStrong)
             )
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 Text(
                     text = section.label,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = AppColors.TextPrimary,
                     maxLines = 1
                 )
@@ -429,8 +442,8 @@ private fun VodShelfSectionRow(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(end = 12.dp)
+            horizontalArrangement = Arrangement.spacedBy(VodLayoutMetrics.ShelfItemSpacing),
+            contentPadding = PaddingValues(end = 8.dp)
         ) {
             items(section.items, key = { it.id }) { movie ->
                 VodTextTile(
@@ -438,7 +451,7 @@ private fun VodShelfSectionRow(
                     selected = movie.id == selectedMovieId,
                     onClick = { onMovieClick(movie) },
                     modifier = Modifier
-                        .width(250.dp)
+                        .width(VodLayoutMetrics.ShelfTileWidth)
                         .fillMaxHeight()
                 )
             }
@@ -454,11 +467,11 @@ private fun VodItemGrid(
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 250.dp),
+        columns = GridCells.Adaptive(minSize = VodLayoutMetrics.GridMinTileWidth),
         modifier = modifier,
         contentPadding = PaddingValues(bottom = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         items(movies, key = { it.id }) { movie ->
             VodTextTile(
@@ -467,7 +480,7 @@ private fun VodItemGrid(
                 onClick = { onMovieClick(movie) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(74.dp)
+                    .height(VodLayoutMetrics.GridTileHeight)
             )
         }
     }
@@ -502,8 +515,8 @@ private fun VodTextTile(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(7.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(VodLayoutMetrics.TilePadding),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             VodSmallArtwork(movie)
@@ -515,7 +528,7 @@ private fun VodTextTile(
                     text = displayTitle.title,
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppColors.TextPrimary,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
@@ -549,7 +562,7 @@ private fun VodSmallArtwork(movie: Movie) {
     if (imageUrl.isNullOrBlank()) {
         Box(
             modifier = Modifier
-                .width(4.dp)
+                .width(3.dp)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(999.dp))
                 .background(AppColors.BrandStrong.copy(alpha = 0.76f))
@@ -559,7 +572,7 @@ private fun VodSmallArtwork(movie: Movie) {
     Box(
         modifier = Modifier
             .fillMaxHeight()
-            .width(64.dp)
+            .width(VodLayoutMetrics.TileArtworkWidth)
             .clip(RoundedCornerShape(8.dp))
             .background(AppColors.SurfaceEmphasis),
         contentAlignment = Alignment.Center
