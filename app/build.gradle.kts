@@ -76,7 +76,8 @@ android {
 
         create("amazon") {
             dimension = "store"
-            applicationId = "com.afterglowtv.app"
+            applicationIdSuffix = ".amazon"
+            versionNameSuffix = "-amazon"
             buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
             buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
             buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
