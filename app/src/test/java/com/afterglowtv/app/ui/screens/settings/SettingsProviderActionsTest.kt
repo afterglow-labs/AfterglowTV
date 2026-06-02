@@ -8,6 +8,8 @@ import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.data.sync.SyncManager
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.repository.CombinedM3uRepository
@@ -75,6 +77,31 @@ class SettingsProviderActionsTest {
         verify(launcherRecommendationsManager).refreshRecommendations(force = true)
         verify(tvInputChannelSyncManager).refreshTvInputCatalog()
         verify(syncProvider, never()).invoke(any(), any())
+    }
+
+    @Test
+    fun setActiveProvider_routesVodPlaylistToVodSourceSlot() = runTest(StandardTestDispatcher()) {
+        val provider = Provider(
+            id = 8L,
+            name = "VOD Playlist",
+            type = ProviderType.M3U,
+            serverUrl = "https://example.com/vod.m3u",
+            m3uUrl = "https://example.com/vod.m3u",
+            m3uPlaylistKind = ProviderM3uPlaylistKind.VOD,
+            lastSyncedAt = System.currentTimeMillis()
+        )
+        whenever(providerRepository.getProvider(8L)).thenReturn(provider)
+
+        actions.setActiveProvider(this, 8L)
+        advanceUntilIdle()
+
+        verify(preferencesRepository).setActiveSource(
+            ProviderSourceSlot.VOD,
+            ActiveLiveSource.ProviderSource(8L)
+        )
+        verify(providerRepository, never()).setActiveProvider(8L)
+        verify(combinedM3uRepository, never()).setActiveLiveSource(any())
+        assertThat(uiState.value.userMessage).isEqualTo("VOD source set to VOD Playlist")
     }
 
     @Test

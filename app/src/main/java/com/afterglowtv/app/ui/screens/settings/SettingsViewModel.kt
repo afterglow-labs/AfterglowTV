@@ -174,6 +174,7 @@ class SettingsViewModel @Inject constructor(
         registerCombinedProfileObservers(
             scope = viewModelScope,
             combinedM3uRepository = combinedM3uRepository,
+            preferencesRepository = preferencesRepository,
             uiState = _uiState
         )
         registerDerivedStateObservers(

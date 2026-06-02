@@ -69,6 +69,7 @@ internal fun registerSettingsAppUpdateObservers(
 internal fun registerCombinedProfileObservers(
     scope: CoroutineScope,
     combinedM3uRepository: CombinedM3uRepository,
+    preferencesRepository: PreferencesRepository,
     uiState: MutableStateFlow<SettingsUiState>
 ) {
     scope.launch {
@@ -88,6 +89,24 @@ internal fun registerCombinedProfileObservers(
     scope.launch {
         combinedM3uRepository.getActiveLiveSource().collect { activeSource ->
             uiState.update { it.copy(activeLiveSource = activeSource) }
+        }
+    }
+
+    scope.launch {
+        preferencesRepository.activeVodSource.collect { activeSource ->
+            uiState.update { it.copy(activeVodSource = activeSource) }
+        }
+    }
+
+    scope.launch {
+        preferencesRepository.activeAdultLiveSource.collect { activeSource ->
+            uiState.update { it.copy(activeAdultLiveSource = activeSource) }
+        }
+    }
+
+    scope.launch {
+        preferencesRepository.activeAdultVodSource.collect { activeSource ->
+            uiState.update { it.copy(activeAdultVodSource = activeSource) }
         }
     }
 }

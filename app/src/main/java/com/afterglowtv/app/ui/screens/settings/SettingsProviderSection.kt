@@ -31,6 +31,8 @@ import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.theme.OnSurfaceDim
 import com.afterglowtv.app.ui.theme.Primary
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ActiveLiveSource
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderType
 
 internal fun LazyListScope.providerSection(
@@ -76,17 +78,19 @@ internal fun LazyListScope.providerSection(
                 contentPadding = PaddingValues(bottom = 14.dp)
             ) {
                 items(uiState.providers, key = { it.id }) { provider ->
+                    val activeRoleLabels = provider.activeRoleLabels(uiState)
                     ProviderSelectorTab(
                         provider = provider,
                         isSelected = provider.id == selectedProvider.id,
-                        isActive = provider.id == uiState.activeProviderId,
+                        activeLabels = activeRoleLabels,
                         onClick = { selectedProviderId = provider.id }
                     )
                 }
             }
+            val selectedActiveRoleLabels = selectedProvider.activeRoleLabels(uiState)
             ProviderSettingsCard(
                 provider = selectedProvider,
-                isActive = selectedProvider.id == uiState.activeProviderId,
+                activeLabels = selectedActiveRoleLabels,
                 isSyncing = uiState.isSyncing,
                 xtreamLiveOnboardingPhase = uiState.xtreamLiveOnboardingPhaseByProvider[selectedProvider.id],
                 xtreamLiveOnboarding = uiState.xtreamLiveOnboardingByProvider[selectedProvider.id],
@@ -184,3 +188,56 @@ internal fun LazyListScope.providerSection(
         }
     }
 }
+
+internal enum class ProviderActiveRole {
+    LIVE,
+    VOD,
+    ADULT,
+    ADULT_VOD
+}
+
+internal fun providerActiveRoles(
+    provider: Provider,
+    activeProviderId: Long?,
+    activeLiveSource: ActiveLiveSource?,
+    activeVodSource: ActiveLiveSource?,
+    activeAdultLiveSource: ActiveLiveSource? = null,
+    activeAdultVodSource: ActiveLiveSource? = null
+): Set<ProviderActiveRole> = buildSet {
+    val liveProviderId = (activeLiveSource as? ActiveLiveSource.ProviderSource)?.providerId
+    if (provider.id == liveProviderId || provider.id == activeProviderId && provider.isLiveProviderCandidate()) {
+        add(ProviderActiveRole.LIVE)
+    }
+    val vodProviderId = (activeVodSource as? ActiveLiveSource.ProviderSource)?.providerId
+    if (provider.id == vodProviderId) {
+        add(ProviderActiveRole.VOD)
+    }
+    val adultLiveProviderId = (activeAdultLiveSource as? ActiveLiveSource.ProviderSource)?.providerId
+    if (provider.id == adultLiveProviderId) {
+        add(ProviderActiveRole.ADULT)
+    }
+    val adultVodProviderId = (activeAdultVodSource as? ActiveLiveSource.ProviderSource)?.providerId
+    if (provider.id == adultVodProviderId) {
+        add(ProviderActiveRole.ADULT_VOD)
+    }
+}
+
+private fun Provider.activeRoleLabels(uiState: SettingsUiState): List<String> =
+    providerActiveRoles(
+        provider = this,
+        activeProviderId = uiState.activeProviderId,
+        activeLiveSource = uiState.activeLiveSource,
+        activeVodSource = uiState.activeVodSource,
+        activeAdultLiveSource = uiState.activeAdultLiveSource,
+        activeAdultVodSource = uiState.activeAdultVodSource
+    ).map { role ->
+        when (role) {
+            ProviderActiveRole.LIVE -> "Live Active"
+            ProviderActiveRole.VOD -> "VOD Active"
+            ProviderActiveRole.ADULT -> "Adult Active"
+            ProviderActiveRole.ADULT_VOD -> "Adult VOD Active"
+        }
+    }
+
+private fun Provider.isLiveProviderCandidate(): Boolean =
+    type != ProviderType.M3U || m3uPlaylistKind != ProviderM3uPlaylistKind.VOD

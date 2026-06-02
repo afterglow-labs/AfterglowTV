@@ -58,7 +58,7 @@ import java.util.Locale
 @Composable
 internal fun ProviderSettingsCard(
     provider: Provider,
-    isActive: Boolean,
+    activeLabels: List<String>,
     isSyncing: Boolean,
     xtreamLiveOnboardingPhase: String?,
     xtreamLiveOnboarding: XtreamLiveOnboardingUiModel?,
@@ -76,6 +76,7 @@ internal fun ProviderSettingsCard(
     onRefreshM3uClassification: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val isActive = activeLabels.isNotEmpty()
     val liveOnboardingIncomplete = provider.type == ProviderType.XTREAM_CODES &&
         provider.status == ProviderStatus.PARTIAL &&
         !isActive
@@ -119,9 +120,9 @@ internal fun ProviderSettingsCard(
                 )
             }
             ProviderStatusBadge(status = provider.status)
-            if (isActive) {
+            activeLabels.forEach { label ->
                 Text(
-                    text = stringResource(R.string.settings_active),
+                    text = label,
                     style = MaterialTheme.typography.labelSmall,
                     color = Primary,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
@@ -308,7 +309,6 @@ internal fun sectionCatalogCount(
         ProviderCatalogCountUiModel(count, ProviderCatalogCountStatus.PENDING)
     }
 }
-
 
 
 

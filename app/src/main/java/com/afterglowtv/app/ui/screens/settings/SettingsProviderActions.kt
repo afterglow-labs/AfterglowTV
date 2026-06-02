@@ -5,6 +5,8 @@ import com.afterglowtv.app.tv.WatchNextManager
 import com.afterglowtv.app.tvinput.TvInputChannelSyncManager
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.model.SyncMetadata
@@ -44,6 +46,14 @@ internal class SettingsProviderActions(
             val provider = providerRepository.getProvider(providerId)
             if (provider == null) {
                 uiState.update { it.copy(userMessage = "Could not activate provider: provider not found") }
+                return@launch
+            }
+            if (provider.type == ProviderType.M3U && provider.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD) {
+                preferencesRepository.setActiveSource(
+                    ProviderSourceSlot.VOD,
+                    ActiveLiveSource.ProviderSource(providerId)
+                )
+                uiState.update { it.copy(userMessage = "VOD source set to ${provider.name}") }
                 return@launch
             }
             // Write to the repository first; only persist UI-layer preferences on success.
