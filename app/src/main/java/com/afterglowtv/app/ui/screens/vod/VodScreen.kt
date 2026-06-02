@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -63,7 +62,7 @@ import com.afterglowtv.player.PlayerSurfaceResizeMode
 @Suppress("PropertyName")
 internal object VodLayoutMetrics {
     val ShelfRowHeight = 58.dp
-    val ShelfHeaderWidth = 88.dp
+    val ShelfHeaderWidth = 64.dp
     val ShelfTileWidth = 188.dp
     val ShelfRowSpacing = 6.dp
     val ShelfItemSpacing = 6.dp
@@ -71,6 +70,9 @@ internal object VodLayoutMetrics {
     val GridTileHeight = 58.dp
     val TilePadding = 5.dp
     val TileArtworkWidth = 48.dp
+    val HeaderPreviewWidth = 224.dp
+    val HeaderPreviewHeight = 96.dp
+    val ContentHeaderHeight = 58.dp
 }
 
 @Composable
@@ -94,11 +96,17 @@ fun VodScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            AfterglowBrandStrip(
-                wordmark = "VOD",
-                tagline = uiState.provider?.name ?: "On-demand library",
+            VodHeaderRow(
+                uiState = uiState,
+                onOpenMovie = { movie ->
+                    viewModel.clearPreview()
+                    onMovieClick(movie)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(VodLayoutMetrics.HeaderPreviewHeight)
             )
             VodBrowser(
                 uiState = uiState,
@@ -114,13 +122,38 @@ fun VodScreen(
                         viewModel.previewMovie(movie)
                     }
                 },
-                onOpenMovie = { movie ->
-                    viewModel.clearPreview()
-                    onMovieClick(movie)
-                },
                 modifier = Modifier.fillMaxSize()
             )
         }
+    }
+}
+
+@Composable
+private fun VodHeaderRow(
+    uiState: VodUiState,
+    onOpenMovie: (Movie) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AfterglowBrandStrip(
+            wordmark = "VOD",
+            tagline = uiState.provider?.name ?: "On-demand library",
+            modifier = Modifier.weight(1f)
+        )
+        VodPreviewPane(
+            movie = uiState.previewMovie,
+            playerEngine = uiState.previewPlayerEngine,
+            isLoading = uiState.isPreviewLoading,
+            errorMessage = uiState.previewErrorMessage,
+            onOpenMovie = onOpenMovie,
+            modifier = Modifier
+                .width(VodLayoutMetrics.HeaderPreviewWidth)
+                .fillMaxHeight()
+        )
     }
 }
 
@@ -132,68 +165,50 @@ private fun VodBrowser(
     onLoadMore: () -> Unit,
     onLoadAll: () -> Unit,
     onMovieClick: (Movie) -> Unit,
-    onOpenMovie: (Movie) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Column(
+        VodContentHeader(
+            uiState = uiState,
+            onSearchQueryChange = onSearchQueryChange,
+            onLoadMore = onLoadMore,
+            onLoadAll = onLoadAll,
             modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            VodContentHeader(
-                uiState = uiState,
-                onSearchQueryChange = onSearchQueryChange,
-                onLoadMore = onLoadMore,
-                onLoadAll = onLoadAll,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(76.dp)
-            )
-            when {
-                uiState.isLoading -> VodEmptyMessage("Loading VOD...")
-                uiState.provider == null -> VodEmptyMessage("No active VOD source")
-                uiState.items.isEmpty() -> VodEmptyMessage("No VOD titles found")
-                uiState.viewMode == VodViewMode.GUIDE -> VodGuideRailBrowser(
-                    uiState = uiState,
-                    onCategoryClick = onCategoryClick,
-                    onMovieClick = onMovieClick,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                )
-                uiState.viewMode == VodViewMode.GRID -> VodItemGrid(
-                    movies = uiState.items,
-                    selectedMovieId = uiState.previewMovie?.id,
-                    onMovieClick = onMovieClick,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                )
-                else -> VodShelfRows(
-                    sections = uiState.sections,
-                    selectedMovieId = uiState.previewMovie?.id,
-                    onMovieClick = onMovieClick,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                )
-            }
-        }
-        VodPreviewPane(
-            movie = uiState.previewMovie,
-            playerEngine = uiState.previewPlayerEngine,
-            isLoading = uiState.isPreviewLoading,
-            errorMessage = uiState.previewErrorMessage,
-            onOpenMovie = onOpenMovie,
-            modifier = Modifier
-                .width(400.dp)
-                .fillMaxHeight()
+                .fillMaxWidth()
+                .height(VodLayoutMetrics.ContentHeaderHeight)
         )
+        when {
+            uiState.isLoading -> VodEmptyMessage("Loading VOD...")
+            uiState.provider == null -> VodEmptyMessage("No active VOD source")
+            uiState.items.isEmpty() -> VodEmptyMessage("No VOD titles found")
+            uiState.viewMode == VodViewMode.GUIDE -> VodGuideRailBrowser(
+                uiState = uiState,
+                onCategoryClick = onCategoryClick,
+                onMovieClick = onMovieClick,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
+            uiState.viewMode == VodViewMode.GRID -> VodItemGrid(
+                movies = uiState.items,
+                selectedMovieId = uiState.previewMovie?.id,
+                onMovieClick = onMovieClick,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
+            else -> VodShelfRows(
+                sections = uiState.sections,
+                selectedMovieId = uiState.previewMovie?.id,
+                onMovieClick = onMovieClick,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -431,7 +446,7 @@ private fun VodShelfSectionRow(
                     maxLines = 1
                 )
                 Text(
-                    text = "${section.count} titles",
+                    text = section.count.toString(),
                     style = MaterialTheme.typography.labelSmall,
                     color = AppColors.TextSecondary,
                     maxLines = 1
@@ -611,90 +626,115 @@ private fun VodPreviewPane(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
             .background(AppColors.SurfaceElevated)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            .padding(6.dp)
     ) {
-        Text(
-            text = "Preview",
-            style = MaterialTheme.typography.titleMedium,
-            color = AppColors.TextPrimary
-        )
-        Box(
+        TvClickableSurface(
+            onClick = { movie?.let(onOpenMovie) },
+            enabled = movie != null,
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color.Black),
-            contentAlignment = Alignment.Center
-        ) {
-            if (movie != null && playerEngine != null && errorMessage == null) {
-                PlayerRenderView(
-                    playerEngine = playerEngine,
-                    resizeMode = PlayerSurfaceResizeMode.FIT,
-                    surfaceType = renderSurfaceType,
-                    modifier = Modifier.fillMaxSize()
+                .fillMaxHeight(),
+            shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
+            colors = ClickableSurfaceDefaults.colors(
+                containerColor = Color.Black,
+                focusedContainerColor = Color.Black,
+                contentColor = AppColors.TextPrimary,
+                focusedContentColor = AppColors.TextPrimary
+            ),
+            border = ClickableSurfaceDefaults.border(
+                focusedBorder = Border(
+                    border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                    shape = RoundedCornerShape(10.dp)
                 )
-            } else {
-                Column(
-                    modifier = Modifier.padding(horizontal = 18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = "Press OK to load a preview.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = AppColors.TextPrimary
+            ),
+            scale = ClickableSurfaceDefaults.scale(focusedScale = FocusSpec.FocusedScale)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                if (movie != null && playerEngine != null && errorMessage == null) {
+                    PlayerRenderView(
+                        playerEngine = playerEngine,
+                        resizeMode = PlayerSurfaceResizeMode.FIT,
+                        surfaceType = renderSurfaceType,
+                        modifier = Modifier.fillMaxSize()
                     )
-                    Text(
-                        text = errorMessage ?: "Press OK again for full screen.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = AppColors.TextSecondary
-                    )
+                } else {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Press OK to preview",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = AppColors.TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = errorMessage ?: "OK again for full screen",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = AppColors.TextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
-            }
-            if (isLoading && movie != null) {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(Color.Black.copy(alpha = 0.66f))
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CircularProgressIndicator(
-                        color = AppColors.BrandStrong,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = "Loading preview",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = AppColors.TextPrimary
-                    )
+                if (movie != null && displayTitle != null) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth()
+                            .background(Color.Black.copy(alpha = 0.72f))
+                            .padding(horizontal = 8.dp, vertical = 5.dp),
+                        verticalArrangement = Arrangement.spacedBy(1.dp)
+                    ) {
+                        Text(
+                            text = displayTitle.title,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = AppColors.TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = listOfNotNull(
+                                displayTitle.year ?: movie.year,
+                                movie.duration?.takeIf { it.isNotBlank() },
+                                movie.genre?.takeIf { it.isNotBlank() }
+                            ).joinToString("  |  ").ifBlank { "VOD" },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = AppColors.TextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
-            }
-        }
-        if (movie != null && displayTitle != null) {
-            Text(
-                text = displayTitle.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = AppColors.TextPrimary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = listOfNotNull(
-                    displayTitle.year ?: movie.year,
-                    movie.duration?.takeIf { it.isNotBlank() },
-                    movie.genre?.takeIf { it.isNotBlank() }
-                ).joinToString("  |  ").ifBlank { "VOD" },
-                style = MaterialTheme.typography.bodySmall,
-                color = AppColors.TextSecondary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            TvButton(onClick = { onOpenMovie(movie) }) {
-                Text("Full screen")
+                if (isLoading && movie != null) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(Color.Black.copy(alpha = 0.70f))
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            color = AppColors.BrandStrong,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Loading preview",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = AppColors.TextPrimary,
+                            maxLines = 1
+                        )
+                    }
+                }
             }
         }
     }
