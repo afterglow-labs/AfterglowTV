@@ -34,9 +34,15 @@ import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderType
 
+internal enum class ProviderSettingsCategory {
+    LIVE_TV,
+    VOD
+}
+
 internal fun LazyListScope.providerSection(
     uiState: SettingsUiState,
-    onAddProvider: () -> Unit,
+    providerCategory: ProviderSettingsCategory,
+    onAddProvider: (ProviderM3uPlaylistKind?) -> Unit,
     onEditProvider: (Provider) -> Unit,
     onNavigateToParentalControl: (Long) -> Unit,
     viewModel: SettingsViewModel,
@@ -55,20 +61,35 @@ internal fun LazyListScope.providerSection(
     } else {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                ProviderSettingsContainer(
-                    title = "Live TV",
-                    emptyTitle = "No Live TV providers",
-                    emptySubtitle = "Add a playlist or provider for Live TV.",
-                    providers = uiState.providers.filter { it.isLiveProviderCandidate() },
-                    preferredProviderId = uiState.activeProviderId,
-                    uiState = uiState,
-                    providerState = providerState,
-                    viewModel = viewModel,
-                    onEditProvider = onEditProvider,
-                    onNavigateToParentalControl = onNavigateToParentalControl
-                )
+                if (providerCategory == ProviderSettingsCategory.LIVE_TV) {
+                    ProviderSettingsContainer(
+                        title = "Live TV",
+                        emptyTitle = "No Live TV providers",
+                        emptySubtitle = "Add a playlist or provider for Live TV.",
+                        providers = uiState.providers.filter { it.isLiveProviderCandidate() },
+                        preferredProviderId = uiState.activeProviderId,
+                        uiState = uiState,
+                        providerState = providerState,
+                        viewModel = viewModel,
+                        onEditProvider = onEditProvider,
+                        onNavigateToParentalControl = onNavigateToParentalControl
+                    )
+                } else {
+                    ProviderSettingsContainer(
+                        title = "VOD",
+                        emptyTitle = "No VOD providers",
+                        emptySubtitle = "Add a VOD playlist to use in the VOD container.",
+                        providers = uiState.providers.filter { it.isVodProvider() },
+                        preferredProviderId = (uiState.activeVodSource as? ActiveLiveSource.ProviderSource)?.providerId,
+                        uiState = uiState,
+                        providerState = providerState,
+                        viewModel = viewModel,
+                        onEditProvider = onEditProvider,
+                        onNavigateToParentalControl = onNavigateToParentalControl
+                    )
+                }
 
-                if (StorePolicy.current.showAdvancedSourceTypes) {
+                if (providerCategory == ProviderSettingsCategory.LIVE_TV && StorePolicy.current.showAdvancedSourceTypes) {
                     CombinedM3uProfilesCard(
                         profiles = uiState.combinedProfiles,
                         availableProviders = uiState.availableM3uProviders,
@@ -102,26 +123,18 @@ internal fun LazyListScope.providerSection(
                         }
                     )
                 }
-
-                ProviderSettingsContainer(
-                    title = "VOD",
-                    emptyTitle = "No VOD providers",
-                    emptySubtitle = "Add a VOD playlist to use in the VOD container.",
-                    providers = uiState.providers.filter { it.isVodProvider() },
-                    preferredProviderId = (uiState.activeVodSource as? ActiveLiveSource.ProviderSource)?.providerId,
-                    uiState = uiState,
-                    providerState = providerState,
-                    viewModel = viewModel,
-                    onEditProvider = onEditProvider,
-                    onNavigateToParentalControl = onNavigateToParentalControl
-                )
             }
         }
     }
 
     item {
+        val providerKind = if (providerCategory == ProviderSettingsCategory.VOD) {
+            ProviderM3uPlaylistKind.VOD
+        } else {
+            null
+        }
         TvClickableSurface(
-            onClick = onAddProvider,
+            onClick = { onAddProvider(providerKind) },
             shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp)),
             colors = ClickableSurfaceDefaults.colors(
                 containerColor = Primary.copy(alpha = 0.15f),

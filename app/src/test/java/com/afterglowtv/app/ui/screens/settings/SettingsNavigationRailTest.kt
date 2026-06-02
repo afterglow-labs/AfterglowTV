@@ -14,6 +14,7 @@ class SettingsNavigationRailTest {
             )
         ).containsExactly(
             SETTINGS_CATEGORY_PROVIDERS,
+            SETTINGS_CATEGORY_PROVIDERS_VOD,
             SETTINGS_CATEGORY_PLAYBACK,
             SETTINGS_CATEGORY_BROWSING,
             SETTINGS_CATEGORY_PRIVACY,

@@ -30,13 +30,14 @@ import com.afterglowtv.domain.model.Provider
 import androidx.compose.ui.res.stringResource
 import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.design.requestFocusSafely
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import kotlinx.coroutines.delay
 
 
 @Composable
 fun SettingsScreen(
     onNavigate: (String) -> Unit,
-    onAddProvider: () -> Unit = {},
+    onAddProvider: (ProviderM3uPlaylistKind?) -> Unit = {},
     onEditProvider: (Provider) -> Unit = {},
     onNavigateToParentalControl: (Long) -> Unit = {},
     onReturnToPlayer: () -> Unit = {},

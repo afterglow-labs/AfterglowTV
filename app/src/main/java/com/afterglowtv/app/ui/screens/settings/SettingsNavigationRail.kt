@@ -38,12 +38,14 @@ internal const val SETTINGS_CATEGORY_LOCAL_MEDIA = 5
 internal const val SETTINGS_CATEGORY_BACKUP = 6
 internal const val SETTINGS_CATEGORY_EPG_SOURCES = 7
 internal const val SETTINGS_CATEGORY_ABOUT = 8
+internal const val SETTINGS_CATEGORY_PROVIDERS_VOD = 9
 
 internal fun visibleSettingsCategoryIds(
     policy: StorePolicySnapshot = StorePolicy.current,
     developerModeEnabled: Boolean = false
 ): List<Int> = buildList {
     add(SETTINGS_CATEGORY_PROVIDERS)
+    add(SETTINGS_CATEGORY_PROVIDERS_VOD)
     add(SETTINGS_CATEGORY_PLAYBACK)
     add(SETTINGS_CATEGORY_BROWSING)
     add(SETTINGS_CATEGORY_PRIVACY)
@@ -76,12 +78,6 @@ internal fun SettingsNavigationRail(
         developerModeEnabled = developerModeEnabled
     )
     val entries = listOf(
-        SettingsNavEntry(
-            categoryId = SETTINGS_CATEGORY_PROVIDERS,
-            label = stringResource(R.string.settings_providers),
-            icon = Icons.Default.Settings,
-            accent = Primary
-        ),
         SettingsNavEntry(
             categoryId = SETTINGS_CATEGORY_PLAYBACK,
             label = stringResource(R.string.settings_playback),
@@ -140,6 +136,39 @@ internal fun SettingsNavigationRail(
         contentPadding = PaddingValues(top = 76.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
+        item {
+            SettingsNavItem(
+                label = stringResource(R.string.settings_providers),
+                badgeIcon = Icons.Default.Settings,
+                accentColor = Primary,
+                isSelected = false,
+                onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS) }
+            )
+        }
+        item {
+            SettingsNavItem(
+                label = "Live TV",
+                badgeIcon = Icons.Default.PlayArrow,
+                accentColor = Primary,
+                isSelected = selectedCategory == SETTINGS_CATEGORY_PROVIDERS,
+                modifier = if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS) Modifier.focusRequester(focusRequester) else Modifier,
+                indent = 28.dp,
+                compact = true,
+                onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS) }
+            )
+        }
+        item {
+            SettingsNavItem(
+                label = "VOD",
+                badgeIcon = Icons.Default.Star,
+                accentColor = Color(0xFFFFA64D),
+                isSelected = selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD,
+                modifier = if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD) Modifier.focusRequester(focusRequester) else Modifier,
+                indent = 28.dp,
+                compact = true,
+                onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS_VOD) }
+            )
+        }
         items(entries, key = { it.categoryId }) { entry ->
             SettingsNavItem(
                 label = entry.label,

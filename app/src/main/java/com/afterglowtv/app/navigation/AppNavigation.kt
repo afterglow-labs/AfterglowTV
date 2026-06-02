@@ -25,6 +25,7 @@ import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Episode
 import com.afterglowtv.domain.model.LocalMediaItem
 import com.afterglowtv.domain.model.Movie
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.app.ui.screens.dashboard.DashboardScreen
@@ -74,7 +75,7 @@ data class PlayerNavigationRequest(
 ) : Serializable
 
 object Routes {
-    const val PROVIDER_SETUP = "provider_setup?providerId={providerId}&importUri={importUri}"
+    const val PROVIDER_SETUP = "provider_setup?providerId={providerId}&importUri={importUri}&m3uKind={m3uKind}"
     const val HOME = "home"
     const val LIVE_TV = "live_tv"
     const val LIVE_TV_DESTINATION = "live_tv?categoryId={categoryId}"
@@ -96,9 +97,13 @@ object Routes {
     const val MULTI_VIEW = "multi_view"
 
 
-    fun providerSetup(providerId: Long? = null, importUri: String? = null): String {
+    fun providerSetup(
+        providerId: Long? = null,
+        importUri: String? = null,
+        m3uKind: ProviderM3uPlaylistKind? = null
+    ): String {
         val encodedImportUri = Uri.encode(importUri ?: "")
-        return "provider_setup?providerId=${providerId ?: -1L}&importUri=$encodedImportUri"
+        return "provider_setup?providerId=${providerId ?: -1L}&importUri=$encodedImportUri&m3uKind=${m3uKind?.name.orEmpty()}"
     }
     fun liveTv(categoryId: Long? = null) = if (categoryId == null) LIVE_TV else "$LIVE_TV?categoryId=$categoryId"
     fun epg(categoryId: Long? = null, anchorTime: Long? = null, favoritesOnly: Boolean? = null): String {
@@ -403,15 +408,21 @@ fun AppNavigation(mainActivity: MainActivity) {
             route = Routes.PROVIDER_SETUP,
             arguments = listOf(
                 navArgument("providerId") { type = NavType.LongType; defaultValue = -1L },
-                navArgument("importUri") { type = NavType.StringType; defaultValue = "" }
+                navArgument("importUri") { type = NavType.StringType; defaultValue = "" },
+                navArgument("m3uKind") { type = NavType.StringType; defaultValue = "" }
             )
         ) { backStackEntry ->
             val providerId = backStackEntry.arguments?.getLong("providerId")?.takeIf { it != -1L }
             val importUri = backStackEntry.arguments?.getString("importUri")?.takeIf { it.isNotBlank() }
+            val m3uKind = backStackEntry.arguments
+                ?.getString("m3uKind")
+                ?.takeIf { it.isNotBlank() }
+                ?.let { value -> runCatching { ProviderM3uPlaylistKind.valueOf(value) }.getOrNull() }
             
             ProviderSetupScreen(
                 editProviderId = providerId,
                 initialImportUri = importUri,
+                initialM3uPlaylistKind = m3uKind,
                 onBack = { navController.popBackStack() },
                 onProviderAdded = dropUnlessResumed {
                     navController.navigate(startupRoute) {
@@ -643,8 +654,8 @@ fun AppNavigation(mainActivity: MainActivity) {
             val backupUri = backStackEntry.arguments?.getString("backupUri")?.takeIf { it.isNotBlank() }
             SettingsScreen(
                 onNavigate = { route -> tabNavigate(route) },
-                onAddProvider = dropUnlessResumed {
-                    navController.navigate(Routes.providerSetup(null))
+                onAddProvider = { m3uKind ->
+                    navController.navigateIfResumed(Routes.providerSetup(m3uKind = m3uKind))
                 },
                 onEditProvider = { provider ->
                     navController.navigateIfResumed(Routes.providerSetup(provider.id))

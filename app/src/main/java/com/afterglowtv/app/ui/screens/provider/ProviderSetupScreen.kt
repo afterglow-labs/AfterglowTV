@@ -146,6 +146,7 @@ fun ProviderSetupScreen(
     onBack: () -> Unit,
     editProviderId: Long? = null,
     initialImportUri: String? = null,
+    initialM3uPlaylistKind: ProviderM3uPlaylistKind? = null,
     viewModel: ProviderSetupViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -246,6 +247,14 @@ fun ProviderSetupScreen(
         selectedTab = 2
         viewModel.updateM3uTab(1)
         runCatching { android.net.Uri.parse(importUri) }.getOrNull()?.let(::importM3uUri)
+    }
+
+    LaunchedEffect(initialM3uPlaylistKind, editProviderId) {
+        val playlistKind = initialM3uPlaylistKind ?: return@LaunchedEffect
+        if (editProviderId != null) return@LaunchedEffect
+        selectedTab = 2
+        viewModel.updateM3uTab(0)
+        viewModel.updateM3uPlaylistKind(playlistKind)
     }
 
     LaunchedEffect(uiState.backupImportSuccess) {

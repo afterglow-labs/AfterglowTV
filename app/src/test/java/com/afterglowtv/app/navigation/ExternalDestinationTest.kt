@@ -1,5 +1,6 @@
 package com.afterglowtv.app.navigation
 
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -11,6 +12,8 @@ class ExternalDestinationTest {
             .isEqualTo(ExternalDestination.Home)
         assertThat(ExternalDestination.fromLegacyRoute("provider_setup?providerId=-1&importUri="))
             .isEqualTo(ExternalDestination.ProviderSetup())
+        assertThat(ExternalDestination.fromLegacyRoute("provider_setup?providerId=-1&importUri=&m3uKind=VOD"))
+            .isEqualTo(ExternalDestination.ProviderSetup(m3uKind = ProviderM3uPlaylistKind.VOD))
     }
 
     @Test
