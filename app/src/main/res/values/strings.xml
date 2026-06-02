@@ -347,8 +347,8 @@
     <string name="settings_category_sorting_title">Category Sorting</string>
     <string name="settings_category_sorting_subtitle">Sort categories for the active playlist. Locking and hiding now live in Category Controls.</string>
     <string name="settings_category_sort_live">Live TV Categories</string>
-    <string name="settings_category_sort_movies">Movie Categories</string>
-    <string name="settings_category_sort_series">Series Categories</string>
+    <string name="settings_category_sort_vod_movies">VOD Movie Categories</string>
+    <string name="settings_category_sort_vod_tv">VOD TV Categories</string>
     <string name="settings_hidden_categories_title">Hidden Categories</string>
     <string name="settings_hidden_categories_subtitle">Restore any provider categories you previously hid from browsing surfaces.</string>
     <string name="settings_hidden_categories_none">None hidden</string>
@@ -364,8 +364,8 @@
     <string name="settings_category_sort_most_items">Most Items First</string>
     <string name="settings_category_sort_least_items">Least Items First</string>
     <string name="settings_category_type_live_description">Sort and hide provider live groups while keeping All Channels, Favorites, Recent, and custom groups in their pinned positions.</string>
-    <string name="settings_category_type_movies_description">Sort and hide provider movie categories without affecting Favorites, Resume, or custom shelves.</string>
-    <string name="settings_category_type_series_description">Sort and hide provider series categories without affecting Favorites, Continue Watching, or custom shelves.</string>
+    <string name="settings_category_type_vod_movies_description">Sort and hide provider VOD movie categories without affecting Favorites, Resume, or custom shelves.</string>
+    <string name="settings_category_type_vod_tv_description">Sort and hide provider VOD TV categories without affecting Favorites, Continue Watching, or custom shelves.</string>
     <string name="settings_playback">Playback</string>
     <string name="settings_playback_subtitle">Tune decoder and buffering behavior for smoother playback.</string>
     <string name="settings_browsing">Browsing</string>

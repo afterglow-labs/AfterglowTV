@@ -210,12 +210,12 @@ internal fun LazyListScope.settingsBrowsingSection(
             onClick = { onCategorySortDialogTypeChange(ContentType.LIVE.name) }
         )
         ClickableSettingsRow(
-            label = stringResource(R.string.settings_category_sort_movies),
+            label = stringResource(R.string.settings_category_sort_vod_movies),
             value = formatCategorySortModeLabel(uiState.categorySortModes[ContentType.MOVIE] ?: CategorySortMode.DEFAULT, context),
             onClick = { onCategorySortDialogTypeChange(ContentType.MOVIE.name) }
         )
         ClickableSettingsRow(
-            label = stringResource(R.string.settings_category_sort_series),
+            label = stringResource(R.string.settings_category_sort_vod_tv),
             value = formatCategorySortModeLabel(uiState.categorySortModes[ContentType.SERIES] ?: CategorySortMode.DEFAULT, context),
             onClick = { onCategorySortDialogTypeChange(ContentType.SERIES.name) }
         )

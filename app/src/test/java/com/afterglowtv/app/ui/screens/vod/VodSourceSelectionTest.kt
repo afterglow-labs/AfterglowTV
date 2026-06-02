@@ -5,6 +5,7 @@ import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Movie
+import com.afterglowtv.app.ui.model.VodViewMode
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -53,17 +54,85 @@ class VodSourceSelectionTest {
     }
 
     @Test
-    fun `alphabet categories include all numbers and title letters`() {
+    fun `alphabet categories group letters into compact ranges without all`() {
         val categories = buildAlphabetCategories(
             listOf(
                 Movie(id = 1L, name = "731"),
-                Movie(id = 2L, name = "Scam City"),
-                Movie(id = 3L, name = "Two Maladroits")
+                Movie(id = 2L, name = "Adam"),
+                Movie(id = 3L, name = "Drew"),
+                Movie(id = 4L, name = "Echo"),
+                Movie(id = 5L, name = "Hannah"),
+                Movie(id = 6L, name = "Iris"),
+                Movie(id = 7L, name = "Luna"),
+                Movie(id = 8L, name = "Mom"),
+                Movie(id = 9L, name = "Peach"),
+                Movie(id = 10L, name = "Queen"),
+                Movie(id = 11L, name = "Tango"),
+                Movie(id = 12L, name = "Unknown"),
+                Movie(id = 13L, name = "Zulu")
             )
         )
 
-        assertThat(categories.map { it.label }).containsExactly("All", "#", "S", "T").inOrder()
+        assertThat(categories.map { it.label }).containsExactly("#", "A-D", "E-H", "I-L", "M-P", "Q-T", "U-Z").inOrder()
         assertThat(categories.associate { it.label to it.count })
-            .containsExactly("All", 3, "#", 1, "S", 1, "T", 1)
+            .containsExactly("#", 1, "A-D", 2, "E-H", 2, "I-L", 2, "M-P", 2, "Q-T", 2, "U-Z", 2)
+    }
+
+    @Test
+    fun `vod state exposes loaded titles as range sections`() {
+        val provider = Provider(
+            id = 4L,
+            name = "VOD",
+            type = ProviderType.M3U,
+            serverUrl = "https://example.com/vod.m3u"
+        )
+
+        val state = buildVodUiState(
+            provider = provider,
+            movies = listOf(
+                Movie(id = 1L, providerId = provider.id, name = "731"),
+                Movie(id = 2L, providerId = provider.id, name = "Blonde Night"),
+                Movie(id = 3L, providerId = provider.id, name = "Teen City")
+            ),
+            hiddenCategoryIds = emptySet(),
+            searchQuery = "",
+            visibleLimit = 120,
+            selectedPreviewMovieId = 2L
+        )
+
+        assertThat(state.sections.map { it.label }).containsExactly("#", "A-D", "Q-T").inOrder()
+        assertThat(state.sections.associate { it.label to it.items.map(Movie::name) })
+            .containsExactly("#", listOf("731"), "A-D", listOf("Blonde Night"), "Q-T", listOf("Teen City"))
+        assertThat(state.previewMovie?.name).isEqualTo("Blonde Night")
+    }
+
+    @Test
+    fun `vod guide layout scopes loaded titles to selected category range`() {
+        val provider = Provider(
+            id = 5L,
+            name = "VOD",
+            type = ProviderType.M3U,
+            serverUrl = "https://example.com/vod.m3u"
+        )
+
+        val state = buildVodUiState(
+            provider = provider,
+            movies = listOf(
+                Movie(id = 1L, providerId = provider.id, name = "Adam"),
+                Movie(id = 2L, providerId = provider.id, name = "Drew"),
+                Movie(id = 3L, providerId = provider.id, name = "Tango")
+            ),
+            hiddenCategoryIds = emptySet(),
+            searchQuery = "",
+            visibleLimit = 120,
+            selectedCategoryKey = "A-D",
+            viewMode = VodViewMode.GUIDE
+        )
+
+        assertThat(state.viewMode).isEqualTo(VodViewMode.GUIDE)
+        assertThat(state.selectedItems.map(Movie::name)).containsExactly("Adam", "Drew").inOrder()
+        assertThat(state.visibleItemCount).isEqualTo(2)
+        assertThat(state.totalItemCount).isEqualTo(2)
+        assertThat(state.canLoadMore).isFalse()
     }
 }
