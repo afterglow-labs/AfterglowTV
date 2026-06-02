@@ -1,5 +1,7 @@
 package com.afterglowtv.app.ui.screens.epg
 
+import android.app.Application
+import com.afterglowtv.app.player.LivePreviewHandoffManager
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import androidx.lifecycle.ViewModel
@@ -15,6 +17,7 @@ import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.Favorite
 import com.afterglowtv.domain.model.ActiveLiveSource
+import com.afterglowtv.domain.model.DecoderMode
 import com.afterglowtv.domain.model.GuideNoDataTextMode
 import com.afterglowtv.domain.model.Program
 import com.afterglowtv.domain.model.Provider
@@ -23,6 +26,9 @@ import com.afterglowtv.domain.model.CombinedCategory
 import com.afterglowtv.domain.model.CombinedCategoryBinding
 import com.afterglowtv.domain.model.CombinedM3uProfile
 import com.afterglowtv.domain.model.CombinedM3uProfileMember
+import com.afterglowtv.domain.model.PlayerSurfaceMode
+import com.afterglowtv.domain.model.Result
+import com.afterglowtv.domain.model.StreamInfo
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.domain.repository.CombinedM3uRepository
 import com.afterglowtv.domain.repository.EpgRepository
@@ -35,6 +41,7 @@ import com.afterglowtv.domain.usecase.ScheduleRecording
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -55,6 +62,9 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.argThat
+import com.afterglowtv.player.PlaybackState
+import com.afterglowtv.player.PlayerEngine
+import javax.inject.Provider as InjectProvider
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EpgViewModelTest {
@@ -73,6 +83,10 @@ class EpgViewModelTest {
     private val programReminderManager: ProgramReminderManager = mock()
     private val scheduleRecording: ScheduleRecording = mock()
     private val recordingManager: RecordingManager = mock()
+    private val application: Application = mock()
+    private val livePreviewHandoffManager: LivePreviewHandoffManager = mock()
+    private val playerEngine: PlayerEngine = mock()
+    private val playerEngineProvider: InjectProvider<PlayerEngine> = mock()
     private val positionMemo = EpgPositionMemo()
     private val getCustomCategories by lazy { GetCustomCategories(favoriteRepository) }
     private val createdViewModels = mutableListOf<EpgViewModel>()
@@ -82,6 +96,10 @@ class EpgViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        whenever(application.getString(any())).thenReturn("Preview unavailable")
+        whenever(playerEngineProvider.get()).thenReturn(playerEngine)
+        whenever(playerEngine.playbackState).thenReturn(MutableStateFlow(PlaybackState.IDLE))
+        whenever(playerEngine.error).thenReturn(flowOf(null))
         whenever(providerRepository.getActiveProvider()).thenReturn(flowOf(null))
         whenever(preferencesRepository.parentalControlLevel).thenReturn(flowOf(0))
         whenever(preferencesRepository.showAllChannelsCategory).thenReturn(flowOf(true))
@@ -96,6 +114,8 @@ class EpgViewModelTest {
         whenever(preferencesRepository.guideNoDataShowChannelText).thenReturn(flowOf(true))
         whenever(preferencesRepository.guideNoDataTextMode).thenReturn(flowOf(GuideNoDataTextMode.CHANNEL_NAME))
         whenever(preferencesRepository.guideNoDataCustomText).thenReturn(flowOf(""))
+        whenever(preferencesRepository.playerDecoderMode).thenReturn(flowOf(DecoderMode.AUTO))
+        whenever(preferencesRepository.playerSurfaceMode).thenReturn(flowOf(PlayerSurfaceMode.AUTO))
         runBlocking {
             whenever(epgRepository.getResolvedProgramsForChannels(any(), any(), any(), any())).thenReturn(emptyMap())
             whenever(epgRepository.getProgramsForChannelsSnapshot(any(), any(), any(), any())).thenReturn(emptyMap())
@@ -169,6 +189,9 @@ class EpgViewModelTest {
             getCustomCategories = getCustomCategories,
             scheduleRecording = scheduleRecording,
             recordingManager = recordingManager,
+            application = application,
+            livePreviewHandoffManager = livePreviewHandoffManager,
+            playerEngineProvider = playerEngineProvider,
             positionMemo = positionMemo
         ).also(createdViewModels::add)
 
@@ -178,6 +201,53 @@ class EpgViewModelTest {
         } ?: error("Unable to find ViewModel clear method")
         clearMethod.isAccessible = true
         clearMethod.invoke(viewModel)
+    }
+
+    @Test
+    fun `preview channel prepares auxiliary player and registers handoff session`() = runTest {
+        val viewModel = createViewModel()
+        val channel = Channel(
+            id = 11L,
+            name = "Preview News",
+            streamUrl = "https://example.test/live.m3u8",
+            providerId = 7L
+        )
+        val streamInfo = StreamInfo(url = channel.streamUrl, title = channel.name)
+        whenever(channelRepository.getStreamInfo(channel)).thenReturn(Result.Success(streamInfo))
+
+        viewModel.previewChannel(channel)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.previewChannelId).isEqualTo(channel.id)
+        assertThat(viewModel.uiState.value.previewPlayerEngine).isSameInstanceAs(playerEngine)
+        assertThat(viewModel.uiState.value.isPreviewLoading).isTrue()
+        verify(playerEngine).prepare(streamInfo)
+        verify(playerEngine).setVolume(1f)
+        verify(playerEngine).play()
+        verify(livePreviewHandoffManager).registerPreviewSession(channel, streamInfo, playerEngine)
+    }
+
+    @Test
+    fun `begin preview handoff clears epg preview without releasing player`() = runTest {
+        val viewModel = createViewModel()
+        val channel = Channel(
+            id = 12L,
+            name = "Smooth News",
+            streamUrl = "https://example.test/smooth.m3u8",
+            providerId = 7L
+        )
+        val streamInfo = StreamInfo(url = channel.streamUrl, title = channel.name)
+        whenever(channelRepository.getStreamInfo(channel)).thenReturn(Result.Success(streamInfo))
+        whenever(livePreviewHandoffManager.beginFullscreenHandoff(channel.id, playerEngine)).thenReturn(true)
+
+        viewModel.previewChannel(channel)
+        advanceUntilIdle()
+        val handedOff = viewModel.beginPreviewHandoff(channel)
+
+        assertThat(handedOff).isTrue()
+        assertThat(viewModel.uiState.value.previewChannelId).isNull()
+        assertThat(viewModel.uiState.value.previewPlayerEngine).isNull()
+        verify(playerEngine, never()).release()
     }
 
     @Test

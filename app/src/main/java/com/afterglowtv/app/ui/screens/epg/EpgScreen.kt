@@ -88,6 +88,8 @@ import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
 import com.afterglowtv.app.device.rememberIsTelevisionDevice
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.components.ChannelLogoBadge
 import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.ui.notifications.rememberNotificationPermissionGate
@@ -127,6 +129,7 @@ import com.afterglowtv.app.ui.interaction.TvIconButton
 private sealed interface LockedGuideAction {
     data class SelectCategory(val category: Category) : LockedGuideAction
     data class OpenProgram(val channel: Channel, val program: Program) : LockedGuideAction
+    data class PreviewChannel(val channel: Channel) : LockedGuideAction
     data class PlayChannel(val channel: Channel, val returnRoute: String) : LockedGuideAction
     data class PlayArchive(val channel: Channel, val program: Program, val returnRoute: String) : LockedGuideAction
 }
@@ -170,6 +173,12 @@ internal fun shouldUseAdultGuide(state: EpgUiState): Boolean {
     return state.selectedCategoryId == VirtualCategoryIds.ADULT_GUIDE && state.channels.isNotEmpty()
 }
 
+internal fun shouldShowGuideRecordingActions(
+    policy: StorePolicySnapshot,
+    developerModeEnabled: Boolean,
+    canScheduleRecording: Boolean
+): Boolean = canScheduleRecording && policy.canUseDvr(developerModeEnabled)
+
 private fun hasRestrictiveGuideView(state: EpgUiState): Boolean =
     state.programSearchQuery.isNotBlank() ||
         state.showScheduledOnly ||
@@ -194,6 +203,7 @@ fun FullEpgScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val overrideUiState by viewModel.overrideUiState.collectAsStateWithLifecycle()
     val programReminderUiState by viewModel.programReminderUiState.collectAsStateWithLifecycle()
+    val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val isTelevisionDevice = rememberIsTelevisionDevice()
     var selectedProgram by remember { mutableStateOf<Pair<Channel, Program>?>(null) }
     var focusedChannel by remember { mutableStateOf<Channel?>(null) }
@@ -243,18 +253,22 @@ fun FullEpgScreen(
         playerCategoryId == VirtualCategoryIds.RECENT ||
         (playerCategoryId < 0L && playerCategoryId != ChannelRepository.ALL_CHANNELS_ID)
 
+    fun playChannelFullscreen(channel: Channel) {
+        onPlayChannel(
+            channel,
+            playerCategoryId,
+            playerIsVirtualCategory,
+            uiState.combinedProfileId,
+            returnRoute
+        )
+    }
+
     fun executeLockedGuideAction(action: LockedGuideAction) {
         when (action) {
             is LockedGuideAction.SelectCategory -> viewModel.selectCategory(action.category.id)
             is LockedGuideAction.OpenProgram -> selectedProgram = action.channel to action.program
-            is LockedGuideAction.PlayChannel ->
-                onPlayChannel(
-                    action.channel,
-                    playerCategoryId,
-                    playerIsVirtualCategory,
-                    uiState.combinedProfileId,
-                    action.returnRoute
-                )
+            is LockedGuideAction.PreviewChannel -> viewModel.previewChannel(action.channel)
+            is LockedGuideAction.PlayChannel -> playChannelFullscreen(action.channel)
             is LockedGuideAction.PlayArchive ->
                 onPlayArchive(
                     action.channel,
@@ -273,6 +287,22 @@ fun FullEpgScreen(
         showPinDialog = true
     }
 
+    fun selectChannelForPreviewOrFullscreen(channel: Channel) {
+        if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
+            requestLockedGuideAction(LockedGuideAction.PreviewChannel(channel))
+            return
+        }
+        if (uiState.previewChannelId == channel.id) {
+            val handedOff = viewModel.beginPreviewHandoff(channel)
+            if (!handedOff) {
+                viewModel.clearPreview()
+            }
+            playChannelFullscreen(channel)
+        } else {
+            viewModel.previewChannel(channel)
+        }
+    }
+
     LaunchedEffect(fixedCategoryId, initialCategoryId, initialAnchorTime, initialFavoritesOnly) {
         viewModel.applyNavigationContext(
             categoryId = fixedCategoryId ?: initialCategoryId,
@@ -289,7 +319,7 @@ fun FullEpgScreen(
         }
     }
 
-    uiState.pendingRecordingConflict?.let { conflict ->
+    if (StorePolicy.current.canUseDvr(developerModeEnabled)) uiState.pendingRecordingConflict?.let { conflict ->
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { viewModel.dismissRecordingConflict() },
             title = {
@@ -484,6 +514,10 @@ fun FullEpgScreen(
                             uiState = uiState,
                             focusedChannel = focusedChannel,
                             focusedProgram = focusedProgram,
+                            previewChannelId = uiState.previewChannelId,
+                            previewPlayerEngine = uiState.previewPlayerEngine,
+                            isPreviewLoading = uiState.isPreviewLoading,
+                            previewErrorMessage = uiState.previewErrorMessage,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 14.dp, vertical = 4.dp)
@@ -610,7 +644,7 @@ fun FullEpgScreen(
                             if (useAdultGuide && adultGuideCategories.isEmpty()) {
                                 GuideMessageState(
                                     modifier = Modifier.weight(1f),
-                                    title = "Adult Guide is ready",
+                                    title = "XXX Guide is ready",
                                     subtitle = "Press Sort next $adultSortBatchSize to categorize channels in small chunks.",
                                     actionLabel = if (uiState.isAdultGuideCategorizing) {
                                         "Sorting..."
@@ -637,17 +671,7 @@ fun FullEpgScreen(
                                     },
                                     onCategorySelected = { selectedAdultGuideCategoryKey = it },
                                     onChannelClick = { channel ->
-                                        if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
-                                            requestLockedGuideAction(LockedGuideAction.PlayChannel(channel, returnRoute))
-                                        } else {
-                                            onPlayChannel(
-                                                channel,
-                                                playerCategoryId,
-                                                playerIsVirtualCategory,
-                                                uiState.combinedProfileId,
-                                                returnRoute
-                                            )
-                                        }
+                                        selectChannelForPreviewOrFullscreen(channel)
                                     },
                                     onChannelFocused = { channel, isFirstRow ->
                                         topNavVisible = isFirstRow
@@ -666,76 +690,64 @@ fun FullEpgScreen(
                                     onRequestMoreChannels = viewModel::requestMoreChannels
                                 )
                             } else {
-                                Box(
+                                EpgGrid(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .weight(1f)
-                                ) {
-                                    EpgGrid(
-                                        modifier = Modifier.fillMaxSize(),
-                                        channels = uiState.channels,
-                                        favoriteChannelIds = uiState.favoriteChannelIds,
-                                        programsByChannel = uiState.programsByChannel,
-                                        guideWindowStart = uiState.guideWindowStart,
-                                        guideWindowEnd = uiState.guideWindowEnd,
-                                        density = uiState.selectedDensity,
-                                        onChannelClick = { channel ->
-                                            if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
-                                                requestLockedGuideAction(LockedGuideAction.PlayChannel(channel, returnRoute))
-                                            } else {
-                                                onPlayChannel(
-                                                    channel,
-                                                    playerCategoryId,
-                                                    playerIsVirtualCategory,
-                                                    uiState.combinedProfileId,
-                                                    returnRoute
-                                                )
-                                            }
-                                        },
-                                        onProgramClick = { channel, program ->
-                                            topNavVisible = false
-                                            if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
-                                                requestLockedGuideAction(LockedGuideAction.OpenProgram(channel, program))
-                                            } else {
-                                                selectedProgram = channel to program
-                                            }
-                                        },
-                                        onChannelFocused = { channel, currentProgram, isFirstRow ->
-                                            topNavVisible = isFirstRow
-                                            focusedChannel = channel
-                                            focusedProgram = currentProgram
-                                            // Always save the channel ID on focus, even when
-                                            // there's no current program. Channels with no
-                                            // EPG data previously had their focus dropped
-                                            // from the position memo entirely, which is why
-                                            // re-entering the EPG landed on the first
-                                            // channel instead of the user's last spot.
-                                            // programStartMs=0L is a sentinel for
-                                            // "channel-only position"; the restore path
-                                            // falls back to the current-time program.
-                                            viewModel.rememberPosition(
-                                                channelId = channel.id,
-                                                programStartMs = currentProgram?.startTime ?: 0L,
-                                                categoryId = uiState.selectedCategoryId,
-                                            )
-                                        },
-                                        onProgramFocused = { channel, program, isFirstRow ->
-                                            topNavVisible = isFirstRow
+                                        .weight(1f),
+                                    channels = uiState.channels,
+                                    favoriteChannelIds = uiState.favoriteChannelIds,
+                                    programsByChannel = uiState.programsByChannel,
+                                    guideWindowStart = uiState.guideWindowStart,
+                                    guideWindowEnd = uiState.guideWindowEnd,
+                                    density = uiState.selectedDensity,
+                                    onChannelClick = { channel ->
+                                        selectChannelForPreviewOrFullscreen(channel)
+                                    },
+                                    onProgramClick = { channel, program ->
+                                        topNavVisible = false
+                                        if (isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)) {
+                                            requestLockedGuideAction(LockedGuideAction.PreviewChannel(channel))
+                                        } else {
                                             focusedChannel = channel
                                             focusedProgram = program
-                                            viewModel.rememberPosition(
-                                                channelId = channel.id,
-                                                programStartMs = program.startTime,
-                                                categoryId = uiState.selectedCategoryId,
-                                            )
-                                        },
-                                        onRequestGuideToolbarFocus = {
-                                            topNavVisible = true
-                                            guideToolbarFocusRequester.requestFocus()
-                                        },
-                                        onRequestMoreChannels = viewModel::requestMoreChannels
-                                    )
-                                }
+                                            selectChannelForPreviewOrFullscreen(channel)
+                                        }
+                                    },
+                                    onChannelFocused = { channel, currentProgram, isFirstRow ->
+                                        topNavVisible = isFirstRow
+                                        focusedChannel = channel
+                                        focusedProgram = currentProgram
+                                        // Always save the channel ID on focus, even when
+                                        // there's no current program. Channels with no
+                                        // EPG data previously had their focus dropped
+                                        // from the position memo entirely, which is why
+                                        // re-entering the EPG landed on the first
+                                        // channel instead of the user's last spot.
+                                        // programStartMs=0L is a sentinel for
+                                        // "channel-only position"; the restore path
+                                        // falls back to the current-time program.
+                                        viewModel.rememberPosition(
+                                            channelId = channel.id,
+                                            programStartMs = currentProgram?.startTime ?: 0L,
+                                            categoryId = uiState.selectedCategoryId,
+                                        )
+                                    },
+                                    onProgramFocused = { channel, program, isFirstRow ->
+                                        topNavVisible = isFirstRow
+                                        focusedChannel = channel
+                                        focusedProgram = program
+                                        viewModel.rememberPosition(
+                                            channelId = channel.id,
+                                            programStartMs = program.startTime,
+                                            categoryId = uiState.selectedCategoryId,
+                                        )
+                                    },
+                                    onRequestGuideToolbarFocus = {
+                                        topNavVisible = true
+                                        guideToolbarFocusRequester.requestFocus()
+                                    },
+                                    onRequestMoreChannels = viewModel::requestMoreChannels
+                                )
                             }
                         }
                     }
@@ -820,6 +832,7 @@ fun FullEpgScreen(
                         val lockedCategoryId = when (action) {
                             is LockedGuideAction.SelectCategory -> action.category.id
                             is LockedGuideAction.OpenProgram -> action.channel.categoryId
+                            is LockedGuideAction.PreviewChannel -> action.channel.categoryId
                             is LockedGuideAction.PlayChannel -> action.channel.categoryId
                             is LockedGuideAction.PlayArchive -> action.channel.categoryId
                             null -> null
@@ -873,6 +886,11 @@ fun FullEpgScreen(
             }
             val canWatchArchive = !isPlaceholderProgram && channel.isArchivePlayable(program, currentGuideNow())
             val canScheduleRecording = channel.streamUrl.isNotBlank() && program.endTime > currentGuideNow()
+            val showRecordingActions = shouldShowGuideRecordingActions(
+                policy = StorePolicy.current,
+                developerModeEnabled = developerModeEnabled,
+                canScheduleRecording = canScheduleRecording
+            )
             CompactGuideProgramDialog(
                 channel = channel,
                 program = program,
@@ -924,7 +942,7 @@ fun FullEpgScreen(
                         }
                     }
                 },
-                onScheduleRecording = if (canScheduleRecording) {
+                onScheduleRecording = if (showRecordingActions) {
                     {
                         notificationPermissionGate.runRecordingAction {
                             viewModel.scheduleRecording(channel, program)
@@ -933,7 +951,7 @@ fun FullEpgScreen(
                 } else {
                     null
                 },
-                onScheduleDailyRecording = if (canScheduleRecording) {
+                onScheduleDailyRecording = if (showRecordingActions) {
                     {
                         notificationPermissionGate.runRecordingAction {
                             viewModel.scheduleRecording(channel, program, com.afterglowtv.domain.model.RecordingRecurrence.DAILY)
@@ -942,7 +960,7 @@ fun FullEpgScreen(
                 } else {
                     null
                 },
-                onScheduleWeeklyRecording = if (canScheduleRecording) {
+                onScheduleWeeklyRecording = if (showRecordingActions) {
                     {
                         notificationPermissionGate.runRecordingAction {
                             viewModel.scheduleRecording(channel, program, com.afterglowtv.domain.model.RecordingRecurrence.WEEKLY)

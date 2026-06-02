@@ -1,7 +1,6 @@
 package com.afterglowtv.app.ui.model
 
 import com.afterglowtv.domain.model.VirtualCategoryIds
-import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.repository.AdultGuideCachedCategory
 import com.afterglowtv.domain.repository.AdultGuideCacheSnapshot
 import com.google.common.truth.Truth.assertThat
@@ -46,26 +45,6 @@ class AdultGuideCategoryIdsTest {
                 categoryId = VirtualCategoryIds.ADULT_GUIDE
             )
         ).containsExactly(10L, 20L, 30L).inOrder()
-    }
-
-    @Test
-    fun `hidden generated adult categories remove shared channels from visible categories`() {
-        val cartoonGay = Channel(id = 10L, name = "Cartoon Gay", providerId = 7L)
-        val cartoonOnly = Channel(id = 20L, name = "Cartoon Solo", providerId = 7L)
-        val categories = listOf(
-            AdultGuideCategory("cartoon", "Cartoon", listOf(cartoonGay, cartoonOnly)),
-            AdultGuideCategory("gay", "Gay", listOf(cartoonGay))
-        )
-
-        val filtered = filterAdultGuideCategoriesForHiddenIds(
-            generatedCategories = categories,
-            adultChannelIds = listOf(10L, 20L),
-            hiddenCategoryIds = setOf(adultGuideCategoryId("gay"))
-        )
-
-        assertThat(filtered.allChannelIds).containsExactly(20L)
-        assertThat(filtered.categories.map { it.title }).containsExactly("Cartoon")
-        assertThat(filtered.categories.single().channelIds).containsExactly(20L)
     }
 
     @Test

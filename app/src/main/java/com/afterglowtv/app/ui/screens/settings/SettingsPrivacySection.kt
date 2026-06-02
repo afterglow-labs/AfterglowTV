@@ -20,10 +20,15 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.theme.OnBackground
 import com.afterglowtv.app.ui.theme.OnSurface
 import com.afterglowtv.app.ui.theme.Primary
+
+internal fun showAdvancedTextImportSettings(policy: StorePolicySnapshot = StorePolicy.current): Boolean =
+    policy.showAdvancedSourceTypes
 
 internal fun LazyListScope.settingsPrivacySection(
     uiState: SettingsUiState,
@@ -85,7 +90,7 @@ internal fun LazyListScope.settingsPrivacySection(
                 Switch(checked = uiState.isIncognitoMode, onCheckedChange = null)
             }
         }
-        if (uiState.developerModeEnabled) {
+        if (showAdvancedTextImportSettings()) {
             Spacer(Modifier.height(2.dp))
             TvClickableSurface(
                 onClick = { viewModel.toggleXtreamTextClassification() },

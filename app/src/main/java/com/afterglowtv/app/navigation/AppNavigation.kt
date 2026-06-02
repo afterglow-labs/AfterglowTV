@@ -18,22 +18,20 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.afterglowtv.app.R
-import com.afterglowtv.app.ui.model.isAdultGuideCategory
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Episode
 import com.afterglowtv.domain.model.LocalMediaItem
 import com.afterglowtv.domain.model.Movie
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
-import com.afterglowtv.domain.repository.MovieRepository
-import com.afterglowtv.domain.repository.ProviderRepository
-import com.afterglowtv.domain.repository.SeriesRepository
 import com.afterglowtv.app.ui.screens.dashboard.DashboardScreen
 import com.afterglowtv.app.ui.screens.multiview.MultiViewScreen
 import com.afterglowtv.app.ui.screens.home.HomeScreen
 import com.afterglowtv.app.ui.screens.local.LocalMediaScreen
-import com.afterglowtv.app.ui.screens.vod.VodMoviesScreen
 import com.afterglowtv.app.ui.screens.player.PlayerScreen
 import com.afterglowtv.app.ui.screens.provider.ProviderSetupScreen
 import com.afterglowtv.app.ui.screens.settings.SettingsScreen
@@ -44,10 +42,7 @@ import com.afterglowtv.data.preferences.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.Serializable
 import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -80,14 +75,13 @@ data class PlayerNavigationRequest(
 ) : Serializable
 
 object Routes {
-    const val PROVIDER_SETUP = "provider_setup?providerId={providerId}&importUri={importUri}"
+    const val PROVIDER_SETUP = "provider_setup?providerId={providerId}&importUri={importUri}&m3uKind={m3uKind}"
     const val HOME = "home"
     const val LIVE_TV = "live_tv"
     const val LIVE_TV_DESTINATION = "live_tv?categoryId={categoryId}"
     const val LOCAL_MEDIA = "local_media"
     const val VOD_CONTAINER = "vod_container"
     const val ADULT_GUIDE = "adult_guide"
-    const val ADULT_VOD = "adult_vod"
     const val EPG = "epg"
     const val EPG_DESTINATION = "epg?categoryId={categoryId}&anchorTime={anchorTime}&favoritesOnly={favoritesOnly}"
     const val SETTINGS = "settings"
@@ -98,16 +92,18 @@ object Routes {
     const val PLAYER = "player"
     const val SEARCH = "search"
     const val SEARCH_DESTINATION = "search?query={query}"
-    const val MOVIE_DETAIL = "movie_detail/{movieId}?returnRoute={returnRoute}"
-    const val SERIES_DETAIL = "series_detail/{seriesId}?returnRoute={returnRoute}"
     const val WELCOME = "welcome"
     const val PARENTAL_CONTROL_GROUPS = "parental_control_groups/{providerId}"
     const val MULTI_VIEW = "multi_view"
 
 
-    fun providerSetup(providerId: Long? = null, importUri: String? = null): String {
+    fun providerSetup(
+        providerId: Long? = null,
+        importUri: String? = null,
+        m3uKind: ProviderM3uPlaylistKind? = null
+    ): String {
         val encodedImportUri = Uri.encode(importUri ?: "")
-        return "provider_setup?providerId=${providerId ?: -1L}&importUri=$encodedImportUri"
+        return "provider_setup?providerId=${providerId ?: -1L}&importUri=$encodedImportUri&m3uKind=${m3uKind?.name.orEmpty()}"
     }
     fun liveTv(categoryId: Long? = null) = if (categoryId == null) LIVE_TV else "$LIVE_TV?categoryId=$categoryId"
     fun epg(categoryId: Long? = null, anchorTime: Long? = null, favoritesOnly: Boolean? = null): String {
@@ -238,10 +234,6 @@ object Routes {
         )
     }
 
-    fun movieDetail(movieId: Long, returnRoute: String? = null) =
-        "movie_detail/$movieId?returnRoute=${Uri.encode(returnRoute ?: "")}"
-    fun seriesDetail(seriesId: Long, returnRoute: String? = null) =
-        "series_detail/$seriesId?returnRoute=${Uri.encode(returnRoute ?: "")}"
     fun parentalControlGroups(providerId: Long) = "parental_control_groups/$providerId"
 }
 
@@ -249,7 +241,7 @@ object Routes {
 private fun isStreamUrlSafe(url: String?): Boolean {
     if (url.isNullOrBlank()) return false
     val scheme = url.substringBefore("://").lowercase()
-    return scheme in setOf("http", "https", "rtsp", "rtmp", "rtsps", "mms", "xtream", "content", "file")
+    return scheme in setOf("http", "https", "rtsp", "rtmp", "rtsps", "mms", "xtream", "content", "file", "smb")
 }
 
 /** Navigate only when the current destination is fully resumed – prevents double-navigation during transitions. */
@@ -303,67 +295,27 @@ class AppStartupDestinationViewModel @Inject constructor(
 }
 
 internal fun resolveStartupRoute(destination: StartupDestination, developerModeEnabled: Boolean): String =
-    if (!destination.visibleInSettings || (destination.requiresDeveloperMode && !developerModeEnabled)) {
+    resolveStartupRoute(destination, developerModeEnabled, StorePolicy.current)
+
+internal fun resolveStartupRoute(
+    destination: StartupDestination,
+    developerModeEnabled: Boolean,
+    policy: StorePolicySnapshot
+): String =
+    if (
+        (destination.requiresDeveloperMode && (!developerModeEnabled || !policy.showAdultSurfaces)) ||
+        (destination.route == Routes.WELCOME && !policy.showWelcomeRoute)
+    ) {
         Routes.HOME
     } else {
         destination.route
     }
 
-internal enum class AdultGuideStartMode {
-    LIVE,
-    VOD
-}
+private fun isDeveloperLockedRoute(route: String): Boolean =
+    route == Routes.ADULT_GUIDE
 
-internal fun resolveAdultGuideStartMode(
-    hasAdultLive: Boolean,
-    hasAdultVod: Boolean
-): AdultGuideStartMode =
-    if (!hasAdultLive && hasAdultVod) AdultGuideStartMode.VOD else AdultGuideStartMode.LIVE
-
-internal data class AdultGuideEntryState(
-    val startMode: AdultGuideStartMode = AdultGuideStartMode.LIVE
-)
-
-@HiltViewModel
-@OptIn(ExperimentalCoroutinesApi::class)
-internal class AdultGuideEntryViewModel @Inject constructor(
-    providerRepository: ProviderRepository,
-    channelRepository: ChannelRepository,
-    movieRepository: MovieRepository,
-    seriesRepository: SeriesRepository
-) : ViewModel() {
-    val state: StateFlow<AdultGuideEntryState> = providerRepository.getActiveProvider()
-        .flatMapLatest { provider ->
-            if (provider == null) {
-                flowOf(AdultGuideEntryState())
-            } else {
-                combine(
-                    channelRepository.getCategories(provider.id),
-                    movieRepository.getCategories(provider.id),
-                    seriesRepository.getCategories(provider.id)
-                ) { liveCategories, movieCategories, seriesCategories ->
-                    val hasAdultLive = liveCategories.any(::isAdultGuideCategory)
-                    val hasAdultVod =
-                        movieCategories.any(::isAdultGuideCategory) ||
-                            seriesCategories.any(::isAdultGuideCategory)
-                    AdultGuideEntryState(
-                        startMode = resolveAdultGuideStartMode(
-                            hasAdultLive = hasAdultLive,
-                            hasAdultVod = hasAdultVod
-                        )
-                    )
-                }
-            }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000L),
-            initialValue = AdultGuideEntryState()
-        )
-}
-
-private fun isDeveloperRoute(route: String): Boolean =
-    route == Routes.ADULT_GUIDE || route == Routes.LOCAL_MEDIA
+private fun isStoreLockedRoute(route: String): Boolean =
+    route == Routes.ADULT_GUIDE && !StorePolicy.current.showAdultSurfaces
 
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
@@ -383,7 +335,10 @@ fun AppNavigation(mainActivity: MainActivity) {
             }
 
             is ExternalNavigationRequest.Destination -> {
-                if (navController.navigateIfResumed(request.destination.toRoute()) { launchSingleTop = true }) {
+                val route = request.destination.toRoute()
+                if (isStoreLockedRoute(route) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
+                    mainActivity.clearExternalNavigationRequest()
+                } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
                 }
             }
@@ -413,7 +368,7 @@ fun AppNavigation(mainActivity: MainActivity) {
     // NAV-M02/NAV-H02: Single helper replacing repeated tab lambdas without serializing
     // each tab's full UI tree into saved state on every switch.
     fun tabNavigate(route: String) {
-        if (isDeveloperRoute(route) && !developerModeEnabled) {
+        if (isStoreLockedRoute(route) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
             return
         }
         val entry = navController.currentBackStackEntry ?: return
@@ -453,19 +408,35 @@ fun AppNavigation(mainActivity: MainActivity) {
             route = Routes.PROVIDER_SETUP,
             arguments = listOf(
                 navArgument("providerId") { type = NavType.LongType; defaultValue = -1L },
-                navArgument("importUri") { type = NavType.StringType; defaultValue = "" }
+                navArgument("importUri") { type = NavType.StringType; defaultValue = "" },
+                navArgument("m3uKind") { type = NavType.StringType; defaultValue = "" }
             )
         ) { backStackEntry ->
             val providerId = backStackEntry.arguments?.getLong("providerId")?.takeIf { it != -1L }
             val importUri = backStackEntry.arguments?.getString("importUri")?.takeIf { it.isNotBlank() }
+            val m3uKind = backStackEntry.arguments
+                ?.getString("m3uKind")
+                ?.takeIf { it.isNotBlank() }
+                ?.let { value -> runCatching { ProviderM3uPlaylistKind.valueOf(value) }.getOrNull() }
             
             ProviderSetupScreen(
                 editProviderId = providerId,
                 initialImportUri = importUri,
+                initialM3uPlaylistKind = m3uKind,
                 onBack = { navController.popBackStack() },
                 onProviderAdded = dropUnlessResumed {
-                    navController.navigate(startupRoute) {
-                        popUpTo(Routes.PROVIDER_SETUP) { inclusive = true }
+                    val previousRoute = navController.previousBackStackEntry?.destination?.route
+                    if (
+                        previousRoute != null &&
+                        previousRoute != Routes.HOME &&
+                        previousRoute != Routes.WELCOME
+                    ) {
+                        navController.popBackStack()
+                    } else {
+                        navController.navigate(Routes.SETTINGS) {
+                            popUpTo(Routes.PROVIDER_SETUP) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 }
             )
@@ -525,7 +496,15 @@ fun AppNavigation(mainActivity: MainActivity) {
                             )
                         }
                         com.afterglowtv.domain.model.ContentType.SERIES -> {
-                            Routes.seriesDetail(history.contentId, Routes.HOME)
+                            Routes.player(
+                                streamUrl = history.streamUrl,
+                                title = history.title,
+                                internalId = history.contentId,
+                                providerId = history.providerId,
+                                contentType = history.contentType.name,
+                                returnRoute = Routes.HOME,
+                                seriesId = history.seriesId
+                            )
                         }
                         com.afterglowtv.domain.model.ContentType.SERIES_EPISODE -> {
                             Routes.player(
@@ -541,11 +520,7 @@ fun AppNavigation(mainActivity: MainActivity) {
                             )
                         }
                     }
-                    if (route is PlayerNavigationRequest) {
-                        navController.navigateToPlayer(route)
-                    } else {
-                        navController.navigateIfResumed(route as String) { launchSingleTop = true }
-                    }
+                    navController.navigateToPlayer(route)
                 },
                 currentRoute = Routes.HOME
             )
@@ -579,43 +554,7 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
 // ... (rest of file)
 
-        composable(Routes.ADULT_VOD) {
-            if (!developerModeEnabled) {
-                LaunchedEffect(Unit) {
-                    navController.navigate(Routes.HOME) {
-                        launchSingleTop = true
-                    }
-                }
-                return@composable
-            }
-            VodMoviesScreen(
-                onMovieClick = { movie ->
-                    navController.navigateToPlayer(
-                        Routes.moviePlayer(movie).copy(returnRoute = Routes.ADULT_VOD)
-                    )
-                },
-                onContinueWatchingPlay = { history ->
-                    navController.navigateToPlayer(
-                        history.toPlayerNavigationRequest().copy(returnRoute = Routes.ADULT_VOD)
-                    )
-                },
-                onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.ADULT_GUIDE,
-                initialAdultGuideMode = true,
-                wordmark = "Adult",
-                tagline = "Adult titles from your playlists."
-            )
-        }
-
         composable(Routes.LOCAL_MEDIA) {
-            if (!developerModeEnabled) {
-                LaunchedEffect(Unit) {
-                    navController.navigate(Routes.HOME) {
-                        launchSingleTop = true
-                    }
-                }
-                return@composable
-            }
             LocalMediaScreen(
                 onPlayItem = { item ->
                     navController.navigateToPlayer(Routes.localMediaPlayer(item))
@@ -627,24 +566,18 @@ fun AppNavigation(mainActivity: MainActivity) {
 
         composable(Routes.VOD_CONTAINER) {
             VodScreen(
-                onMovieClick = { movie ->
-                    navController.navigateIfResumed(Routes.movieDetail(movie.id, Routes.VOD_CONTAINER))
-                },
-                onContinueWatchingPlay = { history ->
-                    navController.navigateToPlayer(
-                        history.toPlayerNavigationRequest().copy(returnRoute = Routes.VOD_CONTAINER)
-                    )
-                },
-                onSeriesClick = { seriesId ->
-                    navController.navigateIfResumed(Routes.seriesDetail(seriesId, Routes.VOD_CONTAINER))
-                },
                 onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.VOD_CONTAINER
+                currentRoute = Routes.VOD_CONTAINER,
+                onMovieClick = { movie ->
+                    navController.navigateToPlayer(
+                        Routes.moviePlayer(movie).copy(returnRoute = Routes.VOD_CONTAINER)
+                    )
+                }
             )
         }
 
         composable(Routes.ADULT_GUIDE) {
-            if (!developerModeEnabled) {
+            if (!developerModeEnabled || !StorePolicy.current.showAdultSurfaces) {
                 LaunchedEffect(Unit) {
                     navController.navigate(Routes.HOME) {
                         launchSingleTop = true
@@ -652,47 +585,25 @@ fun AppNavigation(mainActivity: MainActivity) {
                 }
                 return@composable
             }
-            val adultGuideEntryViewModel: AdultGuideEntryViewModel = hiltViewModel()
-            val entryState = adultGuideEntryViewModel.state.collectAsStateWithLifecycle().value
-            if (entryState.startMode == AdultGuideStartMode.VOD) {
-                VodMoviesScreen(
-                    onMovieClick = { movie ->
-                        navController.navigateToPlayer(
-                            Routes.moviePlayer(movie).copy(returnRoute = Routes.ADULT_GUIDE)
+            HomeScreen(
+                onChannelClick = { channel, category, provider, combinedProfileId, combinedSourceFilterProviderId ->
+                    navController.navigateToPlayer(
+                        Routes.livePlayer(
+                            channel = channel,
+                            categoryId = adultGuidePlaybackCategoryId(category),
+                            providerId = provider?.id ?: channel.providerId,
+                            isVirtual = true,
+                            combinedProfileId = combinedProfileId,
+                            combinedSourceFilterProviderId = combinedSourceFilterProviderId,
+                            returnRoute = Routes.ADULT_GUIDE
                         )
-                    },
-                    onContinueWatchingPlay = { history ->
-                        navController.navigateToPlayer(
-                            history.toPlayerNavigationRequest().copy(returnRoute = Routes.ADULT_GUIDE)
-                        )
-                    },
-                    onNavigate = { route -> tabNavigate(route) },
-                    currentRoute = Routes.ADULT_GUIDE,
-                    initialAdultGuideMode = true,
-                    wordmark = "Adult",
-                    tagline = "Adult titles from your playlists."
-                )
-            } else {
-                HomeScreen(
-                    onChannelClick = { channel, category, provider, combinedProfileId, combinedSourceFilterProviderId ->
-                        navController.navigateToPlayer(
-                            Routes.livePlayer(
-                                channel = channel,
-                                categoryId = adultGuidePlaybackCategoryId(category),
-                                providerId = provider?.id ?: channel.providerId,
-                                isVirtual = true,
-                                combinedProfileId = combinedProfileId,
-                                combinedSourceFilterProviderId = combinedSourceFilterProviderId,
-                                returnRoute = Routes.ADULT_GUIDE
-                            )
-                        )
-                    },
-                    onNavigate = { route -> tabNavigate(route) },
-                    currentRoute = Routes.ADULT_GUIDE,
-                    adultGuideMode = true,
-                    titleRes = R.string.nav_adult_guide
-                )
-            }
+                    )
+                },
+                onNavigate = { route -> tabNavigate(route) },
+                currentRoute = Routes.ADULT_GUIDE,
+                adultGuideMode = true,
+                titleRes = R.string.nav_adult_guide
+            )
         }
 
         composable(
@@ -758,8 +669,8 @@ fun AppNavigation(mainActivity: MainActivity) {
             val backupUri = backStackEntry.arguments?.getString("backupUri")?.takeIf { it.isNotBlank() }
             SettingsScreen(
                 onNavigate = { route -> tabNavigate(route) },
-                onAddProvider = dropUnlessResumed {
-                    navController.navigate(Routes.providerSetup(null))
+                onAddProvider = { m3uKind ->
+                    navController.navigateIfResumed(Routes.providerSetup(m3uKind = m3uKind))
                 },
                 onEditProvider = { provider ->
                     navController.navigateIfResumed(Routes.providerSetup(provider.id))
@@ -826,15 +737,13 @@ fun AppNavigation(mainActivity: MainActivity) {
                     )
                 },
                 onMovieClick = { movie ->
-                     navController.navigateIfResumed(
-                         Routes.movieDetail(movie.id, Routes.search(backStackEntry.arguments?.getString("query").orEmpty()))
-                     )
+                    navController.navigateToPlayer(
+                        Routes.moviePlayer(movie).copy(
+                            returnRoute = Routes.search(backStackEntry.arguments?.getString("query").orEmpty())
+                        )
+                    )
                 },
-                onSeriesClick = { series ->
-                     navController.navigateIfResumed(
-                         Routes.seriesDetail(series.id, Routes.search(backStackEntry.arguments?.getString("query").orEmpty()))
-                     )
-                },
+                onSeriesClick = { _ -> Unit },
                 onNavigate = { route -> tabNavigate(route) },
                 currentRoute = Routes.SEARCH
             )
@@ -887,72 +796,6 @@ fun AppNavigation(mainActivity: MainActivity) {
                         if (route == Routes.MULTI_VIEW) {
                             popUpTo(Routes.PLAYER) { inclusive = true }
                         }
-                    }
-                }
-            )
-        }
-
-        composable(
-            route = Routes.MOVIE_DETAIL,
-            arguments = listOf(
-                navArgument("movieId") { type = NavType.LongType },
-                navArgument("returnRoute") { type = NavType.StringType; defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val returnRoute = backStackEntry.arguments?.getString("returnRoute").orEmpty().takeIf { it.isNotBlank() }
-            val movieId = backStackEntry.arguments?.getLong("movieId") ?: -1L
-            com.afterglowtv.app.ui.screens.movies.MovieDetailScreen(
-                onPlay = { movie ->
-                    navController.navigateToPlayer(
-                        Routes.moviePlayer(movie).copy(
-                            returnRoute = Routes.movieDetail(
-                                movieId = movie.id.takeIf { it > 0L } ?: movieId,
-                                returnRoute = returnRoute
-                            )
-                        )
-                    )
-                },
-                onBack = {
-                    if (!returnRoute.isNullOrBlank()) {
-                        navController.navigate(returnRoute) {
-                            popUpTo(backStackEntry.destination.route ?: Routes.MOVIE_DETAIL) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    } else {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
-
-        composable(
-            route = Routes.SERIES_DETAIL,
-            arguments = listOf(
-                navArgument("seriesId") { type = NavType.LongType },
-                navArgument("returnRoute") { type = NavType.StringType; defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val returnRoute = backStackEntry.arguments?.getString("returnRoute").orEmpty().takeIf { it.isNotBlank() }
-            val seriesId = backStackEntry.arguments?.getLong("seriesId") ?: -1L
-            com.afterglowtv.app.ui.screens.series.SeriesDetailScreen(
-                onEpisodeClick = { episode ->
-                     navController.navigateToPlayer(
-                         Routes.episodePlayer(episode).copy(
-                             returnRoute = Routes.seriesDetail(
-                                 seriesId = episode.seriesId.takeIf { it > 0L } ?: seriesId,
-                                 returnRoute = returnRoute
-                             )
-                         )
-                     )
-                },
-                onBack = {
-                    if (!returnRoute.isNullOrBlank()) {
-                        navController.navigate(returnRoute) {
-                            popUpTo(backStackEntry.destination.route ?: Routes.SERIES_DETAIL) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    } else {
-                        navController.popBackStack()
                     }
                 }
             )

@@ -2,7 +2,6 @@ package com.afterglowtv.app.player
 
 import com.google.common.truth.Truth.assertThat
 import com.afterglowtv.domain.model.Channel
-import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.StreamInfo
 import com.afterglowtv.player.PlayerEngine
 import kotlinx.coroutines.Dispatchers
@@ -48,44 +47,7 @@ class LivePreviewHandoffManagerTest {
 
         assertThat(session).isNotNull()
         assertThat(session?.engine).isSameInstanceAs(engine)
-        assertThat(session?.contentType).isEqualTo(ContentType.LIVE)
         assertThat(manager.consumeFullscreenHandoff(channel.id, channel.providerId)).isNull()
-        verifyNoInteractions(engine)
-    }
-
-    @Test
-    fun `movie preview only hands off to movie playback`() = runTest(testDispatcher) {
-        val manager = LivePreviewHandoffManager()
-        val engine = mock<PlayerEngine>()
-        val movieId = 77L
-        val providerId = 12L
-        val streamInfo = StreamInfo(url = "https://example.com/movie.mp4", title = "Movie")
-
-        manager.registerPreviewSession(
-            contentId = movieId,
-            providerId = providerId,
-            contentType = ContentType.MOVIE,
-            streamInfo = streamInfo,
-            engine = engine
-        )
-
-        assertThat(manager.beginFullscreenHandoff(movieId, engine)).isTrue()
-        assertThat(
-            manager.consumeFullscreenHandoff(
-                contentId = movieId,
-                providerId = providerId,
-                contentType = ContentType.LIVE
-            )
-        ).isNull()
-
-        val session = manager.consumeFullscreenHandoff(
-            contentId = movieId,
-            providerId = providerId,
-            contentType = ContentType.MOVIE
-        )
-
-        assertThat(session?.engine).isSameInstanceAs(engine)
-        assertThat(session?.contentType).isEqualTo(ContentType.MOVIE)
         verifyNoInteractions(engine)
     }
 

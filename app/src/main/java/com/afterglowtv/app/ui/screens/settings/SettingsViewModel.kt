@@ -174,6 +174,7 @@ class SettingsViewModel @Inject constructor(
         registerCombinedProfileObservers(
             scope = viewModelScope,
             combinedM3uRepository = combinedM3uRepository,
+            preferencesRepository = preferencesRepository,
             uiState = _uiState
         )
         registerDerivedStateObservers(
@@ -400,10 +401,6 @@ class SettingsViewModel @Inject constructor(
         providerActions.setM3uVodClassificationEnabled(viewModelScope, providerId, enabled)
     }
 
-    fun setBuiltInPlaylistsLoaded(loaded: Boolean) {
-        providerActions.setBuiltInPlaylistsLoaded(viewModelScope, loaded)
-    }
-
     fun refreshProviderClassification(providerId: Long) {
         refreshProvider(providerId)
     }
@@ -472,12 +469,6 @@ class SettingsViewModel @Inject constructor(
     fun setShowAdultGuideTab(enabled: Boolean) {
         viewModelScope.launch {
             preferencesRepository.setShowAdultGuideTab(enabled)
-        }
-    }
-
-    fun setAdultGuideTabLabel(label: String) {
-        viewModelScope.launch {
-            preferencesRepository.setAdultGuideTabLabel(label)
         }
     }
 
@@ -1063,9 +1054,16 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun addSmbLocalMediaLibrary(config: SmbShareConfig) {
-        val target = listOf(config.host, config.shareName, config.path)
-            .filter { it.isNotBlank() }
-            .joinToString("/")
+        val target = buildString {
+            append("\\\\")
+            append(config.host)
+            append("\\")
+            append(config.shareName)
+            config.path.takeIf { it.isNotBlank() }?.let { path ->
+                append("\\")
+                append(path.replace('/', '\\'))
+            }
+        }
         startLocalMediaScan("Trying to connect to $target...") {
             localMediaRepository.addSmbLibrary(config)
         }

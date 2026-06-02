@@ -30,13 +30,14 @@ import com.afterglowtv.domain.model.Provider
 import androidx.compose.ui.res.stringResource
 import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.design.requestFocusSafely
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import kotlinx.coroutines.delay
 
 
 @Composable
 fun SettingsScreen(
     onNavigate: (String) -> Unit,
-    onAddProvider: () -> Unit = {},
+    onAddProvider: (ProviderM3uPlaylistKind?) -> Unit = {},
     onEditProvider: (Provider) -> Unit = {},
     onNavigateToParentalControl: (Long) -> Unit = {},
     onReturnToPlayer: () -> Unit = {},
@@ -160,14 +161,17 @@ fun SettingsScreen(
         val uri = initialBackupImportUri?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
         if (handledInitialBackupImportUri == uri) return@LaunchedEffect
         handledInitialBackupImportUri = uri
-        dialogState.selectedCategory = 6
+        dialogState.selectedCategory = SETTINGS_CATEGORY_BACKUP
         viewModel.inspectBackup(uri)
     }
 
     LaunchedEffect(uiState.developerModeEnabled, dialogState.selectedCategory) {
-        val hiddenReviewSections = setOf(4, 5, 7)
-        if (!uiState.developerModeEnabled && dialogState.selectedCategory in hiddenReviewSections) {
-            dialogState.selectedCategory = 0
+        if (
+            dialogState.selectedCategory !in visibleSettingsCategoryIds(
+                developerModeEnabled = uiState.developerModeEnabled
+            )
+        ) {
+            dialogState.selectedCategory = SETTINGS_CATEGORY_PROVIDERS
         }
     }
 
@@ -181,7 +185,7 @@ fun SettingsScreen(
             currentRoute = currentRoute,
             onNavigate = { if (!uiState.isSyncing) onNavigate(it) },
             title = stringResource(R.string.settings_title),
-            subtitle = stringResource(R.string.settings_providers_subtitle),
+            subtitle = "",
             navigationChrome = AppNavigationChrome.TopBar,
             compactHeader = true,
             showScreenHeader = false
@@ -195,8 +199,8 @@ fun SettingsScreen(
                 Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     SettingsNavigationRail(
                         selectedCategory = dialogState.selectedCategory,
-                        focusRequester = settingsNavFocusRequester,
                         developerModeEnabled = uiState.developerModeEnabled,
+                        focusRequester = settingsNavFocusRequester,
                         onCategorySelected = { dialogState.selectedCategory = it },
                         onNavigate = onNavigate,
                     )

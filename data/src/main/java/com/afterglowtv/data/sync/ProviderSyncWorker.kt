@@ -80,11 +80,6 @@ internal suspend fun shouldTrackInitialLiveOnboarding(
 ): Boolean = provider.type == ProviderType.XTREAM_CODES &&
     onboardingDao.getIncompleteByProvider(provider.id) != null
 
-internal fun shouldSkipBackgroundProviderSync(
-    provider: com.afterglowtv.data.local.entity.ProviderEntity,
-    requestedProviderId: Long
-): Boolean = requestedProviderId == -1L && provider.type == ProviderType.M3U
-
 class ProviderSyncWorker(
     appContext: Context,
     workerParams: WorkerParameters
@@ -119,9 +114,6 @@ class ProviderSyncWorker(
 
             var sawRetryableFailure = false
             providers.forEach { provider ->
-                if (shouldSkipBackgroundProviderSync(provider, requestedProviderId)) {
-                    return@forEach
-                }
                 val trackInitialLiveOnboarding = shouldTrackInitialLiveOnboarding(
                     provider = provider,
                     onboardingDao = entryPoint.xtreamLiveOnboardingDao()

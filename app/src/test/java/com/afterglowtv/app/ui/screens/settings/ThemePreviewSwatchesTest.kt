@@ -23,6 +23,7 @@ class ThemePreviewSwatchesTest {
             assertThat(swatches).contains(palette.accent)
             assertThat(swatches).contains(palette.accentLight)
             assertThat(swatches).contains(palette.nowLine)
+            assertThat(swatches).contains(palette.info)
             assertThat(swatches.toSet().size).isEqualTo(swatches.size)
         }
     }
@@ -42,7 +43,24 @@ class ThemePreviewSwatchesTest {
             assertThat(swatches).contains(palette.accent)
             assertThat(swatches).contains(palette.accentLight)
             assertThat(swatches).contains(palette.nowLine)
+            assertThat(swatches).contains(palette.surfaceAccent)
+            assertThat(swatches).contains(palette.info)
             assertThat(swatches.toSet().size).isEqualTo(swatches.size)
+        }
+    }
+
+    @Test
+    fun `afterglow dark one through four previews show distinct role colors`() {
+        val previews = listOf(
+            AppPalette.Afterglow1,
+            AppPalette.AfterglowSunset,
+            AppPalette.Afterglow3,
+            AppPalette.Afterglow4,
+        ).map(::themePreviewSwatches)
+
+        assertThat(previews.toSet().size).isEqualTo(previews.size)
+        previews.forEach { swatches ->
+            assertThat(swatches).hasSize(6)
         }
     }
 
@@ -53,7 +71,7 @@ class ThemePreviewSwatchesTest {
         assertEquals(
             listOf(
                 palette.surfaceDeep,
-                palette.surfaceBase,
+                palette.surfaceAccent,
                 palette.accent,
                 palette.accentLight,
                 palette.nowLine,

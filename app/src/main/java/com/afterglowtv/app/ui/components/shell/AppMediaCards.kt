@@ -1,5 +1,6 @@
 package com.afterglowtv.app.ui.components.shell
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -65,6 +66,9 @@ import com.afterglowtv.app.ui.components.rememberCrossfadeImageModel
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.AppMotion
 import com.afterglowtv.app.ui.design.FocusSpec
+import com.afterglowtv.app.ui.design.GlowSpec
+import com.afterglowtv.app.ui.design.Glows
+import com.afterglowtv.app.ui.design.afterglow
 import com.afterglowtv.app.ui.interaction.mouseClickable
 import com.afterglowtv.app.ui.interaction.rememberTvInteractionSounds
 import com.afterglowtv.app.ui.model.VodTitleFormatter
@@ -88,12 +92,48 @@ private object LiveChannelRowTicker {
     )
 }
 
+@StringRes
+internal fun liveChannelFallbackProgramLabelRes(adultChannelMode: Boolean): Int? =
+    if (adultChannelMode) {
+        null
+    } else {
+        R.string.label_no_schedule
+    }
+
+internal fun liveChannelRowGlowSpecs(focused: Boolean): List<GlowSpec> =
+    if (focused) Glows.focus else emptyList()
+
+internal fun liveChannelNumberBadgeLabel(
+    channelNumber: Int,
+    separateChannelNumber: Boolean
+): String? =
+    if (separateChannelNumber && channelNumber > 0) "#$channelNumber" else null
+
+internal fun liveChannelTitleText(
+    channelNumber: Int,
+    channelName: String,
+    separateChannelNumber: Boolean
+): String = buildString {
+    if (!separateChannelNumber) {
+        val numberLabel = channelNumber.takeIf { it > 0 }?.toString()?.padStart(2, '0')
+        if (numberLabel != null) {
+            append(numberLabel)
+            append("  ")
+        } else if (channelNumber == 0) {
+            append("--  ")
+        }
+    }
+    append(channelName)
+}
+
 @Composable
 fun LiveChannelRowCard(
     channel: Channel,
     sourceBadgeLabel: String? = null,
     modifier: Modifier = Modifier,
-    rowHeight: Dp = 68.dp
+    rowHeight: Dp = 68.dp,
+    @StringRes fallbackProgramLabelRes: Int? = R.string.label_no_schedule,
+    separateChannelNumber: Boolean = false
 ) {
     val isUltraCompact = rowHeight <= 60.dp
     val isDense = rowHeight <= 56.dp
@@ -160,22 +200,33 @@ fun LiveChannelRowCard(
                         }
                     }
                 }
-                Text(
-                    text = buildString {
-                        val numberLabel = channel.number.takeIf { it > 0 }?.toString()?.padStart(2, '0')
-                        if (numberLabel != null) {
-                            append(numberLabel)
-                            append("  ")
-                        } else if (channel.number == 0) {
-                            append("--  ")
-                        }
-                        append(channel.name)
-                    },
-                    style = if (isDense) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleSmall,
-                    color = AppColors.TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    liveChannelNumberBadgeLabel(channel.number, separateChannelNumber)?.let { numberLabel ->
+                        StatusPill(
+                            label = numberLabel,
+                            containerColor = AppColors.SurfaceEmphasis,
+                            contentColor = AppColors.TextSecondary,
+                            cornerRadius = 6.dp,
+                            horizontalPadding = 6.dp,
+                            verticalPadding = 2.dp
+                        )
+                    }
+                    Text(
+                        text = liveChannelTitleText(
+                            channelNumber = channel.number,
+                            channelName = channel.name,
+                            separateChannelNumber = separateChannelNumber
+                        ),
+                        style = if (isDense) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleSmall,
+                        color = AppColors.TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
                 val program = channel.currentProgram
                 if (program != null) {
                     Text(
@@ -198,9 +249,9 @@ fun LiveChannelRowCard(
                             trackColor = AppColors.SurfaceEmphasis
                         )
                     }
-                } else {
+                } else if (fallbackProgramLabelRes != null) {
                     Text(
-                        text = stringResource(R.string.label_no_schedule),
+                        text = stringResource(fallbackProgramLabelRes),
                         style = if (isDense) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodySmall,
                         color = AppColors.TextTertiary
                     )
@@ -220,7 +271,9 @@ fun LiveChannelRowSurface(
     isLocked: Boolean = false,
     isReorderMode: Boolean = false,
     isDragging: Boolean = false,
-    rowHeight: Dp = 68.dp
+    rowHeight: Dp = 68.dp,
+    @StringRes fallbackProgramLabelRes: Int? = R.string.label_no_schedule,
+    separateChannelNumber: Boolean = false
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val sounds = rememberTvInteractionSounds()
@@ -252,6 +305,7 @@ fun LiveChannelRowSurface(
         animationSpec = AppMotion.FocusSpec,
         label = "liveRowScale"
     )
+    val rowShape = RoundedCornerShape(16.dp)
 
     Surface(
         onClick = {
@@ -260,6 +314,7 @@ fun LiveChannelRowSurface(
         },
         onLongClick = onLongClick,
         modifier = modifier
+            .afterglow(liveChannelRowGlowSpecs(isFocused), rowShape)
             .focusRequester(focusRequester)
             .fillMaxWidth()
             .mouseClickable(
@@ -285,9 +340,9 @@ fun LiveChannelRowSurface(
                     sounds.playNavigate()
                 }
                 isFocused = it.isFocused
-            },
+        },
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(16.dp)),
+        shape = ClickableSurfaceDefaults.shape(rowShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = AppColors.SurfaceElevated,
             focusedContainerColor = AppColors.SurfaceEmphasis
@@ -298,7 +353,7 @@ fun LiveChannelRowSurface(
                     width = if (isDragging) 4.dp else FocusSpec.BorderWidth,
                     color = if (isDragging) AppColors.Warning else AppColors.Focus
                 ),
-                shape = RoundedCornerShape(16.dp)
+                shape = rowShape
             )
         )
     ) {
@@ -307,7 +362,9 @@ fun LiveChannelRowSurface(
                 channel = channel,
                 sourceBadgeLabel = sourceBadgeLabel,
                 modifier = Modifier.fillMaxWidth(),
-                rowHeight = rowHeight
+                rowHeight = rowHeight,
+                fallbackProgramLabelRes = fallbackProgramLabelRes,
+                separateChannelNumber = separateChannelNumber
             )
             if (isLocked) {
                 Box(

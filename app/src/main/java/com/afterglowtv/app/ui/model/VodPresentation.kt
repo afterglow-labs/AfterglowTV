@@ -10,6 +10,11 @@ data class VodDisplayTitle(
 object VodTitleFormatter {
     private val yearPattern = Regex("""(?<!\d)((?:19|20)\d{2})(?!\d)""")
     private val extensionPattern = Regex("""\.(mkv|mp4|avi|mov|m4v|ts|webm)$""", RegexOption.IGNORE_CASE)
+    private val bracketPattern = Regex("""[\[\]{}()]""")
+    private val dottedSeparatorPattern = Regex("""[._]+""")
+    private val whitespacePattern = Regex("""\s+""")
+    private val trailingSeparatorPattern = Regex("""\s+[-:]\s*$""")
+    private val romanNumeralPattern = Regex("""[IVXLCDM]{2,}""")
     private val removableTokens = setOf(
         "240p",
         "360p",
@@ -53,9 +58,9 @@ object VodTitleFormatter {
 
         val withoutExtension = raw.replace(extensionPattern, "")
         val normalized = withoutExtension
-            .replace(Regex("""[\[\]{}()]"""), " ")
-            .replace(Regex("""[._]+"""), " ")
-            .replace(Regex("""\s+"""), " ")
+            .replace(bracketPattern, " ")
+            .replace(dottedSeparatorPattern, " ")
+            .replace(whitespacePattern, " ")
             .trim()
 
         val year = yearPattern.find(normalized)?.value ?: fallbackYear
@@ -71,7 +76,7 @@ object VodTitleFormatter {
 
         val title = tokens
             .joinToString(" ")
-            .replace(Regex("""\s+[-:]\s*$"""), "")
+            .replace(trailingSeparatorPattern, "")
             .trim()
             .ifBlank { raw }
 
@@ -82,14 +87,14 @@ object VodTitleFormatter {
     }
 
     private fun String.toDisplayTitle(): String {
-        return split(Regex("""\s+"""))
+        return split(whitespacePattern)
             .filter { it.isNotBlank() }
             .joinToString(" ") { word ->
                 val stripped = word.trim()
                 val uppercase = stripped.uppercase(Locale.US)
                 when {
                     uppercase in keepUppercase -> uppercase
-                    uppercase.matches(Regex("""[IVXLCDM]{2,}""")) -> uppercase
+                    uppercase.matches(romanNumeralPattern) -> uppercase
                     else -> stripped.lowercase(Locale.US).replaceFirstChar { char ->
                         if (char.isLowerCase()) char.titlecase(Locale.US) else char.toString()
                     }
@@ -139,6 +144,38 @@ object VodGuideRowBuilder {
             VodGuideRow(
                 title = title,
                 items = rowItems.take(maximumItemsPerRow)
+            )
+        }
+    }
+
+    fun buildAdultRows(
+        items: List<VodGuideItem>,
+        uncategorizedTitle: String
+    ): List<VodGuideRow> {
+        if (items.isEmpty()) return emptyList()
+
+        val grouped = linkedMapOf<String, MutableList<VodGuideItem>>()
+        val titlesByKey = linkedMapOf<String, String>()
+        items.forEach { item ->
+            val matches = AdultGuideCategoryBuilder.keywordCategoryMatches(
+                primaryValue = item.title,
+                contextValues = arrayOf(item.providerCategory)
+            )
+            if (matches.isEmpty()) {
+                titlesByKey.putIfAbsent(uncategorizedTitle, uncategorizedTitle)
+                grouped.getOrPut(uncategorizedTitle) { mutableListOf() }.add(item)
+            } else {
+                matches.forEach { match ->
+                    titlesByKey.putIfAbsent(match.key, match.title)
+                    grouped.getOrPut(match.key) { mutableListOf() }.add(item)
+                }
+            }
+        }
+
+        return grouped.map { (key, rowItems) ->
+            VodGuideRow(
+                title = titlesByKey[key] ?: key,
+                items = rowItems.distinctBy { it.id }
             )
         }
     }

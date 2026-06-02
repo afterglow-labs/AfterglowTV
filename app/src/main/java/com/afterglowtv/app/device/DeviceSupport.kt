@@ -16,9 +16,6 @@ fun Context.isTelevisionDevice(): Boolean {
     if (packageManager.hasSystemFeature("android.software.leanback_only")) {
         return true
     }
-    if (packageManager.hasSystemFeature(PackageManager.FEATURE_TELEVISION)) {
-        return true
-    }
     if (packageManager.hasSystemFeature("amazon.hardware.fire_tv")) {
         return true
     }

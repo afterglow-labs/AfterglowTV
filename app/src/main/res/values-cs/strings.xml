@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Afterglow TV</string>
+    <string name="app_name">AfterglowTV</string>
     <string name="nav_home">Domů</string>
     <string name="nav_live_tv">Živé TV</string>
     <string name="nav_movies">Filmy</string>
@@ -102,7 +102,7 @@
     <string name="dashboard_provider_no_expiry">Není uvedena žádná platnost</string>
     <string name="dashboard_warning_title">Poskytovatel vyžaduje pozornost</string>
     <string name="dashboard_warning_review">Otevřete Podrobnosti poskytovatele</string>
-    <string name="dashboard_update_title">Afterglow TV %1$s je k dispozici</string>
+    <string name="dashboard_update_title">AfterglowTV %1$s je k dispozici</string>
     <string name="dashboard_update_available">Novější verze aplikace je uložená v mezipaměti a připravená ke kontrole v Nastavení.</string>
     <string name="dashboard_update_install_ready">Nejnovější aktualizace už byla stažena. Otevřete Nastavení a nainstalujte ji.</string>
     <string name="dashboard_update_open_settings">Otevřít aktualizace</string>
@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d k pokračování</string>
     <string name="dashboard_stat_movies">%1$d filmů</string>
     <string name="dashboard_stat_series">série %1$d</string>
-    <string name="dashboard_empty_title">Nastavte poskytovatele pro odemknutí domovské obrazovky</string>
-    <string name="dashboard_empty_body">Nejprve přidejte playlist nebo zdroj Xtream. Jakmile bude poskytovatel aktivní, Domů zobrazí oblíbené kanály, pokračování ve sledování a nové řádky knihovny.</string>
+    <string name="dashboard_empty_title">Vítejte v AfterglowTV</string>
+    <string name="dashboard_empty_body">Procházejte svého osobního průvodce a síťové sdílené složky kdykoli. Chcete na domovské obrazovce i živé kanály a řádky na vyžádání? Kdykoli přidejte playlist nebo poskytovatele Xtream.</string>
     <string name="pin_dialog_title">Zadejte PIN</string>
     <string name="pin_dialog_cancel">Zrušit</string>
     <string name="category_options_set_default">Nastavit jako výchozí skupinu</string>
@@ -382,8 +382,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_container">VOD</string>
-    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategorie</string>
     <string name="vod_classic_category_search">Hledat v kategoriích</string>
     <string name="vod_classic_all">Vše</string>
@@ -402,7 +402,7 @@
     <string name="settings_about_subtitle">Podrobnosti o verzi, sestavení a podpoře pro tuto instalaci.</string>
     <string name="settings_app_version">Verze aplikace</string>
     <string name="settings_build">Stavět</string>
-    <string name="settings_build_desc">Afterglow TV pro Android TV</string>
+    <string name="settings_build_desc">AfterglowTV pro Android TV</string>
     <string name="settings_enabled">Zapnuto</string>
     <string name="settings_disabled">Vypnuto</string>
     <string name="settings_developed_by">Vyvinuto</string>
@@ -412,7 +412,7 @@
     <string name="settings_donate">Podpora na Ko-fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">Aktualizace</string>
-    <string name="settings_updates_subtitle">Zkontrolujte novější verze Afterglow TV na GitHub Releases, aniž byste opustili aplikaci.</string>
+    <string name="settings_updates_subtitle">Zkontrolujte novější verze AfterglowTV na GitHub Releases, aniž byste opustili aplikaci.</string>
     <string name="settings_update_auto_check">Automaticky kontrolovat aktualizace</string>
     <string name="settings_update_latest_release">Nejnovější verze</string>
     <string name="settings_update_status">Stav aktualizace</string>
@@ -436,8 +436,8 @@
     <string name="settings_update_status_check_failed">Poslední kontrola selhala</string>
     <string name="settings_update_status_downloading">Stahování aktualizace</string>
     <string name="settings_update_status_ready_to_install">Připraveno k instalaci</string>
-    <string name="settings_update_available_message">Afterglow TV %1$s je k dispozici.</string>
-    <string name="settings_update_current_message">Máte již nejnovější verzi Afterglow TV.</string>
+    <string name="settings_update_available_message">AfterglowTV %1$s je k dispozici.</string>
+    <string name="settings_update_current_message">Máte již nejnovější verzi AfterglowTV.</string>
     <string name="settings_syncing">Probíhá synchronizace dat, čekejte prosím...</string>
     <string name="settings_syncing_title">Synchronizace dat...</string>
     <string name="settings_syncing_subtitle">Počkejte prosím, než se importuje váš playlist.</string>
@@ -700,7 +700,7 @@
     <string name="a11y_catch_up_available">Catch-up k dispozici</string>
     <string name="a11y_now_playing">Právě hraje %1$s</string>
     <string name="a11y_channel_with_number">Kanál %1$d, %2$s</string>
-    <string name="setup_title_afterglowtv">Afterglow TV</string>
+    <string name="setup_title_afterglowtv">AfterglowTV</string>
     <string name="setup_provider_title">Přidejte poskytovatele</string>
     <string name="setup_edit_provider">Upravit poskytovatele</string>
     <string name="setup_update_desc">Aktualizujte podrobnosti svého poskytovatele IPTV</string>
@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Určete, jak se při nastavení a obnovení poskytovatele načítají data průvodce.</string>
     <string name="setup_advanced_options_show">Zobrazit</string>
     <string name="setup_advanced_options_hide">Skrýt</string>
-    <string name="setup_m3u_vod_classification_label">Klasifikace VOD v M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Pouze M3U. Použijte URL playlistu a heuristiku group-title k zařazení odpovídajících položek do Filmů místo Živého TV.</string>
     <string name="setup_epg_sync_mode_label">Synchronizace EPG</string>
     <string name="setup_epg_sync_mode_helper">Režim „Hned“ zachová dnešní chování. „Na pozadí“ nejdřív dokončí nastavení a „Přeskočit“ nechá aktualizaci průvodce na později.</string>
     <string name="setup_epg_sync_mode_upfront_title">Plné EPG nyní</string>
@@ -1165,21 +1163,21 @@
     <string name="settings_history_cleared">Historie sledování a nedávné události byly vymazány</string>
     <string name="settings_pin_changed">PIN byl úspěšně uložen</string>
     <string name="home_reorder_channels">Uspořádat kanály</string>
-    <string name="tv_input_setup_scanning_title">Prohledávají se kanály Afterglow TV</string>
+    <string name="tv_input_setup_scanning_title">Prohledávají se kanály AfterglowTV</string>
     <string name="tv_input_setup_success_title">Živé TV je připraveno</string>
     <string name="tv_input_setup_no_provider_title">Není nakonfigurován žádný IPTV poskytovatel</string>
     <string name="tv_input_setup_error_title">Automatické vyhledávání selhalo</string>
     <string name="tv_input_setup_idle_title">Připravuje se integrace Živé TV</string>
-    <string name="tv_input_setup_scanning_body">Afterglow TV synchronizuje vašeho aktivního poskytovatele do Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">AfterglowTV synchronizuje vašeho aktivního poskytovatele do Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">Vaše kanály byly úspěšně synchronizovány.</string>
-    <string name="tv_input_setup_no_provider_body">Přidejte alespoň jednoho IPTV poskytovatele ve Afterglow TV a pak se vraťte sem, abyste prohledali kanály do Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">Přidejte alespoň jednoho IPTV poskytovatele ve AfterglowTV a pak se vraťte sem, abyste prohledali kanály do Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">Synchronizace vstupu televizoru nebyla dokončena.</string>
     <string name="tv_input_setup_idle_body">Prosím, čekejte.</string>
     <string name="tv_input_setup_source_format">Zdroj: %1$s</string>
-    <string name="tv_input_setup_open_setup">Otevřít nastavení Afterglow TV</string>
+    <string name="tv_input_setup_open_setup">Otevřít nastavení AfterglowTV</string>
     <string name="tv_input_setup_try_scan_again">Zkuste znovu Auto Scan</string>
     <string name="tv_input_setup_retry_scan">Zopakovat automatické vyhledávání</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV nyní může otevřít vaše kanály Afterglow TV.</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV nyní může otevřít vaše kanály AfterglowTV.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1206,8 +1204,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d slotů</string>
     <string name="movie_detail_related">Více podobného</string>
     <string name="movie_detail_resume_from">Pokračovat od %1$s</string>
-    <string name="notification_permission_recording_alert_required">Povolte oznámení pro Afterglow TV, abyste dostávali upozornění na selhání nahrávání.</string>
-    <string name="notification_permission_reminder_required">Povolte oznámení pro Afterglow TV, abyste dostávali připomínky pořadů.</string>
+    <string name="notification_permission_recording_alert_required">Povolte oznámení pro AfterglowTV, abyste dostávali upozornění na selhání nahrávání.</string>
+    <string name="notification_permission_reminder_required">Povolte oznámení pro AfterglowTV, abyste dostávali připomínky pořadů.</string>
     <string name="player_action_variants">Varianty</string>
     <string name="player_auto_play_cancel">Zrušit</string>
     <string name="player_auto_play_countdown">Přehrávání za %1$d s</string>
@@ -1381,7 +1379,7 @@
     <string name="settings_recording_skipped">Událost přeskočena</string>
     <string name="settings_recording_wifi_only">Nahrávat pouze na Wi-Fi</string>
     <string name="settings_reset">Obnovit</string>
-    <string name="settings_restore_subtitle">Vyberte záložní soubor nebo otevřete zálohu pomocí Afterglow TV ze správce souborů.</string>
+    <string name="settings_restore_subtitle">Vyberte záložní soubor nebo otevřete zálohu pomocí AfterglowTV ze správce souborů.</string>
     <string name="settings_select_guide_default_category">Vybrat výchozí kategorii průvodce</string>
     <string name="settings_select_live_timeshift_depth">Vybrat hloubku místního přetáčení</string>
     <string name="settings_select_time_format">Vybrat formát času</string>

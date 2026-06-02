@@ -45,16 +45,74 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.afterglowtv.app.corey"
+        applicationId = "com.afterglowtv.app"
         minSdk = 28
         targetSdk = 36
         versionCode = 29
         versionName = "0.1.28"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app.corey\"")
+        buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
         buildConfigField("String", "OFFICIAL_SIGNING_CERT_SHA256", "\"$officialSigningCertSha256\"")
-        buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
-        buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
+    }
+
+    flavorDimensions += "store"
+
+    productFlavors {
+        create("standard") {
+            dimension = "store"
+            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "false")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
+            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
+            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
+            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
+            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "false")
+            buildConfigField("String", "HIDDEN_FALLBACK_SOURCE_SPECS", "\"\"")
+            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
+            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "true")
+            buildConfigField("boolean", "ENABLE_DVR", "true")
+            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "false")
+        }
+
+        create("amazon") {
+            dimension = "store"
+            applicationId = "com.afterglowtv.app"
+            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
+            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
+            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
+            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
+            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
+            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "true")
+            buildConfigField(
+                "String",
+                "HIDDEN_FALLBACK_SOURCE_SPECS",
+                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::AfterglowTV::LIVE::false|amazon_fallback/playlist_usa_vod.m3u8::afterglow_amazon_vod.m3u8::Afterglow Videos::VOD::true\""
+            )
+            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
+            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
+            buildConfigField("boolean", "ENABLE_DVR", "false")
+            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
+        }
+
+        create("corey") {
+            dimension = "store"
+            applicationIdSuffix = ".corey"
+            versionNameSuffix = "-corey"
+            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "false")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"Plex\"")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\\\\\\\\192.168.1.8\\\\Plex\"")
+            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
+            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
+            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
+            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "false")
+            buildConfigField("String", "HIDDEN_FALLBACK_SOURCE_SPECS", "\"\"")
+            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
+            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
+            buildConfigField("boolean", "ENABLE_DVR", "true")
+            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "false")
+        }
     }
 
     signingConfigs {
@@ -103,16 +161,23 @@ android {
     }
 }
 
+androidComponents {
+    onVariants(selector().withFlavor("store", "amazon")) { variant ->
+        variant.androidResources.localeFilters.add("en")
+    }
+}
+
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
     }
 }
 
 kover {
     currentProject {
         createVariant("ci") {
-            add("debug")
+            add("standardDebug")
         }
     }
 }
@@ -198,7 +263,7 @@ dependencies {
 }
 
 tasks.configureEach {
-    if (name == "hiltJavaCompileDebugUnitTest") {
+    if (name.startsWith("hiltJavaCompile") && name.endsWith("UnitTest")) {
         enabled = false
     }
 }

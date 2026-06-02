@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.afterglowtv.app.store.StorePolicy
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
@@ -30,16 +31,18 @@ internal fun BoxScope.SettingsScreenOverlays(
             .padding(bottom = 16.dp)
     )
 
-    SettingsRecordingBrowserDialog(
-        showRecordingBrowserDialog = dialogState.showRecordingBrowserDialog,
-        uiState = uiState,
-        selectedRecordingId = dialogState.selectedRecordingId,
-        onSelectedRecordingChange = { dialogState.selectedRecordingId = it },
-        onShowRecordingBrowserDialogChange = { dialogState.showRecordingBrowserDialog = it },
-        mainActivity = mainActivity,
-        currentRoute = currentRoute,
-        viewModel = viewModel
-    )
+    if (StorePolicy.current.canUseDvr(uiState.developerModeEnabled)) {
+        SettingsRecordingBrowserDialog(
+            showRecordingBrowserDialog = dialogState.showRecordingBrowserDialog,
+            uiState = uiState,
+            selectedRecordingId = dialogState.selectedRecordingId,
+            onSelectedRecordingChange = { dialogState.selectedRecordingId = it },
+            onShowRecordingBrowserDialogChange = { dialogState.showRecordingBrowserDialog = it },
+            mainActivity = mainActivity,
+            currentRoute = currentRoute,
+            viewModel = viewModel
+        )
+    }
 
     SettingsScreenDialogs(
         uiState = uiState,

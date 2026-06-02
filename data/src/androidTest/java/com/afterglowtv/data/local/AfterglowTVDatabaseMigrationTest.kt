@@ -1122,14 +1122,14 @@ class AfterglowTVDatabaseMigrationTest {
     }
 
     @Test
-    fun migrate55To56_createsAdultGuideCacheTables() {
-        migrationTestHelper.createDatabase("afterglowtv-55-56-test", 55).close()
+    fun migrate54To55_createsAdultGuideCacheTables() {
+        migrationTestHelper.createDatabase("afterglowtv-54-55-test", 54).close()
 
         val migratedDb = migrationTestHelper.runMigrationsAndValidate(
-            "afterglowtv-55-56-test",
-            56,
+            "afterglowtv-54-55-test",
+            55,
             true,
-            AfterglowTVDatabase.MIGRATION_55_56
+            AfterglowTVDatabase.MIGRATION_54_55
         )
 
         assertEquals(1, countRows(migratedDb, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'adult_guide_cache_meta'"))

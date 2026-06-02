@@ -29,7 +29,7 @@ import com.afterglowtv.app.ui.design.AfterglowFocusRole
 import com.afterglowtv.app.ui.design.afterglowFocus
 
 /**
- * Afterglow TV right-anchored quick-settings panel. Slides in from the
+ * AfterglowTV right-anchored quick-settings panel. Slides in from the
  * right (275 ms) over a 75% black scrim. Each row shows a label + the
  * currently-selected value tinted in the theme accent.
  */

@@ -24,7 +24,6 @@ import com.afterglowtv.domain.repository.CombinedM3uRepository
 import com.afterglowtv.domain.repository.MovieRepository
 import com.afterglowtv.domain.repository.PlaybackHistoryRepository
 import com.afterglowtv.domain.repository.ProviderRepository
-import com.afterglowtv.domain.repository.SeriesRepository
 import com.afterglowtv.domain.usecase.GetRecommendations
 import com.afterglowtv.domain.usecase.GetContinueWatching
 import com.afterglowtv.domain.usecase.ContinueWatchingResult
@@ -45,8 +44,7 @@ class LauncherRecommendationsManager @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val combinedM3uRepository: CombinedM3uRepository,
     private val playbackHistoryRepository: PlaybackHistoryRepository,
-    movieRepository: MovieRepository,
-    private val seriesRepository: SeriesRepository
+    movieRepository: MovieRepository
 ) {
     private val getRecommendations = GetRecommendations(movieRepository)
     private val getContinueWatching = GetContinueWatching(playbackHistoryRepository)
@@ -183,24 +181,6 @@ class LauncherRecommendationsManager @Inject constructor(
             }
         }
 
-        val freshSeries = seriesRepository.getFreshPreview(provider.id, limit = 12)
-            .first()
-            .mapIndexed { index, series ->
-                RecommendationProgramSpec(
-                    key = "series:${series.id}",
-                    title = series.name,
-                    description = series.plot ?: series.genre ?: provider.name,
-                    posterArtUri = artworkUri(series.posterUrl ?: series.backdropUrl),
-                    intentUri = buildDestinationIntent(
-                        ExternalDestination.SeriesDetail(series.id)
-                    ).toUri(Intent.URI_INTENT_SCHEME),
-                    weight = (FRESH_SERIES_WEIGHT_BASE - index).coerceAtLeast(0),
-                    durationMillis = 0L,
-                    playbackPositionMillis = 0L,
-                    contentType = ContentType.SERIES
-                )
-            }
-
         return listOf(
             RecommendationChannelSpec(
                 key = CHANNEL_CONTINUE_WATCHING,
@@ -214,12 +194,6 @@ class LauncherRecommendationsManager @Inject constructor(
                 description = context.getString(R.string.tv_channel_recommended_movies_description, provider.name),
                 programs = recommendedMovies,
                 isDegraded = recommendationsDegraded
-            ),
-            RecommendationChannelSpec(
-                key = CHANNEL_FRESH_SERIES,
-                title = context.getString(R.string.tv_channel_fresh_series_title),
-                description = context.getString(R.string.tv_channel_fresh_series_description, provider.name),
-                programs = freshSeries
             )
         )
     }

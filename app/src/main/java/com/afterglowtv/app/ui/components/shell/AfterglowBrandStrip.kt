@@ -158,11 +158,13 @@ fun AfterglowBrandStrip(
                         ),
                 )
             }
-            Text(
-                text = tagline,
-                style = MaterialTheme.typography.bodyMedium,
-                color = AppColors.TiviAccentLight,
-            )
+            if (tagline.isNotBlank()) {
+                Text(
+                    text = tagline,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppColors.TiviAccentLight,
+                )
+            }
         }
     }
 }

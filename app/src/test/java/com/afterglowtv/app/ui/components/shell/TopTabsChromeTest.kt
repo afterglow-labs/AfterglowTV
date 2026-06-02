@@ -1,71 +1,80 @@
 package com.afterglowtv.app.ui.components.shell
 
+import com.afterglowtv.app.store.StorePolicy
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class TopTabsChromeTest {
 
     @Test
-    fun `program guide and personal library are separate top level tabs`() {
-        val guideTabs = defaultTopTabs(
+    fun `program guide destinations are separate top level tabs`() {
+        val tabs = defaultTopTabs(
             developerModeEnabled = true,
             showAdultGuideTab = true
-        ).filter { tab ->
-            tab.label.contains("Guide", ignoreCase = true)
+        )
+
+        val expectedIds = buildList {
+            add("home")
+            add("live_tv")
+            add("epg")
+            add("vod_container")
+            if (StorePolicy.current.showAdultSurfaces) add("adult_guide")
+            add("local_media")
+            add("favorites")
+            add("search")
+            add("settings")
         }
-        val localMediaTab = defaultTopTabs(
-            developerModeEnabled = true,
+        val expectedLabels = buildList {
+            add("Home")
+            add("Live TV")
+            add(if (StorePolicy.current.amazonReviewBuild) "TV Guide" else "IPTV Guide")
+            add(if (StorePolicy.current.amazonReviewBuild) "Video" else "VOD")
+            if (StorePolicy.current.showAdultSurfaces) add("XXX Guide")
+            add("Personal Library")
+            add("Favorites")
+            add("Search")
+            add("Settings")
+        }
+
+        assertThat(tabs.map { it.id }).containsExactlyElementsIn(expectedIds).inOrder()
+        assertThat(tabs.map { it.label }).containsExactlyElementsIn(expectedLabels).inOrder()
+    }
+
+    @Test
+    fun `adult guide tab is hidden until developer mode is unlocked`() {
+        val tabs = defaultTopTabs(
+            developerModeEnabled = false,
             showAdultGuideTab = true
-        ).first { it.id == "local_media" }
+        )
 
-        assertThat(guideTabs.map { it.id }).containsExactly("epg").inOrder()
-        assertThat(guideTabs.map { it.label }).containsExactly("TV Guide").inOrder()
-        assertThat(localMediaTab.label).isEqualTo("Personal Library")
-        assertThat(
-            defaultTopTabs(
-                developerModeEnabled = true,
-                showAdultGuideTab = true
-            ).first { it.id == "adult_guide" }.label
-        ).isEqualTo("Adult")
+        assertThat(tabs.map { it.id }).containsExactly(
+            "home",
+            "live_tv",
+            "epg",
+            "vod_container",
+            "local_media",
+            "favorites",
+            "search",
+            "settings"
+        ).inOrder()
     }
 
     @Test
-    fun `adult guide tab uses custom label`() {
-        val adultTab = defaultTopTabs(
-            developerModeEnabled = true,
-            showAdultGuideTab = true,
-            adultGuideLabel = "After Dark"
-        ).first { it.id == "adult_guide" }
-
-        assertThat(adultTab.label).isEqualTo("After Dark")
-    }
-
-    @Test
-    fun `adult guide tab can be hidden`() {
-        val guideTabs = defaultTopTabs(
+    fun `developer mode still respects adult guide visibility preference`() {
+        val tabs = defaultTopTabs(
             developerModeEnabled = true,
             showAdultGuideTab = false
-        ).filter { tab ->
-            tab.label.contains("Guide", ignoreCase = true)
-        }
+        )
 
-        assertThat(guideTabs.map { it.id }).containsExactly("epg").inOrder()
-    }
-
-    @Test
-    fun `vod replaces movies and series as a top level tab`() {
-        val tabIds = defaultTopTabs(
-            developerModeEnabled = true,
-            showAdultGuideTab = true
-        ).map { it.id }
-        val vodTab = defaultTopTabs(
-            developerModeEnabled = true,
-            showAdultGuideTab = true
-        ).first { it.id == "vod_container" }
-
-        assertThat(tabIds).contains("vod_container")
-        assertThat(tabIds).doesNotContain("movies")
-        assertThat(tabIds).doesNotContain("series")
-        assertThat(vodTab.label).isEqualTo("VOD")
+        assertThat(tabs.map { it.id }).containsExactly(
+            "home",
+            "live_tv",
+            "epg",
+            "vod_container",
+            "local_media",
+            "favorites",
+            "search",
+            "settings"
+        ).inOrder()
     }
 }

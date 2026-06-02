@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 
 @Composable
 internal fun SettingsContentPane(
@@ -19,7 +20,7 @@ internal fun SettingsContentPane(
     screenLabels: SettingsScreenLabels,
     dialogState: SettingsScreenDialogState,
     providerState: SettingsProviderSectionState,
-    onAddProvider: () -> Unit,
+    onAddProvider: (ProviderM3uPlaylistKind?) -> Unit,
     onEditProvider: (Provider) -> Unit,
     onNavigateToParentalControl: (Long) -> Unit,
     onChooseRecordingFolder: () -> Unit,
@@ -33,6 +34,10 @@ internal fun SettingsContentPane(
     onOpenUri: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val selectedCategory = dialogState.selectedCategory.takeIf {
+        it in visibleSettingsCategoryIds(developerModeEnabled = uiState.developerModeEnabled)
+    } ?: SETTINGS_CATEGORY_PROVIDERS
+
     LazyColumn(
         modifier = modifier
             .fillMaxHeight()
@@ -41,16 +46,21 @@ internal fun SettingsContentPane(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         userScrollEnabled = !uiState.isSyncing
     ) {
-        if (dialogState.selectedCategory == 0) {
+        if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS || selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD) {
             providerSection(
                 uiState = uiState,
+                providerCategory = if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD) {
+                    ProviderSettingsCategory.VOD
+                } else {
+                    ProviderSettingsCategory.LIVE_TV
+                },
                 onAddProvider = onAddProvider,
                 onEditProvider = onEditProvider,
                 onNavigateToParentalControl = onNavigateToParentalControl,
                 viewModel = viewModel,
                 providerState = providerState
             )
-        } else if (dialogState.selectedCategory == 1) {
+        } else if (selectedCategory == SETTINGS_CATEGORY_PLAYBACK) {
             settingsPlaybackSection(
                 uiState = uiState,
                 viewModel = viewModel,
@@ -94,7 +104,7 @@ internal fun SettingsContentPane(
                 onShowRemoteChannelUpButtonDialogChange = { dialogState.showRemoteChannelUpButtonDialog = it },
                 onShowRemoteChannelDownButtonDialogChange = { dialogState.showRemoteChannelDownButtonDialog = it }
             )
-        } else if (dialogState.selectedCategory == 2) {
+        } else if (selectedCategory == SETTINGS_CATEGORY_BROWSING) {
             settingsBrowsingSection(
                 uiState = uiState,
                 viewModel = viewModel,
@@ -116,7 +126,7 @@ internal fun SettingsContentPane(
                 onCategorySortDialogTypeChange = { dialogState.categorySortDialogType = it },
                 onShowLanguageDialogChange = { dialogState.showLanguageDialog = it }
             )
-        } else if (dialogState.selectedCategory == 3) {
+        } else if (selectedCategory == SETTINGS_CATEGORY_PRIVACY) {
             settingsPrivacySection(
                 uiState = uiState,
                 viewModel = viewModel,
@@ -126,7 +136,7 @@ internal fun SettingsContentPane(
                 onShowLevelDialogChange = { dialogState.showLevelDialog = it },
                 onShowClearHistoryDialogChange = { dialogState.showClearHistoryDialog = it }
             )
-        } else if (dialogState.selectedCategory == 4 && uiState.developerModeEnabled) {
+        } else if (selectedCategory == SETTINGS_CATEGORY_RECORDING) {
             settingsRecordingSection(
                 uiState = uiState,
                 viewModel = viewModel,
@@ -137,24 +147,24 @@ internal fun SettingsContentPane(
                 onShowRecordingPaddingDialogChange = { dialogState.showRecordingPaddingDialog = it },
                 onShowRecordingBrowserDialogChange = { dialogState.showRecordingBrowserDialog = it }
             )
-        } else if (dialogState.selectedCategory == 5 && uiState.developerModeEnabled) {
+        } else if (selectedCategory == SETTINGS_CATEGORY_LOCAL_MEDIA) {
             settingsLocalMediaSection(
                 uiState = uiState,
                 viewModel = viewModel,
                 onChooseLibrary = onChooseLocalMediaLibrary
             )
-        } else if (dialogState.selectedCategory == 6) {
+        } else if (selectedCategory == SETTINGS_CATEGORY_BACKUP) {
             settingsBackupSection(
                 onCreateBackup = onCreateBackup,
                 onShareBackup = onShareBackup,
                 onRestoreBackup = onRestoreBackup
             )
-        } else if (dialogState.selectedCategory == 7 && uiState.developerModeEnabled) {
+        } else if (selectedCategory == SETTINGS_CATEGORY_EPG_SOURCES) {
             epgSourcesSection(
                 uiState = uiState,
                 viewModel = viewModel
             )
-        } else if (dialogState.selectedCategory == 8) {
+        } else if (selectedCategory == SETTINGS_CATEGORY_ABOUT) {
             settingsAboutSection(
                 uiState = uiState,
                 context = context,
@@ -170,15 +180,6 @@ internal fun SettingsContentPane(
                 onViewCrashReport = onViewCrashReport,
                 onShareCrashReport = onShareCrashReport,
                 onDeleteCrashReport = onDeleteCrashReport
-            )
-        } else {
-            providerSection(
-                uiState = uiState,
-                onAddProvider = onAddProvider,
-                onEditProvider = onEditProvider,
-                onNavigateToParentalControl = onNavigateToParentalControl,
-                viewModel = viewModel,
-                providerState = providerState
             )
         }
     }

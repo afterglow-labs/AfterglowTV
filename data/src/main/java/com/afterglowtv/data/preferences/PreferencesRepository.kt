@@ -27,6 +27,7 @@ import com.afterglowtv.domain.model.LiveChannelGroupingMode
 import com.afterglowtv.domain.model.LiveChannelObservedQuality
 import com.afterglowtv.domain.model.LiveVariantPreferenceMode
 import com.afterglowtv.domain.model.PlayerSurfaceMode
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.SearchHistoryScope
 import com.afterglowtv.domain.manager.ParentalPinVerifier
 import com.afterglowtv.domain.manager.ParentalControlSessionState
@@ -35,15 +36,11 @@ import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -72,6 +69,13 @@ private fun sanitizePlaybackTimerMinutes(minutes: Int): Int = when (minutes) {
     in 76..105 -> 90
     else -> 120
 }
+
+internal fun shouldRepairAdultGuideTabVisibility(
+    developerModeEnabled: Boolean,
+    showAdultGuideTab: Boolean?
+): Boolean = developerModeEnabled && showAdultGuideTab != true
+
+internal fun adultGuideTabVisibilityForDeveloperMode(enabled: Boolean): Boolean = enabled
 
 @Serializable
 data class AdultGuideCategoryCache(
@@ -125,6 +129,12 @@ class PreferencesRepository @Inject constructor(
         val LAST_ACTIVE_PROVIDER_ID = longPreferencesKey("last_active_provider_id")
         val ACTIVE_LIVE_SOURCE_TYPE = stringPreferencesKey("active_live_source_type")
         val ACTIVE_LIVE_SOURCE_ID = longPreferencesKey("active_live_source_id")
+        val ACTIVE_ADULT_LIVE_SOURCE_TYPE = stringPreferencesKey("active_adult_live_source_type")
+        val ACTIVE_ADULT_LIVE_SOURCE_ID = longPreferencesKey("active_adult_live_source_id")
+        val ACTIVE_VOD_SOURCE_TYPE = stringPreferencesKey("active_vod_source_type")
+        val ACTIVE_VOD_SOURCE_ID = longPreferencesKey("active_vod_source_id")
+        val ACTIVE_ADULT_VOD_SOURCE_TYPE = stringPreferencesKey("active_adult_vod_source_type")
+        val ACTIVE_ADULT_VOD_SOURCE_ID = longPreferencesKey("active_adult_vod_source_id")
         val DEFAULT_VIEW_MODE = stringPreferencesKey("default_view_mode")
         val STARTUP_DESTINATION = stringPreferencesKey("startup_destination")
         val PARENTAL_CONTROL_LEVEL = intPreferencesKey("parental_control_level")
@@ -147,6 +157,7 @@ class PreferencesRepository @Inject constructor(
         val STYLE_FOCUS = stringPreferencesKey("style_focus")
         val STYLE_PROGRESS = stringPreferencesKey("style_progress")
         val BACKGROUND_GRADIENTS_ENABLED = booleanPreferencesKey("background_gradients_enabled")
+        val DASHBOARD_WELCOME_SEEN = booleanPreferencesKey("dashboard_welcome_seen")
         val GLOW_INTENSITY = stringPreferencesKey("glow_intensity")
         val GLOW_FOCUS_SPECS = stringPreferencesKey("glow_focus_specs")
         val GLOW_LIVE_SPECS = stringPreferencesKey("glow_live_specs")
@@ -155,14 +166,12 @@ class PreferencesRepository @Inject constructor(
         val APP_TIME_FORMAT = stringPreferencesKey("app_time_format")
         val LIVE_TV_CHANNEL_MODE = stringPreferencesKey("live_tv_channel_mode")
         val SHOW_LIVE_SOURCE_SWITCHER = booleanPreferencesKey("show_live_source_switcher")
-        val SHOW_BUILT_IN_PLAYLISTS = booleanPreferencesKey("show_builtin_playlists")
         val SHOW_ALL_CHANNELS_CATEGORY = booleanPreferencesKey("show_all_channels_category")
         val SHOW_RECENT_CHANNELS_CATEGORY = booleanPreferencesKey("show_recent_channels_category")
         val LIVE_TV_CATEGORY_FILTERS = stringPreferencesKey("live_tv_category_filters")
         val LIVE_TV_QUICK_FILTER_VISIBILITY = stringPreferencesKey("live_tv_quick_filter_visibility")
         val DEVELOPER_MODE_ENABLED = booleanPreferencesKey("developer_mode_enabled")
         val SHOW_ADULT_GUIDE_TAB = booleanPreferencesKey("show_adult_guide_tab")
-        val ADULT_GUIDE_TAB_LABEL = stringPreferencesKey("adult_guide_tab_label")
         val ADULT_GUIDE_SORT_BATCH_SIZE = intPreferencesKey("adult_guide_sort_batch_size")
         val LIVE_CHANNEL_NUMBERING_MODE = stringPreferencesKey("live_channel_numbering_mode")
         val LIVE_CHANNEL_GROUPING_MODE = stringPreferencesKey("live_channel_grouping_mode")
@@ -261,6 +270,31 @@ class PreferencesRepository @Inject constructor(
         val LAST_MAINTENANCE_FAVORITE_ROWS = longPreferencesKey("last_maintenance_favorite_rows")
     }
 
+    private fun Preferences.toActiveSource(slot: ProviderSourceSlot): ActiveLiveSource? {
+        val sourceId = this[activeSourceIdKey(slot)] ?: return null
+        return when (this[activeSourceTypeKey(slot)]) {
+            "provider" -> ActiveLiveSource.ProviderSource(sourceId)
+            "combined_m3u" -> ActiveLiveSource.CombinedM3uSource(sourceId)
+            else -> null
+        }
+    }
+
+    private fun activeSourceTypeKey(slot: ProviderSourceSlot): Preferences.Key<String> =
+        when (slot) {
+            ProviderSourceSlot.LIVE -> PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE
+            ProviderSourceSlot.ADULT_LIVE -> PreferencesKeys.ACTIVE_ADULT_LIVE_SOURCE_TYPE
+            ProviderSourceSlot.VOD -> PreferencesKeys.ACTIVE_VOD_SOURCE_TYPE
+            ProviderSourceSlot.ADULT_VOD -> PreferencesKeys.ACTIVE_ADULT_VOD_SOURCE_TYPE
+        }
+
+    private fun activeSourceIdKey(slot: ProviderSourceSlot): Preferences.Key<Long> =
+        when (slot) {
+            ProviderSourceSlot.LIVE -> PreferencesKeys.ACTIVE_LIVE_SOURCE_ID
+            ProviderSourceSlot.ADULT_LIVE -> PreferencesKeys.ACTIVE_ADULT_LIVE_SOURCE_ID
+            ProviderSourceSlot.VOD -> PreferencesKeys.ACTIVE_VOD_SOURCE_ID
+            ProviderSourceSlot.ADULT_VOD -> PreferencesKeys.ACTIVE_ADULT_VOD_SOURCE_ID
+        }
+
     private object ParentalSessionKeys {
         const val FILE_NAME = "parental_control_session"
         const val UNLOCK_ENTRIES = "unlock_entries"
@@ -300,10 +334,6 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
-    private val parentalSessionWriteScope = CoroutineScope(
-        SupervisorJob() + Dispatchers.IO.limitedParallelism(1)
-    )
-
     private val adultGuideCacheJson = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
@@ -314,13 +344,17 @@ class PreferencesRepository @Inject constructor(
     }
 
     val activeLiveSource: Flow<ActiveLiveSource?> = context.dataStore.data.map { preferences ->
-        val sourceId = preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_ID] ?: return@map null
-        when (preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE]) {
-            "provider" -> ActiveLiveSource.ProviderSource(sourceId)
-            "combined_m3u" -> ActiveLiveSource.CombinedM3uSource(sourceId)
-            else -> null
-        }
+        preferences.toActiveSource(ProviderSourceSlot.LIVE)
     }
+
+    val activeAdultLiveSource: Flow<ActiveLiveSource?> = activeSource(ProviderSourceSlot.ADULT_LIVE)
+
+    val activeVodSource: Flow<ActiveLiveSource?> = activeSource(ProviderSourceSlot.VOD)
+
+    val activeAdultVodSource: Flow<ActiveLiveSource?> = activeSource(ProviderSourceSlot.ADULT_VOD)
+
+    fun activeSource(slot: ProviderSourceSlot): Flow<ActiveLiveSource?> =
+        context.dataStore.data.map { preferences -> preferences.toActiveSource(slot) }
 
     val defaultViewMode: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.DEFAULT_VIEW_MODE]
@@ -490,20 +524,26 @@ class PreferencesRepository @Inject constructor(
     }
 
     suspend fun setActiveLiveSource(source: ActiveLiveSource?) {
+        setActiveSource(ProviderSourceSlot.LIVE, source)
+    }
+
+    suspend fun setActiveSource(slot: ProviderSourceSlot, source: ActiveLiveSource?) {
         context.dataStore.edit { preferences ->
+            val typeKey = activeSourceTypeKey(slot)
+            val idKey = activeSourceIdKey(slot)
             if (source == null) {
-                preferences.remove(PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE)
-                preferences.remove(PreferencesKeys.ACTIVE_LIVE_SOURCE_ID)
+                preferences.remove(typeKey)
+                preferences.remove(idKey)
                 return@edit
             }
             when (source) {
                 is ActiveLiveSource.ProviderSource -> {
-                    preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE] = "provider"
-                    preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_ID] = source.providerId
+                    preferences[typeKey] = "provider"
+                    preferences[idKey] = source.providerId
                 }
                 is ActiveLiveSource.CombinedM3uSource -> {
-                    preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_TYPE] = "combined_m3u"
-                    preferences[PreferencesKeys.ACTIVE_LIVE_SOURCE_ID] = source.profileId
+                    preferences[typeKey] = "combined_m3u"
+                    preferences[idKey] = source.profileId
                 }
             }
         }
@@ -1234,12 +1274,10 @@ class PreferencesRepository @Inject constructor(
     }
 
     override fun writeSessionState(state: ParentalControlSessionState) {
-        parentalSessionWriteScope.launch {
-            parentalSessionPreferences.edit().apply {
-                remove(ParentalSessionKeys.UNLOCK_TIMEOUT_MS)
-                remove(ParentalSessionKeys.UNLOCK_ENTRIES)
-            }.apply()
-        }
+        parentalSessionPreferences.edit().apply {
+            remove(ParentalSessionKeys.UNLOCK_TIMEOUT_MS)
+            remove(ParentalSessionKeys.UNLOCK_ENTRIES)
+        }.apply()
     }
 
     suspend fun clearDefaultViewMode() {
@@ -1300,6 +1338,17 @@ class PreferencesRepository @Inject constructor(
     suspend fun setBackgroundGradientsEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.BACKGROUND_GRADIENTS_ENABLED] = enabled
+        }
+    }
+
+    /** Whether the first-launch Home welcome card has been shown to the user. */
+    val dashboardWelcomeSeen: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DASHBOARD_WELCOME_SEEN] ?: false
+    }
+
+    suspend fun setDashboardWelcomeSeen(seen: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DASHBOARD_WELCOME_SEEN] = seen
         }
     }
 
@@ -1433,16 +1482,6 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
-    val showBuiltInPlaylists: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.SHOW_BUILT_IN_PLAYLISTS] ?: true
-    }
-
-    suspend fun setShowBuiltInPlaylists(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.SHOW_BUILT_IN_PLAYLISTS] = enabled
-        }
-    }
-
     val showAllChannelsCategory: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.SHOW_ALL_CHANNELS_CATEGORY] ?: true
     }
@@ -1477,10 +1516,6 @@ class PreferencesRepository @Inject constructor(
         preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] ?: true
     }
 
-    val adultGuideTabLabel: Flow<String> = context.dataStore.data.map { preferences ->
-        normalizeAdultGuideTabLabel(preferences[PreferencesKeys.ADULT_GUIDE_TAB_LABEL])
-    }
-
     val developerModeEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] ?: false
     }
@@ -1488,6 +1523,7 @@ class PreferencesRepository @Inject constructor(
     suspend fun setDeveloperModeEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] = enabled
+            preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = adultGuideTabVisibilityForDeveloperMode(enabled)
         }
     }
 
@@ -1497,13 +1533,15 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
-    suspend fun setAdultGuideTabLabel(label: String) {
+    suspend fun ensureAdultGuideTabVisibleForDeveloperMode() {
         context.dataStore.edit { preferences ->
-            val normalized = normalizeAdultGuideTabLabel(label)
-            if (normalized == DEFAULT_ADULT_GUIDE_TAB_LABEL) {
-                preferences.remove(PreferencesKeys.ADULT_GUIDE_TAB_LABEL)
-            } else {
-                preferences[PreferencesKeys.ADULT_GUIDE_TAB_LABEL] = normalized
+            if (
+                shouldRepairAdultGuideTabVisibility(
+                    developerModeEnabled = preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] ?: false,
+                    showAdultGuideTab = preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB]
+                )
+            ) {
+                preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = true
             }
         }
     }
@@ -1830,6 +1868,43 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
+    fun getHiddenChannelIds(providerId: Long, type: ContentType): Flow<Set<Long>> {
+        val key = stringPreferencesKey(hiddenChannelsKey(providerId, type))
+        return context.dataStore.data.map { preferences ->
+            preferences[key]
+                ?.split(',')
+                ?.mapNotNull { token -> token.toLongOrNull() }
+                ?.toSet()
+                .orEmpty()
+        }
+    }
+
+    suspend fun setChannelHidden(
+        providerId: Long,
+        type: ContentType,
+        channelId: Long,
+        hidden: Boolean
+    ) {
+        val key = stringPreferencesKey(hiddenChannelsKey(providerId, type))
+        context.dataStore.edit { preferences ->
+            val current = preferences[key]
+                ?.split(',')
+                ?.mapNotNull { token -> token.toLongOrNull() }
+                ?.toMutableSet()
+                ?: mutableSetOf()
+            if (hidden) {
+                current += channelId
+            } else {
+                current -= channelId
+            }
+            if (current.isEmpty()) {
+                preferences.remove(key)
+            } else {
+                preferences[key] = current.sorted().joinToString(",")
+            }
+        }
+    }
+
     fun getPinnedCategoryIds(providerId: Long, type: ContentType): Flow<Set<Long>> {
         val key = stringPreferencesKey(pinnedCategoriesKey(providerId, type))
         return context.dataStore.data.map { preferences ->
@@ -1994,6 +2069,9 @@ class PreferencesRepository @Inject constructor(
     private fun hiddenCategoriesKey(providerId: Long, type: ContentType): String =
         "hidden_categories_${providerId}_${type.name}"
 
+    private fun hiddenChannelsKey(providerId: Long, type: ContentType): String =
+        "hidden_channels_${providerId}_${type.name}"
+
     private fun pinnedCategoriesKey(providerId: Long, type: ContentType): String =
         "pinned_categories_${providerId}_${type.name}"
 
@@ -2135,15 +2213,6 @@ private fun normalizeAdultGuideSortBatchSize(size: Int?): Int = when (val value 
     in 50..2_000 -> value
     else -> 2_000
 }
-
-private const val DEFAULT_ADULT_GUIDE_TAB_LABEL = "Adult"
-
-private fun normalizeAdultGuideTabLabel(label: String?): String =
-    label
-        ?.trim()
-        ?.take(24)
-        ?.takeIf { it.isNotEmpty() }
-        ?: DEFAULT_ADULT_GUIDE_TAB_LABEL
 
 data class ParentalPinBackupData(
     val hash: String,

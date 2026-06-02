@@ -1,7 +1,6 @@
 package com.afterglowtv.app.ui.screens.settings
 
 import android.content.Context
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
@@ -32,10 +32,38 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.theme.OnSurfaceDim
 import com.afterglowtv.app.ui.theme.Primary
 import com.afterglowtv.app.ui.theme.Secondary
+
+private const val DEVELOPER_MODE_TAP_THRESHOLD = 7
+
+internal data class DeveloperModeTapResult(
+    val tapCount: Int,
+    val showPasswordDialog: Boolean,
+    val targetDeveloperModeEnabled: Boolean? = null
+)
+
+internal fun nextDeveloperModeTapResult(
+    developerModeEnabled: Boolean,
+    currentTapCount: Int
+): DeveloperModeTapResult {
+    val nextTapCount = currentTapCount + 1
+    return if (nextTapCount >= DEVELOPER_MODE_TAP_THRESHOLD) {
+        DeveloperModeTapResult(
+            tapCount = 0,
+            showPasswordDialog = true,
+            targetDeveloperModeEnabled = developerModeStateAfterValidPassword(developerModeEnabled)
+        )
+    } else {
+        DeveloperModeTapResult(tapCount = nextTapCount, showPasswordDialog = false)
+    }
+}
+
+internal fun developerModeStateAfterValidPassword(currentDeveloperModeEnabled: Boolean): Boolean =
+    !currentDeveloperModeEnabled
 
 internal fun LazyListScope.settingsBackupSection(
     onCreateBackup: () -> Unit,
@@ -130,9 +158,11 @@ internal fun LazyListScope.settingsAboutSection(
     item {
         var developerTapCount by rememberSaveable { mutableStateOf(0) }
         var showDeveloperPasswordDialog by rememberSaveable { mutableStateOf(false) }
+        var pendingDeveloperModeEnabled by rememberSaveable { mutableStateOf<Boolean?>(null) }
         var developerPassword by rememberSaveable { mutableStateOf("") }
         var developerPasswordError by rememberSaveable { mutableStateOf(false) }
         val downloadStatus = uiState.appUpdate.downloadStatus
+        val showSideloadUpdates = StorePolicy.current.enableSideloadUpdates
         LaunchedEffect(downloadStatus) {
             if (downloadStatus == com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloading) {
                 while (true) {
@@ -142,9 +172,11 @@ internal fun LazyListScope.settingsAboutSection(
             }
         }
         if (showDeveloperPasswordDialog) {
+            val disablingDeveloperMode = pendingDeveloperModeEnabled == false
             AlertDialog(
                 onDismissRequest = {
                     showDeveloperPasswordDialog = false
+                    pendingDeveloperModeEnabled = null
                     developerPassword = ""
                     developerPasswordError = false
                 },
@@ -152,7 +184,11 @@ internal fun LazyListScope.settingsAboutSection(
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            text = "Enter the unlock code.",
+                            text = if (disablingDeveloperMode) {
+                                "Enter the unlock code to disable Developer Mode."
+                            } else {
+                                "Enter the unlock code."
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = OnSurfaceDim
                         )
@@ -183,8 +219,12 @@ internal fun LazyListScope.settingsAboutSection(
                     TextButton(
                         onClick = {
                             if (developerPassword == "1337") {
-                                onSetDeveloperModeEnabled(true)
+                                onSetDeveloperModeEnabled(
+                                    pendingDeveloperModeEnabled
+                                        ?: developerModeStateAfterValidPassword(uiState.developerModeEnabled)
+                                )
                                 showDeveloperPasswordDialog = false
+                                pendingDeveloperModeEnabled = null
                                 developerPassword = ""
                                 developerPasswordError = false
                                 developerTapCount = 0
@@ -193,13 +233,14 @@ internal fun LazyListScope.settingsAboutSection(
                             }
                         }
                     ) {
-                        Text(text = "Unlock")
+                        Text(text = if (disablingDeveloperMode) "Disable" else "Unlock")
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = {
                             showDeveloperPasswordDialog = false
+                            pendingDeveloperModeEnabled = null
                             developerPassword = ""
                             developerPasswordError = false
                         }
@@ -209,88 +250,95 @@ internal fun LazyListScope.settingsAboutSection(
                 }
             )
         }
-        SettingsSectionHeader(
-            title = stringResource(R.string.settings_updates_title),
-            subtitle = stringResource(R.string.settings_updates_subtitle)
-        )
+        if (showSideloadUpdates) {
+            SettingsSectionHeader(
+                title = stringResource(R.string.settings_updates_title),
+                subtitle = stringResource(R.string.settings_updates_subtitle)
+            )
+        }
         ClickableSettingsRow(
             label = stringResource(R.string.settings_app_version),
             value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
             onClick = {
-                if (uiState.developerModeEnabled) return@ClickableSettingsRow
-                developerTapCount += 1
-                if (developerTapCount >= 7) {
-                    developerTapCount = 0
+                val result = nextDeveloperModeTapResult(
+                    developerModeEnabled = uiState.developerModeEnabled,
+                    currentTapCount = developerTapCount
+                )
+                developerTapCount = result.tapCount
+                if (result.showPasswordDialog) {
+                    pendingDeveloperModeEnabled = result.targetDeveloperModeEnabled
                     showDeveloperPasswordDialog = true
                 }
             }
         )
-        SwitchSettingsRow(
-            label = stringResource(R.string.settings_update_auto_check),
-            value = stringResource(
-                if (uiState.autoCheckAppUpdates) R.string.settings_enabled else R.string.settings_disabled
-            ),
-            checked = uiState.autoCheckAppUpdates,
-            onCheckedChange = onSetAutoCheckAppUpdates
-        )
-        if (uiState.autoCheckAppUpdates) {
+        if (showSideloadUpdates) {
             SwitchSettingsRow(
-                label = stringResource(R.string.settings_update_auto_download),
+                label = stringResource(R.string.settings_update_auto_check),
                 value = stringResource(
-                    if (uiState.autoDownloadAppUpdates) R.string.settings_enabled else R.string.settings_disabled
+                    if (uiState.autoCheckAppUpdates) R.string.settings_enabled else R.string.settings_disabled
                 ),
-                checked = uiState.autoDownloadAppUpdates,
-                onCheckedChange = onSetAutoDownloadAppUpdates
+                checked = uiState.autoCheckAppUpdates,
+                onCheckedChange = onSetAutoCheckAppUpdates
             )
-        }
-        SettingsRow(
-            label = stringResource(R.string.settings_update_latest_release),
-            value = formatLatestReleaseLabel(uiState.appUpdate, context)
-        )
-        SettingsRow(
-            label = stringResource(R.string.settings_update_status),
-            value = formatUpdateStatusLabel(uiState.appUpdate, context)
-        )
-        SettingsRow(
-            label = stringResource(R.string.settings_update_last_checked),
-            value = formatUpdateCheckTimeLabel(uiState.appUpdate.lastCheckedAt, context)
-        )
-        ClickableSettingsRow(
-            label = stringResource(R.string.settings_update_check_now),
-            value = stringResource(
-                if (uiState.isCheckingForUpdates) R.string.settings_update_checking else R.string.settings_update_check_action
-            ),
-            onClick = {
-                if (!uiState.isCheckingForUpdates) {
-                    onCheckForUpdates()
-                }
+            if (uiState.autoCheckAppUpdates) {
+                SwitchSettingsRow(
+                    label = stringResource(R.string.settings_update_auto_download),
+                    value = stringResource(
+                        if (uiState.autoDownloadAppUpdates) R.string.settings_enabled else R.string.settings_disabled
+                    ),
+                    checked = uiState.autoDownloadAppUpdates,
+                    onCheckedChange = onSetAutoDownloadAppUpdates
+                )
             }
-        )
-        if (shouldShowUpdateDownloadAction(uiState.appUpdate)) {
+            SettingsRow(
+                label = stringResource(R.string.settings_update_latest_release),
+                value = formatLatestReleaseLabel(uiState.appUpdate, context)
+            )
+            SettingsRow(
+                label = stringResource(R.string.settings_update_status),
+                value = formatUpdateStatusLabel(uiState.appUpdate, context)
+            )
+            SettingsRow(
+                label = stringResource(R.string.settings_update_last_checked),
+                value = formatUpdateCheckTimeLabel(uiState.appUpdate.lastCheckedAt, context)
+            )
             ClickableSettingsRow(
-                label = stringResource(R.string.settings_update_download),
-                value = formatUpdateDownloadLabel(uiState.appUpdate, context),
+                label = stringResource(R.string.settings_update_check_now),
+                value = stringResource(
+                    if (uiState.isCheckingForUpdates) R.string.settings_update_checking else R.string.settings_update_check_action
+                ),
                 onClick = {
-                    if (uiState.appUpdate.downloadStatus == com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloaded) {
-                        onInstallDownloadedUpdate()
-                    } else if (uiState.appUpdate.downloadStatus != com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloading) {
-                        onDownloadLatestUpdate()
+                    if (!uiState.isCheckingForUpdates) {
+                        onCheckForUpdates()
                     }
                 }
             )
-        }
-        if (!uiState.appUpdate.releaseUrl.isNullOrBlank()) {
-            ClickableSettingsRow(
-                label = stringResource(R.string.settings_update_view_release),
-                value = uiState.appUpdate.latestVersionName ?: stringResource(R.string.settings_update_release_notes),
-                onClick = { onOpenUri(uiState.appUpdate.releaseUrl.orEmpty()) }
-            )
-        }
-        if (!uiState.appUpdate.errorMessage.isNullOrBlank()) {
-            SettingsRow(
-                label = stringResource(R.string.settings_update_error),
-                value = uiState.appUpdate.errorMessage.orEmpty()
-            )
+            if (shouldShowUpdateDownloadAction(uiState.appUpdate)) {
+                ClickableSettingsRow(
+                    label = stringResource(R.string.settings_update_download),
+                    value = formatUpdateDownloadLabel(uiState.appUpdate, context),
+                    onClick = {
+                        if (uiState.appUpdate.downloadStatus == com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloaded) {
+                            onInstallDownloadedUpdate()
+                        } else if (uiState.appUpdate.downloadStatus != com.afterglowtv.app.update.AppUpdateDownloadStatus.Downloading) {
+                            onDownloadLatestUpdate()
+                        }
+                    }
+                )
+            }
+            if (!uiState.appUpdate.releaseUrl.isNullOrBlank()) {
+                ClickableSettingsRow(
+                    label = stringResource(R.string.settings_update_view_release),
+                    value = uiState.appUpdate.latestVersionName ?: stringResource(R.string.settings_update_release_notes),
+                    onClick = { onOpenUri(uiState.appUpdate.releaseUrl.orEmpty()) }
+                )
+            }
+            if (!uiState.appUpdate.errorMessage.isNullOrBlank()) {
+                SettingsRow(
+                    label = stringResource(R.string.settings_update_error),
+                    value = uiState.appUpdate.errorMessage.orEmpty()
+                )
+            }
         }
     }
 

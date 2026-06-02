@@ -12,7 +12,6 @@ inline fun <State> selectVodCategory(
     selectedLibraryFilterType: StateFlow<LibraryFilterType>,
     selectedLibrarySortBy: StateFlow<LibrarySortBy>,
     uiState: MutableStateFlow<State>,
-    loadLimit: Int = VodBrowseDefaults.SELECTED_CATEGORY_PAGE_SIZE,
     crossinline updateState: State.(
         selectedCategory: String?,
         filterType: LibraryFilterType,
@@ -20,7 +19,7 @@ inline fun <State> selectVodCategory(
         isLoadingSelectedCategory: Boolean
     ) -> State
 ) {
-    selectedCategoryLoadLimit.value = loadLimit
+    selectedCategoryLoadLimit.value = VodBrowseDefaults.SELECTED_CATEGORY_PAGE_SIZE
     uiState.update { state ->
         state.updateState(
             categoryName,
@@ -33,11 +32,10 @@ inline fun <State> selectVodCategory(
 
 fun incrementVodSelectedCategoryLoadLimit(
     canLoadMore: Boolean,
-    selectedCategoryLoadLimit: MutableStateFlow<Int>,
-    incrementBy: Int = VodBrowseDefaults.SELECTED_CATEGORY_PAGE_SIZE
+    selectedCategoryLoadLimit: MutableStateFlow<Int>
 ) {
     if (!canLoadMore) return
-    selectedCategoryLoadLimit.update { it + incrementBy }
+    selectedCategoryLoadLimit.update { it + VodBrowseDefaults.SELECTED_CATEGORY_PAGE_SIZE }
 }
 
 inline fun <State> setVodSearchQuery(

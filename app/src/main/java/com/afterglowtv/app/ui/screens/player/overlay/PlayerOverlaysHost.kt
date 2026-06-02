@@ -17,7 +17,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 
 /**
- * Drop-in Afterglow TV overlay host. Stacks (in Z order, low → high):
+ * Drop-in AfterglowTV overlay host. Stacks (in Z order, low → high):
  *
  *  1. Optional 40% black scrim — dims the underlying player when [state.livePanelVisible].
  *  2. [LivePanelOverlay] — left-anchored two-column channel picker.

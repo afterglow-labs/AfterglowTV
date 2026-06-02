@@ -16,6 +16,7 @@ data class AdultGuideCacheSnapshot(
 )
 
 interface AdultGuideCacheRepository {
+    fun observeProviderCache(providerId: Long): Flow<AdultGuideCacheSnapshot?>
     fun observeProviderCache(providerId: Long, playlistFingerprint: String): Flow<AdultGuideCacheSnapshot?>
     suspend fun replaceProviderCache(
         providerId: Long,

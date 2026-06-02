@@ -48,6 +48,7 @@ import com.afterglowtv.app.ui.theme.SurfaceElevated
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.CombinedM3uProfile
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderType
 
 @Composable
@@ -262,7 +263,9 @@ internal fun CreateCombinedM3uDialog(
 ) {
     var name by rememberSaveable { mutableStateOf("") }
     var selectedProviderIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
-    val m3uProviders = remember(providers) { providers.filter { it.type == ProviderType.M3U } }
+    val m3uProviders = remember(providers) {
+        providers.filter { it.type == ProviderType.M3U && it.m3uPlaylistKind == ProviderM3uPlaylistKind.LIVE }
+    }
     val effectiveName = remember(name, selectedProviderIds, m3uProviders) {
         val manualName = name.trim()
         if (manualName.isNotBlank()) {

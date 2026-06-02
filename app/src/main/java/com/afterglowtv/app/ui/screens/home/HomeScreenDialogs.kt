@@ -21,7 +21,6 @@ import com.afterglowtv.app.ui.components.dialogs.PremiumDialog
 import com.afterglowtv.app.ui.components.dialogs.PremiumDialogActionButton
 import com.afterglowtv.app.ui.components.dialogs.PremiumDialogFooterButton
 import com.afterglowtv.app.ui.components.dialogs.RenameGroupDialog
-import com.afterglowtv.app.ui.model.isAdultGuideGeneratedCategoryId
 import com.afterglowtv.app.ui.screens.multiview.MultiViewPlannerDialog
 import com.afterglowtv.app.ui.screens.multiview.MultiViewViewModel
 import com.afterglowtv.domain.model.ActiveLiveSource
@@ -124,7 +123,6 @@ internal fun HomeDialogsHost(
 
     if (uiState.selectedCategoryForOptions != null) {
         val category = uiState.selectedCategoryForOptions
-        val isAdultGeneratedCategory = uiState.isAdultGuideMode && isAdultGuideGeneratedCategoryId(category.id)
         val isCategoryLocked =
             category.isUserProtected &&
                 uiState.parentalControlLevel in 1..2 &&
@@ -142,11 +140,7 @@ internal fun HomeDialogsHost(
             onTogglePinned = if (!isCategoryLocked && !category.isVirtual && category.id != ChannelRepository.ALL_CHANNELS_ID) {
                 { viewModel.toggleCategoryPinned(category) }
             } else null,
-            onHide = if (
-                !isCategoryLocked &&
-                category.id != ChannelRepository.ALL_CHANNELS_ID &&
-                (!category.isVirtual || isAdultGeneratedCategory)
-            ) {
+            onHide = if (!isCategoryLocked && !category.isVirtual && category.id != ChannelRepository.ALL_CHANNELS_ID) {
                 { viewModel.hideCategory(category) }
             } else null,
             onHideFromLiveTV = if (!isCategoryLocked && category.id in setOf(VirtualCategoryIds.RECENT, ChannelRepository.ALL_CHANNELS_ID)) {
@@ -164,7 +158,7 @@ internal fun HomeDialogsHost(
                     viewModel.dismissCategoryOptions()
                 }
             } else null,
-            onRename = if (!isCategoryLocked && category.isVirtual && !isAdultGeneratedCategory && category.id !in setOf(VirtualCategoryIds.FAVORITES, VirtualCategoryIds.RECENT)) {
+            onRename = if (!isCategoryLocked && category.isVirtual && category.id !in setOf(VirtualCategoryIds.FAVORITES, VirtualCategoryIds.RECENT)) {
                 { viewModel.requestRenameGroup(category) }
             } else null,
             onToggleLock = {
@@ -172,10 +166,10 @@ internal fun HomeDialogsHost(
                 onPendingLockToggleCategoryChange(category)
                 onShowPinDialogChange(true)
             },
-            onDelete = if (!isCategoryLocked && category.isVirtual && !isAdultGeneratedCategory && category.id !in setOf(VirtualCategoryIds.FAVORITES, VirtualCategoryIds.RECENT)) {
+            onDelete = if (!isCategoryLocked && category.isVirtual && category.id !in setOf(VirtualCategoryIds.FAVORITES, VirtualCategoryIds.RECENT)) {
                 { viewModel.requestDeleteGroup(category) }
             } else null,
-            onReorderChannels = if (!isCategoryLocked && category.isVirtual && !isAdultGeneratedCategory && category.id != VirtualCategoryIds.RECENT) {
+            onReorderChannels = if (!isCategoryLocked && category.isVirtual && category.id != VirtualCategoryIds.RECENT) {
                 { viewModel.enterChannelReorderMode(category) }
             } else null
         )

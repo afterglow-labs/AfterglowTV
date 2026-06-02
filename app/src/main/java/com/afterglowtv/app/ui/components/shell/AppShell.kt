@@ -259,16 +259,8 @@ private fun TopNavigationBar(
     modifier: Modifier = Modifier,
     viewModel: AppShellViewModel = hiltViewModel()
 ) {
-    val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val showAdultGuideTab by viewModel.showAdultGuideTab.collectAsStateWithLifecycle()
-    val adultGuideTabLabel by viewModel.adultGuideTabLabel.collectAsStateWithLifecycle()
-    val items = remember(developerModeEnabled, showAdultGuideTab, adultGuideTabLabel) {
-        buildDestinationItems(
-            developerModeEnabled = developerModeEnabled,
-            showAdultGuideTab = showAdultGuideTab,
-            adultGuideLabel = adultGuideTabLabel
-        )
-    }
+    val items = remember(showAdultGuideTab) { buildDestinationItems(showAdultGuideTab) }
     val scrollState = rememberScrollState()
 
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
@@ -308,7 +300,7 @@ private fun TopNavigationBar(
                 items.forEach { item ->
                     val requester = focusRequesters.getOrPut(item.route) { FocusRequester() }
                     TopNavigationButton(
-                        label = item.labelOverride ?: stringResource(item.labelRes),
+                        label = stringResource(item.labelRes),
                         icon = item.icon,
                         selected = currentRoute.startsWith(item.route),
                         focusRequester = requester,
@@ -682,16 +674,8 @@ private fun DestinationRail(
     viewModel: AppShellViewModel = hiltViewModel()
 ) {
     val spacing = LocalAppSpacing.current
-    val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val showAdultGuideTab by viewModel.showAdultGuideTab.collectAsStateWithLifecycle()
-    val adultGuideTabLabel by viewModel.adultGuideTabLabel.collectAsStateWithLifecycle()
-    val items = remember(developerModeEnabled, showAdultGuideTab, adultGuideTabLabel) {
-        buildDestinationItems(
-            developerModeEnabled = developerModeEnabled,
-            showAdultGuideTab = showAdultGuideTab,
-            adultGuideLabel = adultGuideTabLabel
-        )
-    }
+    val items = remember(showAdultGuideTab) { buildDestinationItems(showAdultGuideTab) }
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
 
     Box(
@@ -733,7 +717,7 @@ private fun DestinationRail(
             items.forEach { item ->
                 val requester = focusRequesters.getOrPut(item.route) { FocusRequester() }
                 RailButton(
-                    label = item.labelOverride ?: stringResource(item.labelRes),
+                    label = stringResource(item.labelRes),
                     icon = item.icon,
                     selected = currentRoute.startsWith(item.route),
                     modifier = Modifier.focusRequester(requester),
@@ -817,8 +801,7 @@ private fun RailButton(
 private data class DestinationItem(
     val route: String,
     @StringRes val labelRes: Int,
-    val icon: ImageVector,
-    val labelOverride: String? = null
+    val icon: ImageVector
 )
 
 private fun findActiveDestinationItem(
@@ -830,23 +813,15 @@ private fun findActiveDestinationItem(
         .maxByOrNull { it.route.length }
         ?: items.firstOrNull { it.route == currentRoute }
 
-private fun buildDestinationItems(
-    developerModeEnabled: Boolean = false,
-    showAdultGuideTab: Boolean = false,
-    adultGuideLabel: String = "Adult"
-): List<DestinationItem> = buildList {
+private fun buildDestinationItems(showAdultGuideTab: Boolean = false): List<DestinationItem> = buildList {
     add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))
     add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
     add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
-    if (developerModeEnabled) {
-        if (showAdultGuideTab) {
-            add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info, adultGuideLabel.ifBlank { "Adult" }))
-        }
+    add(DestinationItem(Routes.VOD_CONTAINER, R.string.nav_vod_container, Icons.Default.Star))
+    if (showAdultGuideTab) {
+        add(DestinationItem(Routes.ADULT_GUIDE, R.string.nav_adult_guide, Icons.Default.Info))
     }
-    add(DestinationItem(Routes.VOD_CONTAINER, R.string.nav_vod, Icons.Default.Star))
-    if (developerModeEnabled) {
-        add(DestinationItem(Routes.LOCAL_MEDIA, R.string.nav_personal_guide, Icons.Default.Menu))
-    }
+    add(DestinationItem(Routes.LOCAL_MEDIA, R.string.nav_personal_guide, Icons.Default.Menu))
     add(DestinationItem(Routes.SEARCH, R.string.search_title, Icons.Default.Search))
     add(DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings))
 }

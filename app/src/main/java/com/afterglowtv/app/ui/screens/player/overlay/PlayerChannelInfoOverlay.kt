@@ -74,6 +74,7 @@ fun ChannelInfoOverlay(
     onOpenFullEpg: () -> Unit,
     onOpenLastGroup: () -> Unit,
     currentRecordingStatus: RecordingStatus?,
+    enableDvr: Boolean = true,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
     onScheduleRecording: () -> Unit,
@@ -212,12 +213,12 @@ fun ChannelInfoOverlay(
                                     containerColor = AppColors.SurfaceEmphasis
                                 )
                             }
-                            if (currentRecordingStatus == RecordingStatus.RECORDING) {
+                            if (enableDvr && currentRecordingStatus == RecordingStatus.RECORDING) {
                                 StatusPill(
                                     label = stringResource(R.string.player_recording_badge),
                                     containerColor = AppColors.Live
                                 )
-                            } else if (currentRecordingStatus == RecordingStatus.SCHEDULED) {
+                            } else if (enableDvr && currentRecordingStatus == RecordingStatus.SCHEDULED) {
                                 StatusPill(
                                     label = stringResource(R.string.player_recording_scheduled_badge),
                                     containerColor = AppColors.BrandMuted
@@ -363,7 +364,7 @@ fun ChannelInfoOverlay(
             ) {
                 item {
                     QuickActionButton(
-                        icon = if (showTimeshiftControls) "Replay" else stringResource(R.string.player_action_playback),
+                        icon = if (showTimeshiftControls) "DVR" else stringResource(R.string.player_action_playback),
                         label = if (showTimeshiftControls) {
                             stringResource(R.string.player_live_dvr_controls)
                         } else if (isPlaying) {
@@ -506,24 +507,26 @@ fun ChannelInfoOverlay(
                         )
                     }
                 }
-                item {
-                    QuickActionButton(
-                        icon = "REC",
-                        label = stringResource(R.string.player_record),
-                        onClick = { togglePanel(ChannelInfoPanel.RECORD) },
-                        onInteraction = { handleMainActionFocus(ChannelInfoPanel.RECORD) },
-                        colors = ClickableSurfaceDefaults.colors(
-                            containerColor = if (expandedPanel == ChannelInfoPanel.RECORD) Primary.copy(alpha = 0.22f) else AppColors.SurfaceEmphasis,
-                            focusedContainerColor = Primary.copy(alpha = 0.85f)
-                        ),
-                        modifier = Modifier
-                            .focusRequester(recordButtonFocusRequester)
-                            .focusProperties {
-                                if (expandedPanel == ChannelInfoPanel.RECORD) {
-                                    up = recordPanelFocusRequester
+                if (enableDvr) {
+                    item {
+                        QuickActionButton(
+                            icon = "REC",
+                            label = stringResource(R.string.player_record),
+                            onClick = { togglePanel(ChannelInfoPanel.RECORD) },
+                            onInteraction = { handleMainActionFocus(ChannelInfoPanel.RECORD) },
+                            colors = ClickableSurfaceDefaults.colors(
+                                containerColor = if (expandedPanel == ChannelInfoPanel.RECORD) Primary.copy(alpha = 0.22f) else AppColors.SurfaceEmphasis,
+                                focusedContainerColor = Primary.copy(alpha = 0.85f)
+                            ),
+                            modifier = Modifier
+                                .focusRequester(recordButtonFocusRequester)
+                                .focusProperties {
+                                    if (expandedPanel == ChannelInfoPanel.RECORD) {
+                                        up = recordPanelFocusRequester
+                                    }
                                 }
-                            }
-                    )
+                        )
+                    }
                 }
                 if (hasCatchUpOptions) {
                     item {
@@ -582,7 +585,7 @@ fun ChannelInfoOverlay(
             }
 
             when (expandedPanel) {
-                ChannelInfoPanel.RECORD -> {
+                ChannelInfoPanel.RECORD -> if (enableDvr) {
                     ChannelInfoActionMenuTray(
                         title = stringResource(R.string.player_record_options),
                         actions = buildList {
@@ -624,7 +627,7 @@ fun ChannelInfoOverlay(
                         firstActionFocusRequester = recordPanelFocusRequester,
                         ownerFocusRequester = recordButtonFocusRequester
                     )
-                }
+                } else Unit
 
                 ChannelInfoPanel.CATCH_UP -> {
                     ChannelInfoActionMenuTray(

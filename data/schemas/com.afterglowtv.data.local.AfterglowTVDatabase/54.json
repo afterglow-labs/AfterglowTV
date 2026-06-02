@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 54,
-    "identityHash": "2d7706a74756f2125494494024cb9381",
+    "identityHash": "2800d0fb778c625065277f66fadcfea8",
     "entities": [
       {
         "tableName": "providers",
@@ -4990,7 +4990,7 @@
       },
       {
         "tableName": "local_media_libraries",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `root_uri` TEXT NOT NULL, `source_type` TEXT NOT NULL, `display_name` TEXT, `enabled` INTEGER NOT NULL, `item_count` INTEGER NOT NULL, `added_at_ms` INTEGER NOT NULL, `updated_at_ms` INTEGER NOT NULL, `last_scanned_at_ms` INTEGER, `smb_host` TEXT, `smb_port` INTEGER, `smb_share` TEXT, `smb_path` TEXT, `smb_domain` TEXT, `smb_username` TEXT, `smb_password` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `root_uri` TEXT NOT NULL, `display_name` TEXT, `enabled` INTEGER NOT NULL, `item_count` INTEGER NOT NULL, `added_at_ms` INTEGER NOT NULL, `updated_at_ms` INTEGER NOT NULL, `last_scanned_at_ms` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -5007,12 +5007,6 @@
           {
             "fieldPath": "rootUri",
             "columnName": "root_uri",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "sourceType",
-            "columnName": "source_type",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -5049,41 +5043,6 @@
             "fieldPath": "lastScannedAtMs",
             "columnName": "last_scanned_at_ms",
             "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "smbHost",
-            "columnName": "smb_host",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbPort",
-            "columnName": "smb_port",
-            "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "smbShare",
-            "columnName": "smb_share",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbPath",
-            "columnName": "smb_path",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbDomain",
-            "columnName": "smb_domain",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbUsername",
-            "columnName": "smb_username",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbPassword",
-            "columnName": "smb_password",
-            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -5504,7 +5463,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2d7706a74756f2125494494024cb9381')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2800d0fb778c625065277f66fadcfea8')"
     ]
   }
 }

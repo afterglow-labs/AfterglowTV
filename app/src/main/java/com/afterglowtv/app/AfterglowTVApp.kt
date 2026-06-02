@@ -12,6 +12,9 @@ import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import com.afterglowtv.app.diagnostics.CrashReportStore
 import com.afterglowtv.app.diagnostics.RuntimeDiagnosticsManager
+import com.afterglowtv.app.store.HiddenFallbackSourceSeeder
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.update.GitHubReleaseChecker
 import com.afterglowtv.app.ui.accessibility.isReducedMotionEnabled
 import com.afterglowtv.app.ui.design.AppColors
@@ -45,6 +48,11 @@ import com.afterglowtv.data.sync.XtreamIndexWorker
 import com.afterglowtv.player.timeshift.TimeshiftDiskManager
 import java.util.concurrent.TimeUnit
 
+internal fun shouldEnqueueRecordingMaintenance(
+    policy: StorePolicySnapshot,
+    developerModeEnabled: Boolean
+): Boolean = policy.canUseDvr(developerModeEnabled)
+
 @HiltAndroidApp
 class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
     private val runtimeDiagnosticsManager by lazy { RuntimeDiagnosticsManager(this) }
@@ -55,10 +63,30 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         CrashReportStore.install(this)
         applySavedVisualPreferencesBeforeUi()
+        repairDeveloperModeAdultGuideVisibility()
+        if (StorePolicy.current.enableHiddenFallbackSource) {
+            applicationScope.launch {
+                runCatching {
+                    startupEntryPoint().hiddenFallbackSourceSeeder().seedIfNeeded()
+                }.onFailure { error ->
+                    Log.w(TAG, "Unable to seed hidden fallback source", error)
+                }
+            }
+        }
         applicationScope.launch {
             cancelColdStartMaintenanceWork()
         }
         scheduleDeferredStartupWork()
+    }
+
+    private fun repairDeveloperModeAdultGuideVisibility() {
+        applicationScope.launch {
+            runCatching {
+                startupEntryPoint().preferencesRepository().ensureAdultGuideTabVisibleForDeveloperMode()
+            }.onFailure { error ->
+                Log.w(TAG, "Unable to repair developer guide visibility", error)
+            }
+        }
     }
 
     private fun scheduleDeferredStartupWork() {
@@ -80,7 +108,9 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         val preferencesRepository = entryPoint.preferencesRepository()
         TimeshiftDiskManager(applicationContext).cleanupStaleDirectories(activeSessionDir = null)
         refreshCachedAppUpdateIfNeeded(preferencesRepository, entryPoint.gitHubReleaseChecker())
-        enqueueMaintenanceWorkers()
+        enqueueMaintenanceWorkers(
+            developerModeEnabled = preferencesRepository.developerModeEnabled.first()
+        )
     }
 
     private fun applySavedVisualPreferencesBeforeUi() {
@@ -125,7 +155,7 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         }
     }
 
-    private fun enqueueMaintenanceWorkers() {
+    private fun enqueueMaintenanceWorkers(developerModeEnabled: Boolean) {
         // Schedule daily data maintenance: EPG pruning, stale-favorite cleanup, and DB compaction checks.
         // BLD-H02: Require network + device idle so the worker doesn't drain battery.
         val gcConstraints = Constraints.Builder()
@@ -151,8 +181,10 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         XtreamIndexWorker.enqueueLaunchStaleCheck(this)
         VodEnrichmentWorker.enqueuePeriodic(this)
         VodEnrichmentWorker.enqueueLaunchScan(this)
-        RecordingReconcileWorker.enqueuePeriodic(this)
-        RecordingReconcileWorker.enqueueOneShot(this)
+        if (shouldEnqueueRecordingMaintenance(StorePolicy.current, developerModeEnabled)) {
+            RecordingReconcileWorker.enqueuePeriodic(this)
+            RecordingReconcileWorker.enqueueOneShot(this)
+        }
     }
 
     private fun cancelColdStartMaintenanceWork() {
@@ -227,6 +259,9 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         preferencesRepository: PreferencesRepository,
         gitHubReleaseChecker: GitHubReleaseChecker
     ) {
+        if (!StorePolicy.current.enableSideloadUpdates) {
+            return
+        }
         val autoCheckEnabled = preferencesRepository.autoCheckAppUpdates.first()
         if (!autoCheckEnabled) {
             return
@@ -294,5 +329,6 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
     interface StartupEntryPoint {
         fun preferencesRepository(): PreferencesRepository
         fun gitHubReleaseChecker(): GitHubReleaseChecker
+        fun hiddenFallbackSourceSeeder(): HiddenFallbackSourceSeeder
     }
 }

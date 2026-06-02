@@ -385,24 +385,6 @@ class M3uParserTest {
     }
 
     @Test
-    fun `isVodEntry_adultCategoryWithTransportUrl_returnsTrue`() {
-        val entry = parseEntries(buildPlaylist(
-            "http://cdn.example.com/stream/12345.ts?token=abc123" to "XXX"
-        )).single()
-
-        assertThat(M3uParser.isVodEntry(entry)).isTrue()
-    }
-
-    @Test
-    fun `isVodEntry_adultTitleWithGenericCategory_returnsTrue`() {
-        val entry = parseEntries(buildPlaylistWithNames(
-            Triple("http://cdn.example.com/stream/67890", "Uncategorized", "Adult Feature 1")
-        )).single()
-
-        assertThat(M3uParser.isVodEntry(entry)).isTrue()
-    }
-
-    @Test
     fun `isVodEntry_livePhpMp4Path_returnsFalse`() {
         val entry = parseEntries(buildPlaylist(
             "http://iptv.example.com/live.php/user/pass/12345.mp4?token=abc123" to "Live Channels"
@@ -426,15 +408,6 @@ class M3uParserTest {
         val sb = StringBuilder("#EXTM3U\n")
         entries.forEachIndexed { index, (url, group) ->
             sb.append("#EXTINF:-1 group-title=\"$group\",Channel ${index + 1}\n")
-            sb.append("$url\n")
-        }
-        return sb.toString()
-    }
-
-    private fun buildPlaylistWithNames(vararg entries: Triple<String, String, String>): String {
-        val sb = StringBuilder("#EXTM3U\n")
-        entries.forEach { (url, group, name) ->
-            sb.append("#EXTINF:-1 group-title=\"$group\",$name\n")
             sb.append("$url\n")
         }
         return sb.toString()

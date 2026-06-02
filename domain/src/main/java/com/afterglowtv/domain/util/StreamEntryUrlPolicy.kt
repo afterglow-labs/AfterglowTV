@@ -4,7 +4,7 @@ import java.net.URI
 import java.util.Locale
 
 object StreamEntryUrlPolicy {
-    private val allowedSchemes = setOf("http", "https", "rtsp", "rtsps", "rtmp", "file", "content")
+    private val allowedSchemes = setOf("http", "https", "rtsp", "rtsps", "rtmp", "file", "content", "smb")
 
     fun isAllowed(url: String): Boolean = !containsControlSeparators(url) && hasAllowedScheme(url)
 

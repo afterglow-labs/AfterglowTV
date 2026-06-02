@@ -32,6 +32,16 @@ abstract class AdultGuideCacheDao {
     @Query(
         """
         SELECT *
+        FROM adult_guide_cache_meta
+        WHERE provider_id = :providerId
+        LIMIT 1
+        """
+    )
+    abstract fun observeMeta(providerId: Long): Flow<AdultGuideCacheMetaEntity?>
+
+    @Query(
+        """
+        SELECT *
         FROM adult_guide_cache_categories
         WHERE provider_id = :providerId
           AND playlist_fingerprint = :playlistFingerprint
@@ -42,6 +52,16 @@ abstract class AdultGuideCacheDao {
         providerId: Long,
         playlistFingerprint: String
     ): Flow<List<AdultGuideCacheCategoryEntity>>
+
+    @Query(
+        """
+        SELECT *
+        FROM adult_guide_cache_categories
+        WHERE provider_id = :providerId
+        ORDER BY position ASC, title ASC
+        """
+    )
+    abstract fun observeCategories(providerId: Long): Flow<List<AdultGuideCacheCategoryEntity>>
 
     @Query(
         """
@@ -56,6 +76,16 @@ abstract class AdultGuideCacheDao {
         providerId: Long,
         playlistFingerprint: String
     ): Flow<List<AdultGuideCacheChannelRefRow>>
+
+    @Query(
+        """
+        SELECT category_key AS categoryKey, channel_id AS channelId, position
+        FROM adult_guide_cache_category_channels
+        WHERE provider_id = :providerId
+        ORDER BY category_key ASC, position ASC
+        """
+    )
+    abstract fun observeChannelRefs(providerId: Long): Flow<List<AdultGuideCacheChannelRefRow>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertMeta(meta: AdultGuideCacheMetaEntity)

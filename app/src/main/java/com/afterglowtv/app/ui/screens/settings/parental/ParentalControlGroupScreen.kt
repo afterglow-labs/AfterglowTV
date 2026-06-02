@@ -288,9 +288,9 @@ private fun ContentTypeSelectorRow(
 @Composable
 private fun contentTypeTabLabel(type: ContentType): String = when (type) {
     ContentType.LIVE -> stringResource(R.string.nav_live_tv)
-    ContentType.MOVIE -> stringResource(R.string.nav_movies)
+    ContentType.MOVIE -> stringResource(R.string.nav_vod_container)
     ContentType.SERIES,
-    ContentType.SERIES_EPISODE -> stringResource(R.string.nav_series)
+    ContentType.SERIES_EPISODE -> stringResource(R.string.player_episodes)
 }
 
 @Composable

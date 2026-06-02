@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 57,
-    "identityHash": "dd7526578f188bff5be49e971637cebd",
+    "identityHash": "d96363bdcea4300fae4880845d19bba7",
     "entities": [
       {
         "tableName": "providers",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `server_url` TEXT NOT NULL, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `m3u_url` TEXT NOT NULL, `epg_url` TEXT NOT NULL, `http_user_agent` TEXT NOT NULL, `http_headers` TEXT NOT NULL, `stalker_mac_address` TEXT NOT NULL, `stalker_device_profile` TEXT NOT NULL, `stalker_device_timezone` TEXT NOT NULL, `stalker_device_locale` TEXT NOT NULL, `is_active` INTEGER NOT NULL, `max_connections` INTEGER NOT NULL, `expiration_date` INTEGER, `api_version` TEXT, `allowed_output_formats_json` TEXT NOT NULL, `epg_sync_mode` TEXT NOT NULL, `xtream_fast_sync_enabled` INTEGER NOT NULL, `xtream_live_sync_mode` TEXT NOT NULL, `m3u_vod_classification_enabled` INTEGER NOT NULL, `status` TEXT NOT NULL, `last_synced_at` INTEGER NOT NULL, `created_at` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `server_url` TEXT NOT NULL, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `m3u_url` TEXT NOT NULL, `epg_url` TEXT NOT NULL, `http_user_agent` TEXT NOT NULL, `http_headers` TEXT NOT NULL, `stalker_mac_address` TEXT NOT NULL, `stalker_device_profile` TEXT NOT NULL, `stalker_device_timezone` TEXT NOT NULL, `stalker_device_locale` TEXT NOT NULL, `is_active` INTEGER NOT NULL, `max_connections` INTEGER NOT NULL, `expiration_date` INTEGER, `api_version` TEXT, `allowed_output_formats_json` TEXT NOT NULL, `epg_sync_mode` TEXT NOT NULL, `xtream_fast_sync_enabled` INTEGER NOT NULL, `xtream_live_sync_mode` TEXT NOT NULL, `m3u_vod_classification_enabled` INTEGER NOT NULL, `m3u_playlist_kind` TEXT NOT NULL, `status` TEXT NOT NULL, `last_synced_at` INTEGER NOT NULL, `created_at` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -142,6 +142,12 @@
             "fieldPath": "m3uVodClassificationEnabled",
             "columnName": "m3u_vod_classification_enabled",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "m3uPlaylistKind",
+            "columnName": "m3u_playlist_kind",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -5115,7 +5121,7 @@
       },
       {
         "tableName": "local_media_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `library_id` INTEGER NOT NULL, `uri` TEXT NOT NULL, `display_name` TEXT NOT NULL, `title` TEXT NOT NULL, `sort_title` TEXT NOT NULL, `folder_path` TEXT NOT NULL, `media_kind` TEXT NOT NULL, `mime_type` TEXT, `duration_ms` INTEGER, `size_bytes` INTEGER, `date_modified_ms` INTEGER, `poster_uri` TEXT, `backdrop_uri` TEXT, `description` TEXT, `genre` TEXT, `release_year` INTEGER, `series_title` TEXT, `season_number` INTEGER, `episode_number` INTEGER, `added_at_ms` INTEGER NOT NULL, `updated_at_ms` INTEGER NOT NULL, `last_scanned_at_ms` INTEGER, FOREIGN KEY(`library_id`) REFERENCES `local_media_libraries`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `library_id` INTEGER NOT NULL, `uri` TEXT NOT NULL, `display_name` TEXT NOT NULL, `title` TEXT NOT NULL, `sort_title` TEXT NOT NULL, `media_kind` TEXT NOT NULL, `mime_type` TEXT, `duration_ms` INTEGER, `size_bytes` INTEGER, `date_modified_ms` INTEGER, `poster_uri` TEXT, `backdrop_uri` TEXT, `description` TEXT, `genre` TEXT, `release_year` INTEGER, `series_title` TEXT, `season_number` INTEGER, `episode_number` INTEGER, `added_at_ms` INTEGER NOT NULL, `updated_at_ms` INTEGER NOT NULL, `last_scanned_at_ms` INTEGER, FOREIGN KEY(`library_id`) REFERENCES `local_media_libraries`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -5150,12 +5156,6 @@
           {
             "fieldPath": "sortTitle",
             "columnName": "sort_title",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "folderPath",
-            "columnName": "folder_path",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -5276,15 +5276,6 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_local_media_items_media_kind` ON `${TABLE_NAME}` (`media_kind`)"
-          },
-          {
-            "name": "index_local_media_items_folder_path",
-            "unique": false,
-            "columnNames": [
-              "folder_path"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_local_media_items_folder_path` ON `${TABLE_NAME}` (`folder_path`)"
           },
           {
             "name": "index_local_media_items_series_title_season_number_episode_number",
@@ -5765,7 +5756,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dd7526578f188bff5be49e971637cebd')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd96363bdcea4300fae4880845d19bba7')"
     ]
   }
 }

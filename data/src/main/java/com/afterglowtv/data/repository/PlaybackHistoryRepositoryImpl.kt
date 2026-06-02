@@ -14,6 +14,7 @@ import com.afterglowtv.domain.repository.PlaybackHistoryRepository
 import com.afterglowtv.domain.util.DEFAULT_PLAYBACK_COMPLETION_THRESHOLD
 import com.afterglowtv.domain.util.isPlaybackComplete
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -118,7 +119,7 @@ class PlaybackHistoryRepositoryImpl @Inject constructor(
 
     override suspend fun markAsWatched(history: PlaybackHistory): Result<Unit> {
         return try {
-            if (isIncognito.value) {
+            if (isIncognito.value || !history.canPersistInProviderHistory()) {
                 return Result.success(Unit)
             }
 
@@ -152,7 +153,7 @@ class PlaybackHistoryRepositoryImpl @Inject constructor(
 
     override suspend fun recordPlayback(history: PlaybackHistory): Result<Unit> {
         return try {
-            if (isIncognito.value) {
+            if (isIncognito.value || !history.canPersistInProviderHistory()) {
                 return Result.success(Unit)
             }
 
@@ -184,7 +185,7 @@ class PlaybackHistoryRepositoryImpl @Inject constructor(
 
     override suspend fun updateResumePosition(history: PlaybackHistory): Result<Unit> {
         return try {
-            if (isIncognito.value) {
+            if (isIncognito.value || !history.canPersistInProviderHistory()) {
                 return Result.success(Unit)
             }
 
@@ -269,9 +270,17 @@ class PlaybackHistoryRepositoryImpl @Inject constructor(
         snapshot.forEach { (key, history) ->
             if (pendingResumeUpdates.remove(key, history)) {
                 changed = true
-                transactionRunner.inTransaction {
-                    dao.insertOrUpdate(history.toEntity())
-                    syncDenormalizedProgress(history.contentId, history.contentType, history.providerId)
+                try {
+                    if (history.canPersistInProviderHistory()) {
+                        transactionRunner.inTransaction {
+                            dao.insertOrUpdate(history.toEntity())
+                            syncDenormalizedProgress(history.contentId, history.contentType, history.providerId)
+                        }
+                    }
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    // Drop invalid pending history rows instead of crashing from the background flusher.
                 }
             }
         }
@@ -349,3 +358,6 @@ private data class PlaybackKey(
 
 private fun PlaybackHistory.playbackKey(): PlaybackKey =
     PlaybackKey(contentId = contentId, contentType = contentType, providerId = providerId)
+
+private fun PlaybackHistory.canPersistInProviderHistory(): Boolean =
+    providerId > 0L && contentId > 0L

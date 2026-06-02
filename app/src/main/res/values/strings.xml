@@ -10,9 +10,9 @@
     <string name="nav_local_media">Local Media</string>
     <string name="nav_personal_guide">Personal Library</string>
     <string name="nav_epg">Guide</string>
-    <string name="nav_iptv_guide">TV Guide</string>
-    <string name="nav_vod">VOD</string>
-    <string name="nav_adult_guide">Adult</string>
+    <string name="nav_iptv_guide">IPTV Guide</string>
+    <string name="nav_vod_container">VOD</string>
+    <string name="nav_adult_guide">XXX Guide</string>
     <string name="nav_settings">Settings</string>
 
     
@@ -22,7 +22,7 @@
     <string name="welcome_version">v1.0.3</string>
     <string name="welcome_loading_title">Preparing your library</string>
     <string name="welcome_loading_subtitle">Opening the right screen for this device.</string>
-    <string name="welcome_tagline">A clean player for your own sources</string>
+    <string name="welcome_tagline">Premium IPTV for the living room</string>
     <string name="welcome_subtitle">Lean back into live channels, catch-up viewing, movies, and series with a first-party Android TV experience.</string>
     <string name="welcome_feature_live">Fast live browsing with remote-first focus</string>
     <string name="welcome_feature_library">Large-library movies and series without the clutter</string>
@@ -75,7 +75,7 @@
     <string name="live_channel_results">%1$d channels in view</string>
     <string name="live_preview_title">Channel Preview</string>
     <string name="live_preview_placeholder_title">Select a channel to preview</string>
-    <string name="live_preview_placeholder_subtitle">Press OK to load a preview. Press OK again for full screen.</string>
+    <string name="live_preview_placeholder_subtitle">In Pro mode, first click previews the stream and second click opens full playback.</string>
     <string name="live_preview_no_epg">No schedule information</string>
     <string name="live_preview_open_hint">Press OK again to open this channel</string>
     <string name="live_preview_loading">Loading preview…</string>
@@ -112,7 +112,7 @@
     <string name="dashboard_provider_status">Status</string>
     <string name="dashboard_provider_source">Source</string>
     <string name="dashboard_provider_connections">Connections</string>
-    <string name="dashboard_provider_xtream">Account Login</string>
+    <string name="dashboard_provider_xtream">Xtream Codes</string>
     <string name="dashboard_provider_m3u">M3U Playlist</string>
     <string name="dashboard_provider_no_sync">No recent sync</string>
     <string name="dashboard_provider_synced_at">Synced %1$s</string>
@@ -132,8 +132,8 @@
     <string name="dashboard_stat_resume">%1$d to resume</string>
     <string name="dashboard_stat_movies">%1$d movies</string>
     <string name="dashboard_stat_series">%1$d series</string>
-    <string name="dashboard_empty_title">Add a source when you are ready</string>
-    <string name="dashboard_empty_body">Home will show favorites, continue watching, and library rows after a source is active.</string>
+    <string name="dashboard_empty_title">Welcome to AfterglowTV</string>
+    <string name="dashboard_empty_body">Browse your Personal Library and network shares any time. Want live channels and on-demand rows on Home too? Add a playlist or Xtream provider whenever you like.</string>
 
     
     <string name="pin_dialog_title">Enter PIN</string>
@@ -244,10 +244,10 @@
     <string name="movies_reorder_subtitle">Use the remote to move posters, then save the shelf order for this group.</string>
     <string name="library_full_browse_title_movies">Browse Full Movie Library</string>
     <string name="library_full_browse_subtitle">%1$d titles available in the current provider</string>
-    <string name="vod_container_title">VOD</string>
-    <string name="vod_container_detail">VOD browsing</string>
-    <string name="adult_on_demand_title">On Demand</string>
-    <string name="adult_on_demand_detail">Adult titles</string>
+    <string name="vod_guide_title">VOD</string>
+    <string name="vod_guide_detail">VOD browsing</string>
+    <string name="xxx_vod_guide_title">XXX VOD</string>
+    <string name="xxx_vod_guide_detail">Adult VOD only</string>
 
     
     <string name="series_incorrect_pin">Incorrect PIN</string>
@@ -273,13 +273,13 @@
     <string name="series_reorder_subtitle">Use the remote to move posters, then save the shelf order for this group.</string>
     <string name="library_full_browse_title_series">Browse Full Series Library</string>
 
-    <string name="local_media_subtitle">Your own videos, kept separate from connected sources.</string>
+    <string name="local_media_subtitle">Browse your movies, shows, and personal videos.</string>
     <string name="local_media_loading">Loading local media...</string>
     <string name="local_media_filter_all">All</string>
     <string name="local_media_filter_movies">Movies</string>
     <string name="local_media_filter_tv">TV Shows</string>
     <string name="local_media_filter_other">Other</string>
-    <string name="local_media_filter_xxx">Adult</string>
+    <string name="local_media_filter_xxx">XXX</string>
     <string name="local_media_empty_title">Add a local media folder</string>
     <string name="local_media_empty_subtitle">Use Settings to add folders for personal movies, shows, and other videos.</string>
     <string name="local_media_open_settings">Open Settings</string>
@@ -327,17 +327,11 @@
     <string name="settings_now_playing_pip">Open PiP</string>
     <string name="settings_providers">Providers</string>
     <string name="settings_no_providers">No providers configured</string>
-    <string name="settings_add_provider">Add Source</string>
-    <string name="settings_providers_subtitle">Manage playlists, playback, and app preferences.</string>
-    <string name="settings_free_broadcasts_title">Free broadcasts</string>
-    <string name="settings_free_broadcasts_loaded">Loaded. Turn this off to hide the built-in source.</string>
-    <string name="settings_free_broadcasts_unloaded">Unloaded. Turn this on to scan for legal and free broadcasts.</string>
-    <string name="settings_free_broadcasts_loading">Scanning for legal and free broadcasts...</string>
-    <string name="settings_free_broadcasts_loaded_message">Free broadcasts loaded</string>
-    <string name="settings_free_broadcasts_unloaded_message">Free broadcasts unloaded</string>
+    <string name="settings_add_provider">Add Provider</string>
+    <string name="settings_providers_subtitle">Switch, sync, edit, and troubleshoot your IPTV sources.</string>
     <string name="settings_provider_selector_hint">Select a provider to view details and actions.</string>
     <string name="settings_parental_control">Parental Control</string>
-    <string name="settings_parental_subtitle">Protect sensitive content with TV-friendly controls.</string>
+    <string name="settings_parental_subtitle">Protect adult or sensitive content with TV-friendly controls.</string>
     <string name="settings_parental_groups_title">Protected Groups</string>
     <string name="settings_parental_groups_hint">Lock or unlock categories for the active provider.</string>
     <string name="settings_parental_groups_action">Manage</string>
@@ -353,8 +347,8 @@
     <string name="settings_category_sorting_title">Category Sorting</string>
     <string name="settings_category_sorting_subtitle">Sort categories for the active playlist. Locking and hiding now live in Category Controls.</string>
     <string name="settings_category_sort_live">Live TV Categories</string>
-    <string name="settings_category_sort_movies">Movie Categories</string>
-    <string name="settings_category_sort_series">Series Categories</string>
+    <string name="settings_category_sort_vod_movies">VOD Movie Categories</string>
+    <string name="settings_category_sort_vod_tv">VOD TV Categories</string>
     <string name="settings_hidden_categories_title">Hidden Categories</string>
     <string name="settings_hidden_categories_subtitle">Restore any provider categories you previously hid from browsing surfaces.</string>
     <string name="settings_hidden_categories_none">None hidden</string>
@@ -370,8 +364,8 @@
     <string name="settings_category_sort_most_items">Most Items First</string>
     <string name="settings_category_sort_least_items">Least Items First</string>
     <string name="settings_category_type_live_description">Sort and hide provider live groups while keeping All Channels, Favorites, Recent, and custom groups in their pinned positions.</string>
-    <string name="settings_category_type_movies_description">Sort and hide provider movie categories without affecting Favorites, Resume, or custom shelves.</string>
-    <string name="settings_category_type_series_description">Sort and hide provider series categories without affecting Favorites, Continue Watching, or custom shelves.</string>
+    <string name="settings_category_type_vod_movies_description">Sort and hide provider VOD movie categories without affecting Favorites, Resume, or custom shelves.</string>
+    <string name="settings_category_type_vod_tv_description">Sort and hide provider VOD TV categories without affecting Favorites, Continue Watching, or custom shelves.</string>
     <string name="settings_playback">Playback</string>
     <string name="settings_playback_subtitle">Tune decoder and buffering behavior for smoother playback.</string>
     <string name="settings_browsing">Browsing</string>
@@ -417,12 +411,9 @@
     <string name="settings_guide_no_data_show_channel_text">Show Text In Empty Guide Blocks</string>
     <string name="settings_guide_no_data_show_channel_text_on">Show channel name and a no-guide description.</string>
     <string name="settings_guide_no_data_show_channel_text_off">Leave empty guide blocks blank for faster browsing.</string>
-    <string name="settings_show_adult_guide_tab">Show Adult Tab</string>
-    <string name="settings_show_adult_guide_tab_on">Adult appears in the main navigation.</string>
-    <string name="settings_show_adult_guide_tab_off">Adult is hidden from the main navigation.</string>
-    <string name="settings_adult_guide_tab_label">Adult tab name</string>
-    <string name="settings_adult_guide_tab_label_dialog_title">Rename Adult tab</string>
-    <string name="settings_adult_guide_tab_label_reset">Reset</string>
+    <string name="settings_show_adult_guide_tab">Show XXX Guide Tab</string>
+    <string name="settings_show_adult_guide_tab_on">XXX Guide appears in the main navigation.</string>
+    <string name="settings_show_adult_guide_tab_off">XXX Guide is hidden from the main navigation.</string>
     <string name="settings_time_format">Time Format</string>
     <string name="settings_select_time_format">Select time format</string>
     <string name="settings_time_format_system">System Default</string>
@@ -525,13 +516,13 @@
     <string name="settings_live_channel_numbering_hidden">Hidden</string>
     <string name="settings_live_channel_numbering_hidden_desc">Never show channel numbers anywhere in the app.</string>
     <string name="settings_vod_view_mode">VOD layout</string>
-    <string name="settings_vod_view_mode_subtitle">Choose shelf rows, a poster grid, or VOD.</string>
+    <string name="settings_vod_view_mode_subtitle">Choose shelf rows, a poster grid, or the VOD guide.</string>
     <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_container">VOD</string>
-    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_guide">VOD</string>
+    <string name="settings_vod_view_mode_guide_desc">Category rail with VOD results on the right.</string>
     <string name="settings_vod_infinite_scroll">Infinite scroll</string>
     <string name="settings_vod_infinite_scroll_on">Auto-load more category rows as you scroll near the end.</string>
     <string name="settings_vod_infinite_scroll_off">Show a Load more button to fetch the next batch of category rows.</string>
@@ -561,7 +552,7 @@
     <string name="settings_about_subtitle">Version, build, and support details for this installation.</string>
     <string name="settings_app_version">App Version</string>
     <string name="settings_build">Build</string>
-    <string name="settings_build_desc">AfterglowTV for FireOS</string>
+    <string name="settings_build_desc">AfterglowTV for Android TV</string>
     <string name="settings_build_verification">Build Verification</string>
     <string name="settings_build_verification_official">Official build</string>
     <string name="settings_build_verification_unofficial">Unofficial build</string>
@@ -643,6 +634,7 @@
     <string name="settings_syncing_preparing">Preparing sync...</string>
     <string name="settings_syncing_section">Syncing %1$s...</string>
     <string name="settings_sync_option_tv">Live TV</string>
+    <string name="settings_sync_option_vod">VOD</string>
     <string name="settings_sync_option_movies">Movies</string>
     <string name="settings_sync_option_series">Series</string>
     <string name="settings_sync_option_epg">EPG</string>
@@ -746,7 +738,7 @@
     <string name="settings_overview_no_provider">No active provider</string>
     <string name="settings_no_providers_subtitle">Add a provider to unlock playback, guide data, and the rest of the TV experience.</string>
     <string name="settings_recording_title">Recording</string>
-    <string name="settings_recording_subtitle">Manage local recording jobs, storage, and scheduled captures.</string>
+    <string name="settings_recording_subtitle">Manage local live DVR jobs, storage, and scheduled captures.</string>
     <string name="settings_recording_storage_title">Recording Storage</string>
     <string name="settings_recording_storage_unknown">Storage unavailable</string>
     <string name="settings_recording_storage_ready">Storage ready for local live recording</string>
@@ -820,8 +812,8 @@
     <string name="settings_recording_retry_count_label">Retries</string>
     <string name="settings_recording_pattern_hint">Use tokens like ChannelName, ProgramTitle, yyyy-MM-dd_HH-mm</string>
     <string name="settings_save">Save</string>
-    <string name="settings_capability_xtream_with_epg">Account source with XMLTV guide support and on-demand guide fallback. Catch-up is available when the provider exposes replay streams.</string>
-    <string name="settings_capability_xtream_without_epg">Account source with on-demand guide fallback. Catch-up depends on provider replay support.</string>
+    <string name="settings_capability_xtream_with_epg">Xtream source with XMLTV guide support and on-demand guide fallback. Catch-up is available when the provider exposes replay streams.</string>
+    <string name="settings_capability_xtream_without_epg">Xtream source with on-demand guide fallback. Catch-up depends on provider replay support.</string>
     <string name="settings_capability_m3u_with_epg">M3U source with XMLTV guide. Archive support depends on provider stream templates.</string>
     <string name="settings_capability_m3u_without_epg">M3U source without guide URL. Guide and archive coverage may be limited.</string>
 
@@ -942,26 +934,26 @@
 
     
     <string name="setup_title_afterglowtv">AfterglowTV</string>
-    <string name="setup_provider_title">Add a source</string>
+    <string name="setup_provider_title">Hook up your IPTV</string>
     <string name="setup_edit_provider">Edit playlist</string>
     <string name="setup_update_desc">Tweak how this playlist connects</string>
-    <string name="setup_add_desc">Connect your media source</string>
+    <string name="setup_add_desc">Connect your IPTV service</string>
     <string name="setup_shell_eyebrow">First-time setup</string>
-    <string name="setup_shell_subtitle">Add a playlist link or local playlist file.</string>
-    <string name="setup_form_subtitle">Choose a source type, fill it in, then connect.</string>
+    <string name="setup_shell_subtitle">Login, MAC address, M3U link, or a local file — pick whichever your service hands you.</string>
+    <string name="setup_form_subtitle">Pick a connection type, fill it in, hit go.</string>
     <string name="setup_source_type_label">How are we connecting?</string>
-    <string name="setup_info_xtream_title">Account Login</string>
+    <string name="setup_info_xtream_title">Xtream Codes</string>
     <string name="setup_info_xtream_body">Server URL + username + password.</string>
     <string name="setup_info_stalker_body">Portal URL + registered MAC address.</string>
     <string name="setup_info_m3u_title">M3U Playlist</string>
-    <string name="setup_info_m3u_body">A playlist link from your source.</string>
+    <string name="setup_info_m3u_body">Playlist URL</string>
     <string name="setup_info_manage_title">Manage later</string>
     <string name="setup_info_manage_body">Edit, refresh, or replace from Settings whenever.</string>
     <string name="setup_import_backup">Restore from backup</string>
     <string name="badge_beta">Beta</string>
-    <string name="setup_xtream">Account Login</string>
-    <string name="setup_stalker">Portal</string>
-    <string name="setup_m3u">Playlist</string>
+    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_stalker">Portal Login</string>
+    <string name="setup_m3u">M3U Playlist</string>
     <string name="setup_name_hint">Name this playlist (optional)</string>
     <string name="setup_server_hint">Server URL</string>
     <string name="setup_user_hint">Username</string>
@@ -975,11 +967,16 @@
     <string name="setup_advanced_options_helper">Custom HTTP headers, EPG sync mode, and other tweaks.</string>
     <string name="setup_advanced_options_show">Show</string>
     <string name="setup_advanced_options_hide">Hide</string>
-    <string name="setup_m3u_vod_classification_label">Movie sorting</string>
-    <string name="setup_m3u_vod_classification_helper">Use playlist URL and category hints to sort matching entries into Movies instead of Live TV.</string>
+    <string name="setup_m3u_playlist_type_label">Type of playlist</string>
+    <string name="setup_m3u_playlist_type_live_title">Live TV</string>
+    <string name="setup_m3u_playlist_type_live_description">Channels and guide data.</string>
+    <string name="setup_m3u_playlist_type_vod_title">VOD</string>
+    <string name="setup_m3u_playlist_type_vod_description">Everything is on-demand.</string>
+    <string name="setup_m3u_playlist_type_mixed_title">Mixed</string>
+    <string name="setup_m3u_playlist_type_mixed_description">Live TV plus VOD entries.</string>
     <string name="setup_xtream_fast_sync_label">Fast Movie + Series Sync</string>
     <string name="setup_xtream_fast_sync_helper">Keep movie and series imports lightweight on the first sync. Turn this off only for providers that need a full catalog pass immediately.</string>
-    <string name="setup_xtream_live_sync_mode_label">Live channel sync</string>
+    <string name="setup_xtream_live_sync_mode_label">Xtream Live Sync</string>
     <string name="setup_xtream_live_sync_mode_helper">Choose how Live TV channels are fetched. Auto protects weak devices and routine refreshes while keeping categories populated.</string>
     <string name="setup_xtream_live_sync_mode_auto_title">Auto</string>
     <string name="setup_xtream_live_sync_mode_auto_description">Recommended. Uses category sync on low-memory devices, background refreshes, hidden-category refreshes, and stressed providers.</string>
@@ -999,15 +996,14 @@
     <string name="setup_stalker_epg_sync_mode_upfront_description">Download live channels and import the portal guide during setup. If XMLTV is configured and works, it is used first.</string>
     <string name="setup_stalker_epg_sync_mode_background_description">Finish setup first, then import the portal guide in the background. If XMLTV is configured and works, it is used first.</string>
     <string name="setup_stalker_epg_sync_mode_skip_description">Do not bulk import guide data automatically. Live guide data can still load on demand when you browse channels.</string>
-    <string name="setup_m3u_hint">Playlist URL</string>
+    <string name="setup_paste_m3u_url">Paste M3U URL</string>
+    <string name="setup_m3u_hint">M3U URL</string>
     <string name="setup_epg_url_hint">EPG / XMLTV URL (optional)</string>
-    <string name="setup_m3u_epg_unique_label">This EPG is unique to this playlist</string>
-    <string name="setup_m3u_epg_unique_helper">Save it with this playlist and remove it when the playlist is deleted. Turn this off only when sharing one EPG with other playlists.</string>
     <string name="setup_tab_url">URL</string>
     <string name="setup_tab_file">File</string>
-    <string name="setup_choose_file">Choose Playlist File</string>
+    <string name="setup_choose_file">Choose M3U File</string>
     <string name="setup_file_replace_hint">Press to replace file</string>
-    <string name="setup_file_select_title">Select Playlist File</string>
+    <string name="setup_file_select_title">Select M3U File</string>
     <string name="setup_file_browse_hint">Browse local storage or USB</string>
     <string name="setup_file_import_failed">Could not import playlist file. Please try again.</string>
     <string name="setup_file_import_storage_full">Storage is full. Free up space and try importing again.</string>
@@ -1350,7 +1346,7 @@
     <string name="player_no_archive">No archived programs found</string>
     <string name="player_jump_to_live">Jump to Live</string>
     <string name="player_jump_to_live_short">LIVE</string>
-    <string name="player_live_rewind_badge">LOCAL REPLAY</string>
+    <string name="player_live_rewind_badge">LOCAL DVR</string>
     <string name="player_live_offset">%1$s behind live</string>
     <string name="player_live_ready">LIVE</string>
     <string name="player_live_buffer_depth">Buffer %1$s</string>
@@ -1447,10 +1443,10 @@
     <string name="settings_clear_history">Clear Watch History</string>
     <string name="settings_clear_history_subtitle">Wipe all watch progress and recents for all providers.</string>
     <string name="settings_clear_history_confirm">Clear History</string>
-    <string name="settings_xtream_text_classification">Name-based content detection</string>
-    <string name="settings_xtream_text_classification_subtitle">Use category name keywords for content grouping when the source does not provide explicit flags.</string>
-    <string name="settings_xtream_base64_compatibility">Encoded text compatibility</string>
-    <string name="settings_xtream_base64_compatibility_subtitle">Decode names and categories when a source stores them as Base64. Leave this off unless text looks encoded.</string>
+    <string name="settings_xtream_text_classification">Xtream Name-Based Adult Detection</string>
+    <string name="settings_xtream_text_classification_subtitle">Use category name keywords to flag adult content when the provider doesn\'t set the adult flag explicitly</string>
+    <string name="settings_xtream_base64_compatibility">Xtream Base64 Text Compatibility</string>
+    <string name="settings_xtream_base64_compatibility_subtitle">Broadly decode Xtream names and categories when a provider stores them as Base64. Leave this off unless text looks encoded.</string>
     <string name="settings_prevent_standby">Keep screen on while watching</string>
     <string name="settings_prevent_standby_subtitle">Prevents the TV from sleeping during playback. Player timers can still exit playback when they expire.</string>
     <string name="settings_auto_play_next_episode">Auto-Play Next Episode</string>
@@ -1542,7 +1538,7 @@
     <string name="dashboard_open_movies">Open Movies</string>
     <string name="dashboard_updated_series">Updated series shelf</string>
     <string name="dashboard_open_series">Open Series</string>
-    <string name="dashboard_library_ready">Your library is ready</string>
+    <string name="dashboard_library_ready">Your IPTV library is ready</string>
     <string name="dashboard_open_live_tv">Open Live TV</string>
     <string name="dashboard_resume_unavailable">Watch history temporarily unavailable</string>
     <string name="dashboard_resume_unavailable_detail">Resume content could not be loaded. It will restore automatically.</string>
@@ -1579,12 +1575,12 @@
     <string name="home_reorder_channels">Reorder Channels</string>
     <string name="tv_input_setup_scanning_title">Scanning AfterglowTV channels</string>
     <string name="tv_input_setup_success_title">Live TV is ready</string>
-    <string name="tv_input_setup_no_provider_title">No source configured</string>
+    <string name="tv_input_setup_no_provider_title">No IPTV provider configured</string>
     <string name="tv_input_setup_error_title">Auto scan failed</string>
     <string name="tv_input_setup_idle_title">Preparing Live TV integration</string>
-    <string name="tv_input_setup_scanning_body">AfterglowTV is syncing your active source into Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">AfterglowTV is syncing your active provider into Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">Your channels were synced successfully.</string>
-    <string name="tv_input_setup_no_provider_body">Add at least one source in AfterglowTV, then return here to scan channels into Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">Add at least one IPTV provider in AfterglowTV, then return here to scan channels into Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">The TV input sync did not complete.</string>
     <string name="tv_input_setup_idle_body">Please wait.</string>
     <string name="tv_input_setup_source_format">Source: %1$s</string>

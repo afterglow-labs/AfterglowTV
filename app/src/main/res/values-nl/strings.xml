@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Afterglow TV</string>
+    <string name="app_name">AfterglowTV</string>
     <string name="nav_home">Thuis</string>
     <string name="nav_live_tv">Live-tv</string>
     <string name="nav_movies">Films</string>
@@ -102,7 +102,7 @@
     <string name="dashboard_provider_no_expiry">Geen vervaldatum gemeld</string>
     <string name="dashboard_warning_title">Aanbieder heeft aandacht nodig</string>
     <string name="dashboard_warning_review">Open Providergegevens</string>
-    <string name="dashboard_update_title">Afterglow TV %1$s is beschikbaar</string>
+    <string name="dashboard_update_title">AfterglowTV %1$s is beschikbaar</string>
     <string name="dashboard_update_available">Een nieuwere appversie is in de cache opgeslagen en klaar om te bekijken via Instellingen.</string>
     <string name="dashboard_update_install_ready">De nieuwste update is al gedownload. Open Instellingen om deze te installeren.</string>
     <string name="dashboard_update_open_settings">Updates openen</string>
@@ -382,8 +382,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_container">VOD</string>
-    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Categorieën</string>
     <string name="vod_classic_category_search">Zoeken in categorieën</string>
     <string name="vod_classic_all">Alles</string>
@@ -402,7 +402,7 @@
     <string name="settings_about_subtitle">Versie-, build- en ondersteuningsgegevens voor deze installatie.</string>
     <string name="settings_app_version">App-versie</string>
     <string name="settings_build">Bouw</string>
-    <string name="settings_build_desc">Afterglow TV voor Android TV</string>
+    <string name="settings_build_desc">AfterglowTV voor Android TV</string>
     <string name="settings_enabled">Ingeschakeld</string>
     <string name="settings_disabled">Uitgeschakeld</string>
     <string name="settings_developed_by">Ontwikkeld door</string>
@@ -412,7 +412,7 @@
     <string name="settings_donate">Ondersteuning op Ko-fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">Updates</string>
-    <string name="settings_updates_subtitle">Controleer GitHub Releases voor nieuwere Afterglow TV-versies zonder de app te verlaten.</string>
+    <string name="settings_updates_subtitle">Controleer GitHub Releases voor nieuwere AfterglowTV-versies zonder de app te verlaten.</string>
     <string name="settings_update_auto_check">Automatisch op updates controleren</string>
     <string name="settings_update_latest_release">Nieuwste release</string>
     <string name="settings_update_status">Updatestatus</string>
@@ -436,8 +436,8 @@
     <string name="settings_update_status_check_failed">Laatste controle mislukt</string>
     <string name="settings_update_status_downloading">Update wordt gedownload</string>
     <string name="settings_update_status_ready_to_install">Klaar om te installeren</string>
-    <string name="settings_update_available_message">Afterglow TV %1$s is beschikbaar.</string>
-    <string name="settings_update_current_message">Je hebt al de nieuwste Afterglow TV-release.</string>
+    <string name="settings_update_available_message">AfterglowTV %1$s is beschikbaar.</string>
+    <string name="settings_update_current_message">Je hebt al de nieuwste AfterglowTV-release.</string>
     <string name="settings_syncing">Gegevens worden gesynchroniseerd. Even geduld a.u.b....</string>
     <string name="settings_syncing_title">Gegevens synchroniseren...</string>
     <string name="settings_syncing_subtitle">Wacht even terwijl je afspeellijst wordt geïmporteerd.</string>
@@ -700,7 +700,7 @@
     <string name="a11y_catch_up_available">Inhaalmogelijkheid beschikbaar</string>
     <string name="a11y_now_playing">Speelt nu %1$s</string>
     <string name="a11y_channel_with_number">Kanaal %1$d, %2$s</string>
-    <string name="setup_title_afterglowtv">Afterglow TV</string>
+    <string name="setup_title_afterglowtv">AfterglowTV</string>
     <string name="setup_provider_title">Voeg een aanbieder toe</string>
     <string name="setup_edit_provider">Aanbieder bewerken</string>
     <string name="setup_update_desc">Update de gegevens van uw IPTV-provider</string>
@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Bepaal hoe gidsgegevens worden opgehaald tijdens providerinstelling en verversing.</string>
     <string name="setup_advanced_options_show">Tonen</string>
     <string name="setup_advanced_options_hide">Verbergen</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD-classificatie</string>
-    <string name="setup_m3u_vod_classification_helper">Alleen M3U. Gebruik de playlist-URL en group-title-heuristieken om overeenkomende items te sorteren in Films in plaats van Live TV.</string>
     <string name="setup_epg_sync_mode_label">EPG-synchronisatie</string>
     <string name="setup_epg_sync_mode_helper">Vooraf houdt het huidige gedrag aan. Achtergrond voltooit eerst de installatie, en Overslaan laat het verversen van de gids voor later.</string>
     <string name="setup_epg_sync_mode_upfront_title">Volledige EPG nu</string>
@@ -1165,21 +1163,21 @@
     <string name="settings_history_cleared">Kijkgeschiedenis en recente beelden gewist</string>
     <string name="settings_pin_changed">Pincode succesvol opgeslagen</string>
     <string name="home_reorder_channels">Kanalen opnieuw rangschikken</string>
-    <string name="tv_input_setup_scanning_title">Afterglow TV-kanalen scannen</string>
+    <string name="tv_input_setup_scanning_title">AfterglowTV-kanalen scannen</string>
     <string name="tv_input_setup_success_title">Live-tv is klaar</string>
     <string name="tv_input_setup_no_provider_title">Geen IPTV-provider geconfigureerd</string>
     <string name="tv_input_setup_error_title">Automatische scan mislukt</string>
     <string name="tv_input_setup_idle_title">Live TV-integratie voorbereiden</string>
-    <string name="tv_input_setup_scanning_body">Afterglow TV synchroniseert uw actieve provider met Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">AfterglowTV synchroniseert uw actieve provider met Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">Je kanalen zijn succesvol gesynchroniseerd.</string>
-    <string name="tv_input_setup_no_provider_body">Voeg ten minste één IPTV-provider toe in Afterglow TV en kom dan hier terug om kanalen te scannen voor Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">Voeg ten minste één IPTV-provider toe in AfterglowTV en kom dan hier terug om kanalen te scannen voor Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">De tv-invoersynchronisatie is niet voltooid.</string>
     <string name="tv_input_setup_idle_body">Wacht alstublieft.</string>
     <string name="tv_input_setup_source_format">Bron: %1$s</string>
-    <string name="tv_input_setup_open_setup">Open Afterglow TV-installatie</string>
+    <string name="tv_input_setup_open_setup">Open AfterglowTV-installatie</string>
     <string name="tv_input_setup_try_scan_again">Probeer Automatisch scannen opnieuw</string>
     <string name="tv_input_setup_retry_scan">Probeer de automatische scan opnieuw</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV kan nu uw Afterglow TV-kanalen openen.</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV kan nu uw AfterglowTV-kanalen openen.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1206,8 +1204,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d slots</string>
     <string name="movie_detail_related">Meer zoals dit</string>
     <string name="movie_detail_resume_from">Hervatten vanaf %1$s</string>
-    <string name="notification_permission_recording_alert_required">Schakel meldingen voor Afterglow TV in om opnamefoutmeldingen te ontvangen.</string>
-    <string name="notification_permission_reminder_required">Schakel meldingen voor Afterglow TV in om programmaherinneringen te ontvangen.</string>
+    <string name="notification_permission_recording_alert_required">Schakel meldingen voor AfterglowTV in om opnamefoutmeldingen te ontvangen.</string>
+    <string name="notification_permission_reminder_required">Schakel meldingen voor AfterglowTV in om programmaherinneringen te ontvangen.</string>
     <string name="player_action_variants">Varianten</string>
     <string name="player_auto_play_cancel">Annuleren</string>
     <string name="player_auto_play_countdown">Afspelen over %1$d s</string>
@@ -1381,7 +1379,7 @@
     <string name="settings_recording_skipped">Herhaling overgeslagen</string>
     <string name="settings_recording_wifi_only">Alleen opnemen via Wi-Fi</string>
     <string name="settings_reset">Resetten</string>
-    <string name="settings_restore_subtitle">Kies een back-upbestand of open een back-up met Afterglow TV via een bestandsbeheerder.</string>
+    <string name="settings_restore_subtitle">Kies een back-upbestand of open een back-up met AfterglowTV via een bestandsbeheerder.</string>
     <string name="settings_select_guide_default_category">Selecteer standaardcategorie gids</string>
     <string name="settings_select_live_timeshift_depth">Selecteer diepte lokaal terugspelen</string>
     <string name="settings_select_time_format">Selecteer tijdformaat</string>

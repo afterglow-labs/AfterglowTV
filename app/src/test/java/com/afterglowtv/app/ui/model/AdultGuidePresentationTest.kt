@@ -2,7 +2,6 @@ package com.afterglowtv.app.ui.model
 
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.Channel
-import com.google.common.truth.Truth.assertWithMessage
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -25,12 +24,12 @@ class AdultGuidePresentationTest {
         assertThat(categories.map { it.title }).containsAtLeast(
             "All",
             "MILF",
-            "Blonde",
+            "Blondes",
             "Trans",
             "Taboo"
         )
         assertThat(categories.category("MILF").channels).containsExactly(channel)
-        assertThat(categories.category("Blonde").channels).containsExactly(channel)
+        assertThat(categories.category("Blondes").channels).containsExactly(channel)
         assertThat(categories.category("Trans").channels).containsExactly(channel)
         assertThat(categories.category("Taboo").channels).containsExactly(channel)
     }
@@ -64,26 +63,6 @@ class AdultGuidePresentationTest {
     }
 
     @Test
-    fun `adult vod category prefers title match over generic adult group`() {
-        assertThat(
-            AdultGuideCategoryBuilder.resolveVodCategoryTitle(
-                title = "Some MILF Scene",
-                providerCategory = "XXX Movies"
-            )
-        ).isEqualTo("MILF")
-    }
-
-    @Test
-    fun `adult vod category falls back to adult provider group for generic title`() {
-        assertThat(
-            AdultGuideCategoryBuilder.resolveVodCategoryTitle(
-                title = "Unknown Clip",
-                providerCategory = "XXX Movies"
-            )
-        ).isEqualTo("XXX Movies")
-    }
-
-    @Test
     fun `adult category builder uses provider category context when title is generic`() {
         val channel = Channel(
             id = 2L,
@@ -102,127 +81,7 @@ class AdultGuidePresentationTest {
     }
 
     @Test
-    fun `common adult playlist title labels become generated categories`() {
-        val channels = listOf(
-            Channel(id = 10L, name = "Adult Blowjob", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 11L, name = "GENRE 25: Blonde", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 12L, name = "PH 21: Anal 4K", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 13L, name = "Adult TEENS  (P)", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 14L, name = "Adult Big Tits", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 15L, name = "Adult Hardcore", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 16L, name = "XXM: REALTEENS", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 17L, name = "PH 240: Milfy", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 18L, name = "OnlyFans TikTok Solo", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 19L, name = "Bondage Cartoon Hentai", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 20L, name = "Adult Compilation Oral", providerId = 7L, categoryId = 30L, categoryName = "XXX"),
-            Channel(id = 21L, name = "Teacher Student Family", providerId = 7L, categoryId = 30L, categoryName = "XXX")
-        )
-
-        val categories = AdultGuideCategoryBuilder.build(
-            channels = channels,
-            providerCategories = listOf(Category(id = 30L, name = "XXX", isAdult = true)),
-            includeAllCategory = false
-        )
-
-        assertThat(categories.map { it.title }).containsAtLeast(
-            "Blowjob",
-            "Blonde",
-            "Anal",
-            "Teen",
-            "Big Tits",
-            "Hardcore",
-            "MILF",
-            "OnlyFans",
-            "TikTok",
-            "Solo",
-            "Bondage",
-            "Cartoon",
-            "Hentai",
-            "Compilation",
-            "Oral",
-            "Taboo"
-        )
-        assertThat(categories.any { it.title == "XXX" }).isFalse()
-    }
-
-    @Test
-    fun `requested adult playlist labels become generated categories`() {
-        val expected = listOf(
-            "Gangbang" to "Group",
-            "Brazzers" to "Brazzers",
-            "Blacked" to "Blacked",
-            "Tiny" to "Petite",
-            "Daughter" to "Taboo",
-            "Cinema" to "Cinema",
-            "Tushy" to "Anal",
-            "Mouth" to "Oral",
-            "Sis" to "Taboo",
-            "Amateurs" to "Amateur",
-            "Moms" to "Taboo",
-            "Teach" to "Taboo",
-            "Russian" to "International",
-            "Czech" to "International",
-            "Wife" to "MILF",
-            "Futanari" to "Gonzo / Bizarre",
-            "BBC" to "Interracial",
-            "Playboy" to "Playboy",
-            "MYLF" to "MILF",
-            "Fisting" to "Gonzo / Bizarre",
-            "Cum4K" to "4K",
-            "Fam" to "Taboo",
-            "Masturbation" to "Solo",
-            "German" to "International",
-            "Office" to "Office",
-            "Boss" to "Office",
-            "Erotic4k" to "4K",
-            "Studio *4K" to "4K",
-            "Handjob" to "Handjob",
-            "Private Society" to "Private Society",
-            "Pornbox" to "Pornbox",
-            "Mom" to "MILF",
-            "Les" to "Lesbian",
-            "Parasited" to "Gonzo / Bizarre",
-            "Africa" to "International",
-            "Spy" to "Hidden Camera",
-            "GenderX" to "Trans",
-            "Arab" to "International",
-            "Work" to "Office",
-            "Feet" to "Fetish",
-            "Twink" to "Gay",
-            "PureTaboo" to "Taboo",
-            "TabooHeat" to "Taboo",
-            "MommysGirl" to "Taboo",
-            "AdultTime" to "AdultTime"
-        )
-        val channels = expected.mapIndexed { index, (title, _) ->
-            Channel(
-                id = 100L + index,
-                name = title,
-                providerId = 7L,
-                categoryId = 30L,
-                categoryName = "XXX",
-                isAdult = true
-            )
-        }
-
-        val categories = AdultGuideCategoryBuilder.build(
-            channels = channels,
-            providerCategories = listOf(Category(id = 30L, name = "XXX", isAdult = true)),
-            includeAllCategory = false
-        )
-
-        expected.forEach { (title, categoryTitle) ->
-            val category = categories.firstOrNull { it.title == categoryTitle }
-            assertWithMessage("Missing category $categoryTitle for $title. Categories: ${categories.map { it.title }}")
-                .that(category)
-                .isNotNull()
-            assertThat(category!!.channels.map { it.name }).contains(title)
-        }
-        assertThat(categories.category("Taboo").channels.map { it.name }).contains("Mom")
-    }
-
-    @Test
-    fun `unmatched adult channels use unsorted category`() {
+    fun `unmatched adult channels use provider category before other`() {
         val channel = Channel(
             id = 3L,
             name = "Channel 888",
@@ -237,35 +96,7 @@ class AdultGuidePresentationTest {
             providerCategories = listOf(Category(id = 30L, name = "Adult Premium", isAdult = true))
         )
 
-        assertThat(categories.category("Unsorted").channels).containsExactly(channel)
-    }
-
-    @Test
-    fun `unsorted adult category only contains adult channels without generated matches`() {
-        val unsorted = Channel(
-            id = 4L,
-            name = "Channel 999",
-            providerId = 7L,
-            categoryId = 30L,
-            categoryName = "XXX",
-            isAdult = true
-        )
-        val sorted = Channel(
-            id = 5L,
-            name = "MILF Channel",
-            providerId = 7L,
-            categoryId = 30L,
-            categoryName = "XXX",
-            isAdult = true
-        )
-
-        val categories = AdultGuideCategoryBuilder.build(
-            channels = listOf(unsorted, sorted),
-            providerCategories = listOf(Category(id = 30L, name = "XXX", isAdult = true))
-        )
-
-        assertThat(categories.category("Unsorted").channels).containsExactly(unsorted)
-        assertThat(categories.category("MILF").channels).containsExactly(sorted)
+        assertThat(categories.category("Adult Premium").channels).containsExactly(channel)
     }
 
     private fun List<AdultGuideCategory>.category(title: String): AdultGuideCategory =

@@ -161,13 +161,7 @@ class LocalMediaRepositoryImpl @Inject constructor(
                 val insertedId = libraryDao.upsertLibrary(entity)
                 val libraryId = existing?.id ?: insertedId
                 val savedLibrary = libraryDao.getLibrary(libraryId) ?: entity.copy(id = libraryId)
-                validateSmbLibrary(savedLibrary)
-                LocalMediaScanResult(
-                    libraryId = libraryId,
-                    scannedCount = 0,
-                    importedCount = 0,
-                    skippedCount = 0
-                )
+                scanLibrary(savedLibrary)
             }.fold(
                 onSuccess = { Result.success(it) },
                 onFailure = { error ->
@@ -339,15 +333,7 @@ class LocalMediaRepositoryImpl @Inject constructor(
     private suspend fun scanLibrary(library: LocalMediaLibraryEntity): LocalMediaScanResult =
         when (library.sourceType) {
             LocalMediaLibrarySourceType.DOCUMENT_TREE -> scanDocumentLibrary(library)
-            LocalMediaLibrarySourceType.SMB -> {
-                validateSmbLibrary(library)
-                LocalMediaScanResult(
-                    libraryId = library.id,
-                    scannedCount = 0,
-                    importedCount = 0,
-                    skippedCount = 0
-                )
-            }
+            LocalMediaLibrarySourceType.SMB -> scanSmbLibrary(library)
         }
 
     private suspend fun scanDocumentLibrary(library: LocalMediaLibraryEntity): LocalMediaScanResult {

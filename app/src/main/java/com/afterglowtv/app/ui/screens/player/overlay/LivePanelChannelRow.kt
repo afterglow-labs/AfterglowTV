@@ -29,7 +29,7 @@ import com.afterglowtv.app.ui.design.AfterglowFocusRole
 import com.afterglowtv.app.ui.design.afterglowFocus
 
 /**
- * Afterglow TV channel row: # | logo | name (+ now title) (+ progress).
+ * AfterglowTV channel row: # | logo | name (+ now title) (+ progress).
  *
  * Compact TV dimensions:
  *  - row height: 56 dp

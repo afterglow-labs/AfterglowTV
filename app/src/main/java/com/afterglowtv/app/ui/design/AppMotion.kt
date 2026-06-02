@@ -15,7 +15,7 @@ object AppMotion {
         easing = FastOutSlowInEasing
     )
 
-    // Afterglow TV ground-truth motion durations / specs.
+    // AfterglowTV ground-truth motion durations / specs.
     val FocusFade: FiniteAnimationSpec<Float> = tween(150, easing = FastOutSlowInEasing)
     val Standard220: FiniteAnimationSpec<Float> = tween(220, easing = FastOutSlowInEasing)
     val PanelSlide: FiniteAnimationSpec<Float> = tween(275, easing = FastOutSlowInEasing)

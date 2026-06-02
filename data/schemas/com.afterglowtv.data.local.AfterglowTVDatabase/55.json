@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 55,
-    "identityHash": "6acfe29484a0f2f20bd41eb716ff8881",
+    "identityHash": "878c836bd563b88f03e409b0f1b1c517",
     "entities": [
       {
         "tableName": "providers",
@@ -4990,7 +4990,7 @@
       },
       {
         "tableName": "local_media_libraries",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `root_uri` TEXT NOT NULL, `source_type` TEXT NOT NULL, `display_name` TEXT, `enabled` INTEGER NOT NULL, `item_count` INTEGER NOT NULL, `added_at_ms` INTEGER NOT NULL, `updated_at_ms` INTEGER NOT NULL, `last_scanned_at_ms` INTEGER, `smb_host` TEXT, `smb_port` INTEGER, `smb_share` TEXT, `smb_path` TEXT, `smb_domain` TEXT, `smb_username` TEXT, `smb_password` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `root_uri` TEXT NOT NULL, `display_name` TEXT, `enabled` INTEGER NOT NULL, `item_count` INTEGER NOT NULL, `added_at_ms` INTEGER NOT NULL, `updated_at_ms` INTEGER NOT NULL, `last_scanned_at_ms` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -5007,12 +5007,6 @@
           {
             "fieldPath": "rootUri",
             "columnName": "root_uri",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "sourceType",
-            "columnName": "source_type",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -5049,41 +5043,6 @@
             "fieldPath": "lastScannedAtMs",
             "columnName": "last_scanned_at_ms",
             "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "smbHost",
-            "columnName": "smb_host",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbPort",
-            "columnName": "smb_port",
-            "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "smbShare",
-            "columnName": "smb_share",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbPath",
-            "columnName": "smb_path",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbDomain",
-            "columnName": "smb_domain",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbUsername",
-            "columnName": "smb_username",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "smbPassword",
-            "columnName": "smb_password",
-            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -5115,7 +5074,7 @@
       },
       {
         "tableName": "local_media_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `library_id` INTEGER NOT NULL, `uri` TEXT NOT NULL, `display_name` TEXT NOT NULL, `title` TEXT NOT NULL, `sort_title` TEXT NOT NULL, `folder_path` TEXT NOT NULL, `media_kind` TEXT NOT NULL, `mime_type` TEXT, `duration_ms` INTEGER, `size_bytes` INTEGER, `date_modified_ms` INTEGER, `poster_uri` TEXT, `backdrop_uri` TEXT, `description` TEXT, `genre` TEXT, `release_year` INTEGER, `series_title` TEXT, `season_number` INTEGER, `episode_number` INTEGER, `added_at_ms` INTEGER NOT NULL, `updated_at_ms` INTEGER NOT NULL, `last_scanned_at_ms` INTEGER, FOREIGN KEY(`library_id`) REFERENCES `local_media_libraries`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `library_id` INTEGER NOT NULL, `uri` TEXT NOT NULL, `display_name` TEXT NOT NULL, `title` TEXT NOT NULL, `sort_title` TEXT NOT NULL, `media_kind` TEXT NOT NULL, `mime_type` TEXT, `duration_ms` INTEGER, `size_bytes` INTEGER, `date_modified_ms` INTEGER, `poster_uri` TEXT, `backdrop_uri` TEXT, `description` TEXT, `genre` TEXT, `release_year` INTEGER, `series_title` TEXT, `season_number` INTEGER, `episode_number` INTEGER, `added_at_ms` INTEGER NOT NULL, `updated_at_ms` INTEGER NOT NULL, `last_scanned_at_ms` INTEGER, FOREIGN KEY(`library_id`) REFERENCES `local_media_libraries`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -5150,12 +5109,6 @@
           {
             "fieldPath": "sortTitle",
             "columnName": "sort_title",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "folderPath",
-            "columnName": "folder_path",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -5276,15 +5229,6 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_local_media_items_media_kind` ON `${TABLE_NAME}` (`media_kind`)"
-          },
-          {
-            "name": "index_local_media_items_folder_path",
-            "unique": false,
-            "columnNames": [
-              "folder_path"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_local_media_items_folder_path` ON `${TABLE_NAME}` (`folder_path`)"
           },
           {
             "name": "index_local_media_items_series_title_season_number_episode_number",
@@ -5515,11 +5459,257 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "adult_guide_cache_meta",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`provider_id` INTEGER NOT NULL, `playlist_fingerprint` TEXT NOT NULL, `categorized_channel_count` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`provider_id`), FOREIGN KEY(`provider_id`) REFERENCES `providers`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "providerId",
+            "columnName": "provider_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playlistFingerprint",
+            "columnName": "playlist_fingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categorizedChannelCount",
+            "columnName": "categorized_channel_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "provider_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_adult_guide_cache_meta_provider_id",
+            "unique": true,
+            "columnNames": [
+              "provider_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_adult_guide_cache_meta_provider_id` ON `${TABLE_NAME}` (`provider_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "providers",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "provider_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "adult_guide_cache_categories",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`provider_id` INTEGER NOT NULL, `playlist_fingerprint` TEXT NOT NULL, `category_key` TEXT NOT NULL, `title` TEXT NOT NULL, `position` INTEGER NOT NULL, `channel_count` INTEGER NOT NULL, PRIMARY KEY(`provider_id`, `playlist_fingerprint`, `category_key`), FOREIGN KEY(`provider_id`) REFERENCES `providers`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "providerId",
+            "columnName": "provider_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playlistFingerprint",
+            "columnName": "playlist_fingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryKey",
+            "columnName": "category_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelCount",
+            "columnName": "channel_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "provider_id",
+            "playlist_fingerprint",
+            "category_key"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_adult_guide_cache_categories_provider_id_playlist_fingerprint_position",
+            "unique": false,
+            "columnNames": [
+              "provider_id",
+              "playlist_fingerprint",
+              "position"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_adult_guide_cache_categories_provider_id_playlist_fingerprint_position` ON `${TABLE_NAME}` (`provider_id`, `playlist_fingerprint`, `position`)"
+          },
+          {
+            "name": "index_adult_guide_cache_categories_provider_id",
+            "unique": false,
+            "columnNames": [
+              "provider_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_adult_guide_cache_categories_provider_id` ON `${TABLE_NAME}` (`provider_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "providers",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "provider_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "adult_guide_cache_category_channels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`provider_id` INTEGER NOT NULL, `playlist_fingerprint` TEXT NOT NULL, `category_key` TEXT NOT NULL, `channel_id` INTEGER NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`provider_id`, `playlist_fingerprint`, `category_key`, `channel_id`), FOREIGN KEY(`provider_id`) REFERENCES `providers`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`channel_id`) REFERENCES `channels`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "providerId",
+            "columnName": "provider_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playlistFingerprint",
+            "columnName": "playlist_fingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryKey",
+            "columnName": "category_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channel_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "provider_id",
+            "playlist_fingerprint",
+            "category_key",
+            "channel_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_adult_guide_cache_category_channels_provider_id_playlist_fingerprint_category_key_position",
+            "unique": false,
+            "columnNames": [
+              "provider_id",
+              "playlist_fingerprint",
+              "category_key",
+              "position"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_adult_guide_cache_category_channels_provider_id_playlist_fingerprint_category_key_position` ON `${TABLE_NAME}` (`provider_id`, `playlist_fingerprint`, `category_key`, `position`)"
+          },
+          {
+            "name": "index_adult_guide_cache_category_channels_provider_id",
+            "unique": false,
+            "columnNames": [
+              "provider_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_adult_guide_cache_category_channels_provider_id` ON `${TABLE_NAME}` (`provider_id`)"
+          },
+          {
+            "name": "index_adult_guide_cache_category_channels_channel_id",
+            "unique": false,
+            "columnNames": [
+              "channel_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_adult_guide_cache_category_channels_channel_id` ON `${TABLE_NAME}` (`channel_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "providers",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "provider_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "channels",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "channel_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6acfe29484a0f2f20bd41eb716ff8881')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '878c836bd563b88f03e409b0f1b1c517')"
     ]
   }
 }

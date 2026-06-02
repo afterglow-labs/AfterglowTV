@@ -168,7 +168,7 @@ object ChannelNormalizer {
                 codecLabel = codecLabel,
                 transportLabel = transportLabel,
                 frameRate = frameRate,
-                isHdr = lowerName.contains("hdr") || lowerName.contains("dolby vision") || containsStandalone(lowerName, "dv"),
+                isHdr = lowerName.contains("hdr") || lowerName.contains("dolby vision") || Regex("""(?<![a-z0-9])dv(?![a-z0-9])""").containsMatchIn(lowerName),
                 sourceHint = sourceHint,
                 regionHint = regionHint,
                 languageHint = languageHint,
@@ -204,7 +204,8 @@ object ChannelNormalizer {
             return directHeight
         }
         resolutionTags.forEach { (tag, height) ->
-            if (containsStandalone(lowerName, tag)) {
+            val regex = Regex("""(?<![a-z0-9])${Regex.escape(tag)}(?![a-z0-9])""", RegexOption.IGNORE_CASE)
+            if (regex.containsMatchIn(lowerName)) {
                 return height
             }
         }
@@ -269,24 +270,14 @@ object ChannelNormalizer {
         regionHint?.let { add(it) }
         languageHint?.let { if (it != regionHint) add(it) }
         if (lowerName.contains("hdr")) add("HDR")
-        if (lowerName.contains("dolby vision") || containsStandalone(lowerName, "dv")) {
+        if (lowerName.contains("dolby vision") || Regex("""(?<![a-z0-9])dv(?![a-z0-9])""").containsMatchIn(lowerName)) {
             add("Dolby Vision")
         }
     }.distinct()
 
     private fun containsStandalone(text: String, token: String): Boolean {
-        if (text.isBlank() || token.isBlank()) return false
-        var startIndex = 0
-        while (startIndex <= text.length - token.length) {
-            val index = text.indexOf(token, startIndex, ignoreCase = true)
-            if (index < 0) return false
-            val beforeOk = index == 0 || !text[index - 1].isLetterOrDigit()
-            val afterIndex = index + token.length
-            val afterOk = afterIndex == text.length || !text[afterIndex].isLetterOrDigit()
-            if (beforeOk && afterOk) return true
-            startIndex = index + 1
-        }
-        return false
+        val regex = Regex("""(?<![a-z0-9])${Regex.escape(token)}(?![a-z0-9])""", RegexOption.IGNORE_CASE)
+        return regex.containsMatchIn(text)
     }
 
     private fun heightToResolutionLabel(height: Int): String = when {

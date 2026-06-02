@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_iptv_guide">TV Guide</string>
+    <string name="nav_vod_guide">Video Guide</string>
+    <string name="nav_adult_guide">XXX Guide</string>
+    <string name="welcome_tagline">Live and on-demand video for the living room</string>
+
+    <string name="dashboard_provider_xtream">Server Login</string>
+    <string name="dashboard_provider_m3u">Playlist Link</string>
+    <string name="dashboard_empty_title">Welcome to AfterglowTV</string>
+    <string name="dashboard_empty_body">Browse your personal videos and network shares any time. Want your own channels and on-demand rows on Home too? Add a playlist link or local playlist file from Settings whenever you like.</string>
+    <string name="dashboard_library_ready">Your TV library is ready</string>
+
+    <string name="local_media_subtitle">Browse your movies, shows, and personal videos.</string>
+    <string name="settings_providers">Sources</string>
+    <string name="settings_no_providers">No sources configured</string>
+    <string name="settings_add_provider">Add Source</string>
+    <string name="settings_providers_subtitle">Switch, sync, edit, and troubleshoot your sources.</string>
+    <string name="settings_provider_selector_hint">Select a source to view details and actions.</string>
+    <string name="settings_build_desc">AfterglowTV for FireOS</string>
+    <string name="settings_parental_control">Content Controls</string>
+    <string name="settings_parental_subtitle">Manage selected categories with TV-friendly controls.</string>
+    <string name="settings_m3u_vod_classification_title">Video Classification</string>
+    <string name="settings_m3u_vod_classification_summary">Uses playlist and group-title rules to move matching entries into Movies. Refresh after changing this to rearrange content.</string>
+    <string name="settings_show_adult_guide_tab">Show XXX Guide Tab</string>
+    <string name="settings_show_adult_guide_tab_on">XXX Guide appears in the main navigation.</string>
+    <string name="settings_show_adult_guide_tab_off">XXX Guide is hidden from the main navigation.</string>
+    <string name="settings_select_level">Select Protection Level</string>
+    <string name="settings_level_off_subtitle">All categories remain visible.</string>
+    <string name="settings_level_locked_subtitle">Selected categories stay visible and require a PIN to open.</string>
+    <string name="settings_level_private_subtitle">Selected categories require a PIN and stay out of Search, Guide, All Channels, and Recent.</string>
+    <string name="settings_level_hidden_subtitle">Selected categories are hidden everywhere.</string>
+    <string name="settings_parental_pin">Unlock PIN</string>
+    <string name="settings_pc_btn">Content Controls</string>
+    <string name="search_actions_lock">Lock with Content Controls</string>
+    <string name="search_actions_unlock">Unlock Content Controls</string>
+    <string name="search_actions_pin_subtitle">Enter your unlock PIN to confirm</string>
+    <string name="parental_group_auto_protected">Selected Category</string>
+    <string name="parental_group_adult_tagged">Selected</string>
+    <string name="settings_category_protection_summary_body">Toggle the categories you want to lock or unlock, then save. Saving requires your unlock PIN.</string>
+    <string name="settings_category_protection_summary_body_no_pin">Toggle the categories you want to lock or unlock, then save. You will be asked to create an unlock PIN before the changes are applied.</string>
+    <string name="settings_xtream_text_classification">Name-Based Content Detection</string>
+    <string name="settings_xtream_text_classification_subtitle">Use category name keywords to mark selected content when the source does not set the flag explicitly.</string>
+    <string name="settings_xtream_base64_compatibility">Encoded Text Compatibility</string>
+    <string name="settings_xtream_base64_compatibility_subtitle">Decode source names and categories when a source stores them as encoded text. Leave this off unless text looks encoded.</string>
+
+    <string name="setup_provider_title">Add a source</string>
+    <string name="setup_edit_provider">Edit source</string>
+    <string name="setup_update_desc">Tweak how this source connects</string>
+    <string name="setup_add_desc">Connect a video source</string>
+    <string name="setup_shell_subtitle">Add a playlist link or choose a local playlist file.</string>
+    <string name="setup_form_subtitle">Pick a source type, fill it in, hit go.</string>
+    <string name="setup_source_type_label">Source type</string>
+    <string name="setup_info_xtream_title">Server Login</string>
+    <string name="setup_info_xtream_body">Server URL + username + password.</string>
+    <string name="setup_info_stalker_body">Portal URL + registered device address.</string>
+    <string name="setup_info_m3u_title">Playlist Link</string>
+    <string name="setup_info_m3u_body">A playlist link from a source you manage.</string>
+    <string name="setup_xtream">Server Login</string>
+    <string name="setup_stalker">Portal Login</string>
+    <string name="setup_m3u">Playlist Link</string>
+    <string name="setup_name_hint">Name this source (optional)</string>
+    <string name="setup_m3u_vod_classification_label">Video Classification</string>
+    <string name="setup_m3u_vod_classification_helper">Use playlist and group-title heuristics to sort matching entries into Movies instead of Live TV.</string>
+    <string name="setup_xtream_live_sync_mode_label">Live TV Sync</string>
+    <string name="setup_xtream_live_sync_mode_helper">Choose how Live TV channels are fetched. Auto protects weak devices and routine refreshes while keeping categories populated.</string>
+    <string name="setup_paste_m3u_url">Paste playlist URL</string>
+    <string name="setup_m3u_hint">Playlist URL</string>
+    <string name="setup_tab_url">Playlist Link</string>
+    <string name="setup_tab_file">Playlist File</string>
+    <string name="setup_choose_file">Choose Playlist File</string>
+    <string name="setup_file_select_title">Select Playlist File</string>
+    <string name="setup_badge_vod_sorting">Video sorting</string>
+    <string name="setup_discard_draft_body">This source setup is incomplete. Go back and lose the current draft?</string>
+
+    <string name="tv_input_setup_no_provider_title">No source configured</string>
+    <string name="tv_input_setup_no_provider_body">Add at least one source in AfterglowTV, then return here to scan channels into Android TV Live TV.</string>
+</resources>

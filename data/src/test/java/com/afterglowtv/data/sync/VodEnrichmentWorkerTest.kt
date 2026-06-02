@@ -36,6 +36,27 @@ class VodEnrichmentWorkerTest {
     }
 
     @Test
+    fun `targeted adult enrichment carries adult flag and clamped candidate limit`() {
+        val request = VodEnrichmentWorker.createProviderRequest(
+            providerId = 42L,
+            initialDelaySeconds = 0L,
+            candidateLimit = 999,
+            adultOnly = true
+        )
+
+        assertThat(request.workSpec.input.getLong("provider_id", -1L)).isEqualTo(42L)
+        assertThat(request.workSpec.input.getBoolean("adult_only", false)).isTrue()
+        assertThat(request.workSpec.input.getInt("candidate_limit", -1)).isEqualTo(240)
+    }
+
+    @Test
+    fun `enrichment candidate limit is clamped to worker bounds`() {
+        assertThat(normalizeVodEnrichmentCandidateLimit(0)).isEqualTo(12)
+        assertThat(normalizeVodEnrichmentCandidateLimit(120)).isEqualTo(120)
+        assertThat(normalizeVodEnrichmentCandidateLimit(999)).isEqualTo(240)
+    }
+
+    @Test
     fun `frame artwork extraction only runs when poster is missing and stream is usable`() {
         assertThat(shouldAttemptVodFrameArtwork(posterUrl = null, streamUrl = "https://example.com/movie.mp4")).isTrue()
         assertThat(shouldAttemptVodFrameArtwork(posterUrl = "", streamUrl = "http://example.com/movie.mkv")).isTrue()

@@ -49,8 +49,6 @@ data class VodGuideProgramCard(
     val imageUrl: String?,
     val badge: String?,
     val isLocked: Boolean = false,
-    val textFirst: Boolean = false,
-    val topLabel: String? = null,
     val onClick: () -> Unit,
     val onLongClick: (() -> Unit)? = null
 )
@@ -63,7 +61,8 @@ fun VodGuideLane(
     modifier: Modifier = Modifier,
     initialFocusRequester: FocusRequester? = null,
     rowHeight: Dp = 118.dp,
-    programWidth: Dp = 300.dp
+    programCardWidth: Dp = 300.dp,
+    textFirstMissingArtwork: Boolean = false
 ) {
     Row(
         modifier = modifier
@@ -90,8 +89,9 @@ fun VodGuideLane(
             itemsIndexed(programs, key = { _, program -> program.key }) { index, program ->
                 VodGuideProgramSurface(
                     program = program,
+                    textFirstMissingArtwork = textFirstMissingArtwork,
                     modifier = Modifier
-                        .width(programWidth)
+                        .width(programCardWidth)
                         .fillMaxHeight()
                         .then(
                             if (index == 0 && initialFocusRequester != null) {
@@ -147,9 +147,11 @@ private fun VodGuideLaneHeader(
 @Composable
 private fun VodGuideProgramSurface(
     program: VodGuideProgramCard,
+    textFirstMissingArtwork: Boolean,
     modifier: Modifier = Modifier
 ) {
     val lockedLabel = stringResource(R.string.home_locked_short)
+    val showTextFirstFallback = textFirstMissingArtwork && program.imageUrl.isNullOrBlank()
     TvClickableSurface(
         onClick = program.onClick,
         onLongClick = program.onLongClick,
@@ -180,41 +182,30 @@ private fun VodGuideProgramSurface(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val hasArtwork = !program.imageUrl.isNullOrBlank()
-            if (!program.textFirst || hasArtwork) {
+            if (showTextFirstFallback) {
+                VodGuideArtworkMarker(
+                    modifier = Modifier
+                        .width(5.dp)
+                        .fillMaxHeight()
+                )
+            } else {
                 VodGuideThumbnail(
                     imageUrl = program.imageUrl,
                     title = program.title,
-                    showFallbackInitial = !program.textFirst,
-                    modifier = if (program.textFirst) {
-                        Modifier
-                            .fillMaxHeight()
-                            .width(76.dp)
-                    } else {
-                        Modifier
-                            .fillMaxHeight()
-                            .aspectRatio(16f / 9f)
-                    }
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .aspectRatio(16f / 9f)
                 )
             }
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
-                program.topLabel?.takeIf { it.isNotBlank() }?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = AppColors.Warning,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
                 Text(
                     text = program.title,
                     style = MaterialTheme.typography.titleSmall,
                     color = AppColors.TextPrimary,
-                    maxLines = 2,
+                    maxLines = if (showTextFirstFallback) 3 else 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 program.subtitle?.takeIf { it.isNotBlank() }?.let {
@@ -243,10 +234,25 @@ private fun VodGuideProgramSurface(
 }
 
 @Composable
+private fun VodGuideArtworkMarker(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        AppColors.BrandStrong,
+                        AppColors.SurfaceAccent
+                    )
+                )
+            )
+    )
+}
+
+@Composable
 private fun VodGuideThumbnail(
     imageUrl: String?,
     title: String,
-    showFallbackInitial: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -262,13 +268,13 @@ private fun VodGuideThumbnail(
             ),
         contentAlignment = Alignment.Center
     ) {
-        if (showFallbackInitial) {
-            Text(
-                text = title.take(1).uppercase(),
-                style = MaterialTheme.typography.headlineSmall,
-                color = AppColors.TextSecondary
-            )
-        }
+        Box(
+            modifier = Modifier
+                .width(34.dp)
+                .height(3.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(AppColors.BrandStrong.copy(alpha = 0.6f))
+        )
         if (!imageUrl.isNullOrBlank()) {
             AsyncImage(
                 model = rememberCrossfadeImageModel(imageUrl),

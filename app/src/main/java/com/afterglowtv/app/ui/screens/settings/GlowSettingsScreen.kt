@@ -22,7 +22,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.ui.design.AppColors
@@ -47,8 +46,6 @@ import com.afterglowtv.app.ui.design.Glows
 import com.afterglowtv.app.ui.design.afterglow
 import com.afterglowtv.data.preferences.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -57,17 +54,6 @@ import javax.inject.Inject
 class GlowSettingsViewModel @Inject constructor(
     private val preferences: PreferencesRepository,
 ) : ViewModel() {
-    val backgroundGradientsEnabled = preferences.backgroundGradientsEnabled.stateIn(
-        viewModelScope,
-        SharingStarted.Eagerly,
-        false,
-    )
-
-    fun setBackgroundGradientsEnabled(enabled: Boolean) {
-        AppColors.applyBackgroundGradientsEnabled(enabled)
-        viewModelScope.launch { preferences.setBackgroundGradientsEnabled(enabled) }
-    }
-
     fun saveIntensity(value: Float) {
         viewModelScope.launch { preferences.setGlowIntensity(value) }
     }
@@ -94,7 +80,7 @@ fun GlowSettingsScreen(
     onBack: () -> Unit = {},
     viewModel: GlowSettingsViewModel = hiltViewModel(),
 ) {
-    val backgroundGradientsEnabled by viewModel.backgroundGradientsEnabled.collectAsState()
+    val backgroundGradientsEnabled = AppColors.backgroundGradientsEnabled
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -191,19 +177,6 @@ fun GlowSettingsScreen(
             }
 
             item { MasterIntensityCard(onPersist = viewModel::saveIntensity) }
-
-            item {
-                SwitchSettingsRow(
-                    label = "Background gradients",
-                    value = if (backgroundGradientsEnabled) {
-                        "Blend theme colors behind full screens"
-                    } else {
-                        "Use solid backgrounds and keep gradients inside theme previews"
-                    },
-                    checked = backgroundGradientsEnabled,
-                    onCheckedChange = viewModel::setBackgroundGradientsEnabled,
-                )
-            }
 
             item {
                 GlowRoleCard(

@@ -96,6 +96,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val recordingChannelIds by viewModel.recordingChannelIds.collectAsStateWithLifecycle()
     val scheduledChannelIds by viewModel.scheduledChannelIds.collectAsStateWithLifecycle()
+    val welcomeSeen by viewModel.welcomeSeen.collectAsStateWithLifecycle()
     val provider = uiState.provider
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -111,7 +112,7 @@ fun DashboardScreen(
             currentRoute = currentRoute,
             onNavigate = onNavigate,
             title = stringResource(R.string.nav_home),
-            subtitle = provider?.name,
+            subtitle = provider?.name?.takeIf { uiState.showProviderChrome },
             navigationChrome = AppNavigationChrome.TopBar,
             compactHeader = true,
             showScreenHeader = false
@@ -125,7 +126,8 @@ fun DashboardScreen(
                 }
                 return@AppScreenScaffold
             }
-            if (shouldShowDashboardEmptyState(uiState)) {
+            if (shouldShowDashboardEmptyState(uiState) && !welcomeSeen) {
+                LaunchedEffect(Unit) { viewModel.markWelcomeSeen() }
                 EmptyDashboard(
                     onAddProvider = onAddProvider,
                     onOpenSettings = { onNavigate(Routes.SETTINGS) }
@@ -141,7 +143,7 @@ fun DashboardScreen(
                 item(key = "afterglow_brand_strip") {
                     AfterglowBrandStrip(
                         wordmark = "Home",
-                        tagline = provider?.name?.let { "Connected to $it." }
+                        tagline = provider?.name?.takeIf { uiState.showProviderChrome }?.let { "Connected to $it." }
                             ?: "Pick up where you left off.",
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                     )

@@ -107,6 +107,7 @@ class RuntimeDiagnosticsManager(
         writeSnapshot("trim_memory:${trimLevelLabel(level)}")
     }
 
+    @Deprecated("Android framework callback is deprecated; retained for ComponentCallbacks2 compatibility.")
     override fun onLowMemory() {
         writeSnapshot("low_memory")
     }
@@ -156,18 +157,25 @@ class RuntimeDiagnosticsManager(
     }
 
     private fun trimLevelLabel(level: Int): String = when (level) {
-        ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> "ui_hidden"
-        ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE -> "running_moderate"
-        ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> "running_low"
-        ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> "running_critical"
-        ComponentCallbacks2.TRIM_MEMORY_BACKGROUND -> "background"
-        ComponentCallbacks2.TRIM_MEMORY_MODERATE -> "moderate"
-        ComponentCallbacks2.TRIM_MEMORY_COMPLETE -> "complete"
+        TRIM_MEMORY_UI_HIDDEN -> "ui_hidden"
+        TRIM_MEMORY_RUNNING_MODERATE -> "running_moderate"
+        TRIM_MEMORY_RUNNING_LOW -> "running_low"
+        TRIM_MEMORY_RUNNING_CRITICAL -> "running_critical"
+        TRIM_MEMORY_BACKGROUND -> "background"
+        TRIM_MEMORY_MODERATE -> "moderate"
+        TRIM_MEMORY_COMPLETE -> "complete"
         else -> level.toString()
     }
 
     companion object {
         private const val TAG = "RuntimeDiagnostics"
         private const val SAMPLE_INTERVAL_MS = 30_000L
+        private const val TRIM_MEMORY_RUNNING_MODERATE = 5
+        private const val TRIM_MEMORY_RUNNING_LOW = 10
+        private const val TRIM_MEMORY_RUNNING_CRITICAL = 15
+        private const val TRIM_MEMORY_UI_HIDDEN = 20
+        private const val TRIM_MEMORY_BACKGROUND = 40
+        private const val TRIM_MEMORY_MODERATE = 60
+        private const val TRIM_MEMORY_COMPLETE = 80
     }
 }

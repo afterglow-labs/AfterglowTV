@@ -3,6 +3,7 @@ package com.afterglowtv.app.ui.screens.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.BuildConfig
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.data.sync.SyncManager
@@ -38,6 +39,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -48,6 +50,7 @@ import com.afterglowtv.domain.util.AdultContentVisibilityPolicy
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
@@ -83,6 +86,16 @@ class DashboardViewModel @Inject constructor(
 
     private val _scheduledChannelIds = MutableStateFlow<Set<Long>>(emptySet())
     val scheduledChannelIds: StateFlow<Set<Long>> = _scheduledChannelIds.asStateFlow()
+
+    /** Tracks whether the first-launch Home welcome card has already been shown. */
+    val welcomeSeen: StateFlow<Boolean> = preferencesRepository.dashboardWelcomeSeen
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    fun markWelcomeSeen() {
+        viewModelScope.launch {
+            preferencesRepository.setDashboardWelcomeSeen(true)
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -187,8 +200,11 @@ class DashboardViewModel @Inject constructor(
         }.combine(observeUpdateNotice().onStart { emit(null) }) { snapshot, updateNotice ->
             snapshot.copy(updateNotice = updateNotice)
         }.combine(syncManager.syncStateForProvider(provider.id).onStart { emit(SyncState.Idle) }) { snapshot, syncState ->
+            val visibleProvider = provider.takeUnless(StorePolicy.current::isHiddenFallbackProvider)
+            val providerDisplayName = visibleProvider?.name ?: appContext.getString(R.string.app_name)
             DashboardUiState(
                 provider = provider,
+                showProviderChrome = visibleProvider != null,
                 favoriteChannels = snapshot.shelves.favoriteChannels,
                 recentChannels = snapshot.shelves.recentChannels,
                 continueWatching = snapshot.shelves.continueWatching,
@@ -203,18 +219,20 @@ class DashboardViewModel @Inject constructor(
                     continueWatchingCount = snapshot.shelves.continueWatching.size
                 ),
                 feature = buildFeature(
-                    providerName = provider.name,
+                    providerName = providerDisplayName,
                     recentChannels = snapshot.shelves.recentChannels,
                     continueWatching = snapshot.shelves.continueWatching,
                     continueWatchingDegraded = snapshot.shelves.continueWatchingDegraded
                 ),
-                providerHealth = DashboardProviderHealth(
-                    status = provider.status,
-                    type = provider.type,
-                    lastSyncedAt = provider.lastSyncedAt,
-                    expirationDate = provider.expirationDate,
-                    maxConnections = provider.maxConnections
-                ),
+                providerHealth = visibleProvider?.let {
+                    DashboardProviderHealth(
+                        status = it.status,
+                        type = it.type,
+                        lastSyncedAt = it.lastSyncedAt,
+                        expirationDate = it.expirationDate,
+                        maxConnections = it.maxConnections
+                    )
+                } ?: DashboardProviderHealth(),
                 providerWarnings = when (syncState) {
                     is SyncState.Partial -> syncState.warnings
                     is SyncState.Error -> listOf(syncState.message)
@@ -521,6 +539,7 @@ private data class DashboardSnapshot(
 
 data class DashboardUiState(
     val provider: Provider? = null,
+    val showProviderChrome: Boolean = true,
     val favoriteChannels: List<Channel> = emptyList(),
     val recentChannels: List<Channel> = emptyList(),
     val continueWatching: List<PlaybackHistory> = emptyList(),

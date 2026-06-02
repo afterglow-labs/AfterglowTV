@@ -13,10 +13,15 @@ data class AdultGuideCategory(
     val channels: List<Channel>
 )
 
+internal data class AdultGuideCategoryMatch(
+    val key: String,
+    val title: String
+)
+
 object AdultGuideCategoryBuilder {
     const val ALL_CATEGORY_KEY = "all"
-    const val UNSORTED_CATEGORY_KEY = "unsorted"
 
+    private const val OTHER_CATEGORY_KEY = "other"
     private val explicitAdultSignals = listOf(
         "milf",
         "milfs",
@@ -44,17 +49,9 @@ object AdultGuideCategoryBuilder {
         "threesome",
         "orgy"
     )
-    private val normalizedExplicitAdultSignals = explicitAdultSignals
-        .map(::normalizeAdultGuideText)
-        .filter(String::isNotBlank)
-
+    private val normalizedExplicitAdultSignals = explicitAdultSignals.map(::normalizeAdultGuideText)
     private val categoryRules = listOf(
-        AdultGuideRule(
-            "milf",
-            "MILF",
-            listOf("milf", "milfs", "milfy", "mylf", "stepmom", "step mom", "mom", "wife"),
-            embeddedAliases = listOf("milf", "milfy", "mylf")
-        ),
+        AdultGuideRule("milf", "MILF", listOf("milf", "milfs", "stepmom", "step mom")),
         AdultGuideRule(
             "taboo",
             "Taboo",
@@ -70,141 +67,29 @@ object AdultGuideCategoryBuilder {
                 "step sister",
                 "stepbrother",
                 "step brother",
-                "family",
-                "teacher",
-                "student",
-                "school",
-                "schoolgirl",
-                "school girl",
-                "college",
                 "cousin",
                 "aunt",
-                "uncle",
-                "mom",
-                "mother",
-                "dad",
-                "father",
-                "sister",
-                "brother",
-                "daughter",
-                "sis",
-                "moms",
-                "teach",
-                "fam",
-                "puretaboo",
-                "tabooheat",
-                "mommysgirl"
-            ),
-            embeddedAliases = listOf(
-                "stepmom",
-                "stepdad",
-                "stepsister",
-                "stepbrother",
-                "family",
-                "teacher",
-                "student",
-                "schoolgirl",
-                "cousin",
-                "mother",
-                "father",
-                "daughter",
-                "puretaboo",
-                "tabooheat",
-                "mommysgirl"
+                "uncle"
             )
         ),
-        AdultGuideRule("interracial", "Interracial", listOf("interracial", "ir", "bbc")),
-        AdultGuideRule(
-            "teen",
-            "Teen",
-            listOf("teen", "teens", "eighteen", "18 plus", "barely legal", "nubile"),
-            embeddedAliases = listOf("teen", "teens", "realteens", "eighteen", "barelylegal", "nubile")
-        ),
-        AdultGuideRule(
-            "anal",
-            "Anal",
-            listOf("anal", "anal 4k", "anal only", "anal mom", "analized", "tushy"),
-            embeddedAliases = listOf("anal", "anal4k", "analonly", "analmom", "analized", "tushy")
-        ),
-        AdultGuideRule(
-            "blowjob",
-            "Blowjob",
-            listOf("blowjob", "blowjobs", "bj", "deep throat", "deepthroat"),
-            embeddedAliases = listOf("blowjob", "blowjobs", "deepthroat")
-        ),
-        AdultGuideRule("oral", "Oral", listOf("oral", "mouth"), embeddedAliases = listOf("oral")),
-        AdultGuideRule("handjob", "Handjob", listOf("handjob", "hand job"), embeddedAliases = listOf("handjob")),
-        AdultGuideRule(
-            "big_tits",
-            "Big Tits",
-            listOf("big tits", "big titty", "bigtitty", "busty", "boobs"),
-            embeddedAliases = listOf("bigtits", "bigtitty", "busty")
-        ),
-        AdultGuideRule("hardcore", "Hardcore", listOf("hardcore", "rough"), embeddedAliases = listOf("hardcore")),
-        AdultGuideRule("bondage", "Bondage", listOf("bondage", "bdsm"), embeddedAliases = listOf("bondage", "bdsm")),
-        AdultGuideRule("babes", "Babes", listOf("babes", "babe"), embeddedAliases = listOf("babes")),
-        AdultGuideRule("cuckold", "Cuckold", listOf("cuckold", "cuck"), embeddedAliases = listOf("cuckold")),
-        AdultGuideRule(
-            "compilation",
-            "Compilation",
-            listOf("compilation", "compilations"),
-            embeddedAliases = listOf("compilation", "compilations")
-        ),
-        AdultGuideRule("brazzers", "Brazzers", listOf("brazzers"), embeddedAliases = listOf("brazzers")),
-        AdultGuideRule("blacked", "Blacked", listOf("blacked"), embeddedAliases = listOf("blacked")),
-        AdultGuideRule("cinema", "Cinema", listOf("cinema"), embeddedAliases = listOf("cinema")),
-        AdultGuideRule("playboy", "Playboy", listOf("playboy"), embeddedAliases = listOf("playboy")),
-        AdultGuideRule("adulttime", "AdultTime", listOf("adulttime", "adult time"), embeddedAliases = listOf("adulttime")),
-        AdultGuideRule("private_society", "Private Society", listOf("private society"), embeddedAliases = listOf("privatesociety")),
-        AdultGuideRule("pornbox", "Pornbox", listOf("pornbox"), embeddedAliases = listOf("pornbox")),
-        AdultGuideRule(
-            "gonzo_bizarre",
-            "Gonzo / Bizarre",
-            listOf("gonzo", "bizarre", "futanari", "fisting", "parasited"),
-            embeddedAliases = listOf("futanari", "fisting", "parasited")
-        ),
-        AdultGuideRule("parody", "Parody", listOf("parody", "parodies"), embeddedAliases = listOf("parody")),
-        AdultGuideRule("pornstar", "Pornstar", listOf("pornstar", "pornstars"), embeddedAliases = listOf("pornstar")),
-        AdultGuideRule("cartoon", "Cartoon", listOf("cartoon", "cartoons", "toon", "animated"), embeddedAliases = listOf("cartoon")),
-        AdultGuideRule("hentai", "Hentai", listOf("hentai", "anime"), embeddedAliases = listOf("hentai", "anime")),
-        AdultGuideRule(
-            "solo",
-            "Solo",
-            listOf("solo", "solo girl", "solo girls", "masturbation"),
-            embeddedAliases = listOf("solo", "masturbation")
-        ),
-        AdultGuideRule("onlyfans", "OnlyFans", listOf("onlyfans", "only fans"), embeddedAliases = listOf("onlyfans")),
-        AdultGuideRule("tiktok", "TikTok", listOf("tiktok", "tik tok"), embeddedAliases = listOf("tiktok")),
-        AdultGuideRule("petite", "Petite", listOf("petite", "tiny")),
-        AdultGuideRule("blondes", "Blonde", listOf("blonde", "blondes"), embeddedAliases = listOf("blonde", "blondessa")),
+        AdultGuideRule("interracial", "Interracial", listOf("interracial", "ir")),
+        AdultGuideRule("blondes", "Blondes", listOf("blonde", "blondes")),
         AdultGuideRule("brunettes", "Brunettes", listOf("brunette", "brunettes")),
-        AdultGuideRule("trans", "Trans", listOf("trans", "transgender", "tg", "ts", "genderx"), embeddedAliases = listOf("genderx")),
+        AdultGuideRule("trans", "Trans", listOf("trans", "transgender", "tg", "ts")),
         AdultGuideRule("latina", "Latina", listOf("latina", "latinas", "latin")),
-        AdultGuideRule(
-            "asian",
-            "Asian",
-            listOf("asian", "japanese", "korean", "chinese", "thai", "japan", "japanhdv"),
-            embeddedAliases = listOf("asian", "japanese", "korean", "chinese", "japanhdv")
-        ),
+        AdultGuideRule("asian", "Asian", listOf("asian", "japanese", "korean", "chinese")),
         AdultGuideRule("ebony", "Ebony", listOf("ebony", "black")),
-        AdultGuideRule("amateur", "Amateur", listOf("amateur", "amateurs", "homemade")),
-        AdultGuideRule("lesbian", "Lesbian", listOf("lesbian", "lesbians", "les")),
-        AdultGuideRule("gay", "Gay", listOf("gay", "twink")),
+        AdultGuideRule("amateur", "Amateur", listOf("amateur", "homemade")),
+        AdultGuideRule("lesbian", "Lesbian", listOf("lesbian", "lesbians")),
+        AdultGuideRule("gay", "Gay", listOf("gay")),
         AdultGuideRule("bbw", "BBW", listOf("bbw")),
         AdultGuideRule("mature", "Mature", listOf("mature", "cougar", "cougars")),
         AdultGuideRule("pov", "POV", listOf("pov")),
-        AdultGuideRule("group", "Group", listOf("group", "threesome", "orgy", "gangbang"), embeddedAliases = listOf("gangbang")),
-        AdultGuideRule("fetish", "Fetish", listOf("fetish", "bdsm", "bondage", "feet")),
+        AdultGuideRule("group", "Group", listOf("group", "threesome", "orgy")),
+        AdultGuideRule("fetish", "Fetish", listOf("fetish", "bdsm", "bondage")),
         AdultGuideRule("reality", "Reality", listOf("reality", "casting", "audition")),
-        AdultGuideRule(
-            "international",
-            "International",
-            listOf("international", "russian", "czech", "german", "africa", "arab")
-        ),
-        AdultGuideRule("office", "Office", listOf("office", "boss", "work")),
-        AdultGuideRule("hidden_camera", "Hidden Camera", listOf("hidden camera", "spy")),
         AdultGuideRule("vr", "VR", listOf("vr", "virtual reality")),
-        AdultGuideRule("4k", "4K", listOf("4k", "uhd"), embeddedAliases = listOf("4k"))
+        AdultGuideRule("4k", "4K", listOf("4k", "uhd"))
     )
 
     fun build(
@@ -221,22 +106,24 @@ object AdultGuideCategoryBuilder {
         }
 
         channels.forEach { channel ->
-            val titleText = AdultGuideNormalizedText.from(channel.name)
-            val categoryText = AdultGuideNormalizedText.from(channel.categoryName)
-            val groupText = AdultGuideNormalizedText.from(channel.groupTitle)
-            val titleMatches = categoryRules.filter { rule ->
-                rule.matches(titleText)
-            }
-            val contextMatches = categoryRules.filter { rule ->
-                rule !in titleMatches &&
-                    (rule.matches(categoryText) || rule.matches(groupText))
-            }
-            val matches = titleMatches + contextMatches
+            val matches = keywordCategoryMatches(channel.name, channel.categoryName, channel.groupTitle)
             if (matches.isEmpty()) {
                 val sourceCategory = channel.categoryId?.let(providerCategoryById::get)
                 if (isAdultGuideChannel(channel, sourceCategory)) {
-                    grouped.getOrPut(UNSORTED_CATEGORY_KEY) {
-                        AdultGuideMutableCategory(UNSORTED_CATEGORY_KEY, "Unsorted", mutableListOf())
+                    val fallbackCategory = sourceCategory?.takeIf(::isAdultGuideCategory)
+                        ?: channel.categoryName
+                            ?.takeIf(::isAdultGuideText)
+                            ?.let { Category(id = Long.MIN_VALUE, name = it, isAdult = true) }
+                    val key = fallbackCategory?.name
+                        ?.let(::adultGuideCategoryKey)
+                        ?.takeIf(String::isNotBlank)
+                        ?: OTHER_CATEGORY_KEY
+                    val title = fallbackCategory?.name
+                        ?.trim()
+                        ?.takeIf(String::isNotBlank)
+                        ?: "Other"
+                    grouped.getOrPut(key) {
+                        AdultGuideMutableCategory(key, title, mutableListOf())
                     }.channels.add(channel)
                 }
             } else {
@@ -259,24 +146,29 @@ object AdultGuideCategoryBuilder {
             .filter { it.channels.isNotEmpty() }
     }
 
-    fun matchesGeneratedCategory(value: String?): Boolean {
-        val text = AdultGuideNormalizedText.from(value)
-        if (text.normalized.isBlank()) return false
-        return categoryRules.any { it.matches(text) }
-    }
+    fun matchesGeneratedCategory(value: String?): Boolean =
+        normalizeAdultGuideText(value)
+            .takeIf(String::isNotBlank)
+            ?.let { normalized -> categoryRules.any { it.matchesNormalized(normalized) } }
+            ?: false
 
-    fun resolveVodCategoryTitle(title: String?, providerCategory: String?): String? {
-        categoryRules.firstOrNull { rule -> rule.matches(title) }?.let { rule ->
-            return rule.title
-        }
-        providerCategory
-            ?.trim()
-            ?.takeIf { it.isNotBlank() && (isAdultGuideText(it) || matchesExplicitAdultSignal(it)) }
-            ?.let { return it }
-        categoryRules.firstOrNull { rule -> rule.matches(providerCategory) }?.let { rule ->
-            return rule.title
-        }
-        return providerCategory?.trim()?.takeIf(String::isNotBlank)
+    internal fun keywordCategoryMatches(
+        primaryValue: String?,
+        vararg contextValues: String?
+    ): List<AdultGuideCategoryMatch> {
+        val normalizedPrimary = normalizeAdultGuideText(primaryValue)
+        val normalizedContextValues = contextValues
+            .map(::normalizeAdultGuideText)
+            .filter(String::isNotBlank)
+        val primaryMatches = categoryRules
+            .filter { rule -> rule.matchesNormalized(normalizedPrimary) }
+            .map { rule -> AdultGuideCategoryMatch(rule.key, rule.title) }
+        val primaryKeys = primaryMatches.mapTo(mutableSetOf()) { it.key }
+        val contextMatches = categoryRules
+            .filterNot { rule -> rule.key in primaryKeys }
+            .filter { rule -> normalizedContextValues.any(rule::matchesNormalized) }
+            .map { rule -> AdultGuideCategoryMatch(rule.key, rule.title) }
+        return primaryMatches + contextMatches
     }
 
     fun matchesExplicitAdultSignal(value: String?): Boolean {
@@ -361,45 +253,22 @@ private data class AdultGuideMutableCategory(
 private data class AdultGuideRule(
     val key: String,
     val title: String,
-    val aliases: List<String>,
-    val embeddedAliases: List<String> = emptyList()
+    val aliases: List<String>
 ) {
-    private val normalizedAliases = aliases
-        .map(::normalizeAdultGuideText)
-        .filter(String::isNotBlank)
-    private val compactEmbeddedAliases = embeddedAliases
-        .map { alias -> normalizeAdultGuideText(alias).replace(" ", "") }
-        .filter(String::isNotBlank)
+    private val normalizedAliases = aliases.map(::normalizeAdultGuideText)
 
     fun matches(value: String?): Boolean {
-        return matches(AdultGuideNormalizedText.from(value))
+        val normalized = normalizeAdultGuideText(value)
+        return matchesNormalized(normalized)
     }
 
-    fun matches(value: AdultGuideNormalizedText): Boolean {
-        val normalized = value.normalized
+    fun matchesNormalized(normalized: String): Boolean {
         if (normalized.isBlank()) return false
         return normalizedAliases.any { normalizedAlias ->
             normalized == normalizedAlias ||
                 normalized.startsWith("$normalizedAlias ") ||
                 normalized.endsWith(" $normalizedAlias") ||
                 normalized.contains(" $normalizedAlias ")
-        } || compactEmbeddedAliases.any { compactAlias ->
-            value.compact.contains(compactAlias)
-        }
-    }
-}
-
-private data class AdultGuideNormalizedText(
-    val normalized: String,
-    val compact: String
-) {
-    companion object {
-        fun from(value: String?): AdultGuideNormalizedText {
-            val normalized = normalizeAdultGuideText(value)
-            return AdultGuideNormalizedText(
-                normalized = normalized,
-                compact = normalized.replace(" ", "")
-            )
         }
     }
 }
@@ -431,3 +300,6 @@ private fun normalizeAdultGuideText(value: String?): String =
         .replace(adultGuideNonAlphaNumericRegex, " ")
         .replace(adultGuideWhitespaceRegex, " ")
         .trim()
+
+private fun adultGuideCategoryKey(value: String): String =
+    normalizeAdultGuideText(value).replace(" ", "_")

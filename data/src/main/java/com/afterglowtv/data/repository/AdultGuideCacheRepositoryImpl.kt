@@ -1,6 +1,7 @@
 package com.afterglowtv.data.repository
 
 import com.afterglowtv.data.local.dao.AdultGuideCacheDao
+import com.afterglowtv.data.local.dao.AdultGuideCacheChannelRefRow
 import com.afterglowtv.data.local.entity.AdultGuideCacheCategoryChannelEntity
 import com.afterglowtv.data.local.entity.AdultGuideCacheCategoryEntity
 import com.afterglowtv.data.local.entity.AdultGuideCacheMetaEntity
@@ -19,24 +20,41 @@ import kotlinx.coroutines.withContext
 class AdultGuideCacheRepositoryImpl @Inject constructor(
     private val dao: AdultGuideCacheDao
 ) : AdultGuideCacheRepository {
+    override fun observeProviderCache(providerId: Long): Flow<AdultGuideCacheSnapshot?> =
+        observeProviderCacheRows(
+            providerId = providerId,
+            meta = dao.observeMeta(providerId),
+            categories = dao.observeCategories(providerId),
+            refs = dao.observeChannelRefs(providerId)
+        )
+
     override fun observeProviderCache(
         providerId: Long,
         playlistFingerprint: String
     ): Flow<AdultGuideCacheSnapshot?> =
-        combine(
-            dao.observeMeta(providerId, playlistFingerprint),
-            dao.observeCategories(providerId, playlistFingerprint),
-            dao.observeChannelRefs(providerId, playlistFingerprint)
-        ) { meta, categories, refs ->
-            if (meta == null) {
+        observeProviderCacheRows(
+            providerId = providerId,
+            meta = dao.observeMeta(providerId, playlistFingerprint),
+            categories = dao.observeCategories(providerId, playlistFingerprint),
+            refs = dao.observeChannelRefs(providerId, playlistFingerprint)
+        )
+
+    private fun observeProviderCacheRows(
+        providerId: Long,
+        meta: Flow<AdultGuideCacheMetaEntity?>,
+        categories: Flow<List<AdultGuideCacheCategoryEntity>>,
+        refs: Flow<List<AdultGuideCacheChannelRefRow>>
+    ): Flow<AdultGuideCacheSnapshot?> =
+        combine(meta, categories, refs) { cacheMeta, cacheCategories, cacheRefs ->
+            if (cacheMeta == null) {
                 null
             } else {
-                val refsByCategory = refs.groupBy { it.categoryKey }
+                val refsByCategory = cacheRefs.groupBy { it.categoryKey }
                 AdultGuideCacheSnapshot(
                     providerId = providerId,
-                    playlistFingerprint = playlistFingerprint,
-                    categorizedChannelCount = meta.categorizedChannelCount,
-                    categories = categories.mapNotNull { category ->
+                    playlistFingerprint = cacheMeta.playlistFingerprint,
+                    categorizedChannelCount = cacheMeta.categorizedChannelCount,
+                    categories = cacheCategories.mapNotNull { category ->
                         val channelIds = refsByCategory[category.categoryKey]
                             .orEmpty()
                             .sortedBy { it.position }

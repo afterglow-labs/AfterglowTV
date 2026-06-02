@@ -15,36 +15,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.LocalAppSpacing
 import com.afterglowtv.app.ui.design.AfterglowFocusRole
 import com.afterglowtv.app.ui.design.afterglowFocus
 
 /**
- * Afterglow TV top tabs row. Alternative chrome to the existing left rail —
- * meant for the Home / Live TV / Guide / VOD / Recordings /
- * Search / Settings landing screens. The player route ignores this and
- * renders full-bleed.
+ * AfterglowTV top tabs row. Alternative chrome to the existing left rail —
+ * meant for the main landing screens. The player route ignores this and renders full-bleed.
  */
 data class TopTab(val id: String, val label: String)
 
 fun defaultTopTabs(
     developerModeEnabled: Boolean = false,
-    showAdultGuideTab: Boolean = false,
-    adultGuideLabel: String = "Adult"
+    showAdultGuideTab: Boolean = true
 ): List<TopTab> = buildList {
     add(TopTab("home", "Home"))
     add(TopTab("live_tv", "Live TV"))
-    add(TopTab("epg", "TV Guide"))
-    if (developerModeEnabled) {
-        if (showAdultGuideTab) {
-            add(TopTab("adult_guide", adultGuideLabel.ifBlank { "Adult" }))
-        }
+    add(TopTab("epg", if (StorePolicy.current.amazonReviewBuild) "TV Guide" else "IPTV Guide"))
+    add(TopTab("vod_container", if (StorePolicy.current.amazonReviewBuild) "Video" else "VOD"))
+    if (StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultGuideTab) {
+        add(TopTab("adult_guide", "XXX Guide"))
     }
-    add(TopTab("vod_container", "VOD"))
-    if (developerModeEnabled) {
-        add(TopTab("local_media", "Personal Library"))
-    }
+    add(TopTab("local_media", "Personal Library"))
     add(TopTab("favorites", "Favorites"))
     add(TopTab("search", "Search"))
     add(TopTab("settings", "Settings"))

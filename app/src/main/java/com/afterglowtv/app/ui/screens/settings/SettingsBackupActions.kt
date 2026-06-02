@@ -1,5 +1,6 @@
 package com.afterglowtv.app.ui.screens.settings
 
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.domain.manager.BackupConflictStrategy
 import com.afterglowtv.domain.manager.BackupImportPlan
 import com.afterglowtv.domain.usecase.ExportBackup
@@ -56,13 +57,16 @@ internal class SettingsBackupActions(
                         userMessage = "Import failed: ${result.message}"
                     )
                     is InspectBackupResult.Success -> state.copy(
-                        isSyncing = false,
-                        pendingBackupUri = result.uriString,
-                        backupPreview = result.preview,
-                        backupImportPlan = result.defaultPlan
+                    isSyncing = false,
+                    pendingBackupUri = result.uriString,
+                    backupPreview = result.preview,
+                    backupImportPlan = sanitizedBackupImportPlanForDvr(
+                        result.defaultPlan,
+                        showRecordingSchedules = StorePolicy.current.canUseDvr(state.developerModeEnabled)
                     )
-                }
+                )
             }
+        }
         }
     }
 
@@ -101,7 +105,14 @@ internal class SettingsBackupActions(
     }
 
     fun setImportRecordingSchedules(enabled: Boolean) {
-        uiState.update { it.copy(backupImportPlan = it.backupImportPlan.copy(importRecordingSchedules = enabled)) }
+        uiState.update {
+            it.copy(
+                backupImportPlan = it.backupImportPlan.copy(
+                    importRecordingSchedules = enabled &&
+                        StorePolicy.current.canUseDvr(it.developerModeEnabled)
+                )
+            )
+        }
     }
 
     fun confirmBackupImport(scope: CoroutineScope) {
@@ -112,7 +123,10 @@ internal class SettingsBackupActions(
         var capturedPlan: BackupImportPlan? = null
         uiState.update { state ->
             if (state.isImportingBackup || state.pendingBackupUri == null) return@update state
-            val plan = state.backupImportPlan
+            val plan = sanitizedBackupImportPlanForDvr(
+                state.backupImportPlan,
+                showRecordingSchedules = StorePolicy.current.canUseDvr(state.developerModeEnabled)
+            )
             if (!plan.importPreferences && !plan.importProviders && !plan.importSavedLibrary &&
                 !plan.importPlaybackHistory && !plan.importMultiViewPresets && !plan.importRecordingSchedules
             ) {

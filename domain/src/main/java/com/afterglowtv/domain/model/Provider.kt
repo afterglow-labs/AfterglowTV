@@ -24,6 +24,7 @@ data class Provider(
     val xtreamFastSyncEnabled: Boolean = true,
     val xtreamLiveSyncMode: ProviderXtreamLiveSyncMode = ProviderXtreamLiveSyncMode.AUTO,
     val m3uVodClassificationEnabled: Boolean = false,
+    val m3uPlaylistKind: ProviderM3uPlaylistKind = ProviderM3uPlaylistKind.LIVE,
     val status: ProviderStatus = ProviderStatus.UNKNOWN,
     val lastSyncedAt: Long = 0L,
     val createdAt: Long = System.currentTimeMillis()
@@ -54,6 +55,11 @@ enum class ProviderXtreamLiveSyncMode {
     AUTO,
     CATEGORY_BY_CATEGORY,
     STREAM_ALL
+}
+
+enum class ProviderM3uPlaylistKind {
+    LIVE,
+    VOD
 }
 
 enum class ProviderStatus {

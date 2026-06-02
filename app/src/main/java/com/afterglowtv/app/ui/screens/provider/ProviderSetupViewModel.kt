@@ -2,22 +2,24 @@ package com.afterglowtv.app.ui.screens.provider
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.data.remote.xtream.XtreamAuthenticationException
 import com.afterglowtv.data.remote.xtream.XtreamNetworkException
 import com.afterglowtv.data.remote.xtream.XtreamParsingException
 import com.afterglowtv.data.remote.xtream.XtreamRequestException
 import com.afterglowtv.data.remote.xtream.XtreamResponseTooLargeException
-import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.data.security.CredentialDecryptionException
 import com.afterglowtv.domain.manager.BackupConflictStrategy
 import com.afterglowtv.domain.manager.BackupImportPlan
 import com.afterglowtv.domain.manager.BackupPreview
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.repository.CombinedM3uRepository
-import com.afterglowtv.domain.repository.EpgSourceRepository
 import com.afterglowtv.domain.repository.ProviderRepository
 import com.afterglowtv.domain.usecase.ImportBackup
 import com.afterglowtv.domain.usecase.ImportBackupCommand
@@ -50,10 +52,9 @@ import javax.net.ssl.SSLPeerUnverifiedException
 class ProviderSetupViewModel @Inject constructor(
     private val providerRepository: ProviderRepository,
     private val combinedM3uRepository: CombinedM3uRepository,
-    private val epgSourceRepository: EpgSourceRepository,
+    private val preferencesRepository: PreferencesRepository,
     private val validateAndAddProvider: ValidateAndAddProvider,
-    private val importBackup: ImportBackup,
-    private val preferencesRepository: PreferencesRepository
+    private val importBackup: ImportBackup
 ) : ViewModel() {
 
     enum class OnboardingCompletion {
@@ -90,30 +91,12 @@ class ProviderSetupViewModel @Inject constructor(
                     .toSet()
             }
         }
-        viewModelScope.launch {
-            preferencesRepository.developerModeEnabled.collect { enabled ->
-                _uiState.update { it.copy(developerModeEnabled = enabled) }
-            }
-        }
     }
 
     fun loadProvider(id: Long) {
         viewModelScope.launch {
             val provider = providerRepository.getProvider(id)
             if (provider != null) {
-                val m3uEpgUrl = provider.epgUrl.ifBlank {
-                    if (provider.type == ProviderType.M3U) {
-                        epgSourceRepository.getAssignmentsForProvider(id)
-                            .first()
-                            .firstOrNull { it.enabled && it.epgSourceUrl.isNotBlank() }
-                            ?.epgSourceUrl
-                            .orEmpty()
-                    } else {
-                        ""
-                    }
-                }
-                val m3uEpgUniqueToPlaylist = provider.epgUrl.isNotBlank() ||
-                    (provider.type == ProviderType.M3U && m3uEpgUrl.isNotBlank())
                 _uiState.update {
                     it.copy(
                         isEditing = true,
@@ -123,8 +106,7 @@ class ProviderSetupViewModel @Inject constructor(
                         username = provider.username,
                         password = "",
                         m3uUrl = provider.m3uUrl,
-                        m3uEpgUrl = m3uEpgUrl,
-                        m3uEpgUniqueToPlaylist = m3uEpgUniqueToPlaylist,
+                        m3uEpgUrl = provider.epgUrl,
                         httpUserAgent = provider.httpUserAgent,
                         httpHeaders = provider.httpHeaders,
                         stalkerMacAddress = provider.stalkerMacAddress,
@@ -136,6 +118,7 @@ class ProviderSetupViewModel @Inject constructor(
                         xtreamLiveSyncMode = provider.xtreamLiveSyncMode,
                         hasCustomizedEpgSyncMode = true,
                         m3uVodClassificationEnabled = provider.m3uVodClassificationEnabled,
+                        m3uPlaylistKind = provider.m3uPlaylistKind,
                         selectedTab = when (provider.type) {
                             ProviderType.XTREAM_CODES -> 0
                             ProviderType.STALKER_PORTAL -> 1
@@ -156,8 +139,18 @@ class ProviderSetupViewModel @Inject constructor(
         _uiState.update { it.copy(m3uVodClassificationEnabled = enabled) }
     }
 
-    fun updateM3uEpgUniqueToPlaylist(enabled: Boolean) {
-        _uiState.update { it.copy(m3uEpgUniqueToPlaylist = enabled) }
+    fun updateM3uPlaylistKind(kind: ProviderM3uPlaylistKind) {
+        _uiState.update {
+            it.copy(
+                m3uPlaylistKind = kind,
+                m3uVodClassificationEnabled = if (kind == ProviderM3uPlaylistKind.VOD) true else it.m3uVodClassificationEnabled,
+                epgSyncMode = if (kind == ProviderM3uPlaylistKind.VOD && !it.hasCustomizedEpgSyncMode) {
+                    ProviderEpgSyncMode.SKIP
+                } else {
+                    it.epgSyncMode
+                }
+            )
+        }
     }
 
     fun updateEpgSyncMode(mode: ProviderEpgSyncMode) {
@@ -361,7 +354,7 @@ class ProviderSetupViewModel @Inject constructor(
 
         if (url.isBlank()) {
             _uiState.update {
-                it.copy(validationError = if (_uiState.value.m3uTab == 0) "Please enter M3U URL" else "Please select a file")
+                it.copy(validationError = if (_uiState.value.m3uTab == 0) "Please enter playlist URL" else "Please select a file")
             }
             return
         }
@@ -376,19 +369,26 @@ class ProviderSetupViewModel @Inject constructor(
                     name = name,
                     httpUserAgent = httpUserAgent,
                     httpHeaders = httpHeaders,
-                    epgSyncMode = _uiState.value.epgSyncMode,
-                    m3uVodClassificationEnabled = _uiState.value.m3uVodClassificationEnabled,
+                    epgSyncMode = if (_uiState.value.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD) {
+                        ProviderEpgSyncMode.SKIP
+                    } else {
+                        _uiState.value.epgSyncMode
+                    },
+                    m3uVodClassificationEnabled = _uiState.value.m3uVodClassificationEnabled ||
+                        _uiState.value.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD,
+                    m3uPlaylistKind = _uiState.value.m3uPlaylistKind,
                     existingProviderId = existingId,
                     epgUrl = epgUrl.takeIf { it.isNotBlank() },
-                    epgUniqueToPlaylist = _uiState.value.m3uEpgUniqueToPlaylist
+                    allowXtreamPlaylistAutoDetection = StorePolicy.current.allowXtreamPlaylistAutoDetection
                 ),
                 onProgress = { msg -> _uiState.update { it.copy(syncProgress = msg) } }
             )) {
                 is ValidateAndAddProviderResult.Success -> {
+                    activateVodSourceIfNeeded(result.provider.id)
                     // Only prompt to attach to the active combined profile for newly created
                     // providers; edits should never re-trigger the attach dialog because the
                     // decision was already made when the provider was first onboarded.
-                    val activeCombinedProfileId = if (existingId == null) {
+                    val activeCombinedProfileId = if (existingId == null && _uiState.value.m3uPlaylistKind != ProviderM3uPlaylistKind.VOD) {
                         (combinedM3uRepository.getActiveLiveSource().first()
                             as? ActiveLiveSource.CombinedM3uSource)?.profileId
                     } else {
@@ -413,8 +413,9 @@ class ProviderSetupViewModel @Inject constructor(
                     }
                 }
                 is ValidateAndAddProviderResult.SavedWithWarning -> {
+                    activateVodSourceIfNeeded(result.provider.id)
                     // Same combined-attach guard: only for new providers, not edits.
-                    val activeCombinedProfileId = if (existingId == null) {
+                    val activeCombinedProfileId = if (existingId == null && _uiState.value.m3uPlaylistKind != ProviderM3uPlaylistKind.VOD) {
                         (combinedM3uRepository.getActiveLiveSource().first()
                             as? ActiveLiveSource.CombinedM3uSource)?.profileId
                     } else {
@@ -455,6 +456,15 @@ class ProviderSetupViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun activateVodSourceIfNeeded(providerId: Long) {
+        if (_uiState.value.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD) {
+            preferencesRepository.setActiveSource(
+                ProviderSourceSlot.VOD,
+                ActiveLiveSource.ProviderSource(providerId)
+            )
         }
     }
 
@@ -732,7 +742,6 @@ data class ProviderSetupState(
     val password: String = "",
     val m3uUrl: String = "",
     val m3uEpgUrl: String = "",
-    val m3uEpgUniqueToPlaylist: Boolean = true,
     val httpUserAgent: String = "",
     val httpHeaders: String = "",
     val stalkerMacAddress: String = "",
@@ -751,7 +760,7 @@ data class ProviderSetupState(
     val xtreamFastSyncEnabled: Boolean = true,
     val xtreamLiveSyncMode: ProviderXtreamLiveSyncMode = ProviderXtreamLiveSyncMode.AUTO,
     val hasCustomizedEpgSyncMode: Boolean = false,
-    val developerModeEnabled: Boolean = false,
+    val m3uPlaylistKind: ProviderM3uPlaylistKind = ProviderM3uPlaylistKind.LIVE,
     // Opt-in only. A plain M3U playlist should be treated as Live TV unless the
     // user explicitly asks AfterglowTV to classify VOD/movie-looking entries.
     val m3uVodClassificationEnabled: Boolean = false

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Afterglow TV</string>
+    <string name="app_name">AfterglowTV</string>
     <string name="nav_home">홈</string>
     <string name="nav_live_tv">라이브 TV</string>
     <string name="nav_movies">영화</string>
@@ -102,7 +102,7 @@
     <string name="dashboard_provider_no_expiry">만료 정보 없음</string>
     <string name="dashboard_warning_title">공급자 확인 필요</string>
     <string name="dashboard_warning_review">공급자 상세 열기</string>
-    <string name="dashboard_update_title">Afterglow TV %1$s 사용 가능</string>
+    <string name="dashboard_update_title">AfterglowTV %1$s 사용 가능</string>
     <string name="dashboard_update_available">새 앱 릴리스가 캐시되었으며 설정에서 확인할 수 있습니다.</string>
     <string name="dashboard_update_install_ready">최신 업데이트가 이미 다운로드되었습니다. 설정을 열어 설치하세요.</string>
     <string name="dashboard_update_open_settings">업데이트 열기</string>
@@ -382,8 +382,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_container">VOD</string>
-    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">카테고리</string>
     <string name="vod_classic_category_search">카테고리 검색</string>
     <string name="vod_classic_all">전체</string>
@@ -402,7 +402,7 @@
     <string name="settings_about_subtitle">이 설치의 버전, 빌드 및 지원 정보입니다.</string>
     <string name="settings_app_version">앱 버전</string>
     <string name="settings_build">빌드</string>
-    <string name="settings_build_desc">Android TV용 Afterglow TV</string>
+    <string name="settings_build_desc">Android TV용 AfterglowTV</string>
     <string name="settings_enabled">사용</string>
     <string name="settings_disabled">사용 안 함</string>
     <string name="settings_developed_by">개발</string>
@@ -412,7 +412,7 @@
     <string name="settings_donate">Ko-fi로 후원</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">업데이트</string>
-    <string name="settings_updates_subtitle">앱을 종료하지 않고 GitHub 릴리스에서 최신 Afterglow TV 버전을 확인하세요.</string>
+    <string name="settings_updates_subtitle">앱을 종료하지 않고 GitHub 릴리스에서 최신 AfterglowTV 버전을 확인하세요.</string>
     <string name="settings_update_auto_check">업데이트 자동 확인</string>
     <string name="settings_update_latest_release">최신 릴리스</string>
     <string name="settings_update_status">업데이트 상태</string>
@@ -436,8 +436,8 @@
     <string name="settings_update_status_check_failed">마지막 확인 실패</string>
     <string name="settings_update_status_downloading">업데이트 다운로드 중</string>
     <string name="settings_update_status_ready_to_install">설치 준비 완료</string>
-    <string name="settings_update_available_message">Afterglow TV %1$s을 사용할 수 있습니다.</string>
-    <string name="settings_update_current_message">이미 최신 Afterglow TV 버전을 사용 중입니다.</string>
+    <string name="settings_update_available_message">AfterglowTV %1$s을 사용할 수 있습니다.</string>
+    <string name="settings_update_current_message">이미 최신 AfterglowTV 버전을 사용 중입니다.</string>
     <string name="settings_syncing">데이터를 동기화하는 중입니다. 잠시만 기다려 주세요...</string>
     <string name="settings_syncing_title">데이터 동기화 중...</string>
     <string name="settings_syncing_subtitle">재생목록을 가져오는 동안 잠시만 기다려 주세요.</string>
@@ -700,7 +700,7 @@
     <string name="a11y_catch_up_available">다시보기 가능</string>
     <string name="a11y_now_playing">현재 재생 중 %1$s</string>
     <string name="a11y_channel_with_number">채널 %1$d, %2$s</string>
-    <string name="setup_title_afterglowtv">Afterglow TV</string>
+    <string name="setup_title_afterglowtv">AfterglowTV</string>
     <string name="setup_provider_title">제공업체 추가</string>
     <string name="setup_edit_provider">제공업체 수정</string>
     <string name="setup_update_desc">IPTV 제공업체 정보를 업데이트하세요</string>
@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">공급자 설정 및 새로고침 중 가이드 데이터를 가져오는 방식을 제어합니다.</string>
     <string name="setup_advanced_options_show">표시</string>
     <string name="setup_advanced_options_hide">숨기기</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD 분류</string>
-    <string name="setup_m3u_vod_classification_helper">M3U 전용. 재생목록 URL과 group-title 휴리스틱을 사용해 일치하는 항목을 라이브 TV 대신 영화로 분류합니다.</string>
     <string name="setup_epg_sync_mode_label">EPG 동기화</string>
     <string name="setup_epg_sync_mode_helper">즉시 모드는 현재 동작을 유지합니다. 백그라운드는 설정을 먼저 완료하고, 건너뛰기는 가이드 새로고침을 나중으로 미룹니다.</string>
     <string name="setup_epg_sync_mode_upfront_title">지금 전체 EPG</string>
@@ -1165,21 +1163,21 @@
     <string name="settings_history_cleared">시청 기록과 최근 항목이 삭제되었습니다</string>
     <string name="settings_pin_changed">PIN이 성공적으로 저장되었습니다</string>
     <string name="home_reorder_channels">채널 순서 변경</string>
-    <string name="tv_input_setup_scanning_title">Afterglow TV 채널 검색</string>
+    <string name="tv_input_setup_scanning_title">AfterglowTV 채널 검색</string>
     <string name="tv_input_setup_success_title">실시간 TV가 준비되었습니다</string>
     <string name="tv_input_setup_no_provider_title">IPTV 제공업체가 구성되지 않았습니다.</string>
     <string name="tv_input_setup_error_title">자동 스캔 실패</string>
     <string name="tv_input_setup_idle_title">라이브 TV 통합 준비</string>
-    <string name="tv_input_setup_scanning_body">Afterglow TV가 활성 공급자를 Android TV Live TV에 ​​동기화하고 있습니다.</string>
+    <string name="tv_input_setup_scanning_body">AfterglowTV가 활성 공급자를 Android TV Live TV에 ​​동기화하고 있습니다.</string>
     <string name="tv_input_setup_success_body">채널이 성공적으로 동기화되었습니다.</string>
-    <string name="tv_input_setup_no_provider_body">Afterglow TV에 IPTV 공급자를 하나 이상 추가한 다음 여기로 돌아와 채널을 Android TV Live TV로 스캔하세요.</string>
+    <string name="tv_input_setup_no_provider_body">AfterglowTV에 IPTV 공급자를 하나 이상 추가한 다음 여기로 돌아와 채널을 Android TV Live TV로 스캔하세요.</string>
     <string name="tv_input_setup_error_body">TV 입력 동기화가 완료되지 않았습니다.</string>
     <string name="tv_input_setup_idle_body">기다리세요.</string>
     <string name="tv_input_setup_source_format">출처: %1$s</string>
-    <string name="tv_input_setup_open_setup">Afterglow TV 설정 열기</string>
+    <string name="tv_input_setup_open_setup">AfterglowTV 설정 열기</string>
     <string name="tv_input_setup_try_scan_again">다시 자동 스캔을 시도하세요</string>
     <string name="tv_input_setup_retry_scan">자동 스캔 재시도</string>
-    <string name="tv_input_setup_success_hint">이제 Android TV Live TV에서 Afterglow TV 채널을 열 수 있습니다.</string>
+    <string name="tv_input_setup_success_hint">이제 Android TV Live TV에서 AfterglowTV 채널을 열 수 있습니다.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1206,8 +1204,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d 슬롯</string>
     <string name="movie_detail_related">비슷한 콘텐츠</string>
     <string name="movie_detail_resume_from">%1$s부터 이어보기</string>
-    <string name="notification_permission_recording_alert_required">녹화 실패 알림을 받으려면 Afterglow TV 알림을 활성화하세요.</string>
-    <string name="notification_permission_reminder_required">프로그램 알림을 받으려면 Afterglow TV 알림을 활성화하세요.</string>
+    <string name="notification_permission_recording_alert_required">녹화 실패 알림을 받으려면 AfterglowTV 알림을 활성화하세요.</string>
+    <string name="notification_permission_reminder_required">프로그램 알림을 받으려면 AfterglowTV 알림을 활성화하세요.</string>
     <string name="player_action_variants">변형</string>
     <string name="player_auto_play_cancel">취소</string>
     <string name="player_auto_play_countdown">%1$d 초 후 재생</string>
@@ -1381,7 +1379,7 @@
     <string name="settings_recording_skipped">회차 건너뜀</string>
     <string name="settings_recording_wifi_only">Wi-Fi에서만 녹화</string>
     <string name="settings_reset">초기화</string>
-    <string name="settings_restore_subtitle">백업 파일을 선택하거나 파일 관리자에서 Afterglow TV로 백업을 여세요.</string>
+    <string name="settings_restore_subtitle">백업 파일을 선택하거나 파일 관리자에서 AfterglowTV로 백업을 여세요.</string>
     <string name="settings_select_guide_default_category">가이드 기본 카테고리 선택</string>
     <string name="settings_select_live_timeshift_depth">로컬 라이브 되감기 깊이 선택</string>
     <string name="settings_select_time_format">시간 형식 선택</string>

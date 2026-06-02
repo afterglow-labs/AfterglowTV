@@ -113,7 +113,6 @@ private fun Context.isSyncTelevisionDevice(): Boolean {
     val packageManager = packageManager
     if (packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)) return true
     if (packageManager.hasSystemFeature("android.software.leanback_only")) return true
-    if (packageManager.hasSystemFeature(PackageManager.FEATURE_TELEVISION)) return true
     if (packageManager.hasSystemFeature("amazon.hardware.fire_tv")) return true
     val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
     if (uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION) return true

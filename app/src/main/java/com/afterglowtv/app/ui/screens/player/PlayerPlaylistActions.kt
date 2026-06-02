@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.model.adultGuideCachedChannelIdsForCategory
 import com.afterglowtv.app.ui.model.adultGuideCategoryId
-import com.afterglowtv.app.ui.model.adultGuidePlaylistFingerprint
 import com.afterglowtv.app.ui.model.isAdultGuideChannel
 import com.afterglowtv.app.ui.model.isAdultGuideGeneratedCategoryId
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
@@ -20,7 +19,6 @@ import com.afterglowtv.domain.repository.ChannelRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -140,22 +138,7 @@ internal fun PlayerViewModel.observeAdultGuideCachedPlaylist(
         return flowOf(emptyList())
     }
 
-    val fingerprintFlow = combine(
-        providerRepository.getProviders(),
-        channelRepository.getChannelCount(providerId)
-    ) { providers, channelCount ->
-        val provider = providers.firstOrNull { it.id == providerId }
-        adultGuidePlaylistFingerprint(
-            providerId = providerId,
-            lastSyncedAt = provider?.lastSyncedAt ?: 0L,
-            channelCount = channelCount
-        )
-    }.distinctUntilChanged()
-
-    return fingerprintFlow
-        .flatMapLatest { playlistFingerprint ->
-            adultGuideCacheRepository.observeProviderCache(providerId, playlistFingerprint)
-        }
+    return adultGuideCacheRepository.observeProviderCache(providerId)
         .flatMapLatest { cache ->
             val ids = adultGuideCachedChannelIdsForCategory(cache, categoryId)
             if (ids.isNullOrEmpty()) {

@@ -7,6 +7,7 @@ import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.app.ui.model.RemoteChannelButtonAction
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.navigation.StartupDestination
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.domain.model.AppTimeFormat
 import com.afterglowtv.domain.model.ChannelNumberingMode
@@ -31,8 +32,9 @@ internal fun observeSettingsPreferenceSnapshot(
         preferencesRepository.parentalControlLevel,
         preferencesRepository.hasParentalPin
     ) { providers, activeId, level, hasParentalPin ->
+        val visibleProviders = providers.filter(StorePolicy.current::isUserVisibleProvider)
         SettingsPreferenceSnapshot(
-            providers = providers,
+            providers = visibleProviders,
             activeProviderId = activeId,
             parentalControlLevel = level,
             hasParentalPin = hasParentalPin,
@@ -70,14 +72,12 @@ internal fun observeSettingsPreferenceSnapshot(
             liveTvChannelMode = LiveTvChannelMode.PRO,
             startupDestination = StartupDestination.default,
             showLiveSourceSwitcher = false,
-            showBuiltInPlaylists = true,
             showAllChannelsCategory = true,
             showRecentChannelsCategory = true,
             liveTvCategoryFilters = emptyList(),
             liveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.ALWAYS_VISIBLE,
             developerModeEnabled = false,
             showAdultGuideTab = true,
-            adultGuideTabLabel = "Adult",
             liveChannelNumberingMode = ChannelNumberingMode.GROUP,
             liveChannelGroupingMode = LiveChannelGroupingMode.RAW_VARIANTS,
             groupedChannelLabelMode = GroupedChannelLabelMode.HYBRID,
@@ -174,8 +174,6 @@ internal fun observeSettingsPreferenceSnapshot(
         snapshot.copy(startupDestination = StartupDestination.fromStorage(startupDestination))
     }.combine(preferencesRepository.showLiveSourceSwitcher) { snapshot, showLiveSourceSwitcher ->
         snapshot.copy(showLiveSourceSwitcher = showLiveSourceSwitcher)
-    }.combine(preferencesRepository.showBuiltInPlaylists) { snapshot, showBuiltInPlaylists ->
-        snapshot.copy(showBuiltInPlaylists = showBuiltInPlaylists)
     }.combine(preferencesRepository.showAllChannelsCategory) { snapshot, showAllChannelsCategory ->
         snapshot.copy(showAllChannelsCategory = showAllChannelsCategory)
     }.combine(preferencesRepository.showRecentChannelsCategory) { snapshot, showRecentChannelsCategory ->
@@ -190,8 +188,6 @@ internal fun observeSettingsPreferenceSnapshot(
         snapshot.copy(developerModeEnabled = developerModeEnabled)
     }.combine(preferencesRepository.showAdultGuideTab) { snapshot, showAdultGuideTab ->
         snapshot.copy(showAdultGuideTab = showAdultGuideTab)
-    }.combine(preferencesRepository.adultGuideTabLabel) { snapshot, adultGuideTabLabel ->
-        snapshot.copy(adultGuideTabLabel = adultGuideTabLabel)
     }.combine(preferencesRepository.liveChannelNumberingMode) { snapshot, liveChannelNumberingMode ->
         snapshot.copy(liveChannelNumberingMode = liveChannelNumberingMode)
     }.combine(preferencesRepository.liveChannelGroupingMode) { snapshot, liveChannelGroupingMode ->

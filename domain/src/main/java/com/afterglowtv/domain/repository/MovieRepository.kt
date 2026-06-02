@@ -23,6 +23,8 @@ interface MovieRepository {
     fun getCategoryItemCounts(providerId: Long): Flow<Map<Long, Int>>
     fun getLibraryCount(providerId: Long): Flow<Int>
     fun browseMovies(query: LibraryBrowseQuery): Flow<PagedResult<Movie>>
+    fun browseAdultMovies(query: LibraryBrowseQuery, hiddenCategoryIds: Set<Long> = emptySet()): Flow<PagedResult<Movie>> =
+        browseMovies(query)
     fun searchMovies(providerId: Long, query: String): Flow<List<Movie>>
     suspend fun getMovie(movieId: Long): Movie?
     suspend fun getMovieDetails(providerId: Long, movieId: Long): Result<Movie>

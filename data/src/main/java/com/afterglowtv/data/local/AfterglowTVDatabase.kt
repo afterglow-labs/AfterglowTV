@@ -107,9 +107,9 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * as that would check the entire database and can crash on pre-existing violations in
          * unrelated tables that the migration didn't touch.
          */
-        private fun validateForeignKeys(database: SupportSQLiteDatabase, vararg tableNames: String) {
+        private fun validateForeignKeys(db: SupportSQLiteDatabase, vararg tableNames: String) {
             for (table in tableNames) {
-                database.query("PRAGMA foreign_key_check($table)").use { cursor ->
+                db.query("PRAGMA foreign_key_check($table)").use { cursor ->
                     if (cursor.moveToFirst()) {
                         val tbl = if (!cursor.isNull(0)) cursor.getString(0) else "<unknown>"
                         val rowId = if (!cursor.isNull(1)) cursor.getLong(1) else -1L
@@ -128,7 +128,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * from crashing with an "unsatisfied migration" exception on very early installs.
          */
         val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Schema was identical between v1 and v2; nothing to alter.
             }
         }
@@ -137,22 +137,22 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * Migration 2 → 3: added parental-control protection columns.
          */
         val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE categories ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE channels ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE movies ADD COLUMN is_adult INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE movies ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE series ADD COLUMN is_adult INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE series ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE episodes ADD COLUMN is_adult INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE episodes ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE categories ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE channels ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE movies ADD COLUMN is_adult INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE movies ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE series ADD COLUMN is_adult INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE series ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE episodes ADD COLUMN is_adult INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE episodes ADD COLUMN is_user_protected INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // 1. Create playback_history table
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS playback_history (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         content_id INTEGER NOT NULL,
@@ -170,12 +170,12 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         episode_number INTEGER
                     )
                 """)
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS idx_history_unique ON playback_history(content_id, content_type, provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS idx_history_last_watched ON playback_history(last_watched_at DESC)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS idx_history_provider ON playback_history(provider_id)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS idx_history_unique ON playback_history(content_id, content_type, provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_last_watched ON playback_history(last_watched_at DESC)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_provider ON playback_history(provider_id)")
                 
                 // 2. Create sync_metadata table
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS sync_metadata (
                         provider_id INTEGER PRIMARY KEY NOT NULL,
                         last_live_sync INTEGER NOT NULL DEFAULT 0,
@@ -191,12 +191,12 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                 """)
                 
                 // 3. Migrate existing watch progress to history
-                database.execSQL("""
+                db.execSQL("""
                     INSERT OR IGNORE INTO playback_history (content_id, content_type, provider_id, title, resume_position_ms, last_watched_at)
                     SELECT id, 'MOVIE', provider_id, name, watch_progress, last_watched_at
                     FROM movies WHERE watch_progress > 0
                 """)
-                database.execSQL("""
+                db.execSQL("""
                     INSERT OR IGNORE INTO playback_history (content_id, content_type, provider_id, title, resume_position_ms, last_watched_at, series_id, season_number, episode_number)
                     SELECT id, 'SERIES_EPISODE', provider_id, title, watch_progress, last_watched_at, series_id, season_number, episode_number
                     FROM episodes WHERE watch_progress > 0
@@ -205,51 +205,51 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
         }
 
         val MIGRATION_4_5 = object : Migration(4, 5) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Note: Room auto-generates index names as 'index_tableName_columnNames'
                 // Channels
-                database.execSQL("DROP INDEX IF EXISTS index_channels_category_id")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_channels_provider_id_category_id ON channels(provider_id, category_id)")
+                db.execSQL("DROP INDEX IF EXISTS index_channels_category_id")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_channels_provider_id_category_id ON channels(provider_id, category_id)")
                 
                 // Movies
-                database.execSQL("DROP INDEX IF EXISTS index_movies_category_id")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_category_id ON movies(provider_id, category_id)")
+                db.execSQL("DROP INDEX IF EXISTS index_movies_category_id")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_category_id ON movies(provider_id, category_id)")
                 
                 // Series
-                database.execSQL("DROP INDEX IF EXISTS index_series_category_id")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_category_id ON series(provider_id, category_id)")
+                db.execSQL("DROP INDEX IF EXISTS index_series_category_id")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_category_id ON series(provider_id, category_id)")
                 
                 // Favorites
-                database.execSQL("DROP INDEX IF EXISTS index_favorites_group_id")
-                database.execSQL("DROP INDEX IF EXISTS index_favorites_position")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_favorites_content_type_group_id ON favorites(content_type, group_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_favorites_group_id_position ON favorites(group_id, position)")
+                db.execSQL("DROP INDEX IF EXISTS index_favorites_group_id")
+                db.execSQL("DROP INDEX IF EXISTS index_favorites_position")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_favorites_content_type_group_id ON favorites(content_type, group_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_favorites_group_id_position ON favorites(group_id, position)")
             }
         }
 
         val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE virtual_groups ADD COLUMN content_type TEXT NOT NULL DEFAULT 'LIVE'")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE virtual_groups ADD COLUMN content_type TEXT NOT NULL DEFAULT 'LIVE'")
             }
         }
 
         val MIGRATION_6_7 = object : Migration(6, 7) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE channels ADD COLUMN logical_group_id TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE channels ADD COLUMN error_count INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_channels_logical_group_id ON channels(logical_group_id)")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE channels ADD COLUMN logical_group_id TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE channels ADD COLUMN error_count INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_channels_logical_group_id ON channels(logical_group_id)")
             }
         }
 
         val MIGRATION_7_8 = object : Migration(7, 8) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE programs ADD COLUMN provider_id INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("DROP INDEX IF EXISTS index_programs_channel_id")
-                database.execSQL("DROP INDEX IF EXISTS index_programs_channel_id_start_time")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_programs_provider_id ON programs(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_programs_provider_id_channel_id ON programs(provider_id, channel_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_programs_provider_id_channel_id_start_time ON programs(provider_id, channel_id, start_time)")
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE programs ADD COLUMN provider_id INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("DROP INDEX IF EXISTS index_programs_channel_id")
+                db.execSQL("DROP INDEX IF EXISTS index_programs_channel_id_start_time")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_programs_provider_id ON programs(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_programs_provider_id_channel_id ON programs(provider_id, channel_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_programs_provider_id_channel_id_start_time ON programs(provider_id, channel_id, start_time)")
+                db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS index_programs_provider_id_channel_id_start_time_end_time " +
                         "ON programs(provider_id, channel_id, start_time, end_time)"
                 )
@@ -257,12 +257,12 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
         }
 
         val MIGRATION_8_9 = object : Migration(8, 9) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Rebuild media tables to normalize legacy local IDs and keep only provider-scoped remote IDs as remote keys.
                 // This preserves user-facing references by remapping favorites/history through temporary ID maps.
 
                 // Channels
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS channels_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -286,7 +286,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT INTO channels_new (
                         stream_id, name, logo_url, group_title, category_id, category_name, stream_url,
@@ -300,8 +300,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     FROM channels
                     """.trimIndent()
                 )
-                database.execSQL("CREATE TEMP TABLE channel_id_map(old_id INTEGER PRIMARY KEY NOT NULL, new_id INTEGER NOT NULL)")
-                database.execSQL(
+                db.execSQL("CREATE TEMP TABLE channel_id_map(old_id INTEGER PRIMARY KEY NOT NULL, new_id INTEGER NOT NULL)")
+                db.execSQL(
                     """
                     INSERT INTO channel_id_map(old_id, new_id)
                     SELECT old.id, MIN(new.id)
@@ -312,7 +312,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     GROUP BY old.id
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE favorites
                     SET content_id = (SELECT new_id FROM channel_id_map WHERE old_id = content_id)
@@ -320,7 +320,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND content_id IN (SELECT old_id FROM channel_id_map)
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE playback_history
                     SET content_id = (SELECT new_id FROM channel_id_map WHERE old_id = content_id)
@@ -328,16 +328,16 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND content_id IN (SELECT old_id FROM channel_id_map)
                     """.trimIndent()
                 )
-                database.execSQL("DROP TABLE channels")
-                database.execSQL("ALTER TABLE channels_new RENAME TO channels")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_channels_provider_id ON channels(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_channels_provider_id_category_id ON channels(provider_id, category_id)")
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_channels_provider_id_stream_id ON channels(provider_id, stream_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_channels_logical_group_id ON channels(logical_group_id)")
-                database.execSQL("DROP TABLE channel_id_map")
+                db.execSQL("DROP TABLE channels")
+                db.execSQL("ALTER TABLE channels_new RENAME TO channels")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_channels_provider_id ON channels(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_channels_provider_id_category_id ON channels(provider_id, category_id)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_channels_provider_id_stream_id ON channels(provider_id, stream_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_channels_logical_group_id ON channels(logical_group_id)")
+                db.execSQL("DROP TABLE channel_id_map")
 
                 // Movies
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS movies_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -368,7 +368,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT INTO movies_new (
                         stream_id, name, poster_url, backdrop_url, category_id, category_name, stream_url,
@@ -384,8 +384,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     FROM movies
                     """.trimIndent()
                 )
-                database.execSQL("CREATE TEMP TABLE movie_id_map(old_id INTEGER PRIMARY KEY NOT NULL, new_id INTEGER NOT NULL)")
-                database.execSQL(
+                db.execSQL("CREATE TEMP TABLE movie_id_map(old_id INTEGER PRIMARY KEY NOT NULL, new_id INTEGER NOT NULL)")
+                db.execSQL(
                     """
                     INSERT INTO movie_id_map(old_id, new_id)
                     SELECT old.id, MIN(new.id)
@@ -396,7 +396,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     GROUP BY old.id
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE favorites
                     SET content_id = (SELECT new_id FROM movie_id_map WHERE old_id = content_id)
@@ -404,7 +404,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND content_id IN (SELECT old_id FROM movie_id_map)
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE playback_history
                     SET content_id = (SELECT new_id FROM movie_id_map WHERE old_id = content_id)
@@ -412,15 +412,15 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND content_id IN (SELECT old_id FROM movie_id_map)
                     """.trimIndent()
                 )
-                database.execSQL("DROP TABLE movies")
-                database.execSQL("ALTER TABLE movies_new RENAME TO movies")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id ON movies(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_category_id ON movies(provider_id, category_id)")
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_movies_provider_id_stream_id ON movies(provider_id, stream_id)")
-                database.execSQL("DROP TABLE movie_id_map")
+                db.execSQL("DROP TABLE movies")
+                db.execSQL("ALTER TABLE movies_new RENAME TO movies")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id ON movies(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_category_id ON movies(provider_id, category_id)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_movies_provider_id_stream_id ON movies(provider_id, stream_id)")
+                db.execSQL("DROP TABLE movie_id_map")
 
                 // Series
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS series_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -446,7 +446,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT INTO series_new (
                         series_id, name, poster_url, backdrop_url, category_id, category_name, plot, cast,
@@ -460,8 +460,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     FROM series
                     """.trimIndent()
                 )
-                database.execSQL("CREATE TEMP TABLE series_id_map(old_id INTEGER PRIMARY KEY NOT NULL, new_id INTEGER NOT NULL)")
-                database.execSQL(
+                db.execSQL("CREATE TEMP TABLE series_id_map(old_id INTEGER PRIMARY KEY NOT NULL, new_id INTEGER NOT NULL)")
+                db.execSQL(
                     """
                     INSERT INTO series_id_map(old_id, new_id)
                     SELECT old.id, MIN(new.id)
@@ -472,7 +472,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     GROUP BY old.id
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE favorites
                     SET content_id = (SELECT new_id FROM series_id_map WHERE old_id = content_id)
@@ -480,7 +480,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND content_id IN (SELECT old_id FROM series_id_map)
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE playback_history
                     SET content_id = (SELECT new_id FROM series_id_map WHERE old_id = content_id)
@@ -488,7 +488,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND content_id IN (SELECT old_id FROM series_id_map)
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE playback_history
                     SET series_id = (SELECT new_id FROM series_id_map WHERE old_id = series_id)
@@ -496,22 +496,22 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND series_id IN (SELECT old_id FROM series_id_map)
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE episodes
                     SET series_id = (SELECT new_id FROM series_id_map WHERE old_id = series_id)
                     WHERE series_id IN (SELECT old_id FROM series_id_map)
                     """.trimIndent()
                 )
-                database.execSQL("DROP TABLE series")
-                database.execSQL("ALTER TABLE series_new RENAME TO series")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id ON series(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_category_id ON series(provider_id, category_id)")
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_series_provider_id_series_id ON series(provider_id, series_id)")
-                database.execSQL("DROP TABLE series_id_map")
+                db.execSQL("DROP TABLE series")
+                db.execSQL("ALTER TABLE series_new RENAME TO series")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id ON series(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_category_id ON series(provider_id, category_id)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_series_provider_id_series_id ON series(provider_id, series_id)")
+                db.execSQL("DROP TABLE series_id_map")
 
                 // Episodes
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS episodes_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -536,7 +536,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT INTO episodes_new (
                         episode_id, title, episode_number, season_number, stream_url, container_extension, cover_url,
@@ -550,8 +550,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     FROM episodes
                     """.trimIndent()
                 )
-                database.execSQL("CREATE TEMP TABLE episode_id_map(old_id INTEGER PRIMARY KEY NOT NULL, new_id INTEGER NOT NULL)")
-                database.execSQL(
+                db.execSQL("CREATE TEMP TABLE episode_id_map(old_id INTEGER PRIMARY KEY NOT NULL, new_id INTEGER NOT NULL)")
+                db.execSQL(
                     """
                     INSERT INTO episode_id_map(old_id, new_id)
                     SELECT old.id, new.id
@@ -561,7 +561,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                      AND new.episode_id = old.episode_id
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE playback_history
                     SET content_id = (SELECT new_id FROM episode_id_map WHERE old_id = content_id)
@@ -569,27 +569,27 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND content_id IN (SELECT old_id FROM episode_id_map)
                     """.trimIndent()
                 )
-                database.execSQL("DROP TABLE episodes")
-                database.execSQL("ALTER TABLE episodes_new RENAME TO episodes")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_episodes_series_id ON episodes(series_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_episodes_provider_id ON episodes(provider_id)")
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_episodes_provider_id_episode_id ON episodes(provider_id, episode_id)")
-                database.execSQL("DROP TABLE episode_id_map")
-                validateForeignKeys(database, "episodes")
+                db.execSQL("DROP TABLE episodes")
+                db.execSQL("ALTER TABLE episodes_new RENAME TO episodes")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_episodes_series_id ON episodes(series_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_episodes_provider_id ON episodes(provider_id)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_episodes_provider_id_episode_id ON episodes(provider_id, episode_id)")
+                db.execSQL("DROP TABLE episode_id_map")
+                validateForeignKeys(db, "episodes")
             }
         }
 
         val MIGRATION_9_10 = object : Migration(9, 10) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS channels_fts USING fts4(name, content='channels')")
-                database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS movies_fts USING fts4(name, content='movies')")
-                database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS series_fts USING fts4(name, content='series')")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS channels_fts USING fts4(name, content='channels')")
+                db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS movies_fts USING fts4(name, content='movies')")
+                db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS series_fts USING fts4(name, content='series')")
 
-                database.execSQL("INSERT INTO channels_fts(rowid, name) SELECT id, name FROM channels")
-                database.execSQL("INSERT INTO movies_fts(rowid, name) SELECT id, name FROM movies")
-                database.execSQL("INSERT INTO series_fts(rowid, name) SELECT id, name FROM series")
+                db.execSQL("INSERT INTO channels_fts(rowid, name) SELECT id, name FROM channels")
+                db.execSQL("INSERT INTO movies_fts(rowid, name) SELECT id, name FROM movies")
+                db.execSQL("INSERT INTO series_fts(rowid, name) SELECT id, name FROM series")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TRIGGER IF NOT EXISTS channels_ai
                     AFTER INSERT ON channels BEGIN
@@ -597,7 +597,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     END
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TRIGGER IF NOT EXISTS channels_ad
                     AFTER DELETE ON channels BEGIN
@@ -605,7 +605,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     END
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TRIGGER IF NOT EXISTS channels_au
                     AFTER UPDATE OF name ON channels BEGIN
@@ -614,7 +614,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TRIGGER IF NOT EXISTS movies_ai
                     AFTER INSERT ON movies BEGIN
@@ -622,7 +622,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     END
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TRIGGER IF NOT EXISTS movies_ad
                     AFTER DELETE ON movies BEGIN
@@ -630,7 +630,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     END
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TRIGGER IF NOT EXISTS movies_au
                     AFTER UPDATE OF name ON movies BEGIN
@@ -639,7 +639,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TRIGGER IF NOT EXISTS series_ai
                     AFTER INSERT ON series BEGIN
@@ -647,7 +647,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     END
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TRIGGER IF NOT EXISTS series_ad
                     AFTER DELETE ON series BEGIN
@@ -655,7 +655,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     END
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TRIGGER IF NOT EXISTS series_au
                     AFTER UPDATE OF name ON series BEGIN
@@ -673,33 +673,33 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * Programs table excluded (uses negative staging provider IDs).
          */
         val MIGRATION_10_11 = object : Migration(10, 11) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Clean up orphaned records before adding FK constraints
-                database.execSQL("DELETE FROM channels WHERE provider_id NOT IN (SELECT id FROM providers)")
-                database.execSQL("DELETE FROM movies WHERE provider_id NOT IN (SELECT id FROM providers)")
-                database.execSQL("DELETE FROM series WHERE provider_id NOT IN (SELECT id FROM providers)")
-                database.execSQL("DELETE FROM episodes WHERE provider_id NOT IN (SELECT id FROM providers)")
-                database.execSQL("DELETE FROM categories WHERE provider_id NOT IN (SELECT id FROM providers)")
-                database.execSQL("DELETE FROM playback_history WHERE provider_id NOT IN (SELECT id FROM providers)")
-                database.execSQL("DELETE FROM sync_metadata WHERE provider_id NOT IN (SELECT id FROM providers)")
-                database.execSQL("UPDATE favorites SET group_id = NULL WHERE group_id IS NOT NULL AND group_id NOT IN (SELECT id FROM virtual_groups)")
+                db.execSQL("DELETE FROM channels WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("DELETE FROM movies WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("DELETE FROM series WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("DELETE FROM episodes WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("DELETE FROM categories WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("DELETE FROM playback_history WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("DELETE FROM sync_metadata WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("UPDATE favorites SET group_id = NULL WHERE group_id IS NOT NULL AND group_id NOT IN (SELECT id FROM virtual_groups)")
 
                 // ── Drop FTS triggers and tables (channels, movies, series) ──
-                database.execSQL("DROP TRIGGER IF EXISTS channels_ai")
-                database.execSQL("DROP TRIGGER IF EXISTS channels_ad")
-                database.execSQL("DROP TRIGGER IF EXISTS channels_au")
-                database.execSQL("DROP TRIGGER IF EXISTS movies_ai")
-                database.execSQL("DROP TRIGGER IF EXISTS movies_ad")
-                database.execSQL("DROP TRIGGER IF EXISTS movies_au")
-                database.execSQL("DROP TRIGGER IF EXISTS series_ai")
-                database.execSQL("DROP TRIGGER IF EXISTS series_ad")
-                database.execSQL("DROP TRIGGER IF EXISTS series_au")
-                database.execSQL("DROP TABLE IF EXISTS channels_fts")
-                database.execSQL("DROP TABLE IF EXISTS movies_fts")
-                database.execSQL("DROP TABLE IF EXISTS series_fts")
+                db.execSQL("DROP TRIGGER IF EXISTS channels_ai")
+                db.execSQL("DROP TRIGGER IF EXISTS channels_ad")
+                db.execSQL("DROP TRIGGER IF EXISTS channels_au")
+                db.execSQL("DROP TRIGGER IF EXISTS movies_ai")
+                db.execSQL("DROP TRIGGER IF EXISTS movies_ad")
+                db.execSQL("DROP TRIGGER IF EXISTS movies_au")
+                db.execSQL("DROP TRIGGER IF EXISTS series_ai")
+                db.execSQL("DROP TRIGGER IF EXISTS series_ad")
+                db.execSQL("DROP TRIGGER IF EXISTS series_au")
+                db.execSQL("DROP TABLE IF EXISTS channels_fts")
+                db.execSQL("DROP TABLE IF EXISTS movies_fts")
+                db.execSQL("DROP TABLE IF EXISTS series_fts")
 
                 // ── Channels ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE channels_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         stream_id INTEGER NOT NULL DEFAULT 0,
@@ -722,16 +722,16 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(provider_id) REFERENCES providers(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("INSERT INTO channels_new SELECT * FROM channels")
-                database.execSQL("DROP TABLE channels")
-                database.execSQL("ALTER TABLE channels_new RENAME TO channels")
-                database.execSQL("CREATE INDEX index_channels_provider_id ON channels(provider_id)")
-                database.execSQL("CREATE INDEX index_channels_provider_id_category_id ON channels(provider_id, category_id)")
-                database.execSQL("CREATE UNIQUE INDEX index_channels_provider_id_stream_id ON channels(provider_id, stream_id)")
-                database.execSQL("CREATE INDEX index_channels_logical_group_id ON channels(logical_group_id)")
+                db.execSQL("INSERT INTO channels_new SELECT * FROM channels")
+                db.execSQL("DROP TABLE channels")
+                db.execSQL("ALTER TABLE channels_new RENAME TO channels")
+                db.execSQL("CREATE INDEX index_channels_provider_id ON channels(provider_id)")
+                db.execSQL("CREATE INDEX index_channels_provider_id_category_id ON channels(provider_id, category_id)")
+                db.execSQL("CREATE UNIQUE INDEX index_channels_provider_id_stream_id ON channels(provider_id, stream_id)")
+                db.execSQL("CREATE INDEX index_channels_logical_group_id ON channels(logical_group_id)")
 
                 // ── Movies ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE movies_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         stream_id INTEGER NOT NULL DEFAULT 0,
@@ -761,15 +761,15 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(provider_id) REFERENCES providers(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("INSERT INTO movies_new SELECT * FROM movies")
-                database.execSQL("DROP TABLE movies")
-                database.execSQL("ALTER TABLE movies_new RENAME TO movies")
-                database.execSQL("CREATE INDEX index_movies_provider_id ON movies(provider_id)")
-                database.execSQL("CREATE INDEX index_movies_provider_id_category_id ON movies(provider_id, category_id)")
-                database.execSQL("CREATE UNIQUE INDEX index_movies_provider_id_stream_id ON movies(provider_id, stream_id)")
+                db.execSQL("INSERT INTO movies_new SELECT * FROM movies")
+                db.execSQL("DROP TABLE movies")
+                db.execSQL("ALTER TABLE movies_new RENAME TO movies")
+                db.execSQL("CREATE INDEX index_movies_provider_id ON movies(provider_id)")
+                db.execSQL("CREATE INDEX index_movies_provider_id_category_id ON movies(provider_id, category_id)")
+                db.execSQL("CREATE UNIQUE INDEX index_movies_provider_id_stream_id ON movies(provider_id, stream_id)")
 
                 // ── Series ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE series_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         series_id INTEGER NOT NULL DEFAULT 0,
@@ -794,32 +794,32 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(provider_id) REFERENCES providers(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("INSERT INTO series_new SELECT * FROM series")
-                database.execSQL("DROP TABLE series")
-                database.execSQL("ALTER TABLE series_new RENAME TO series")
-                database.execSQL("CREATE INDEX index_series_provider_id ON series(provider_id)")
-                database.execSQL("CREATE INDEX index_series_provider_id_category_id ON series(provider_id, category_id)")
-                database.execSQL("CREATE UNIQUE INDEX index_series_provider_id_series_id ON series(provider_id, series_id)")
+                db.execSQL("INSERT INTO series_new SELECT * FROM series")
+                db.execSQL("DROP TABLE series")
+                db.execSQL("ALTER TABLE series_new RENAME TO series")
+                db.execSQL("CREATE INDEX index_series_provider_id ON series(provider_id)")
+                db.execSQL("CREATE INDEX index_series_provider_id_category_id ON series(provider_id, category_id)")
+                db.execSQL("CREATE UNIQUE INDEX index_series_provider_id_series_id ON series(provider_id, series_id)")
 
                 // ── Recreate FTS tables and triggers ──
-                database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS channels_fts USING fts4(name, content='channels')")
-                database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS movies_fts USING fts4(name, content='movies')")
-                database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS series_fts USING fts4(name, content='series')")
-                database.execSQL("INSERT INTO channels_fts(rowid, name) SELECT id, name FROM channels")
-                database.execSQL("INSERT INTO movies_fts(rowid, name) SELECT id, name FROM movies")
-                database.execSQL("INSERT INTO series_fts(rowid, name) SELECT id, name FROM series")
-                database.execSQL("CREATE TRIGGER IF NOT EXISTS channels_ai AFTER INSERT ON channels BEGIN INSERT INTO channels_fts(rowid, name) VALUES (new.id, new.name); END")
-                database.execSQL("CREATE TRIGGER IF NOT EXISTS channels_ad AFTER DELETE ON channels BEGIN DELETE FROM channels_fts WHERE rowid = old.id; END")
-                database.execSQL("CREATE TRIGGER IF NOT EXISTS channels_au AFTER UPDATE OF name ON channels BEGIN UPDATE channels_fts SET name = new.name WHERE rowid = old.id; END")
-                database.execSQL("CREATE TRIGGER IF NOT EXISTS movies_ai AFTER INSERT ON movies BEGIN INSERT INTO movies_fts(rowid, name) VALUES (new.id, new.name); END")
-                database.execSQL("CREATE TRIGGER IF NOT EXISTS movies_ad AFTER DELETE ON movies BEGIN DELETE FROM movies_fts WHERE rowid = old.id; END")
-                database.execSQL("CREATE TRIGGER IF NOT EXISTS movies_au AFTER UPDATE OF name ON movies BEGIN UPDATE movies_fts SET name = new.name WHERE rowid = old.id; END")
-                database.execSQL("CREATE TRIGGER IF NOT EXISTS series_ai AFTER INSERT ON series BEGIN INSERT INTO series_fts(rowid, name) VALUES (new.id, new.name); END")
-                database.execSQL("CREATE TRIGGER IF NOT EXISTS series_ad AFTER DELETE ON series BEGIN DELETE FROM series_fts WHERE rowid = old.id; END")
-                database.execSQL("CREATE TRIGGER IF NOT EXISTS series_au AFTER UPDATE OF name ON series BEGIN UPDATE series_fts SET name = new.name WHERE rowid = old.id; END")
+                db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS channels_fts USING fts4(name, content='channels')")
+                db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS movies_fts USING fts4(name, content='movies')")
+                db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS series_fts USING fts4(name, content='series')")
+                db.execSQL("INSERT INTO channels_fts(rowid, name) SELECT id, name FROM channels")
+                db.execSQL("INSERT INTO movies_fts(rowid, name) SELECT id, name FROM movies")
+                db.execSQL("INSERT INTO series_fts(rowid, name) SELECT id, name FROM series")
+                db.execSQL("CREATE TRIGGER IF NOT EXISTS channels_ai AFTER INSERT ON channels BEGIN INSERT INTO channels_fts(rowid, name) VALUES (new.id, new.name); END")
+                db.execSQL("CREATE TRIGGER IF NOT EXISTS channels_ad AFTER DELETE ON channels BEGIN DELETE FROM channels_fts WHERE rowid = old.id; END")
+                db.execSQL("CREATE TRIGGER IF NOT EXISTS channels_au AFTER UPDATE OF name ON channels BEGIN UPDATE channels_fts SET name = new.name WHERE rowid = old.id; END")
+                db.execSQL("CREATE TRIGGER IF NOT EXISTS movies_ai AFTER INSERT ON movies BEGIN INSERT INTO movies_fts(rowid, name) VALUES (new.id, new.name); END")
+                db.execSQL("CREATE TRIGGER IF NOT EXISTS movies_ad AFTER DELETE ON movies BEGIN DELETE FROM movies_fts WHERE rowid = old.id; END")
+                db.execSQL("CREATE TRIGGER IF NOT EXISTS movies_au AFTER UPDATE OF name ON movies BEGIN UPDATE movies_fts SET name = new.name WHERE rowid = old.id; END")
+                db.execSQL("CREATE TRIGGER IF NOT EXISTS series_ai AFTER INSERT ON series BEGIN INSERT INTO series_fts(rowid, name) VALUES (new.id, new.name); END")
+                db.execSQL("CREATE TRIGGER IF NOT EXISTS series_ad AFTER DELETE ON series BEGIN DELETE FROM series_fts WHERE rowid = old.id; END")
+                db.execSQL("CREATE TRIGGER IF NOT EXISTS series_au AFTER UPDATE OF name ON series BEGIN UPDATE series_fts SET name = new.name WHERE rowid = old.id; END")
 
                 // ── Episodes ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE episodes_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         episode_id INTEGER NOT NULL DEFAULT 0,
@@ -843,15 +843,15 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(provider_id) REFERENCES providers(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("INSERT INTO episodes_new SELECT * FROM episodes")
-                database.execSQL("DROP TABLE episodes")
-                database.execSQL("ALTER TABLE episodes_new RENAME TO episodes")
-                database.execSQL("CREATE INDEX index_episodes_series_id ON episodes(series_id)")
-                database.execSQL("CREATE INDEX index_episodes_provider_id ON episodes(provider_id)")
-                database.execSQL("CREATE UNIQUE INDEX index_episodes_provider_id_episode_id ON episodes(provider_id, episode_id)")
+                db.execSQL("INSERT INTO episodes_new SELECT * FROM episodes")
+                db.execSQL("DROP TABLE episodes")
+                db.execSQL("ALTER TABLE episodes_new RENAME TO episodes")
+                db.execSQL("CREATE INDEX index_episodes_series_id ON episodes(series_id)")
+                db.execSQL("CREATE INDEX index_episodes_provider_id ON episodes(provider_id)")
+                db.execSQL("CREATE UNIQUE INDEX index_episodes_provider_id_episode_id ON episodes(provider_id, episode_id)")
 
                 // ── Categories ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE categories_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         category_id INTEGER NOT NULL DEFAULT 0,
@@ -864,14 +864,14 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(provider_id) REFERENCES providers(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("INSERT INTO categories_new SELECT * FROM categories")
-                database.execSQL("DROP TABLE categories")
-                database.execSQL("ALTER TABLE categories_new RENAME TO categories")
-                database.execSQL("CREATE INDEX index_categories_provider_id ON categories(provider_id)")
-                database.execSQL("CREATE UNIQUE INDEX index_categories_provider_id_category_id_type ON categories(provider_id, category_id, type)")
+                db.execSQL("INSERT INTO categories_new SELECT * FROM categories")
+                db.execSQL("DROP TABLE categories")
+                db.execSQL("ALTER TABLE categories_new RENAME TO categories")
+                db.execSQL("CREATE INDEX index_categories_provider_id ON categories(provider_id)")
+                db.execSQL("CREATE UNIQUE INDEX index_categories_provider_id_category_id_type ON categories(provider_id, category_id, type)")
 
                 // ── Playback History ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE playback_history_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         content_id INTEGER NOT NULL,
@@ -890,15 +890,15 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(provider_id) REFERENCES providers(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("INSERT INTO playback_history_new SELECT * FROM playback_history")
-                database.execSQL("DROP TABLE playback_history")
-                database.execSQL("ALTER TABLE playback_history_new RENAME TO playback_history")
-                database.execSQL("CREATE UNIQUE INDEX index_playback_history_content_id_content_type_provider_id ON playback_history(content_id, content_type, provider_id)")
-                database.execSQL("CREATE INDEX index_playback_history_last_watched_at ON playback_history(last_watched_at)")
-                database.execSQL("CREATE INDEX index_playback_history_provider_id ON playback_history(provider_id)")
+                db.execSQL("INSERT INTO playback_history_new SELECT * FROM playback_history")
+                db.execSQL("DROP TABLE playback_history")
+                db.execSQL("ALTER TABLE playback_history_new RENAME TO playback_history")
+                db.execSQL("CREATE UNIQUE INDEX index_playback_history_content_id_content_type_provider_id ON playback_history(content_id, content_type, provider_id)")
+                db.execSQL("CREATE INDEX index_playback_history_last_watched_at ON playback_history(last_watched_at)")
+                db.execSQL("CREATE INDEX index_playback_history_provider_id ON playback_history(provider_id)")
 
                 // ── Sync Metadata ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE sync_metadata_new (
                         provider_id INTEGER NOT NULL PRIMARY KEY,
                         last_live_sync INTEGER NOT NULL DEFAULT 0,
@@ -913,12 +913,12 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(provider_id) REFERENCES providers(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("INSERT INTO sync_metadata_new SELECT * FROM sync_metadata")
-                database.execSQL("DROP TABLE sync_metadata")
-                database.execSQL("ALTER TABLE sync_metadata_new RENAME TO sync_metadata")
+                db.execSQL("INSERT INTO sync_metadata_new SELECT * FROM sync_metadata")
+                db.execSQL("DROP TABLE sync_metadata")
+                db.execSQL("ALTER TABLE sync_metadata_new RENAME TO sync_metadata")
 
                 // ── Favorites ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE favorites_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         content_id INTEGER NOT NULL,
@@ -929,13 +929,13 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(group_id) REFERENCES virtual_groups(id) ON DELETE SET NULL
                     )
                 """.trimIndent())
-                database.execSQL("INSERT INTO favorites_new SELECT * FROM favorites")
-                database.execSQL("DROP TABLE favorites")
-                database.execSQL("ALTER TABLE favorites_new RENAME TO favorites")
-                database.execSQL("CREATE UNIQUE INDEX index_favorites_content_id_content_type_group_id ON favorites(content_id, content_type, group_id)")
-                database.execSQL("CREATE INDEX index_favorites_content_type_group_id ON favorites(content_type, group_id)")
-                database.execSQL("CREATE INDEX index_favorites_group_id_position ON favorites(group_id, position)")
-                validateForeignKeys(database, "favorites")
+                db.execSQL("INSERT INTO favorites_new SELECT * FROM favorites")
+                db.execSQL("DROP TABLE favorites")
+                db.execSQL("ALTER TABLE favorites_new RENAME TO favorites")
+                db.execSQL("CREATE UNIQUE INDEX index_favorites_content_id_content_type_group_id ON favorites(content_id, content_type, group_id)")
+                db.execSQL("CREATE INDEX index_favorites_content_type_group_id ON favorites(content_type, group_id)")
+                db.execSQL("CREATE INDEX index_favorites_group_id_position ON favorites(group_id, position)")
+                validateForeignKeys(db, "favorites")
             }
         }
         /**
@@ -944,9 +944,9 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * removed — they are unreachable orphans and would violate the new constraint.
          */
         val MIGRATION_11_12 = object : Migration(11, 12) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Create new episodes table with both FK constraints
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE episodes_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         episode_id INTEGER NOT NULL DEFAULT 0,
@@ -972,16 +972,16 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                 """.trimIndent())
                 // Migrate only episodes with a valid series parent; orphans are discarded
-                database.execSQL("""
+                db.execSQL("""
                     INSERT INTO episodes_new
                     SELECT * FROM episodes
                     WHERE series_id IN (SELECT id FROM series)
                 """.trimIndent())
-                database.execSQL("DROP TABLE episodes")
-                database.execSQL("ALTER TABLE episodes_new RENAME TO episodes")
-                database.execSQL("CREATE INDEX index_episodes_series_id ON episodes(series_id)")
-                database.execSQL("CREATE INDEX index_episodes_provider_id ON episodes(provider_id)")
-                database.execSQL("CREATE UNIQUE INDEX index_episodes_provider_id_episode_id ON episodes(provider_id, episode_id)")
+                db.execSQL("DROP TABLE episodes")
+                db.execSQL("ALTER TABLE episodes_new RENAME TO episodes")
+                db.execSQL("CREATE INDEX index_episodes_series_id ON episodes(series_id)")
+                db.execSQL("CREATE INDEX index_episodes_provider_id ON episodes(provider_id)")
+                db.execSQL("CREATE UNIQUE INDEX index_episodes_provider_id_episode_id ON episodes(provider_id, episode_id)")
             }
         }
 
@@ -991,8 +991,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * get replaced in Room on the next write for each channel.
          */
         val MIGRATION_12_13 = object : Migration(12, 13) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS channel_preferences (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -1003,7 +1003,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS index_channel_preferences_channel_id ON channel_preferences(channel_id)"
                 )
             }
@@ -1014,34 +1014,34 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * provider/type category filtering, and virtual group content type lookups.
          */
         val MIGRATION_13_14 = object : Migration(13, 14) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_programs_provider_id_start_time_end_time ON programs(provider_id, start_time, end_time)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_categories_provider_id_type ON categories(provider_id, type)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_virtual_groups_content_type ON virtual_groups(content_type)"
                 )
             }
         }
 
         val MIGRATION_14_15 = object : Migration(14, 15) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE providers ADD COLUMN api_version TEXT")
-                database.execSQL("ALTER TABLE channels ADD COLUMN quality_options_json TEXT")
-                database.execSQL("ALTER TABLE programs ADD COLUMN rating TEXT")
-                database.execSQL("ALTER TABLE programs ADD COLUMN image_url TEXT")
-                database.execSQL("ALTER TABLE programs ADD COLUMN genre TEXT")
-                database.execSQL("ALTER TABLE programs ADD COLUMN category TEXT")
-                database.execSQL("ALTER TABLE playback_history ADD COLUMN watched_status TEXT NOT NULL DEFAULT 'IN_PROGRESS'")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE providers ADD COLUMN api_version TEXT")
+                db.execSQL("ALTER TABLE channels ADD COLUMN quality_options_json TEXT")
+                db.execSQL("ALTER TABLE programs ADD COLUMN rating TEXT")
+                db.execSQL("ALTER TABLE programs ADD COLUMN image_url TEXT")
+                db.execSQL("ALTER TABLE programs ADD COLUMN genre TEXT")
+                db.execSQL("ALTER TABLE programs ADD COLUMN category TEXT")
+                db.execSQL("ALTER TABLE playback_history ADD COLUMN watched_status TEXT NOT NULL DEFAULT 'IN_PROGRESS'")
             }
         }
 
         val MIGRATION_15_16 = object : Migration(15, 16) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_channels_provider_id_category_id_logical_group_id " +
                         "ON channels(provider_id, category_id, logical_group_id)"
                 )
@@ -1049,39 +1049,39 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
         }
 
         val MIGRATION_16_17 = object : Migration(16, 17) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     "ALTER TABLE providers ADD COLUMN allowed_output_formats_json TEXT NOT NULL DEFAULT '[]'"
                 )
             }
         }
 
         val MIGRATION_17_18 = object : Migration(17, 18) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_movie_attempt INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_movie_success INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_movie_partial INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_sync_mode TEXT NOT NULL DEFAULT 'UNKNOWN'")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_warnings_count INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_catalog_stale INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_parallel_failures_remembered INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_movie_attempt INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_movie_success INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_movie_partial INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_sync_mode TEXT NOT NULL DEFAULT 'UNKNOWN'")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_warnings_count INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_catalog_stale INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_parallel_failures_remembered INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         val MIGRATION_18_19 = object : Migration(18, 19) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_healthy_sync_streak INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_healthy_sync_streak INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         val MIGRATION_19_20 = object : Migration(19, 20) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE channels ADD COLUMN sync_fingerprint TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE movies ADD COLUMN sync_fingerprint TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE series ADD COLUMN sync_fingerprint TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE categories ADD COLUMN sync_fingerprint TEXT NOT NULL DEFAULT ''")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE channels ADD COLUMN sync_fingerprint TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE movies ADD COLUMN sync_fingerprint TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE series ADD COLUMN sync_fingerprint TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE categories ADD COLUMN sync_fingerprint TEXT NOT NULL DEFAULT ''")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS channel_import_stage (
                         session_id INTEGER NOT NULL,
@@ -1105,10 +1105,10 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_channel_import_stage_provider_id ON channel_import_stage(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_channel_import_stage_session_id_provider_id ON channel_import_stage(session_id, provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_channel_import_stage_provider_id ON channel_import_stage(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_channel_import_stage_session_id_provider_id ON channel_import_stage(session_id, provider_id)")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS movie_import_stage (
                         session_id INTEGER NOT NULL,
@@ -1139,10 +1139,10 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_movie_import_stage_provider_id ON movie_import_stage(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_movie_import_stage_session_id_provider_id ON movie_import_stage(session_id, provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_movie_import_stage_provider_id ON movie_import_stage(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_movie_import_stage_session_id_provider_id ON movie_import_stage(session_id, provider_id)")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS series_import_stage (
                         session_id INTEGER NOT NULL,
@@ -1170,10 +1170,10 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_import_stage_provider_id ON series_import_stage(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_import_stage_session_id_provider_id ON series_import_stage(session_id, provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_import_stage_provider_id ON series_import_stage(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_import_stage_session_id_provider_id ON series_import_stage(session_id, provider_id)")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS category_import_stage (
                         session_id INTEGER NOT NULL,
@@ -1189,40 +1189,40 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_category_import_stage_provider_id ON category_import_stage(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_category_import_stage_session_id_provider_id ON category_import_stage(session_id, provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_category_import_stage_provider_id_type ON category_import_stage(provider_id, type)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_category_import_stage_provider_id ON category_import_stage(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_category_import_stage_session_id_provider_id ON category_import_stage(session_id, provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_category_import_stage_provider_id_type ON category_import_stage(provider_id, type)")
             }
         }
 
         val MIGRATION_20_21 = object : Migration(20, 21) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN live_avoid_full_until INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_avoid_full_until INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN series_avoid_full_until INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN live_sequential_failures_remembered INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN live_healthy_sync_streak INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN series_sequential_failures_remembered INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN series_healthy_sync_streak INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN live_avoid_full_until INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN movie_avoid_full_until INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN series_avoid_full_until INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN live_sequential_failures_remembered INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN live_healthy_sync_streak INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN series_sequential_failures_remembered INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN series_healthy_sync_streak INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         val MIGRATION_21_22 = object : Migration(21, 22) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE channel_import_stage ADD COLUMN logical_group_id TEXT NOT NULL DEFAULT ''")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE channel_import_stage ADD COLUMN logical_group_id TEXT NOT NULL DEFAULT ''")
             }
         }
 
         val MIGRATION_22_23 = object : Migration(22, 23) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE channel_import_stage ADD COLUMN error_count INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE channel_import_stage ADD COLUMN error_count INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         val MIGRATION_23_24 = object : Migration(23, 24) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE providers ADD COLUMN xtream_fast_sync_enabled INTEGER NOT NULL DEFAULT 0")
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE providers ADD COLUMN xtream_fast_sync_enabled INTEGER NOT NULL DEFAULT 0")
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS movie_category_hydration (
                         provider_id INTEGER NOT NULL,
@@ -1236,15 +1236,15 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_movie_category_hydration_provider_id ON movie_category_hydration(provider_id)"
                 )
             }
         }
 
         val MIGRATION_25_26 = object : Migration(25, 26) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("""
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS series_category_hydration (
                         provider_id INTEGER NOT NULL,
                         category_id INTEGER NOT NULL,
@@ -1256,25 +1256,25 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(provider_id) REFERENCES providers(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_category_hydration_provider_id ON series_category_hydration(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_category_hydration_provider_id ON series_category_hydration(provider_id)")
             }
         }
 
         val MIGRATION_26_27 = object : Migration(26, 27) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE providers ADD COLUMN epg_sync_mode TEXT NOT NULL DEFAULT 'UPFRONT'")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE providers ADD COLUMN epg_sync_mode TEXT NOT NULL DEFAULT 'UPFRONT'")
             }
         }
 
         val MIGRATION_27_28 = object : Migration(27, 28) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE providers ADD COLUMN m3u_vod_classification_enabled INTEGER NOT NULL DEFAULT 1")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE providers ADD COLUMN m3u_vod_classification_enabled INTEGER NOT NULL DEFAULT 1")
             }
         }
 
         val MIGRATION_28_29 = object : Migration(28, 29) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS recording_schedules (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -1296,11 +1296,11 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_recording_schedules_provider_id ON recording_schedules(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_recording_schedules_enabled_requested_start_ms ON recording_schedules(enabled, requested_start_ms)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_recording_schedules_recurring_rule_id ON recording_schedules(recurring_rule_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recording_schedules_provider_id ON recording_schedules(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recording_schedules_enabled_requested_start_ms ON recording_schedules(enabled, requested_start_ms)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recording_schedules_recurring_rule_id ON recording_schedules(recurring_rule_id)")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS recording_runs (
                         id TEXT PRIMARY KEY NOT NULL,
@@ -1343,13 +1343,13 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_schedule_id ON recording_runs(schedule_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_provider_id ON recording_runs(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_status_scheduled_start_ms ON recording_runs(status, scheduled_start_ms)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_alarm_start_at_ms ON recording_runs(alarm_start_at_ms)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_alarm_stop_at_ms ON recording_runs(alarm_stop_at_ms)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_schedule_id ON recording_runs(schedule_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_provider_id ON recording_runs(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_status_scheduled_start_ms ON recording_runs(status, scheduled_start_ms)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_alarm_start_at_ms ON recording_runs(alarm_start_at_ms)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recording_runs_alarm_stop_at_ms ON recording_runs(alarm_stop_at_ms)")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS recording_storage (
                         id INTEGER PRIMARY KEY NOT NULL,
@@ -1366,7 +1366,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
                 val now = System.currentTimeMillis()
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT OR IGNORE INTO recording_storage (
                         id, tree_uri, display_name, output_directory, available_bytes, is_writable, file_name_pattern,
@@ -1376,13 +1376,13 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                validateForeignKeys(database, "recording_schedules", "recording_runs")
+                validateForeignKeys(db, "recording_schedules", "recording_runs")
             }
         }
 
         val MIGRATION_29_30 = object : Migration(29, 30) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS combined_m3u_profiles (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -1393,7 +1393,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS combined_m3u_profile_members (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -1406,27 +1406,27 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_combined_m3u_profile_members_profile_id ON combined_m3u_profile_members(profile_id)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_combined_m3u_profile_members_provider_id ON combined_m3u_profile_members(provider_id)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS index_combined_m3u_profile_members_profile_id_provider_id ON combined_m3u_profile_members(profile_id, provider_id)"
                 )
             }
         }
 
         val MIGRATION_30_31 = object : Migration(30, 31) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE movies ADD COLUMN added_at INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE movies ADD COLUMN added_at INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         val MIGRATION_31_32 = object : Migration(31, 32) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                fun firstLong(query: String): Long? = database.query(query).use { cursor ->
+            override fun migrate(db: SupportSQLiteDatabase) {
+                fun firstLong(query: String): Long? = db.query(query).use { cursor ->
                     if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getLong(0) else null
                 }
 
@@ -1435,9 +1435,9 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                 // Purge orphaned content rows now so the provider_id inference below can only
                 // ever produce valid FK values. Favorites pointing to purged content will resolve
                 // to NULL and be silently dropped via the `continue` below.
-                database.execSQL("DELETE FROM channels WHERE provider_id NOT IN (SELECT id FROM providers)")
-                database.execSQL("DELETE FROM movies WHERE provider_id NOT IN (SELECT id FROM providers)")
-                database.execSQL("DELETE FROM series WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("DELETE FROM channels WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("DELETE FROM movies WHERE provider_id NOT IN (SELECT id FROM providers)")
+                db.execSQL("DELETE FROM series WHERE provider_id NOT IN (SELECT id FROM providers)")
 
                 val defaultProviderId = firstLong(
                     "SELECT id FROM providers WHERE is_active = 1 ORDER BY id LIMIT 1"
@@ -1445,7 +1445,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     "SELECT id FROM providers ORDER BY id LIMIT 1"
                 )
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS virtual_groups_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -1461,7 +1461,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                 )
 
                 val providersByLegacyGroup = mutableMapOf<Long, MutableSet<Long>>()
-                database.query(
+                db.query(
                     """
                     SELECT f.group_id,
                            CASE f.content_type
@@ -1485,7 +1485,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                 val groupProviderToNewId = mutableMapOf<Pair<Long, Long>, Long>()
                 var nextGroupId = (firstLong("SELECT MAX(id) FROM virtual_groups") ?: 0L) + 1L
 
-                database.query(
+                db.query(
                     "SELECT id, name, icon_emoji, position, created_at, content_type FROM virtual_groups ORDER BY id"
                 ).use { cursor ->
                     while (cursor.moveToNext()) {
@@ -1504,31 +1504,31 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         providerIds.forEachIndexed { index, providerId ->
                             val newGroupId = if (index == 0) legacyGroupId else nextGroupId++
                             groupProviderToNewId[legacyGroupId to providerId] = newGroupId
-                            database.execSQL(
+                            db.execSQL(
                                 """
                                 INSERT INTO virtual_groups_new(
                                     id, provider_id, name, icon_emoji, position, created_at, content_type
                                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
                                 """.trimIndent(),
-                                arrayOf(newGroupId, providerId, name, iconEmoji, position, createdAt, contentType)
+                                arrayOf<Any?>(newGroupId, providerId, name, iconEmoji, position, createdAt, contentType)
                             )
                         }
                     }
                 }
 
-                database.execSQL("ALTER TABLE virtual_groups RENAME TO virtual_groups_legacy")
-                database.execSQL("ALTER TABLE virtual_groups_new RENAME TO virtual_groups")
-                database.execSQL(
+                db.execSQL("ALTER TABLE virtual_groups RENAME TO virtual_groups_legacy")
+                db.execSQL("ALTER TABLE virtual_groups_new RENAME TO virtual_groups")
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_virtual_groups_provider_id_content_type ON virtual_groups(provider_id, content_type)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_virtual_groups_position ON virtual_groups(position)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_virtual_groups_content_type ON virtual_groups(content_type)"
                 )
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS favorites_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -1544,7 +1544,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                database.query(
+                db.query(
                     """
                     SELECT f.id, f.content_id, f.content_type, f.position, f.group_id, f.added_at,
                            CASE f.content_type
@@ -1577,39 +1577,39 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                                 ?: groupProviderToNewId.entries.firstOrNull { it.key.first == groupId }?.value
                         }
 
-                        database.execSQL(
+                        db.execSQL(
                             """
                             INSERT OR REPLACE INTO favorites_new(
                                 id, provider_id, content_id, content_type, position, group_id, added_at
                             ) VALUES (?, ?, ?, ?, ?, ?, ?)
                             """.trimIndent(),
-                            arrayOf(favoriteId, providerId, contentId, contentType, position, newGroupId, addedAt)
+                            arrayOf<Any?>(favoriteId, providerId, contentId, contentType, position, newGroupId, addedAt)
                         )
                     }
                 }
 
-                database.execSQL("ALTER TABLE favorites RENAME TO favorites_legacy")
-                database.execSQL("ALTER TABLE favorites_new RENAME TO favorites")
-                database.execSQL(
+                db.execSQL("ALTER TABLE favorites RENAME TO favorites_legacy")
+                db.execSQL("ALTER TABLE favorites_new RENAME TO favorites")
+                db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS index_favorites_provider_id_content_id_content_type_group_id ON favorites(provider_id, content_id, content_type, group_id)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_favorites_provider_id_content_type_group_id ON favorites(provider_id, content_type, group_id)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_favorites_group_id_position ON favorites(group_id, position)"
                 )
 
-                database.execSQL("DROP TABLE favorites_legacy")
-                database.execSQL("DROP TABLE virtual_groups_legacy")
-                validateForeignKeys(database, "virtual_groups", "favorites")
+                db.execSQL("DROP TABLE favorites_legacy")
+                db.execSQL("DROP TABLE virtual_groups_legacy")
+                validateForeignKeys(db, "virtual_groups", "favorites")
             }
         }
 
         val MIGRATION_32_33 = object : Migration(32, 33) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE movies ADD COLUMN watch_count INTEGER NOT NULL DEFAULT 0")
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE movies ADD COLUMN watch_count INTEGER NOT NULL DEFAULT 0")
+                db.execSQL(
                     """
                     UPDATE movies
                     SET watch_count = COALESCE((
@@ -1621,7 +1621,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     ), 0)
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE INDEX IF NOT EXISTS index_favorites_global_provider_id_content_type_content_id
                     ON favorites(provider_id, content_type, content_id)
@@ -1632,14 +1632,14 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
         }
 
         val MIGRATION_33_34 = object : Migration(33, 34) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_live_success INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_series_success INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_epg_success INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("UPDATE sync_metadata SET last_live_success = last_live_sync")
-                database.execSQL("UPDATE sync_metadata SET last_series_success = last_series_sync")
-                database.execSQL("UPDATE sync_metadata SET last_epg_success = last_epg_sync")
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_live_success INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_series_success INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE sync_metadata ADD COLUMN last_epg_success INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("UPDATE sync_metadata SET last_live_success = last_live_sync")
+                db.execSQL("UPDATE sync_metadata SET last_series_success = last_series_sync")
+                db.execSQL("UPDATE sync_metadata SET last_epg_success = last_epg_sync")
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_programs_provider_id_end_time_channel_id ON programs(provider_id, end_time, channel_id)"
                 )
                 // No FK-bearing rows added; only column additions and indexes.
@@ -1647,8 +1647,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
         }
 
         val MIGRATION_34_35 = object : Migration(34, 35) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS search_history (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -1660,16 +1660,16 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_search_history_content_scope_provider_id_used_at ON search_history(content_scope, provider_id, used_at)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_search_history_used_at ON search_history(used_at)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_search_history_provider_id ON search_history(provider_id)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS index_search_history_query_content_scope_provider_id ON search_history(query, content_scope, provider_id)"
                 )
                 // search_history has no FK columns; no FK check needed.
@@ -1677,12 +1677,12 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
         }
 
         val MIGRATION_35_36 = object : Migration(35, 36) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE channel_epg_mappings ADD COLUMN matched_at INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE channel_epg_mappings ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE channel_epg_mappings ADD COLUMN source TEXT")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE channel_epg_mappings ADD COLUMN matched_at INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE channel_epg_mappings ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE channel_epg_mappings ADD COLUMN source TEXT")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS program_reminders (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -1700,26 +1700,26 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_program_reminders_provider_id_remind_at ON program_reminders(provider_id, remind_at)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_program_reminders_is_dismissed_notified_at_remind_at ON program_reminders(is_dismissed, notified_at, remind_at)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_program_reminders_provider_id_channel_id_program_start_time ON program_reminders(provider_id, channel_id, program_start_time)"
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS index_program_reminders_provider_id_channel_id_program_title_program_start_time ON program_reminders(provider_id, channel_id, program_title, program_start_time)"
                 )
-                validateForeignKeys(database, "program_reminders")
+                validateForeignKeys(db, "program_reminders")
             }
         }
 
         val MIGRATION_24_25 = object : Migration(24, 25) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // ── epg_sources ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS epg_sources (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         name TEXT NOT NULL,
@@ -1733,10 +1733,10 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         updated_at INTEGER NOT NULL DEFAULT 0
                     )
                 """.trimIndent())
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_epg_sources_url ON epg_sources(url)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_epg_sources_url ON epg_sources(url)")
 
                 // ── provider_epg_sources ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS provider_epg_sources (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         provider_id INTEGER NOT NULL,
@@ -1747,11 +1747,11 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(epg_source_id) REFERENCES epg_sources(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_provider_epg_sources_provider_id_epg_source_id ON provider_epg_sources(provider_id, epg_source_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_provider_epg_sources_epg_source_id ON provider_epg_sources(epg_source_id)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_provider_epg_sources_provider_id_epg_source_id ON provider_epg_sources(provider_id, epg_source_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_provider_epg_sources_epg_source_id ON provider_epg_sources(epg_source_id)")
 
                 // ── epg_channels ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS epg_channels (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         epg_source_id INTEGER NOT NULL,
@@ -1762,12 +1762,12 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(epg_source_id) REFERENCES epg_sources(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_epg_channels_epg_source_id_xmltv_channel_id ON epg_channels(epg_source_id, xmltv_channel_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_epg_channels_epg_source_id ON epg_channels(epg_source_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_epg_channels_normalized_name ON epg_channels(normalized_name)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_epg_channels_epg_source_id_xmltv_channel_id ON epg_channels(epg_source_id, xmltv_channel_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_epg_channels_epg_source_id ON epg_channels(epg_source_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_epg_channels_normalized_name ON epg_channels(normalized_name)")
 
                 // ── epg_programmes ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS epg_programmes (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         epg_source_id INTEGER NOT NULL,
@@ -1785,13 +1785,13 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(epg_source_id) REFERENCES epg_sources(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_epg_programmes_epg_source_id_xmltv_channel_id_start_time ON epg_programmes(epg_source_id, xmltv_channel_id, start_time)")
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_epg_programmes_epg_source_id_xmltv_channel_id_start_time_end_time ON epg_programmes(epg_source_id, xmltv_channel_id, start_time, end_time)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_epg_programmes_epg_source_id ON epg_programmes(epg_source_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_epg_programmes_start_time ON epg_programmes(start_time)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_epg_programmes_epg_source_id_xmltv_channel_id_start_time ON epg_programmes(epg_source_id, xmltv_channel_id, start_time)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_epg_programmes_epg_source_id_xmltv_channel_id_start_time_end_time ON epg_programmes(epg_source_id, xmltv_channel_id, start_time, end_time)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_epg_programmes_epg_source_id ON epg_programmes(epg_source_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_epg_programmes_start_time ON epg_programmes(start_time)")
 
                 // ── channel_epg_mappings ──
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS channel_epg_mappings (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         provider_channel_id INTEGER NOT NULL,
@@ -1806,14 +1806,14 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                         FOREIGN KEY(provider_id) REFERENCES providers(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_channel_epg_mappings_provider_id_provider_channel_id ON channel_epg_mappings(provider_id, provider_channel_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_channel_epg_mappings_provider_id ON channel_epg_mappings(provider_id)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_channel_epg_mappings_provider_id_provider_channel_id ON channel_epg_mappings(provider_id, provider_channel_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_channel_epg_mappings_provider_id ON channel_epg_mappings(provider_id)")
             }
         }
 
         val MIGRATION_36_37 = object : Migration(36, 37) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS tmdb_identity (
                         tmdb_id INTEGER NOT NULL,
@@ -1825,9 +1825,9 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_tmdb_identity_content_type ON tmdb_identity(content_type)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_tmdb_identity_canonical_provider_id ON tmdb_identity(canonical_provider_id)")
-                database.execSQL(
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_tmdb_identity_content_type ON tmdb_identity(content_type)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_tmdb_identity_canonical_provider_id ON tmdb_identity(canonical_provider_id)")
+                db.execSQL(
                     """
                     INSERT OR REPLACE INTO tmdb_identity (tmdb_id, content_type, canonical_provider_id, first_seen_at)
                     SELECT tmdb_id, 'MOVIE', MIN(provider_id), 0
@@ -1836,7 +1836,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     GROUP BY tmdb_id
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT OR REPLACE INTO tmdb_identity (tmdb_id, content_type, canonical_provider_id, first_seen_at)
                     SELECT tmdb_id, 'SERIES', MIN(provider_id), 0
@@ -1845,26 +1845,26 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     GROUP BY tmdb_id
                     """.trimIndent()
                 )
-                validateForeignKeys(database, "tmdb_identity")
+                validateForeignKeys(db, "tmdb_identity")
             }
         }
 
         val MIGRATION_37_38 = object : Migration(37, 38) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE epg_sources ADD COLUMN etag TEXT DEFAULT NULL")
-                database.execSQL("ALTER TABLE epg_sources ADD COLUMN last_modified_header TEXT DEFAULT NULL")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE epg_sources ADD COLUMN etag TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE epg_sources ADD COLUMN last_modified_header TEXT DEFAULT NULL")
             }
         }
 
         val MIGRATION_38_39 = object : Migration(38, 39) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE providers ADD COLUMN stalker_mac_address TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE providers ADD COLUMN stalker_device_profile TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE providers ADD COLUMN stalker_device_timezone TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE providers ADD COLUMN stalker_device_locale TEXT NOT NULL DEFAULT ''")
-                database.execSQL("DROP INDEX IF EXISTS index_providers_server_url_username")
-                database.execSQL("DROP INDEX IF EXISTS index_providers_server_url_username_stalker_mac_address")
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE providers ADD COLUMN stalker_mac_address TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE providers ADD COLUMN stalker_device_profile TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE providers ADD COLUMN stalker_device_timezone TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE providers ADD COLUMN stalker_device_locale TEXT NOT NULL DEFAULT ''")
+                db.execSQL("DROP INDEX IF EXISTS index_providers_server_url_username")
+                db.execSQL("DROP INDEX IF EXISTS index_providers_server_url_username_stalker_mac_address")
+                db.execSQL(
                     """
                     CREATE UNIQUE INDEX IF NOT EXISTS index_providers_server_url_username_stalker_mac_address
                     ON providers(server_url, username, stalker_mac_address)
@@ -1882,16 +1882,16 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * once per sync, after each catalog transaction commits.
          */
         val MIGRATION_39_40 = object : Migration(39, 40) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("DROP TRIGGER IF EXISTS channels_ai")
-                database.execSQL("DROP TRIGGER IF EXISTS channels_ad")
-                database.execSQL("DROP TRIGGER IF EXISTS channels_au")
-                database.execSQL("DROP TRIGGER IF EXISTS movies_ai")
-                database.execSQL("DROP TRIGGER IF EXISTS movies_ad")
-                database.execSQL("DROP TRIGGER IF EXISTS movies_au")
-                database.execSQL("DROP TRIGGER IF EXISTS series_ai")
-                database.execSQL("DROP TRIGGER IF EXISTS series_ad")
-                database.execSQL("DROP TRIGGER IF EXISTS series_au")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TRIGGER IF EXISTS channels_ai")
+                db.execSQL("DROP TRIGGER IF EXISTS channels_ad")
+                db.execSQL("DROP TRIGGER IF EXISTS channels_au")
+                db.execSQL("DROP TRIGGER IF EXISTS movies_ai")
+                db.execSQL("DROP TRIGGER IF EXISTS movies_ad")
+                db.execSQL("DROP TRIGGER IF EXISTS movies_au")
+                db.execSQL("DROP TRIGGER IF EXISTS series_ai")
+                db.execSQL("DROP TRIGGER IF EXISTS series_ad")
+                db.execSQL("DROP TRIGGER IF EXISTS series_au")
             }
         }
 
@@ -1900,8 +1900,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * Null means the channel follows the global player default.
          */
         val MIGRATION_40_41 = object : Migration(40, 41) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE channel_preferences ADD COLUMN audio_video_offset_ms INTEGER DEFAULT NULL")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE channel_preferences ADD COLUMN audio_video_offset_ms INTEGER DEFAULT NULL")
             }
         }
 
@@ -1910,8 +1910,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * silently on a device so Auto mode can avoid repeating them.
          */
         val MIGRATION_41_42 = object : Migration(41, 42) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS playback_compatibility_records (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -1931,20 +1931,20 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE UNIQUE INDEX IF NOT EXISTS index_playback_compatibility_records_device_fingerprint_stream_type_video_mime_type_resolution_bucket_decoder_name_surface_type
                     ON playback_compatibility_records(device_fingerprint, stream_type, video_mime_type, resolution_bucket, decoder_name, surface_type)
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE INDEX IF NOT EXISTS index_playback_compatibility_records_device_fingerprint_stream_type_video_mime_type_resolution_bucket
                     ON playback_compatibility_records(device_fingerprint, stream_type, video_mime_type, resolution_bucket)
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_playback_compatibility_records_last_failed_at ON playback_compatibility_records(last_failed_at)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_playback_compatibility_records_last_succeeded_at ON playback_compatibility_records(last_succeeded_at)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_playback_compatibility_records_last_failed_at ON playback_compatibility_records(last_failed_at)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_playback_compatibility_records_last_succeeded_at ON playback_compatibility_records(last_succeeded_at)")
             }
         }
 
@@ -1953,9 +1953,9 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * series details can round-trip composite portal IDs.
          */
         val MIGRATION_42_43 = object : Migration(42, 43) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE series ADD COLUMN provider_series_id TEXT")
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE series ADD COLUMN provider_series_id TEXT")
+                db.execSQL(
                     "UPDATE series SET provider_series_id = CAST(series_id AS TEXT) WHERE provider_series_id IS NULL"
                 )
             }
@@ -1966,17 +1966,17 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * for on-demand Stalker paging while preserving existing complete caches.
          */
         val MIGRATION_43_44 = object : Migration(43, 44) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                addPagedHydrationColumns(database, "movie_category_hydration")
-                addPagedHydrationColumns(database, "series_category_hydration")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                addPagedHydrationColumns(db, "movie_category_hydration")
+                addPagedHydrationColumns(db, "series_category_hydration")
             }
 
-            private fun addPagedHydrationColumns(database: SupportSQLiteDatabase, tableName: String) {
-                database.execSQL("ALTER TABLE $tableName ADD COLUMN last_loaded_page INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE $tableName ADD COLUMN total_pages INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE $tableName ADD COLUMN is_complete INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE $tableName ADD COLUMN page_size INTEGER NOT NULL DEFAULT 0")
-                database.execSQL(
+            private fun addPagedHydrationColumns(db: SupportSQLiteDatabase, tableName: String) {
+                db.execSQL("ALTER TABLE $tableName ADD COLUMN last_loaded_page INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE $tableName ADD COLUMN total_pages INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE $tableName ADD COLUMN is_complete INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE $tableName ADD COLUMN page_size INTEGER NOT NULL DEFAULT 0")
+                db.execSQL(
                     """
                     UPDATE $tableName
                     SET last_loaded_page = CASE
@@ -2005,10 +2005,10 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * group scope key and deduping any pre-existing global favorite collisions.
          */
         val MIGRATION_44_45 = object : Migration(44, 45) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE favorites ADD COLUMN group_key INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("UPDATE favorites SET group_key = COALESCE(group_id, 0)")
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE favorites ADD COLUMN group_key INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("UPDATE favorites SET group_key = COALESCE(group_id, 0)")
+                db.execSQL(
                     """
                     UPDATE favorites
                     SET position = (
@@ -2037,7 +2037,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     DELETE FROM favorites
                     WHERE group_id IS NULL
@@ -2049,10 +2049,10 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS index_favorites_provider_id_content_id_content_type_group_key ON favorites(provider_id, content_id, content_type, group_key)"
                 )
-                validateForeignKeys(database, "favorites")
+                validateForeignKeys(db, "favorites")
             }
         }
 
@@ -2061,8 +2061,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * the raw provider ID and a non-null remote key used for staged apply matching.
          */
         val MIGRATION_45_46 = object : Migration(45, 46) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS series_import_stage_new (
                         session_id INTEGER NOT NULL,
@@ -2092,7 +2092,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT INTO series_import_stage_new (
                         session_id,
@@ -2144,11 +2144,11 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     FROM series_import_stage
                     """.trimIndent()
                 )
-                database.execSQL("DROP TABLE series_import_stage")
-                database.execSQL("ALTER TABLE series_import_stage_new RENAME TO series_import_stage")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_import_stage_provider_id ON series_import_stage(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_import_stage_session_id_provider_id ON series_import_stage(session_id, provider_id)")
-                validateForeignKeys(database, "series_import_stage")
+                db.execSQL("DROP TABLE series_import_stage")
+                db.execSQL("ALTER TABLE series_import_stage_new RENAME TO series_import_stage")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_import_stage_provider_id ON series_import_stage(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_import_stage_session_id_provider_id ON series_import_stage(session_id, provider_id)")
+                validateForeignKeys(db, "series_import_stage")
             }
         }
 
@@ -2157,17 +2157,17 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * category/rating sorts, and correlated playback-history filters avoid wide scans.
          */
         val MIGRATION_46_47 = object : Migration(46, 47) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_name_id ON movies(provider_id, name, id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_category_id_name_id ON movies(provider_id, category_id, name, id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_rating_name_id ON movies(provider_id, rating, name, id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_added_at_release_date_name_id ON movies(provider_id, added_at, release_date, name, id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_name_id ON series(provider_id, name, id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_category_id_name_id ON series(provider_id, category_id, name, id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_rating_name_id ON series(provider_id, rating, name, id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_last_modified_name_id ON series(provider_id, last_modified, name, id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_playback_history_provider_id_content_type_content_id ON playback_history(provider_id, content_type, content_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_playback_history_provider_id_content_type_last_watched_at ON playback_history(provider_id, content_type, last_watched_at)")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_name_id ON movies(provider_id, name, id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_category_id_name_id ON movies(provider_id, category_id, name, id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_rating_name_id ON movies(provider_id, rating, name, id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_movies_provider_id_added_at_release_date_name_id ON movies(provider_id, added_at, release_date, name, id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_name_id ON series(provider_id, name, id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_category_id_name_id ON series(provider_id, category_id, name, id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_rating_name_id ON series(provider_id, rating, name, id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_series_provider_id_last_modified_name_id ON series(provider_id, last_modified, name, id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_playback_history_provider_id_content_type_content_id ON playback_history(provider_id, content_type, content_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_playback_history_provider_id_content_type_last_watched_at ON playback_history(provider_id, content_type, last_watched_at)")
             }
         }
 
@@ -2177,15 +2177,15 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
          * the playable/detail tables that favorites and history already reference.
          */
         val MIGRATION_47_48 = object : Migration(47, 48) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE movies ADD COLUMN cache_state TEXT NOT NULL DEFAULT 'DETAIL_HYDRATED'")
-                database.execSQL("ALTER TABLE movies ADD COLUMN detail_hydrated_at INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE movies ADD COLUMN remote_stale_at INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE series ADD COLUMN cache_state TEXT NOT NULL DEFAULT 'DETAIL_HYDRATED'")
-                database.execSQL("ALTER TABLE series ADD COLUMN detail_hydrated_at INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE series ADD COLUMN remote_stale_at INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE movies ADD COLUMN cache_state TEXT NOT NULL DEFAULT 'DETAIL_HYDRATED'")
+                db.execSQL("ALTER TABLE movies ADD COLUMN detail_hydrated_at INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE movies ADD COLUMN remote_stale_at INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE series ADD COLUMN cache_state TEXT NOT NULL DEFAULT 'DETAIL_HYDRATED'")
+                db.execSQL("ALTER TABLE series ADD COLUMN detail_hydrated_at INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE series ADD COLUMN remote_stale_at INTEGER NOT NULL DEFAULT 0")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE movies
                     SET cache_state = 'SUMMARY_ONLY'
@@ -2198,7 +2198,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND tmdb_id IS NULL
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE series
                     SET cache_state = 'SUMMARY_ONLY'
@@ -2210,7 +2210,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                       AND tmdb_id IS NULL
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE movies
                     SET detail_hydrated_at = COALESCE(
@@ -2220,7 +2220,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     WHERE cache_state = 'DETAIL_HYDRATED'
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     UPDATE series
                     SET detail_hydrated_at = COALESCE(
@@ -2231,7 +2231,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS xtream_content_index (
                         provider_id INTEGER NOT NULL,
@@ -2257,14 +2257,14 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_content_type ON xtream_content_index(provider_id, content_type)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_content_type_category_id ON xtream_content_index(provider_id, content_type, category_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_content_type_name ON xtream_content_index(provider_id, content_type, name)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_content_type_local_content_id ON xtream_content_index(provider_id, content_type, local_content_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_indexed_at ON xtream_content_index(provider_id, indexed_at)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_stale_state ON xtream_content_index(stale_state)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_content_type ON xtream_content_index(provider_id, content_type)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_content_type_category_id ON xtream_content_index(provider_id, content_type, category_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_content_type_name ON xtream_content_index(provider_id, content_type, name)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_content_type_local_content_id ON xtream_content_index(provider_id, content_type, local_content_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_provider_id_indexed_at ON xtream_content_index(provider_id, indexed_at)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_content_index_stale_state ON xtream_content_index(stale_state)")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS xtream_index_jobs (
                         provider_id INTEGER NOT NULL,
@@ -2288,12 +2288,12 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_index_jobs_provider_id ON xtream_index_jobs(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_index_jobs_section ON xtream_index_jobs(section)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_index_jobs_state ON xtream_index_jobs(state)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_index_jobs_updated_at ON xtream_index_jobs(updated_at)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_index_jobs_provider_id ON xtream_index_jobs(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_index_jobs_section ON xtream_index_jobs(section)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_index_jobs_state ON xtream_index_jobs(state)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_index_jobs_updated_at ON xtream_index_jobs(updated_at)")
 
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT OR REPLACE INTO xtream_content_index (
                         provider_id, content_type, remote_id, local_content_id, name, category_id,
@@ -2324,7 +2324,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     WHERE p.type = 'XTREAM_CODES'
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT OR REPLACE INTO xtream_content_index (
                         provider_id, content_type, remote_id, local_content_id, name, category_id,
@@ -2355,7 +2355,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     WHERE p.type = 'XTREAM_CODES'
                     """.trimIndent()
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT OR REPLACE INTO xtream_content_index (
                         provider_id, content_type, remote_id, local_content_id, name, category_id,
@@ -2387,7 +2387,7 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT OR REPLACE INTO xtream_index_jobs (
                         provider_id, section, state, total_categories, completed_categories, next_category_index, failed_categories,
@@ -2477,20 +2477,20 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                validateForeignKeys(database, "xtream_content_index", "xtream_index_jobs")
+                validateForeignKeys(db, "xtream_content_index", "xtream_index_jobs")
             }
         }
 
         val MIGRATION_48_49 = object : Migration(48, 49) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE providers ADD COLUMN http_user_agent TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE providers ADD COLUMN http_headers TEXT NOT NULL DEFAULT ''")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE providers ADD COLUMN http_user_agent TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE providers ADD COLUMN http_headers TEXT NOT NULL DEFAULT ''")
             }
         }
 
         val MIGRATION_49_50 = object : Migration(49, 50) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS xtream_live_onboarding_state (
                         provider_id INTEGER NOT NULL,
@@ -2511,45 +2511,45 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_live_onboarding_state_provider_id ON xtream_live_onboarding_state(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_live_onboarding_state_phase ON xtream_live_onboarding_state(phase)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_live_onboarding_state_updated_at ON xtream_live_onboarding_state(updated_at)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_live_onboarding_state_staged_session_id ON xtream_live_onboarding_state(staged_session_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_live_onboarding_state_provider_id ON xtream_live_onboarding_state(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_live_onboarding_state_phase ON xtream_live_onboarding_state(phase)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_live_onboarding_state_updated_at ON xtream_live_onboarding_state(updated_at)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_xtream_live_onboarding_state_staged_session_id ON xtream_live_onboarding_state(staged_session_id)")
 
-                validateForeignKeys(database, "xtream_live_onboarding_state")
+                validateForeignKeys(db, "xtream_live_onboarding_state")
             }
         }
 
         val MIGRATION_50_51 = object : Migration(50, 51) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_tier TEXT")
-                database.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_batch_size INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_strategy TEXT")
-                database.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_low_memory INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_memory_class_mb INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_available_mem_mb INTEGER NOT NULL DEFAULT 0")
-                validateForeignKeys(database, "xtream_live_onboarding_state")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_tier TEXT")
+                db.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_batch_size INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_strategy TEXT")
+                db.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_low_memory INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_memory_class_mb INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE xtream_live_onboarding_state ADD COLUMN sync_profile_available_mem_mb INTEGER NOT NULL DEFAULT 0")
+                validateForeignKeys(db, "xtream_live_onboarding_state")
             }
         }
 
         val MIGRATION_51_52 = object : Migration(51, 52) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE providers ADD COLUMN xtream_live_sync_mode TEXT NOT NULL DEFAULT 'AUTO'")
-                validateForeignKeys(database, "providers")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE providers ADD COLUMN xtream_live_sync_mode TEXT NOT NULL DEFAULT 'AUTO'")
+                validateForeignKeys(db, "providers")
             }
         }
 
         val MIGRATION_52_53 = object : Migration(52, 53) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE programs ADD COLUMN subtitle TEXT")
-                database.execSQL("ALTER TABLE programs ADD COLUMN episode_info TEXT")
-                validateForeignKeys(database, "programs")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE programs ADD COLUMN subtitle TEXT")
+                db.execSQL("ALTER TABLE programs ADD COLUMN episode_info TEXT")
+                validateForeignKeys(db, "programs")
             }
         }
 
         val MIGRATION_53_54 = object : Migration(53, 54) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS local_media_libraries (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -2564,9 +2564,9 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_local_media_libraries_root_uri ON local_media_libraries(root_uri)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_libraries_enabled ON local_media_libraries(enabled)")
-                database.execSQL(
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_local_media_libraries_root_uri ON local_media_libraries(root_uri)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_libraries_enabled ON local_media_libraries(enabled)")
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS local_media_items (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -2595,12 +2595,12 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_library_id ON local_media_items(library_id)")
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_local_media_items_uri ON local_media_items(uri)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_media_kind ON local_media_items(media_kind)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_series_title_season_number_episode_number ON local_media_items(series_title, season_number, episode_number)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_sort_title ON local_media_items(sort_title)")
-                database.execSQL(
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_library_id ON local_media_items(library_id)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_local_media_items_uri ON local_media_items(uri)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_media_kind ON local_media_items(media_kind)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_series_title_season_number_episode_number ON local_media_items(series_title, season_number, episode_number)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_sort_title ON local_media_items(sort_title)")
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS local_media_channels (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -2614,9 +2614,9 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_channels_library_id ON local_media_channels(library_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_channels_enabled_sort_order ON local_media_channels(enabled, sort_order)")
-                database.execSQL(
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_channels_library_id ON local_media_channels(library_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_channels_enabled_sort_order ON local_media_channels(enabled, sort_order)")
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS local_media_programs (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -2633,10 +2633,9 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_programs_channel_id_start_time_ms ON local_media_programs(channel_id, start_time_ms)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_programs_media_item_id ON local_media_programs(media_item_id)")
-                validateForeignKeys(
-                    database,
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_programs_channel_id_start_time_ms ON local_media_programs(channel_id, start_time_ms)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_programs_media_item_id ON local_media_programs(media_item_id)")
+                validateForeignKeys(db,
                     "local_media_libraries",
                     "local_media_items",
                     "local_media_channels",
@@ -2646,16 +2645,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
         }
 
         val MIGRATION_54_55 = object : Migration(54, 55) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE local_media_items ADD COLUMN folder_path TEXT NOT NULL DEFAULT ''")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_local_media_items_folder_path ON local_media_items(folder_path)")
-                validateForeignKeys(database, "local_media_items")
-            }
-        }
-
-        val MIGRATION_55_56 = object : Migration(55, 56) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS adult_guide_cache_meta (
                         provider_id INTEGER NOT NULL,
@@ -2667,8 +2658,8 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_adult_guide_cache_meta_provider_id ON adult_guide_cache_meta(provider_id)")
-                database.execSQL(
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_adult_guide_cache_meta_provider_id ON adult_guide_cache_meta(provider_id)")
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS adult_guide_cache_categories (
                         provider_id INTEGER NOT NULL,
@@ -2682,9 +2673,9 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_categories_provider_id_playlist_fingerprint_position ON adult_guide_cache_categories(provider_id, playlist_fingerprint, position)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_categories_provider_id ON adult_guide_cache_categories(provider_id)")
-                database.execSQL(
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_categories_provider_id_playlist_fingerprint_position ON adult_guide_cache_categories(provider_id, playlist_fingerprint, position)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_categories_provider_id ON adult_guide_cache_categories(provider_id)")
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS adult_guide_cache_category_channels (
                         provider_id INTEGER NOT NULL,
@@ -2698,11 +2689,10 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_category_channels_provider_id_playlist_fingerprint_category_key_position ON adult_guide_cache_category_channels(provider_id, playlist_fingerprint, category_key, position)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_category_channels_provider_id ON adult_guide_cache_category_channels(provider_id)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_category_channels_channel_id ON adult_guide_cache_category_channels(channel_id)")
-                validateForeignKeys(
-                    database,
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_category_channels_provider_id_playlist_fingerprint_category_key_position ON adult_guide_cache_category_channels(provider_id, playlist_fingerprint, category_key, position)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_category_channels_provider_id ON adult_guide_cache_category_channels(provider_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_adult_guide_cache_category_channels_channel_id ON adult_guide_cache_category_channels(channel_id)")
+                validateForeignKeys(db,
                     "adult_guide_cache_meta",
                     "adult_guide_cache_categories",
                     "adult_guide_cache_category_channels"
@@ -2710,37 +2700,25 @@ abstract class AfterglowTVDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_55_56 = object : Migration(55, 56) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE local_media_libraries ADD COLUMN source_type TEXT NOT NULL DEFAULT 'DOCUMENT_TREE'")
+                db.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_host TEXT")
+                db.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_port INTEGER")
+                db.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_share TEXT")
+                db.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_path TEXT")
+                db.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_domain TEXT")
+                db.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_username TEXT")
+                db.execSQL("ALTER TABLE local_media_libraries ADD COLUMN smb_password TEXT")
+                validateForeignKeys(db, "local_media_libraries")
+            }
+        }
+
         val MIGRATION_56_57 = object : Migration(56, 57) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.addColumnIfMissing("local_media_libraries", "source_type", "TEXT NOT NULL DEFAULT 'DOCUMENT_TREE'")
-                database.addColumnIfMissing("local_media_libraries", "smb_host", "TEXT")
-                database.addColumnIfMissing("local_media_libraries", "smb_port", "INTEGER")
-                database.addColumnIfMissing("local_media_libraries", "smb_share", "TEXT")
-                database.addColumnIfMissing("local_media_libraries", "smb_path", "TEXT")
-                database.addColumnIfMissing("local_media_libraries", "smb_domain", "TEXT")
-                database.addColumnIfMissing("local_media_libraries", "smb_username", "TEXT")
-                database.addColumnIfMissing("local_media_libraries", "smb_password", "TEXT")
-                validateForeignKeys(database, "local_media_libraries")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE providers ADD COLUMN m3u_playlist_kind TEXT NOT NULL DEFAULT 'LIVE'")
+                validateForeignKeys(db, "providers")
             }
         }
-
-        private fun SupportSQLiteDatabase.addColumnIfMissing(
-            tableName: String,
-            columnName: String,
-            columnDefinition: String
-        ) {
-            if (!hasColumn(tableName, columnName)) {
-                execSQL("ALTER TABLE $tableName ADD COLUMN $columnName $columnDefinition")
-            }
-        }
-
-        private fun SupportSQLiteDatabase.hasColumn(tableName: String, columnName: String): Boolean =
-            query("PRAGMA table_info($tableName)").use { cursor ->
-                val nameIndex = cursor.getColumnIndex("name").takeIf { it >= 0 } ?: 1
-                while (cursor.moveToNext()) {
-                    if (cursor.getString(nameIndex) == columnName) return true
-                }
-                false
-            }
     }
 }

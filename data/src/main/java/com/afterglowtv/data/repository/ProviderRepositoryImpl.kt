@@ -31,7 +31,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -52,8 +51,6 @@ class ProviderRepositoryImpl @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
     private val syncManager: SyncManager,
     private val syncMetadataRepository: SyncMetadataRepository,
-    private val epgSourceDao: EpgSourceDao,
-    private val providerEpgSourceDao: ProviderEpgSourceDao,
     private val transactionRunner: DatabaseTransactionRunner,
     private val recordingAlarmScheduler: RecordingAlarmScheduler,
     private val programReminderAlarmScheduler: ProgramReminderAlarmScheduler
@@ -67,20 +64,10 @@ class ProviderRepositoryImpl @Inject constructor(
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun getProviders(): Flow<List<Provider>> =
-        providerDao.getAll()
-            .map { entities -> entities.map { it.toPublicDomain() } }
-            .combine(preferencesRepository.showBuiltInPlaylists) { providers, showBuiltInPlaylists ->
-                providers.filter { provider ->
-                    showBuiltInPlaylists || !BuiltInPlaylists.isBuiltInProvider(provider)
-                }
-            }
+        providerDao.getAll().map { entities -> entities.map { it.toPublicDomain() } }
 
     override fun getActiveProvider(): Flow<Provider?> =
-        providerDao.getActive()
-            .map { it?.toPublicDomain() }
-            .combine(preferencesRepository.showBuiltInPlaylists) { provider, showBuiltInPlaylists ->
-                provider?.takeIf { showBuiltInPlaylists || !BuiltInPlaylists.isBuiltInProvider(it) }
-            }
+        providerDao.getActive().map { it?.toPublicDomain() }
 
     override suspend fun getProvider(id: Long): Provider? =
         providerDao.getById(id)?.toPublicDomain()
@@ -102,13 +89,11 @@ class ProviderRepositoryImpl @Inject constructor(
     override suspend fun deleteProvider(id: Long): Result<Unit> = try {
         val recordingRunIds = recordingRunDao.getIdsByProvider(id)
         val reminderIds = programReminderDao.getIdsByProvider(id)
-        val ownedEpgSourceIds = playlistOwnedEpgSourceIds(id)
         transactionRunner.inTransaction {
             // ProgramEntity still has no provider FK, so it requires explicit cleanup.
             programDao.deleteByProvider(id)
             providerDao.delete(id)
         }
-        deleteUnassignedEpgSources(ownedEpgSourceIds)
         recordingRunIds.forEach { runId ->
             runPostDeleteCleanup("recording alarm $runId") {
                 recordingAlarmScheduler.cancel(runId)
@@ -125,24 +110,6 @@ class ProviderRepositoryImpl @Inject constructor(
         Result.success(Unit)
     } catch (e: Exception) {
         Result.error("Failed to delete provider: ${e.message}", e)
-    }
-
-    private suspend fun playlistOwnedEpgSourceIds(providerId: Long): List<Long> {
-        val provider = providerDao.getById(providerId) ?: return emptyList()
-        val ownedUrl = provider.epgUrl.trim().takeIf { it.isNotBlank() } ?: return emptyList()
-        return providerEpgSourceDao.getForProviderSync(providerId)
-            .mapNotNull { assignment ->
-                val source = epgSourceDao.getById(assignment.epgSourceId) ?: return@mapNotNull null
-                assignment.epgSourceId.takeIf { source.url.trim() == ownedUrl }
-            }
-    }
-
-    private suspend fun deleteUnassignedEpgSources(sourceIds: List<Long>) {
-        sourceIds.distinct().forEach { sourceId ->
-            if (providerEpgSourceDao.getProviderIdsForSourceSync(sourceId).isEmpty()) {
-                epgSourceDao.delete(sourceId)
-            }
-        }
     }
 
     private inline fun runPostDeleteCleanup(step: String, block: () -> Unit) {
@@ -277,6 +244,7 @@ class ProviderRepositoryImpl @Inject constructor(
         httpHeaders: String,
         epgSyncMode: ProviderEpgSyncMode,
         m3uVodClassificationEnabled: Boolean,
+        m3uPlaylistKind: ProviderM3uPlaylistKind,
         onProgress: ((String) -> Unit)?,
         id: Long?
     ): Result<Provider> = try {
@@ -314,7 +282,8 @@ class ProviderRepositoryImpl @Inject constructor(
                 httpUserAgent = httpUserAgent,
                 httpHeaders = httpHeaders,
                 epgSyncMode = epgSyncMode,
-                m3uVodClassificationEnabled = m3uVodClassificationEnabled,
+                m3uVodClassificationEnabled = m3uVodClassificationEnabled || m3uPlaylistKind == ProviderM3uPlaylistKind.VOD,
+                m3uPlaylistKind = m3uPlaylistKind,
                 isActive = false,
                 status = ProviderStatus.PARTIAL,
                 lastSyncedAt = 0
@@ -330,7 +299,8 @@ class ProviderRepositoryImpl @Inject constructor(
                 httpUserAgent = httpUserAgent,
                 httpHeaders = httpHeaders,
                 epgSyncMode = epgSyncMode,
-                m3uVodClassificationEnabled = m3uVodClassificationEnabled,
+                m3uVodClassificationEnabled = m3uVodClassificationEnabled || m3uPlaylistKind == ProviderM3uPlaylistKind.VOD,
+                m3uPlaylistKind = m3uPlaylistKind,
                 isActive = false,
                 status = ProviderStatus.PARTIAL
             )
@@ -341,7 +311,8 @@ class ProviderRepositoryImpl @Inject constructor(
         handleInitialOnboardingSync(
             providerData = providerData,
             syncResult = syncManager.sync(providerData.id, force = false, onProgress = onProgress),
-            syncFailurePrefix = "Playlist saved, but initial sync failed. The provider was saved and can be retried from Settings"
+            syncFailurePrefix = "Playlist saved, but initial sync failed. The provider was saved and can be retried from Settings",
+            activateLiveProvider = m3uPlaylistKind != ProviderM3uPlaylistKind.VOD
         )
     } catch (e: Exception) {
         Result.error("Failed to add M3U provider: ${e.message}", e)
@@ -452,7 +423,8 @@ class ProviderRepositoryImpl @Inject constructor(
     private suspend fun handleInitialOnboardingSync(
         providerData: Provider,
         syncResult: Result<Unit>,
-        syncFailurePrefix: String
+        syncFailurePrefix: String,
+        activateLiveProvider: Boolean = true
     ): Result<Provider> = when (syncResult) {
         is Result.Success -> {
             val finalStatus = if (syncManager.currentSyncState(providerData.id) is SyncState.Partial) {
@@ -460,6 +432,15 @@ class ProviderRepositoryImpl @Inject constructor(
             } else {
                 ProviderStatus.ACTIVE
             }
+            if (!activateLiveProvider) {
+                updateProviderSyncStatus(
+                    providerData.id,
+                    finalStatus,
+                    lastSyncedAt = System.currentTimeMillis(),
+                    isActive = false
+                )
+                Result.success(providerData.copy(status = finalStatus, isActive = false))
+            } else
             if (!hasUsableLiveCatalogForActivation(providerData.id, providerData.type, channelDao)) {
                 updateProviderSyncStatus(
                     providerData.id,

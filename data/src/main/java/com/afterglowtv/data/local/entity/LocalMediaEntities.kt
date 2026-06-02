@@ -50,7 +50,6 @@ data class LocalMediaLibraryEntity(
         Index(value = ["library_id"]),
         Index(value = ["uri"], unique = true),
         Index(value = ["media_kind"]),
-        Index(value = ["folder_path"]),
         Index(value = ["series_title", "season_number", "episode_number"]),
         Index(value = ["sort_title"])
     ]
@@ -63,7 +62,6 @@ data class LocalMediaItemEntity(
     @ColumnInfo(name = "display_name") val displayName: String,
     val title: String,
     @ColumnInfo(name = "sort_title") val sortTitle: String,
-    @ColumnInfo(name = "folder_path") val folderPath: String = "",
     @ColumnInfo(name = "media_kind") val mediaKind: LocalMediaKind = LocalMediaKind.UNKNOWN,
     @ColumnInfo(name = "mime_type") val mimeType: String? = null,
     @ColumnInfo(name = "duration_ms") val durationMs: Long? = null,

@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+
 package com.afterglowtv.data.repository
 
 import com.afterglowtv.data.local.dao.CombinedM3uProfileDao
@@ -16,6 +18,7 @@ import com.afterglowtv.domain.model.CombinedCategoryBinding
 import com.afterglowtv.domain.model.CombinedM3uProfile
 import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.repository.ChannelRepository
@@ -72,8 +75,8 @@ class CombinedM3uRepositoryImpl @Inject constructor(
         val providers = distinctProviderIds.mapNotNull { providerId ->
             providersById[providerId]?.toDomain()
         }
-        if (providers.size != distinctProviderIds.size || providers.any { it.type != ProviderType.M3U }) {
-            return Result.error("Combined profiles support M3U providers only.")
+        if (providers.size != distinctProviderIds.size || providers.any { it.type != ProviderType.M3U || it.m3uPlaylistKind != ProviderM3uPlaylistKind.LIVE }) {
+            return Result.error("Combined profiles support Live TV M3U providers only.")
         }
         val now = System.currentTimeMillis()
         val profileId = profileDao.insert(
@@ -132,8 +135,8 @@ class CombinedM3uRepositoryImpl @Inject constructor(
         val profile = profileDao.getById(profileId) ?: return Result.error("Combined profile not found.")
         val provider = providerDao.getById(providerId)?.toDomain()
             ?: return Result.error("Provider not found.")
-        if (provider.type != ProviderType.M3U) {
-            return Result.error("Only M3U providers can be added to a combined profile.")
+        if (provider.type != ProviderType.M3U || provider.m3uPlaylistKind != ProviderM3uPlaylistKind.LIVE) {
+            return Result.error("Only Live TV M3U providers can be added to a combined profile.")
         }
         if (memberDao.getMember(profileId, providerId) != null) {
             return Result.success(Unit)
@@ -205,7 +208,7 @@ class CombinedM3uRepositoryImpl @Inject constructor(
     override fun getAvailableM3uProviders(): Flow<List<Provider>> =
         providerDao.getAll().map { providers ->
             providers.map { it.toDomain().copy(password = "") }
-                .filter { it.type == ProviderType.M3U }
+                .filter { it.type == ProviderType.M3U && it.m3uPlaylistKind == ProviderM3uPlaylistKind.LIVE }
         }
 
     override fun getActiveLiveSource(): Flow<ActiveLiveSource?> =
@@ -260,24 +263,20 @@ class CombinedM3uRepositoryImpl @Inject constructor(
                         channelRepository.getCategories(member.providerId),
                         preferencesRepository.getHiddenCategoryIds(member.providerId, ContentType.LIVE)
                     ) { categories, hiddenCategoryIds ->
-                        Triple(member, categories, hiddenCategoryIds)
+                        CombinedCategoryDependencies(member, categories, hiddenCategoryIds)
                     }
                 }
-                combine(categoryFlows) { arrays ->
-                    arrays.toList()
-                        .map { it as Triple<*, *, *> }
-                        .flatMap { triple ->
-                            val member = triple.first as com.afterglowtv.domain.model.CombinedM3uProfileMember
-                            val categories = triple.second as List<Category>
-                            val hiddenCategoryIds = triple.third as Set<Long>
-                            categories
+                combine(categoryFlows) { dependencies ->
+                    dependencies.toList()
+                        .flatMap { dependency ->
+                            dependency.categories
                                 .filter {
                                     !it.isVirtual &&
                                         it.id != com.afterglowtv.domain.repository.ChannelRepository.ALL_CHANNELS_ID &&
-                                        it.id !in hiddenCategoryIds
+                                        it.id !in dependency.hiddenCategoryIds
                                 }
                                 .map { category ->
-                                    Triple(member, category, normalizeCategoryKey(category.name))
+                                    Triple(dependency.member, category, normalizeCategoryKey(category.name))
                                 }
                         }
                         .groupBy { it.third }
@@ -340,15 +339,13 @@ class CombinedM3uRepositoryImpl @Inject constructor(
                     }
                     baseFlow.map { channels ->
                         val priority = enabledProviders[binding.providerId]?.priority ?: Int.MAX_VALUE
-                        priority to channels
+                        CombinedChannelDependencies(priority, channels)
                     }
                 }
-                combine(flows) { arrays ->
-                    arrays.toList()
-                        .map { it as Pair<Int, List<Channel>> }
-                        .sortedBy { it.first }
-                        .flatMap { it.second }
-                        .let(::dedupeCombinedChannels)
+                combine(flows) { dependencies ->
+                    dependencies.toList()
+                        .sortedBy { it.priority }
+                        .flatMap { it.channels }
                 }
             }
         }
@@ -367,30 +364,13 @@ class CombinedM3uRepositoryImpl @Inject constructor(
 
 }
 
-internal fun dedupeCombinedChannels(channels: List<Channel>): List<Channel> {
-    val seenKeys = mutableSetOf<String>()
-    return channels.filter { channel ->
-        seenKeys.add(channel.combinedDedupeKey())
-    }
-}
+private data class CombinedCategoryDependencies(
+    val member: com.afterglowtv.domain.model.CombinedM3uProfileMember,
+    val categories: List<Category>,
+    val hiddenCategoryIds: Set<Long>
+)
 
-private fun Channel.combinedDedupeKey(): String {
-    val normalizedStreamUrl = streamUrl.trim()
-    if (normalizedStreamUrl.isNotBlank()) {
-        return "url:$normalizedStreamUrl"
-    }
-    val normalizedName = normalizeCombinedDedupeText(canonicalName.ifBlank { name })
-    if (normalizedName.isBlank()) {
-        return "channel:$providerId:$id"
-    }
-    val normalizedGroup = normalizeCombinedDedupeText(categoryName ?: groupTitle)
-    return "fallback:$normalizedName:$normalizedGroup"
-}
-
-private fun normalizeCombinedDedupeText(value: String?): String =
-    value
-        .orEmpty()
-        .lowercase(Locale.ROOT)
-        .replace(Regex("""[^a-z0-9]+"""), " ")
-        .replace(Regex("""\s+"""), " ")
-        .trim()
+private data class CombinedChannelDependencies(
+    val priority: Int,
+    val channels: List<Channel>
+)

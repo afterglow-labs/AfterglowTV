@@ -30,6 +30,7 @@ import com.afterglowtv.data.security.CredentialCrypto
 import com.afterglowtv.domain.model.SyncState
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.SyncMetadata
@@ -71,6 +72,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import java.util.zip.GZIPOutputStream
@@ -1733,6 +1735,39 @@ class SyncManagerTest {
     }
 
     @Test
+    fun `sync_m3u_vodPlaylist_imports_all_entries_as_movies`() = runTest {
+        val playlist = tempFolder.newFile("vod-playlist.m3u")
+        playlist.writeText(
+            """
+            #EXTM3U
+            #EXTINF:-1 group-title="XXX",Clip One
+            https://cdn.example.com/stream/one
+            #EXTINF:-1 group-title="Studio",Clip Two
+            https://cdn.example.com/stream/two
+            """.trimIndent()
+        )
+        val url = playlist.toURI().toString()
+        val provider = sampleProvider(ProviderType.M3U).copy(
+            serverUrl = url,
+            m3uUrl = url,
+            epgUrl = "",
+            m3uVodClassificationEnabled = true,
+            m3uPlaylistKind = ProviderM3uPlaylistKind.VOD
+        )
+        val mgr = buildManager(providerType = ProviderType.M3U, providerEntity = provider)
+
+        val result = mgr.sync(1L, force = true)
+        advanceUntilIdle()
+
+        if (result is Result.Error) {
+            error(result.message)
+        }
+        assertThat(result.isSuccess).isTrue()
+        verify(catalogSyncDao, never()).insertChannelStages(any())
+        verify(catalogSyncDao, atLeastOnce()).insertMovieStages(any())
+    }
+
+    @Test
     fun `sync_m3u_gzipFileImport_succeeds`() = runTest {
         val gzFile = tempFolder.newFile("playlist.m3u.gz")
         GZIPOutputStream(gzFile.outputStream()).bufferedWriter(Charsets.UTF_8).use { writer ->
@@ -1752,45 +1787,6 @@ class SyncManagerTest {
         }
         assertThat(result.isSuccess).isTrue()
         verify(catalogSyncDao, atLeastOnce()).insertChannelStages(any())
-    }
-
-    @Test
-    fun `sync_m3u_mixedPlaylist_keeps_explicit_vod_out_of_live_tv`() = runTest {
-        val playlist = tempFolder.newFile("mixed-vod-live.m3u")
-        playlist.writeText(
-            """
-            #EXTM3U
-            #EXTINF:-1 group-title="USA Premium",US News
-            https://live.example.com/news.ts
-            #EXTINF:-1 group-title="XXX",Adult Live Loop
-            https://live.example.com/adult-loop.ts
-            #EXTINF:-1 group-title="Movie VOD",Strange Things H265
-            https://vod.example.com/movie/user/pass/strange-things-h265
-            #EXTINF:-1 group-title="TV VOD",Episode One
-            https://vod.example.com/series/user/pass/episode-one
-            """.trimIndent()
-        )
-        val provider = sampleProvider(ProviderType.M3U).copy(
-            serverUrl = playlist.toURI().toString(),
-            m3uUrl = playlist.toURI().toString(),
-            m3uVodClassificationEnabled = false
-        )
-        val mgr = buildManager(providerType = ProviderType.M3U, providerEntity = provider)
-
-        val result = mgr.sync(1L, force = true)
-        advanceUntilIdle()
-
-        if (result is Result.Error) {
-            error(result.message)
-        }
-        assertThat(result.isSuccess).isTrue()
-        val insertedChannels = argumentCaptor<List<com.afterglowtv.data.local.entity.ChannelImportStageEntity>>()
-        val insertedMovies = argumentCaptor<List<com.afterglowtv.data.local.entity.MovieImportStageEntity>>()
-        verify(catalogSyncDao, atLeastOnce()).insertChannelStages(insertedChannels.capture())
-        verify(catalogSyncDao, atLeastOnce()).insertMovieStages(insertedMovies.capture())
-
-        assertThat(insertedChannels.allValues.flatten().map { it.categoryName }).containsExactly("USA Premium", "XXX")
-        assertThat(insertedMovies.allValues.flatten().map { it.categoryName }).containsExactly("Movie VOD", "TV VOD")
     }
 
     @Test

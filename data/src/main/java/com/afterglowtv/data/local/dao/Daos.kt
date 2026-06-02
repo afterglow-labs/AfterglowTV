@@ -1,6 +1,7 @@
 package com.afterglowtv.data.local.dao
 
 import androidx.room.*
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.afterglowtv.data.local.entity.*
 import kotlinx.coroutines.flow.Flow
 
@@ -759,6 +760,12 @@ interface MovieDao {
     @Query("SELECT * FROM movies WHERE provider_id = :providerId ORDER BY name ASC")
     fun getByProvider(providerId: Long): Flow<List<MovieBrowseEntity>>
 
+    @RawQuery(observedEntities = [MovieEntity::class, FavoriteEntity::class, PlaybackHistoryEntity::class])
+    fun getAdultBrowsePage(query: SupportSQLiteQuery): Flow<List<MovieBrowseEntity>>
+
+    @RawQuery(observedEntities = [MovieEntity::class, FavoriteEntity::class, PlaybackHistoryEntity::class])
+    fun getAdultBrowseCount(query: SupportSQLiteQuery): Flow<Int>
+
     /** SQL-level parental filter — avoids loading protected items into memory. */
     @Query("SELECT * FROM movies WHERE provider_id = :providerId AND is_user_protected = 0 ORDER BY name ASC")
     fun getByProviderUnprotected(providerId: Long): Flow<List<MovieBrowseEntity>>
@@ -1430,6 +1437,44 @@ interface MovieDao {
         """
     )
     suspend fun getVodEnrichmentCandidates(providerId: Long, limit: Int, staleBefore: Long): List<MovieEntity>
+
+    @Query(
+        """
+        SELECT * FROM movies
+        WHERE provider_id = :providerId
+          AND (
+              cache_state = 'SUMMARY_ONLY'
+              OR detail_hydrated_at <= 0
+              OR detail_hydrated_at < :staleBefore
+          )
+          AND (
+              COALESCE(poster_url, '') = ''
+              OR COALESCE(backdrop_url, '') = ''
+              OR COALESCE(genre, '') = ''
+              OR COALESCE(year, '') = ''
+              OR COALESCE(rating, 0) <= 0
+          )
+          AND (
+              is_adult = 1
+              OR LOWER(COALESCE(category_name, '')) LIKE '%xxx%'
+              OR LOWER(COALESCE(category_name, '')) LIKE '%adult%'
+              OR LOWER(COALESCE(category_name, '')) LIKE '%18%'
+              OR LOWER(COALESCE(category_name, '')) LIKE '%porn%'
+              OR LOWER(COALESCE(name, '')) LIKE '%xxx%'
+              OR LOWER(COALESCE(name, '')) LIKE '%adult%'
+              OR LOWER(COALESCE(name, '')) LIKE '%18%'
+              OR LOWER(COALESCE(name, '')) LIKE '%porn%'
+          )
+        ORDER BY
+          CASE WHEN COALESCE(poster_url, '') = '' THEN 0 ELSE 1 END,
+          last_watched_at DESC,
+          added_at DESC,
+          name ASC,
+          id ASC
+        LIMIT :limit
+        """
+    )
+    suspend fun getAdultVodEnrichmentCandidates(providerId: Long, limit: Int, staleBefore: Long): List<MovieEntity>
 
     @Query("SELECT tmdb_id FROM movies WHERE provider_id = :providerId AND tmdb_id IS NOT NULL")
     suspend fun getTmdbIdsByProvider(providerId: Long): List<TmdbIdMapping>
@@ -2417,6 +2462,43 @@ interface SeriesDao {
         """
     )
     suspend fun getVodEnrichmentCandidates(providerId: Long, limit: Int, staleBefore: Long): List<SeriesEntity>
+
+    @Query(
+        """
+        SELECT * FROM series
+        WHERE provider_id = :providerId
+          AND (
+              cache_state = 'SUMMARY_ONLY'
+              OR detail_hydrated_at <= 0
+              OR detail_hydrated_at < :staleBefore
+          )
+          AND (
+              COALESCE(poster_url, '') = ''
+              OR COALESCE(backdrop_url, '') = ''
+              OR COALESCE(genre, '') = ''
+              OR COALESCE(release_date, '') = ''
+              OR COALESCE(rating, 0) <= 0
+          )
+          AND (
+              is_adult = 1
+              OR LOWER(COALESCE(category_name, '')) LIKE '%xxx%'
+              OR LOWER(COALESCE(category_name, '')) LIKE '%adult%'
+              OR LOWER(COALESCE(category_name, '')) LIKE '%18%'
+              OR LOWER(COALESCE(category_name, '')) LIKE '%porn%'
+              OR LOWER(COALESCE(name, '')) LIKE '%xxx%'
+              OR LOWER(COALESCE(name, '')) LIKE '%adult%'
+              OR LOWER(COALESCE(name, '')) LIKE '%18%'
+              OR LOWER(COALESCE(name, '')) LIKE '%porn%'
+          )
+        ORDER BY
+          CASE WHEN COALESCE(poster_url, '') = '' THEN 0 ELSE 1 END,
+          last_modified DESC,
+          name ASC,
+          id ASC
+        LIMIT :limit
+        """
+    )
+    suspend fun getAdultVodEnrichmentCandidates(providerId: Long, limit: Int, staleBefore: Long): List<SeriesEntity>
 
     @Query("SELECT tmdb_id FROM series WHERE provider_id = :providerId AND tmdb_id IS NOT NULL")
     suspend fun getTmdbIdsByProvider(providerId: Long): List<TmdbIdMapping>

@@ -7,14 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Switch
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,6 +18,8 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
+import com.afterglowtv.app.navigation.StartupDestination
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.model.VodViewMode
 import com.afterglowtv.app.ui.theme.OnBackground
@@ -62,7 +58,12 @@ internal fun LazyListScope.settingsBrowsingSection(
         )
         ClickableSettingsRow(
             label = stringResource(R.string.settings_startup_destination),
-            value = stringResource(uiState.startupDestination.labelResId),
+            value = stringResource(
+                StartupDestination.visibleOrDefault(
+                    destination = uiState.startupDestination,
+                    developerModeEnabled = uiState.developerModeEnabled
+                ).labelResId
+            ),
             onClick = { onShowStartupDestinationDialogChange(true) }
         )
         TvClickableSurface(
@@ -170,50 +171,7 @@ internal fun LazyListScope.settingsBrowsingSection(
             value = guideDefaultCategoryLabel,
             onClick = { onShowGuideDefaultCategoryDialogChange(true) }
         )
-        if (uiState.developerModeEnabled) {
-            var showAdultTabLabelDialog by rememberSaveable { mutableStateOf(false) }
-            var pendingAdultTabLabel by rememberSaveable(uiState.adultGuideTabLabel) {
-                mutableStateOf(uiState.adultGuideTabLabel)
-            }
-            if (showAdultTabLabelDialog) {
-                AlertDialog(
-                    onDismissRequest = { showAdultTabLabelDialog = false },
-                    title = { Text(text = stringResource(R.string.settings_adult_guide_tab_label_dialog_title)) },
-                    text = {
-                        EpgSourceTextField(
-                            value = pendingAdultTabLabel,
-                            onValueChange = { pendingAdultTabLabel = it },
-                            placeholder = stringResource(R.string.nav_adult_guide)
-                        )
-                    },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                viewModel.setAdultGuideTabLabel(pendingAdultTabLabel)
-                                showAdultTabLabelDialog = false
-                            }
-                        ) {
-                            Text(text = stringResource(R.string.settings_save), color = Primary)
-                        }
-                    },
-                    dismissButton = {
-                        Row {
-                            TextButton(
-                                onClick = {
-                                    viewModel.setAdultGuideTabLabel("")
-                                    pendingAdultTabLabel = ""
-                                    showAdultTabLabelDialog = false
-                                }
-                            ) {
-                                Text(text = stringResource(R.string.settings_adult_guide_tab_label_reset), color = OnSurface)
-                            }
-                            TextButton(onClick = { showAdultTabLabelDialog = false }) {
-                                Text(text = stringResource(R.string.settings_cancel), color = OnSurface)
-                            }
-                        }
-                    }
-                )
-            }
+        if (StorePolicy.current.showAdultSurfaces && uiState.developerModeEnabled) {
             SwitchSettingsRow(
                 label = stringResource(R.string.settings_show_adult_guide_tab),
                 value = stringResource(
@@ -222,15 +180,6 @@ internal fun LazyListScope.settingsBrowsingSection(
                 ),
                 checked = uiState.showAdultGuideTab,
                 onCheckedChange = viewModel::setShowAdultGuideTab
-            )
-            ClickableSettingsRow(
-                label = stringResource(R.string.settings_adult_guide_tab_label),
-                value = uiState.adultGuideTabLabel,
-                onClick = {
-                    pendingAdultTabLabel = uiState.adultGuideTabLabel
-                    showAdultTabLabelDialog = true
-                },
-                enabled = uiState.showAdultGuideTab
             )
         }
         ClickableSettingsRow(
@@ -261,12 +210,12 @@ internal fun LazyListScope.settingsBrowsingSection(
             onClick = { onCategorySortDialogTypeChange(ContentType.LIVE.name) }
         )
         ClickableSettingsRow(
-            label = stringResource(R.string.settings_category_sort_movies),
+            label = stringResource(R.string.settings_category_sort_vod_movies),
             value = formatCategorySortModeLabel(uiState.categorySortModes[ContentType.MOVIE] ?: CategorySortMode.DEFAULT, context),
             onClick = { onCategorySortDialogTypeChange(ContentType.MOVIE.name) }
         )
         ClickableSettingsRow(
-            label = stringResource(R.string.settings_category_sort_series),
+            label = stringResource(R.string.settings_category_sort_vod_tv),
             value = formatCategorySortModeLabel(uiState.categorySortModes[ContentType.SERIES] ?: CategorySortMode.DEFAULT, context),
             onClick = { onCategorySortDialogTypeChange(ContentType.SERIES.name) }
         )

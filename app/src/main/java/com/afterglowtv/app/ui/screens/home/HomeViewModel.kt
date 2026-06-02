@@ -4,20 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.di.AuxiliaryPlayerEngine
 import com.afterglowtv.app.player.LivePreviewHandoffManager
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.tvinput.TvInputChannelSyncManager
 import com.afterglowtv.app.ui.model.AdultGuideCategory
 import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
 import com.afterglowtv.app.ui.model.adultGuideCategoryId
-import com.afterglowtv.app.ui.model.filterAdultGuideCategoriesForHiddenIds
-import com.afterglowtv.app.ui.model.isAdultGuideGeneratedCategoryId
 import com.afterglowtv.app.ui.model.adultGuidePlaylistFingerprint
 import com.afterglowtv.app.ui.screens.multiview.MultiViewManager
 import com.afterglowtv.app.ui.model.applyProviderCategoryDisplayPreferences
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
 import com.afterglowtv.app.ui.model.guideLookupKey
-import com.afterglowtv.app.ui.model.isAdultGuideCategory
 import com.afterglowtv.app.ui.model.isAdultGuideChannel
 import com.afterglowtv.app.ui.model.isExplicitAdultGuideChannel
+import com.afterglowtv.app.ui.model.isLikelyAdultGuideCategory
 import com.afterglowtv.app.ui.model.LiveTvChannelMode
 import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.data.preferences.PreferencesRepository
@@ -36,6 +35,8 @@ import com.afterglowtv.domain.model.Favorite
 import com.afterglowtv.domain.model.PlaybackHistory
 import com.afterglowtv.domain.model.Program
 import com.afterglowtv.domain.model.Provider
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
+import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.model.StreamInfo
@@ -66,6 +67,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
@@ -167,7 +169,7 @@ class HomeViewModel @Inject constructor(
     private var previewPlayerEngine: PlayerEngine? = null
     private var previewSessionVersion: Long = 0L
     private var combinedCategoriesById: Map<Long, CombinedCategory> = emptyMap()
-    private var liveTvSourceCategoriesById: Map<Long, Category> = emptyMap()
+    private var liveCategoryLookupById: Map<Long, Category> = emptyMap()
     private var adultGuideChannelIdsByCategoryId: Map<Long, List<Long>> = emptyMap()
 
     init {
@@ -189,14 +191,24 @@ class HomeViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            combine(
-                combinedM3uRepository.getActiveLiveSource(),
-                providerRepository.getActiveProvider()
-            ) { activeSource, activeProvider ->
-                Pair(
-                    activeSource ?: activeProvider?.id?.let { ActiveLiveSource.ProviderSource(it) },
-                    activeProvider
-                )
+            _adultGuideMode.flatMapLatest { adultGuideMode ->
+                val sourceFlow = if (adultGuideMode) {
+                    preferencesRepository.activeAdultLiveSource
+                } else {
+                    combinedM3uRepository.getActiveLiveSource()
+                }
+                combine(
+                    sourceFlow,
+                    providerRepository.getActiveProvider(),
+                    providerRepository.getProviders()
+                ) { activeSource, activeProvider, providers ->
+                    val fallbackProvider = activeProvider?.takeIf { it.isLiveTvSourceProvider() }
+                        ?: providers.firstOrNull { it.isLiveTvSourceProvider() }
+                    Pair(
+                        activeSource ?: fallbackProvider?.id?.let { ActiveLiveSource.ProviderSource(it) },
+                        activeProvider
+                    )
+                }
             }.distinctUntilChanged { old, new ->
                 old.first == new.first && old.second?.id == new.second?.id
             }.collectLatest { (activeSource, activeProvider) ->
@@ -204,7 +216,6 @@ class HomeViewModel @Inject constructor(
                     is ActiveLiveSource.CombinedM3uSource -> {
                         val profile = combinedM3uRepository.getProfile(activeSource.profileId)
                         combinedCategoriesById = emptyMap()
-                        liveTvSourceCategoriesById = emptyMap()
                         _uiState.update {
                             it.copy(
                                 provider = null,
@@ -236,7 +247,7 @@ class HomeViewModel @Inject constructor(
                             ?: return@collectLatest
                         parentalControlManager.clearUnlockedCategories(provider.id)
                         combinedCategoriesById = emptyMap()
-                        liveTvSourceCategoriesById = emptyMap()
+                        liveCategoryLookupById = emptyMap()
                         _uiState.update {
                             it.copy(
                                 provider = provider,
@@ -265,7 +276,6 @@ class HomeViewModel @Inject constructor(
                         recentChannelsJob?.cancel()
                         recentChannelsJob = null
                         combinedCategoriesById = emptyMap()
-                        liveTvSourceCategoriesById = emptyMap()
                         _localChannels.value = emptyList()
                         _uiState.update {
                             it.copy(
@@ -298,7 +308,9 @@ class HomeViewModel @Inject constructor(
                         liveSourceOptions = options.filter { option ->
                             when (val source = option.source) {
                                 is ActiveLiveSource.ProviderSource -> {
-                                    state.allProviders.firstOrNull { it.id == source.providerId }?.type == ProviderType.M3U
+                                    val provider = state.allProviders.firstOrNull { it.id == source.providerId }
+                                    provider?.type == ProviderType.M3U &&
+                                        StorePolicy.current.isUserVisibleProvider(provider)
                                 }
                                 is ActiveLiveSource.CombinedM3uSource -> true
                             }
@@ -462,13 +474,14 @@ class HomeViewModel @Inject constructor(
     private fun loadAllProviders() {
         viewModelScope.launch {
             providerRepository.getProviders().collect { providers ->
+                val visibleProviders = providers.filter(StorePolicy.current::isUserVisibleProvider)
                 _uiState.update { state ->
                     state.copy(
-                        allProviders = providers,
+                        allProviders = visibleProviders,
                         liveSourceOptions = state.liveSourceOptions.filter { option ->
                             when (val source = option.source) {
                                 is ActiveLiveSource.ProviderSource ->
-                                    providers.firstOrNull { it.id == source.providerId }?.type == ProviderType.M3U
+                                    visibleProviders.firstOrNull { it.id == source.providerId }?.type == ProviderType.M3U
                                 is ActiveLiveSource.CombinedM3uSource -> true
                             }
                         }
@@ -484,10 +497,14 @@ class HomeViewModel @Inject constructor(
 
     fun switchLiveSource(source: ActiveLiveSource) {
         viewModelScope.launch {
-            combinedM3uRepository.setActiveLiveSource(source)
-            when (source) {
-                is ActiveLiveSource.ProviderSource -> providerRepository.setActiveProvider(source.providerId)
-                is ActiveLiveSource.CombinedM3uSource -> Unit
+            if (_adultGuideMode.value) {
+                preferencesRepository.setActiveSource(ProviderSourceSlot.ADULT_LIVE, source)
+            } else {
+                combinedM3uRepository.setActiveLiveSource(source)
+                when (source) {
+                    is ActiveLiveSource.ProviderSource -> providerRepository.setActiveProvider(source.providerId)
+                    is ActiveLiveSource.CombinedM3uSource -> Unit
+                }
             }
         }
     }
@@ -498,79 +515,31 @@ class HomeViewModel @Inject constructor(
             try {
                 _uiState.update { it.copy(isCategoriesLoading = true, errorMessage = null) }
                 if (_adultGuideMode.value) {
-                    combine(
-                        channelRepository.getCategories(providerId),
-                        channelRepository.getChannelCount(providerId)
-                    ) { providerCats, channelCount ->
-                        val provider = _uiState.value.provider?.takeIf { it.id == providerId }
-                        AdultGuideCacheRequest(
-                            providerId = providerId,
-                            playlistFingerprint = adultGuidePlaylistFingerprint(
-                                providerId = providerId,
-                                lastSyncedAt = provider?.lastSyncedAt ?: 0L,
-                                channelCount = channelCount
-                            ),
-                            providerCategories = providerCats
-                        )
-                    }.distinctUntilChanged()
-                        .flatMapLatest { request ->
-                            combine(
-                                adultGuideCacheRepository.observeProviderCache(request.providerId, request.playlistFingerprint),
-                                preferencesRepository.getHiddenCategoryIds(request.providerId, ContentType.LIVE)
-                            ) { cache, hiddenCategoryIds ->
-                                Triple(request, cache, hiddenCategoryIds)
-                            }
-                        }
-                        .collect { (request, cache, hiddenCategoryIds) ->
-                        val adultContext = buildAdultGuideLiveContextFromCache(cache, hiddenCategoryIds)
-                        adultGuideChannelIdsByCategoryId = adultContext.channelIdsByCategoryId
-                        if (cache == null) {
-                            startAdultGuideCacheRefresh(request, force = false)
-                        }
-                        val categories = adultContext.categories
-                        _uiState.update {
-                            it.copy(
-                                categories = categories,
-                                hiddenCategoryIds = hiddenCategoryIds,
-                                lastVisitedCategory = null,
-                                isCategoriesLoading = cache == null && categories.isEmpty(),
-                                pinnedCategoryIds = emptySet()
-                            )
-                        }
-
-                        val currentSelected = _uiState.value.selectedCategory
-                        if (currentSelected == null && categories.isNotEmpty()) {
-                            selectCategory(categories.first())
-                        } else if (currentSelected != null && categories.none { it.id == currentSelected.id }) {
-                            categories.firstOrNull()?.let(::selectCategory)
-                        } else if (currentSelected != null) {
-                            categories.firstOrNull { it.id == currentSelected.id }?.let { reselected ->
-                                _uiState.update { it.copy(selectedCategory = reselected) }
-                            }
-                        }
-                    }
+                    observeAdultGuideCategories(providerId)
                     return@launch
                 }
-                combine(
+                val categoryBaseFlow = combine(
                     channelRepository.getCategories(providerId),
                     getCustomCategories(providerId, ContentType.LIVE),
                     preferencesRepository.defaultCategoryId,
                     preferencesRepository.getLastLiveCategoryId(providerId),
-                    preferencesRepository.getHiddenCategoryIds(providerId, ContentType.LIVE),
+                    preferencesRepository.getHiddenCategoryIds(providerId, ContentType.LIVE)
+                ) { providerCats, customCats, defaultId, lastVisitedCategoryId, hiddenCategoryIds ->
+                    LiveCategoryBaseDependencies(
+                        providerCats = providerCats,
+                        customCats = customCats,
+                        defaultId = defaultId,
+                        lastVisitedCategoryId = lastVisitedCategoryId,
+                        hiddenCategoryIds = hiddenCategoryIds
+                    )
+                }
+                combine(
+                    categoryBaseFlow,
                     preferencesRepository.getCategorySortMode(providerId, ContentType.LIVE),
                     preferencesRepository.getPinnedCategoryIds(providerId, ContentType.LIVE)
-                ) { values ->
-                    val providerCats = values[0] as List<Category>
-                    val customCats = values[1] as List<Category>
-                    val defaultId = values[2] as Long?
-                    val lastVisitedCategoryId = values[3] as Long?
-                    val hiddenCategoryIds = values[4] as Set<Long>
-                    val sortMode = values[5] as CategorySortMode
-                    val pinnedCategoryIds = values[6] as Set<Long>
-                    liveTvSourceCategoriesById = providerCats.associateBy(Category::id)
-                    val liveTvProviderCats = providerCats.filterNot { category ->
-                        category.id != ChannelRepository.ALL_CHANNELS_ID && isAdultGuideCategory(category)
-                    }
+                ) { baseDependencies, sortMode, pinnedCategoryIds ->
+                    liveCategoryLookupById = baseDependencies.providerCats.associateBy(Category::id)
+                    val visibleProviderCats = baseDependencies.providerCats.filter(::isStandardLiveCategoryVisible)
                     val recentCategory = Category(
                         id = VirtualCategoryIds.RECENT,
                         name = "Recent",
@@ -578,40 +547,39 @@ class HomeViewModel @Inject constructor(
                         isVirtual = true,
                         count = _uiState.value.recentChannels.size
                     )
-                    val allChannelsCategory = liveTvProviderCats.firstOrNull { it.id == ChannelRepository.ALL_CHANNELS_ID }
-                        ?.copy(count = liveTvProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count))
+                    val allChannelsCategory = visibleProviderCats.firstOrNull { it.id == ChannelRepository.ALL_CHANNELS_ID }
+                        ?.copy(count = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in baseDependencies.hiddenCategoryIds }.sumOf(Category::count))
                         ?: Category(
                             id = ChannelRepository.ALL_CHANNELS_ID,
                             name = "All Channels",
                             type = ContentType.LIVE,
-                            count = liveTvProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in hiddenCategoryIds }.sumOf(Category::count)
+                            count = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID && it.id !in baseDependencies.hiddenCategoryIds }.sumOf(Category::count)
                         )
                     val visibleProviderCategories = applyProviderCategoryDisplayPreferences(
-                        categories = liveTvProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID },
-                        hiddenCategoryIds = hiddenCategoryIds,
+                        categories = visibleProviderCats.filter { it.id != ChannelRepository.ALL_CHANNELS_ID },
+                        hiddenCategoryIds = baseDependencies.hiddenCategoryIds,
                         sortMode = sortMode
                     )
                     val pinnedProviderCategories = visibleProviderCategories.filter { it.id in pinnedCategoryIds }
                     val unpinnedProviderCategories = visibleProviderCategories.filterNot { it.id in pinnedCategoryIds }
 
                     val orderedCategories = buildList {
-                        val favoritesCategory = customCats.find { it.id == VirtualCategoryIds.FAVORITES }
+                        val favoritesCategory = baseDependencies.customCats.find { it.id == VirtualCategoryIds.FAVORITES }
                         if (favoritesCategory != null) {
                             add(favoritesCategory)
                         }
                         add(recentCategory)
-                        addAll(customCats.filter { it.id != VirtualCategoryIds.FAVORITES })
+                        addAll(baseDependencies.customCats.filter { it.id != VirtualCategoryIds.FAVORITES })
                         add(allChannelsCategory)
                         addAll(pinnedProviderCategories)
                         addAll(unpinnedProviderCategories)
                     }
 
                     CategorySelectionContext(
-                            categories = orderedCategories,
-                            hiddenCategoryIds = hiddenCategoryIds,
-                            defaultCategoryId = defaultId,
-                            lastVisitedCategoryId = lastVisitedCategoryId,
-                            pinnedCategoryIds = pinnedCategoryIds
+                        categories = orderedCategories,
+                        defaultCategoryId = baseDependencies.defaultId,
+                        lastVisitedCategoryId = baseDependencies.lastVisitedCategoryId,
+                        pinnedCategoryIds = pinnedCategoryIds
                     )
                 }.combine(preferencesRepository.showRecentChannelsCategory) { ctx, showRecent ->
                     if (!showRecent) ctx.copy(categories = ctx.categories.filter { it.id != VirtualCategoryIds.RECENT }) else ctx
@@ -629,7 +597,6 @@ class HomeViewModel @Inject constructor(
                             categories = categories,
                             lastVisitedCategory = lastVisitedCategory,
                             isCategoriesLoading = false,
-                            hiddenCategoryIds = selectionContext.hiddenCategoryIds,
                             pinnedCategoryIds = selectionContext.pinnedCategoryIds
                         )
                     }
@@ -682,6 +649,79 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private suspend fun observeAdultGuideCategories(providerId: Long): Unit = coroutineScope {
+        launch {
+            adultGuideCacheRepository.observeProviderCache(providerId).collect { cache ->
+                publishAdultGuideCache(cache)
+            }
+        }
+        launch {
+            try {
+                val providerCats = channelRepository.getCategories(providerId).first()
+                val channelCount = channelRepository.getChannelCount(providerId).first()
+                val provider = _uiState.value.provider?.takeIf { it.id == providerId }
+                val request = AdultGuideCacheRequest(
+                    providerId = providerId,
+                    playlistFingerprint = adultGuidePlaylistFingerprint(
+                        providerId = providerId,
+                        lastSyncedAt = provider?.lastSyncedAt ?: 0L,
+                        channelCount = channelCount
+                    ),
+                    providerCategories = providerCats
+                )
+                val cache = adultGuideCacheRepository.observeProviderCache(providerId).first()
+                if (cache?.playlistFingerprint != request.playlistFingerprint) {
+                    startAdultGuideCacheRefresh(request, force = false)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                _uiState.update { state ->
+                    if (state.categories.isNotEmpty() || state.filteredChannels.isNotEmpty()) {
+                        state.copy(
+                            isCategoriesLoading = false,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    } else {
+                        state.copy(
+                            isCategoriesLoading = false,
+                            isLoading = false,
+                            errorMessage = appContext.getString(R.string.home_error_load_failed)
+                        )
+                    }
+                }
+            }
+        }
+        awaitCancellation()
+    }
+
+    private fun publishAdultGuideCache(cache: AdultGuideCacheSnapshot?) {
+        val adultContext = buildAdultGuideLiveContextFromCache(cache)
+        adultGuideChannelIdsByCategoryId = adultContext.channelIdsByCategoryId
+        val categories = adultContext.categories
+        _uiState.update {
+            it.copy(
+                categories = categories,
+                lastVisitedCategory = null,
+                isCategoriesLoading = cache == null && categories.isEmpty(),
+                errorMessage = if (categories.isNotEmpty()) null else it.errorMessage,
+                pinnedCategoryIds = emptySet()
+            )
+        }
+
+        val currentSelected = _uiState.value.selectedCategory
+        if (currentSelected == null && categories.isNotEmpty()) {
+            selectCategory(categories.first())
+        } else if (currentSelected != null && categories.none { it.id == currentSelected.id }) {
+            categories.firstOrNull()?.let(::selectCategory)
+        } else if (currentSelected != null) {
+            categories.firstOrNull { it.id == currentSelected.id }?.let { reselected ->
+                _uiState.update { it.copy(selectedCategory = reselected) }
+            }
+        }
+    }
+
     private fun loadCombinedCategoriesAndChannels(profileId: Long) {
         categoriesJob?.cancel()
         categoriesJob = viewModelScope.launch {
@@ -699,22 +739,20 @@ class HomeViewModel @Inject constructor(
                                 flowOf(CategorySelectionContext(emptyList(), null, null, emptySet()))
                             } else {
                                 combine(channelFlows) { channelArrays ->
-                                    withContext(Dispatchers.Default) {
-                                        val channels = channelArrays.toList()
-                                            .flatMap { it }
-                                            .distinctBy { it.providerId to it.id }
-                                        val adultContext = buildAdultGuideLiveContextFromChannels(
-                                            providerCategories = combinedCategories.map { it.category },
-                                            channels = channels
-                                        )
-                                        adultGuideChannelIdsByCategoryId = adultContext.channelIdsByCategoryId
-                                        CategorySelectionContext(
-                                            categories = adultContext.categories,
-                                            defaultCategoryId = null,
-                                            lastVisitedCategoryId = null,
-                                            pinnedCategoryIds = emptySet()
-                                        )
-                                    }
+                                    val channels = channelArrays.toList()
+                                        .flatMap { it }
+                                        .distinctBy { it.providerId to it.id }
+                                    val adultContext = buildAdultGuideLiveContextFromChannels(
+                                        providerCategories = combinedCategories.map { it.category },
+                                        channels = channels
+                                    )
+                                    adultGuideChannelIdsByCategoryId = adultContext.channelIdsByCategoryId
+                                    CategorySelectionContext(
+                                        categories = adultContext.categories,
+                                        defaultCategoryId = null,
+                                        lastVisitedCategoryId = null,
+                                        pinnedCategoryIds = emptySet()
+                                    )
                                 }
                             }
                         }.collect { selectionContext ->
@@ -724,7 +762,6 @@ class HomeViewModel @Inject constructor(
                                     categories = categories,
                                     lastVisitedCategory = null,
                                     isCategoriesLoading = false,
-                                    hiddenCategoryIds = selectionContext.hiddenCategoryIds,
                                     pinnedCategoryIds = emptySet()
                                 )
                             }
@@ -746,8 +783,11 @@ class HomeViewModel @Inject constructor(
                     combinedM3uRepository.getCombinedCategories(profileId),
                     getCustomCategories(providerIds, ContentType.LIVE)
                 ) { combinedCategories, customCats ->
-                    val liveTvCombinedCategories = combinedCategories.filterNot { isAdultGuideCategory(it.category) }
-                    combinedCategoriesById = liveTvCombinedCategories.associateBy { it.category.id }
+                    liveCategoryLookupById = combinedCategories.map { it.category }.associateBy(Category::id)
+                    val visibleCombinedCategories = combinedCategories.filter {
+                        isStandardLiveCategoryVisible(it.category)
+                    }
+                    combinedCategoriesById = visibleCombinedCategories.associateBy { it.category.id }
                     val recentCategory = Category(
                         id = VirtualCategoryIds.RECENT,
                         name = "Recent",
@@ -759,7 +799,7 @@ class HomeViewModel @Inject constructor(
                         id = ChannelRepository.ALL_CHANNELS_ID,
                         name = "All Channels",
                         type = ContentType.LIVE,
-                        count = liveTvCombinedCategories.sumOf { it.category.count }
+                        count = visibleCombinedCategories.sumOf { it.category.count }
                     )
                     CategorySelectionContext(
                         categories = buildList {
@@ -768,7 +808,7 @@ class HomeViewModel @Inject constructor(
                             add(recentCategory)
                             addAll(customCats.filter { it.id != VirtualCategoryIds.FAVORITES })
                             add(allChannelsCategory)
-                            addAll(liveTvCombinedCategories.map { it.category })
+                            addAll(visibleCombinedCategories.map { it.category })
                         },
                         defaultCategoryId = null,
                         lastVisitedCategoryId = null,
@@ -878,14 +918,7 @@ class HomeViewModel @Inject constructor(
                     .distinctUntilChanged()
 
                 val channelsFlow = if (_adultGuideMode.value) {
-                    val hiddenCategoryIds = _uiState.value.hiddenCategoryIds
                     val sourceChannelIds = adultGuideChannelIdsByCategoryId[category.id].orEmpty()
-                        .filterNot { channelId ->
-                            category.id == VirtualCategoryIds.ADULT_GUIDE &&
-                                hiddenCategoryIds.any { hiddenId ->
-                                    adultGuideChannelIdsByCategoryId[hiddenId]?.contains(channelId) == true
-                                }
-                        }
                     val sourceChannelsFlow = if (sourceChannelIds.isEmpty()) {
                         flowOf(emptyList())
                     } else {
@@ -1002,31 +1035,31 @@ class HomeViewModel @Inject constructor(
                     _uiState.map { it.selectedCombinedSourceProviderId }.distinctUntilChanged(),
                     _uiState.map { it.parentalControlLevel }.distinctUntilChanged()
                 ) { channels, numberingMode, selectedCombinedSourceProviderId, level ->
-                    withContext(Dispatchers.Default) {
-                        val byProvider = selectedCombinedSourceProviderId?.let { selectedProviderId ->
-                            channels.filter { it.providerId == selectedProviderId }
-                        } ?: channels
-                        val liveTvVisible = if (_adultGuideMode.value) {
-                            byProvider
-                        } else {
-                            byProvider.filterNotLiveTvAdultContent()
+                    val byProvider = selectedCombinedSourceProviderId?.let { selectedProviderId ->
+                        channels.filter { it.providerId == selectedProviderId }
+                    } ?: channels
+                    val numbered = when (numberingMode) {
+                        ChannelNumberingMode.GROUP -> byProvider.mapIndexed { index, channel ->
+                            channel.copy(number = index + 1)
                         }
-                        val numbered = when (numberingMode) {
-                            ChannelNumberingMode.GROUP -> liveTvVisible.mapIndexed { index, channel ->
-                                channel.copy(number = index + 1)
-                            }
-                            ChannelNumberingMode.PROVIDER -> liveTvVisible
-                            ChannelNumberingMode.HIDDEN -> liveTvVisible.map { it.copy(number = 0) }
+                        ChannelNumberingMode.PROVIDER -> byProvider
+                        ChannelNumberingMode.HIDDEN -> byProvider.map { it.copy(number = 0) }
+                    }
+                    val isAggregatedSurface = category.id == ChannelRepository.ALL_CHANNELS_ID ||
+                        category.id == VirtualCategoryIds.RECENT
+                    if (_adultGuideMode.value) {
+                        numbered
+                    } else {
+                        val standardLiveChannels = numbered.filterNot { channel ->
+                            isStandardLiveAdultChannel(channel, category)
                         }
-                        val isAggregatedSurface = category.id == ChannelRepository.ALL_CHANNELS_ID ||
-                            category.id == VirtualCategoryIds.RECENT
-                        if (_adultGuideMode.value) {
-                            numbered
-                        } else if (isAggregatedSurface) {
+                        if (isAggregatedSurface) {
                             AdultContentVisibilityPolicy.filterForAggregatedSurface(
-                                numbered, level
+                                standardLiveChannels, level
                             ) { isUserProtected }
-                        } else numbered
+                        } else {
+                            standardLiveChannels
+                        }
                     }
                 }.collect { displayedChannels ->
                     val currentQuery = _uiState.value.channelSearchQuery.trim()
@@ -1048,11 +1081,19 @@ class HomeViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = appContext.getString(R.string.home_error_load_failed)
-                    )
+                _uiState.update { state ->
+                    if (_adultGuideMode.value && _localChannels.value.isNotEmpty()) {
+                        state.copy(
+                            hasChannels = true,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    } else {
+                        state.copy(
+                            isLoading = false,
+                            errorMessage = appContext.getString(R.string.home_error_load_failed)
+                        )
+                    }
                 }
             }
         }
@@ -1474,8 +1515,9 @@ class HomeViewModel @Inject constructor(
                     .flatMapLatest(::loadChannelsByOrderedIds),
                 preferencesRepository.parentalControlLevel
             ) { channels, level ->
+                val standardLiveChannels = channels.filterNot(::isStandardLiveAdultChannel)
                 AdultContentVisibilityPolicy.filterForAggregatedSurface(
-                    channels, level
+                    standardLiveChannels, level
                 ) { isUserProtected }
             }.collect { visible ->
                 _uiState.update { it.copy(recentChannels = visible) }
@@ -1493,8 +1535,9 @@ class HomeViewModel @Inject constructor(
                     .flatMapLatest { ids -> loadChannelsByOrderedIds(ids) },
                 preferencesRepository.parentalControlLevel
             ) { channels, level ->
+                val standardLiveChannels = channels.filterNot(::isStandardLiveAdultChannel)
                 AdultContentVisibilityPolicy.filterForAggregatedSurface(
-                    channels, level
+                    standardLiveChannels, level
                 ) { isUserProtected }
             }.collect { visible ->
                 _uiState.update { it.copy(recentChannels = visible) }
@@ -1511,6 +1554,15 @@ class HomeViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    private fun isStandardLiveCategoryVisible(category: Category): Boolean =
+        category.id == ChannelRepository.ALL_CHANNELS_ID || !isLikelyAdultGuideCategory(category)
+
+    private fun isStandardLiveAdultChannel(channel: Channel, selectedCategory: Category? = null): Boolean {
+        val sourceCategory = channel.categoryId?.let(liveCategoryLookupById::get)
+            ?: selectedCategory?.takeUnless { it.isVirtual || it.id == ChannelRepository.ALL_CHANNELS_ID }
+        return isLikelyAdultGuideCategory(sourceCategory) || isExplicitAdultGuideChannel(channel)
     }
 
     fun requestRenameGroup(category: Category) {
@@ -1742,8 +1794,7 @@ class HomeViewModel @Inject constructor(
 
     fun hideCategory(category: Category) {
         if (_uiState.value.isCombinedLiveSource) return
-        val isAdultGeneratedCategory = _uiState.value.isAdultGuideMode && isAdultGuideGeneratedCategoryId(category.id)
-        if ((category.isVirtual && !isAdultGeneratedCategory) || category.id == ChannelRepository.ALL_CHANNELS_ID) return
+        if (category.isVirtual || category.id == ChannelRepository.ALL_CHANNELS_ID) return
         val providerId = _uiState.value.provider?.id ?: return
         viewModelScope.launch {
             preferencesRepository.setCategoryHidden(
@@ -1907,12 +1958,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun List<Channel>.filterNotLiveTvAdultContent(): List<Channel> =
-        filterNot { channel ->
-            val sourceCategory = channel.categoryId?.let(liveTvSourceCategoriesById::get)
-            isAdultGuideCategory(sourceCategory) || isExplicitAdultGuideChannel(channel)
-        }
-
     private suspend fun loadReorderChannels(category: Category): List<Channel> {
         if (!category.isVirtual || category.id == VirtualCategoryIds.RECENT) return emptyList()
 
@@ -2016,8 +2061,7 @@ class HomeViewModel @Inject constructor(
 
     private fun buildAdultGuideLiveContextFromChannels(
         providerCategories: List<Category>,
-        channels: List<Channel>,
-        hiddenCategoryIds: Set<Long> = emptySet()
+        channels: List<Channel>
     ): AdultGuideLiveContext {
         val providerCategoriesById = providerCategories.associateBy(Category::id)
         val adultChannels = channels
@@ -2028,17 +2072,10 @@ class HomeViewModel @Inject constructor(
             providerCategories = providerCategories,
             includeAllCategory = false
         )
-        return buildAdultGuideLiveContextFromGeneratedCategories(
-            generatedCategories = generatedCategories,
-            adultChannelIds = adultChannels.map(Channel::id),
-            hiddenCategoryIds = hiddenCategoryIds
-        )
+        return buildAdultGuideLiveContextFromGeneratedCategories(generatedCategories, adultChannels.map(Channel::id))
     }
 
-    private fun buildAdultGuideLiveContextFromCache(
-        cache: AdultGuideCacheSnapshot?,
-        hiddenCategoryIds: Set<Long>
-    ): AdultGuideLiveContext {
+    private fun buildAdultGuideLiveContextFromCache(cache: AdultGuideCacheSnapshot?): AdultGuideLiveContext {
         val cachedCategories = cache?.categories.orEmpty()
         val generatedCategories = cachedCategories.map { category ->
             AdultGuideCategory(
@@ -2051,25 +2088,18 @@ class HomeViewModel @Inject constructor(
         }
         return buildAdultGuideLiveContextFromGeneratedCategories(
             generatedCategories = generatedCategories,
-            adultChannelIds = cachedCategories.flatMap(AdultGuideCachedCategory::channelIds).distinct(),
-            hiddenCategoryIds = hiddenCategoryIds
+            adultChannelIds = cachedCategories.flatMap(AdultGuideCachedCategory::channelIds).distinct()
         )
     }
 
     private fun buildAdultGuideLiveContextFromGeneratedCategories(
         generatedCategories: List<AdultGuideCategory>,
-        adultChannelIds: List<Long>,
-        hiddenCategoryIds: Set<Long> = emptySet()
+        adultChannelIds: List<Long>
     ): AdultGuideLiveContext {
         val channelIdsByCategoryId = linkedMapOf<Long, List<Long>>()
-        val visibleCategories = filterAdultGuideCategoriesForHiddenIds(
-            generatedCategories = generatedCategories,
-            adultChannelIds = adultChannelIds,
-            hiddenCategoryIds = hiddenCategoryIds
-        )
-        val categoryItems = visibleCategories.categories.map { category ->
+        val categoryItems = generatedCategories.map { category ->
             val id = adultGuideCategoryId(category.key)
-            val channelIds = category.channelIds
+            val channelIds = category.channels.map(Channel::id).distinct()
             channelIdsByCategoryId[id] = channelIds
             Category(
                 id = id,
@@ -2081,16 +2111,15 @@ class HomeViewModel @Inject constructor(
             )
         }.toMutableList()
 
-        val visibleAdultChannelIds = visibleCategories.allChannelIds
-        if (visibleAdultChannelIds.isNotEmpty()) {
-            channelIdsByCategoryId[VirtualCategoryIds.ADULT_GUIDE] = visibleAdultChannelIds
+        if (adultChannelIds.isNotEmpty()) {
+            channelIdsByCategoryId[VirtualCategoryIds.ADULT_GUIDE] = adultChannelIds
             categoryItems.add(
                 Category(
                     id = VirtualCategoryIds.ADULT_GUIDE,
                     name = "All XXX",
                     type = ContentType.LIVE,
                     isVirtual = true,
-                    count = visibleAdultChannelIds.size,
+                    count = adultChannelIds.size,
                     isAdult = true
                 )
             )
@@ -2183,6 +2212,9 @@ class HomeViewModel @Inject constructor(
     }
 }
 
+private fun Provider.isLiveTvSourceProvider(): Boolean =
+    type != ProviderType.M3U || m3uPlaylistKind != ProviderM3uPlaylistKind.VOD
+
 data class HomeUiState(
     val provider: Provider? = null,
     val activeLiveSource: ActiveLiveSource? = null,
@@ -2222,7 +2254,6 @@ data class HomeUiState(
     val parentalControlLevel: Int = 0,
     val unlockedCategoryIds: Set<Long> = emptySet(),
     val pinnedCategoryIds: Set<Long> = emptySet(),
-    val hiddenCategoryIds: Set<Long> = emptySet(),
     val selectedCategoryForOptions: Category? = null,
     val isChannelReorderMode: Boolean = false,
     val reorderCategory: Category? = null,
@@ -2240,14 +2271,46 @@ private data class CategorySelectionContext(
     val categories: List<Category>,
     val defaultCategoryId: Long?,
     val lastVisitedCategoryId: Long?,
-    val pinnedCategoryIds: Set<Long>,
-    val hiddenCategoryIds: Set<Long> = emptySet()
+    val pinnedCategoryIds: Set<Long>
 )
 
-private data class AdultGuideLiveContext(
+private data class LiveCategoryBaseDependencies(
+    val providerCats: List<Category>,
+    val customCats: List<Category>,
+    val defaultId: Long?,
+    val lastVisitedCategoryId: Long?,
+    val hiddenCategoryIds: Set<Long>
+)
+
+internal data class AdultGuideLiveContext(
     val categories: List<Category>,
     val channelIdsByCategoryId: Map<Long, List<Long>>
 )
+
+internal fun filterAdultGuideVisibility(
+    context: AdultGuideLiveContext,
+    hiddenCategoryIds: Set<Long>,
+    hiddenChannelIds: Set<Long>
+): AdultGuideLiveContext {
+    val channelsHiddenByCategory = hiddenCategoryIds
+        .flatMap { categoryId -> context.channelIdsByCategoryId[categoryId].orEmpty() }
+        .toSet()
+    val effectiveHiddenChannelIds = hiddenChannelIds + channelsHiddenByCategory
+    val filteredChannelIdsByCategoryId = linkedMapOf<Long, List<Long>>()
+    val filteredCategories = context.categories.mapNotNull { category ->
+        if (category.id in hiddenCategoryIds) return@mapNotNull null
+        val visibleChannelIds = context.channelIdsByCategoryId[category.id]
+            .orEmpty()
+            .filterNot { channelId -> channelId in effectiveHiddenChannelIds }
+        if (visibleChannelIds.isEmpty()) return@mapNotNull null
+        filteredChannelIdsByCategoryId[category.id] = visibleChannelIds
+        category.copy(count = visibleChannelIds.size)
+    }
+    return AdultGuideLiveContext(
+        categories = filteredCategories,
+        channelIdsByCategoryId = filteredChannelIdsByCategoryId
+    )
+}
 
 private data class AdultGuideCacheRequest(
     val providerId: Long,

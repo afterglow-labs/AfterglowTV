@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Afterglow TV</string>
+    <string name="app_name">AfterglowTV</string>
     <string name="nav_home">Hjem</string>
     <string name="nav_live_tv">Live tv</string>
     <string name="nav_movies">Film</string>
@@ -102,7 +102,7 @@
     <string name="dashboard_provider_no_expiry">Ingen udløbsdato rapporteret</string>
     <string name="dashboard_warning_title">Udbyderen kræver opmærksomhed</string>
     <string name="dashboard_warning_review">Åbn udbyderoplysninger</string>
-    <string name="dashboard_update_title">Afterglow TV %1$s er tilgængelig</string>
+    <string name="dashboard_update_title">AfterglowTV %1$s er tilgængelig</string>
     <string name="dashboard_update_available">En nyere appversion er gemt og klar til at blive gennemgået i Indstillinger.</string>
     <string name="dashboard_update_install_ready">Den seneste opdatering er allerede downloadet. Åbn Indstillinger for at installere den.</string>
     <string name="dashboard_update_open_settings">Åbn opdateringer</string>
@@ -114,8 +114,8 @@
     <string name="dashboard_stat_resume">%1$d for at genoptage</string>
     <string name="dashboard_stat_movies">%1$d film</string>
     <string name="dashboard_stat_series">%1$d serie</string>
-    <string name="dashboard_empty_title">Opsæt en udbyder for at låse startskærmen op</string>
-    <string name="dashboard_empty_body">Tilføj først en playliste eller Xtream-kilde. Når en udbyder er aktiv, viser Hjem favoritkanaler, fortsæt hvor du slap, og nye rækker i biblioteket.</string>
+    <string name="dashboard_empty_title">Velkommen til AfterglowTV</string>
+    <string name="dashboard_empty_body">Gennemse din personlige guide og netværksdrev når som helst. Vil du også have live-kanaler og on-demand-rækker på Hjem? Tilføj en playliste eller en Xtream-udbyder, når du vil.</string>
     <string name="pin_dialog_title">Indtast PIN-kode</string>
     <string name="pin_dialog_cancel">Annuller</string>
     <string name="category_options_set_default">Indstil som standardgruppe</string>
@@ -382,8 +382,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_container">VOD</string>
-    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategorier</string>
     <string name="vod_classic_category_search">Søg i kategorier</string>
     <string name="vod_classic_all">Alle</string>
@@ -402,7 +402,7 @@
     <string name="settings_about_subtitle">Version, build og supportdetaljer for denne installation.</string>
     <string name="settings_app_version">App version</string>
     <string name="settings_build">Byg</string>
-    <string name="settings_build_desc">Afterglow TV til Android TV</string>
+    <string name="settings_build_desc">AfterglowTV til Android TV</string>
     <string name="settings_enabled">Aktiveret</string>
     <string name="settings_disabled">Deaktiveret</string>
     <string name="settings_developed_by">Udviklet af</string>
@@ -412,7 +412,7 @@
     <string name="settings_donate">Support på Ko-fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">Opdateringer</string>
-    <string name="settings_updates_subtitle">Tjek GitHub Releases for nyere Afterglow TV-versioner uden at forlade appen.</string>
+    <string name="settings_updates_subtitle">Tjek GitHub Releases for nyere AfterglowTV-versioner uden at forlade appen.</string>
     <string name="settings_update_auto_check">Søg automatisk efter opdateringer</string>
     <string name="settings_update_latest_release">Seneste version</string>
     <string name="settings_update_status">Opdateringsstatus</string>
@@ -436,8 +436,8 @@
     <string name="settings_update_status_check_failed">Sidste kontrol mislykkedes</string>
     <string name="settings_update_status_downloading">Downloader opdatering</string>
     <string name="settings_update_status_ready_to_install">Klar til installation</string>
-    <string name="settings_update_available_message">Afterglow TV %1$s er tilgængelig.</string>
-    <string name="settings_update_current_message">Du har allerede den nyeste Afterglow TV-version.</string>
+    <string name="settings_update_available_message">AfterglowTV %1$s er tilgængelig.</string>
+    <string name="settings_update_current_message">Du har allerede den nyeste AfterglowTV-version.</string>
     <string name="settings_syncing">Synkroniserer data, vent venligst...</string>
     <string name="settings_syncing_title">Synkroniserer data...</string>
     <string name="settings_syncing_subtitle">Vent venligst, mens din afspilningsliste importeres.</string>
@@ -700,7 +700,7 @@
     <string name="a11y_catch_up_available">Catch-up tilgængelig</string>
     <string name="a11y_now_playing">Spiller nu %1$s</string>
     <string name="a11y_channel_with_number">Kanal %1$d, %2$s</string>
-    <string name="setup_title_afterglowtv">Afterglow TV</string>
+    <string name="setup_title_afterglowtv">AfterglowTV</string>
     <string name="setup_provider_title">Tilføj en udbyder</string>
     <string name="setup_edit_provider">Rediger udbyder</string>
     <string name="setup_update_desc">Opdater dine IPTV-udbyderoplysninger</string>
@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Styr, hvordan guide-data hentes under opsætning og opdatering af udbyder.</string>
     <string name="setup_advanced_options_show">Vis</string>
     <string name="setup_advanced_options_hide">Skjul</string>
-    <string name="setup_m3u_vod_classification_label">M3U VOD-klassificering</string>
-    <string name="setup_m3u_vod_classification_helper">Kun M3U. Brug playlist-URL og group-title-heuristik til at sortere matchende poster i Film i stedet for Live TV.</string>
     <string name="setup_epg_sync_mode_label">EPG-synkronisering</string>
     <string name="setup_epg_sync_mode_helper">Forudindlæsning bevarer den nuværende adfærd. Baggrund afslutter opsætningen først, og Spring over lader guideopdatering vente til senere.</string>
     <string name="setup_epg_sync_mode_upfront_title">Fuld EPG nu</string>
@@ -1165,21 +1163,21 @@
     <string name="settings_history_cleared">Afspilningshistorik og seneste ryddet</string>
     <string name="settings_pin_changed">PIN-koden blev gemt</string>
     <string name="home_reorder_channels">Omarranger kanaler</string>
-    <string name="tv_input_setup_scanning_title">Scanner Afterglow TV-kanaler</string>
+    <string name="tv_input_setup_scanning_title">Scanner AfterglowTV-kanaler</string>
     <string name="tv_input_setup_success_title">Live-tv er klar</string>
     <string name="tv_input_setup_no_provider_title">Ingen IPTV-udbyder konfigureret</string>
     <string name="tv_input_setup_error_title">Automatisk scanning mislykkedes</string>
     <string name="tv_input_setup_idle_title">Forberedelse af Live TV-integration</string>
-    <string name="tv_input_setup_scanning_body">Afterglow TV synkroniserer din aktive udbyder til Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">AfterglowTV synkroniserer din aktive udbyder til Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">Dine kanaler blev synkroniseret.</string>
-    <string name="tv_input_setup_no_provider_body">Tilføj mindst én IPTV-udbyder i Afterglow TV, og vend derefter tilbage her for at scanne kanaler ind i Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">Tilføj mindst én IPTV-udbyder i AfterglowTV, og vend derefter tilbage her for at scanne kanaler ind i Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">Synkroniseringen af TV-input blev ikke fuldført.</string>
     <string name="tv_input_setup_idle_body">Vent venligst.</string>
     <string name="tv_input_setup_source_format">Kilde: %1$s</string>
-    <string name="tv_input_setup_open_setup">Åbn Afterglow TV-opsætning</string>
+    <string name="tv_input_setup_open_setup">Åbn AfterglowTV-opsætning</string>
     <string name="tv_input_setup_try_scan_again">Prøv automatisk scanning igen</string>
     <string name="tv_input_setup_retry_scan">Prøv automatisk scanning igen</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV kan nu åbne dine Afterglow TV-kanaler.</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV kan nu åbne dine AfterglowTV-kanaler.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1206,8 +1204,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d slots</string>
     <string name="movie_detail_related">Mere som dette</string>
     <string name="movie_detail_resume_from">Fortsæt fra %1$s</string>
-    <string name="notification_permission_recording_alert_required">Aktivér notifikationer for Afterglow TV for at modtage advarsler om optagelsesfejl.</string>
-    <string name="notification_permission_reminder_required">Aktivér notifikationer for Afterglow TV for at modtage programpåmindelser.</string>
+    <string name="notification_permission_recording_alert_required">Aktivér notifikationer for AfterglowTV for at modtage advarsler om optagelsesfejl.</string>
+    <string name="notification_permission_reminder_required">Aktivér notifikationer for AfterglowTV for at modtage programpåmindelser.</string>
     <string name="player_action_variants">Varianter</string>
     <string name="player_auto_play_cancel">Annullér</string>
     <string name="player_auto_play_countdown">Afspiller om %1$d sek</string>
@@ -1381,7 +1379,7 @@
     <string name="settings_recording_skipped">Forekomst sprunget over</string>
     <string name="settings_recording_wifi_only">Optag kun på Wi-Fi</string>
     <string name="settings_reset">Nulstil</string>
-    <string name="settings_restore_subtitle">Vælg en backup-fil, eller åbn en backup med Afterglow TV fra en filhåndtering.</string>
+    <string name="settings_restore_subtitle">Vælg en backup-fil, eller åbn en backup med AfterglowTV fra en filhåndtering.</string>
     <string name="settings_select_guide_default_category">Vælg guide standardkategori</string>
     <string name="settings_select_live_timeshift_depth">Vælg dybde for lokal live-tilbagespoling</string>
     <string name="settings_select_time_format">Vælg tidsformat</string>

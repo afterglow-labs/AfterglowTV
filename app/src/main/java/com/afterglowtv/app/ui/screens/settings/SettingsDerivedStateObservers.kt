@@ -170,9 +170,9 @@ private fun buildCapabilitySummary(application: Application, provider: Provider)
 }
 
 private fun Provider.sourceLabel(): String = when (type) {
-    ProviderType.XTREAM_CODES -> "Account Login"
-    ProviderType.M3U -> "Playlist"
-    ProviderType.STALKER_PORTAL -> "Portal"
+    ProviderType.XTREAM_CODES -> "Xtream Codes"
+    ProviderType.M3U -> "M3U Playlist"
+    ProviderType.STALKER_PORTAL -> "Portal/MAG Login"
 }
 
 private fun Provider.expirySummary(): String {

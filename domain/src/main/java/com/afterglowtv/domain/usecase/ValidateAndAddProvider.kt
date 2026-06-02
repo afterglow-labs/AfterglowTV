@@ -3,6 +3,7 @@ package com.afterglowtv.domain.usecase
 import com.afterglowtv.domain.manager.ProviderSetupInputValidator
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import com.afterglowtv.domain.model.ProviderSavedWithSyncErrorException
 import com.afterglowtv.domain.model.Result
@@ -33,10 +34,11 @@ data class M3uProviderSetupCommand(
     val httpHeaders: String = "",
     val epgSyncMode: ProviderEpgSyncMode = ProviderEpgSyncMode.BACKGROUND,
     val m3uVodClassificationEnabled: Boolean = false,
+    val m3uPlaylistKind: ProviderM3uPlaylistKind = ProviderM3uPlaylistKind.LIVE,
     val existingProviderId: Long? = null,
     /** Optional XMLTV / EPG URL to attach to the newly-created provider. */
     val epgUrl: String? = null,
-    val epgUniqueToPlaylist: Boolean = true,
+    val allowXtreamPlaylistAutoDetection: Boolean = true
 )
 
 data class StalkerProviderSetupCommand(
@@ -177,7 +179,12 @@ class ValidateAndAddProvider @Inject constructor(
         ) {
             is Result.Success -> {
                 val validatedInput = validated.data
-                when (val parsedXtream = parseXtreamPlaylistUrl(validatedInput.url)) {
+                val parsedXtream = if (command.allowXtreamPlaylistAutoDetection && command.m3uPlaylistKind != ProviderM3uPlaylistKind.VOD) {
+                    parseXtreamPlaylistUrl(validatedInput.url)
+                } else {
+                    ParsedXtreamPlaylistUrlResult.NotXtreamPlaylist
+                }
+                when (parsedXtream) {
                     is ParsedXtreamPlaylistUrlResult.ValidationError ->
                         ValidateAndAddProviderResult.ValidationError(parsedXtream.message)
 
@@ -204,16 +211,12 @@ class ValidateAndAddProvider @Inject constructor(
                             httpUserAgent = validatedInput.httpUserAgent,
                             httpHeaders = validatedInput.httpHeaders,
                             epgSyncMode = command.epgSyncMode,
-                            m3uVodClassificationEnabled = command.m3uVodClassificationEnabled,
+                            m3uVodClassificationEnabled = command.m3uVodClassificationEnabled || command.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD,
+                            m3uPlaylistKind = command.m3uPlaylistKind,
                             onProgress = onProgress,
                             id = command.existingProviderId
                         ).toUseCaseResult()
-                        attachOptionalEpgSource(
-                            addResult = mapped,
-                            epgUrl = command.epgUrl,
-                            providerName = validatedInput.name,
-                            epgUniqueToPlaylist = command.epgUniqueToPlaylist
-                        )
+                        attachOptionalEpgSource(mapped, command.epgUrl, validatedInput.name)
                         mapped
                     }
                 }
@@ -266,7 +269,6 @@ class ValidateAndAddProvider @Inject constructor(
         addResult: ValidateAndAddProviderResult,
         epgUrl: String?,
         providerName: String,
-        epgUniqueToPlaylist: Boolean,
     ) {
         if (epgUrl.isNullOrBlank()) return
         val provider: Provider = when (addResult) {
@@ -275,13 +277,7 @@ class ValidateAndAddProvider @Inject constructor(
             else -> return
         }
         val sourceName = if (providerName.isNotBlank()) "$providerName EPG" else "EPG for ${provider.id}"
-        val trimmedEpgUrl = epgUrl.trim()
-        runCatching {
-            providerRepository.updateProvider(
-                provider.copy(epgUrl = if (epgUniqueToPlaylist) trimmedEpgUrl else "")
-            )
-        }
-        val added = epgSourceRepository.addSource(name = sourceName, url = trimmedEpgUrl)
+        val added = epgSourceRepository.addSource(name = sourceName, url = epgUrl.trim())
         if (added is Result.Success) {
             epgSourceRepository.assignSourceToProvider(
                 providerId = provider.id,

@@ -1,5 +1,6 @@
 package com.afterglowtv.app.navigation
 
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import java.io.Serializable
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -9,24 +10,13 @@ sealed class ExternalDestination : Serializable {
 
     data class ProviderSetup(
         val providerId: Long? = null,
-        val importUri: String? = null
-    ) : ExternalDestination()
-
-    data class MovieDetail(
-        val movieId: Long,
-        val returnRoute: String? = null
-    ) : ExternalDestination()
-
-    data class SeriesDetail(
-        val seriesId: Long,
-        val returnRoute: String? = null
+        val importUri: String? = null,
+        val m3uKind: ProviderM3uPlaylistKind? = null
     ) : ExternalDestination()
 
     fun toRoute(): String = when (this) {
         Home -> Routes.HOME
-        is ProviderSetup -> Routes.providerSetup(providerId = providerId, importUri = importUri)
-        is MovieDetail -> Routes.movieDetail(movieId = movieId, returnRoute = returnRoute)
-        is SeriesDetail -> Routes.seriesDetail(seriesId = seriesId, returnRoute = returnRoute)
+        is ProviderSetup -> Routes.providerSetup(providerId = providerId, importUri = importUri, m3uKind = m3uKind)
     }
 
     companion object {
@@ -43,27 +33,10 @@ sealed class ExternalDestination : Serializable {
                         ?.takeIf { it >= 0L }
                     val importUri = queryParameters["importUri"]
                         ?.takeIf { it.isNotBlank() }
-                    ProviderSetup(providerId = providerId, importUri = importUri)
-                }
-
-                normalizedRoute.startsWith("movie_detail/") -> {
-                    val pathSegments = normalizedRoute.pathSegments()
-                    val movieId = pathSegments.getOrNull(1)?.toLongOrNull() ?: return null
-                    MovieDetail(
-                        movieId = movieId,
-                        returnRoute = normalizedRoute.queryParameters()["returnRoute"]
-                            ?.takeIf { it.isNotBlank() }
-                    )
-                }
-
-                normalizedRoute.startsWith("series_detail/") -> {
-                    val pathSegments = normalizedRoute.pathSegments()
-                    val seriesId = pathSegments.getOrNull(1)?.toLongOrNull() ?: return null
-                    SeriesDetail(
-                        seriesId = seriesId,
-                        returnRoute = normalizedRoute.queryParameters()["returnRoute"]
-                            ?.takeIf { it.isNotBlank() }
-                    )
+                    val m3uKind = queryParameters["m3uKind"]
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { value -> runCatching { ProviderM3uPlaylistKind.valueOf(value) }.getOrNull() }
+                    ProviderSetup(providerId = providerId, importUri = importUri, m3uKind = m3uKind)
                 }
 
                 else -> null
@@ -71,8 +44,6 @@ sealed class ExternalDestination : Serializable {
         }
     }
 }
-
-private fun String.pathSegments(): List<String> = substringBefore('?').split('/').filter { it.isNotBlank() }
 
 private fun String.queryParameters(): Map<String, String> {
     val query = substringAfter('?', missingDelimiterValue = "")

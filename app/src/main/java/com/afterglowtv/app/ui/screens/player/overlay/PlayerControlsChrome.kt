@@ -112,6 +112,7 @@ fun PlayerControlsOverlay(
     audioTrackCount: Int,
     videoQualityCount: Int,
     currentRecordingStatus: RecordingStatus?,
+    enableDvr: Boolean = true,
     isMuted: Boolean,
     playbackSpeed: Float = 1f,
     mediaTitle: String?,
@@ -202,6 +203,7 @@ fun PlayerControlsOverlay(
                 audioTrackCount = audioTrackCount,
                 videoQualityCount = videoQualityCount,
                 currentRecordingStatus = currentRecordingStatus,
+                enableDvr = enableDvr,
                 isMuted = isMuted,
                 playbackSpeed = playbackSpeed,
                 mediaTitle = mediaTitle,
@@ -532,6 +534,7 @@ private fun PlayerBottomBar(
     audioTrackCount: Int,
     videoQualityCount: Int,
     currentRecordingStatus: RecordingStatus?,
+    enableDvr: Boolean,
     isMuted: Boolean,
     playbackSpeed: Float,
     mediaTitle: String?,
@@ -626,6 +629,7 @@ private fun PlayerBottomBar(
                         audioTrackCount = audioTrackCount,
                         videoQualityCount = videoQualityCount,
                         currentRecordingStatus = currentRecordingStatus,
+                        enableDvr = enableDvr,
                         isMuted = isMuted,
                         mediaTitle = mediaTitle,
                         sleepTimerUiState = sleepTimerUiState,
@@ -718,6 +722,7 @@ private fun PlayerLiveInfo(
     audioTrackCount: Int,
     videoQualityCount: Int,
     currentRecordingStatus: RecordingStatus?,
+    enableDvr: Boolean,
     isMuted: Boolean,
     mediaTitle: String?,
     sleepTimerUiState: SleepTimerUiState,
@@ -795,13 +800,15 @@ private fun PlayerLiveInfo(
             add(PlayerActionSpec(stringResource(R.string.player_restart), onRestartProgram))
             add(PlayerActionSpec(stringResource(R.string.player_archive), onOpenArchive))
         }
-        if (currentRecordingStatus == RecordingStatus.RECORDING) {
-            add(PlayerActionSpec(stringResource(R.string.player_stop_recording), onStopRecording))
-        } else {
-            add(PlayerActionSpec(stringResource(R.string.player_record), onStartRecording))
-            add(PlayerActionSpec(stringResource(R.string.player_schedule_recording), onScheduleRecording))
-            add(PlayerActionSpec(stringResource(R.string.player_schedule_daily_recording), onScheduleDailyRecording))
-            add(PlayerActionSpec(stringResource(R.string.player_schedule_weekly_recording), onScheduleWeeklyRecording))
+        if (enableDvr) {
+            if (currentRecordingStatus == RecordingStatus.RECORDING) {
+                add(PlayerActionSpec(stringResource(R.string.player_stop_recording), onStopRecording))
+            } else {
+                add(PlayerActionSpec(stringResource(R.string.player_record), onStartRecording))
+                add(PlayerActionSpec(stringResource(R.string.player_schedule_recording), onScheduleRecording))
+                add(PlayerActionSpec(stringResource(R.string.player_schedule_daily_recording), onScheduleDailyRecording))
+                add(PlayerActionSpec(stringResource(R.string.player_schedule_weekly_recording), onScheduleWeeklyRecording))
+            }
         }
     }
     val secondaryActions = buildList {

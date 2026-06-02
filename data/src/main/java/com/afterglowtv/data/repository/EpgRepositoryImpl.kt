@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
@@ -89,6 +90,7 @@ class EpgRepositoryImpl @Inject constructor(
     ): Flow<List<Program>> =
         programDao.getForChannel(providerId, channelId, startTime, endTime)
             .map { entities -> entities.map { it.toDomain() } }
+            .flowOn(Dispatchers.IO)
 
     override fun getProgramsForChannels(
         providerId: Long,
@@ -136,6 +138,7 @@ class EpgRepositoryImpl @Inject constructor(
     ): Flow<List<Program>> =
         programDao.getForCategory(providerId, categoryId, startTime, endTime)
             .map { entities -> entities.map { it.toDomain() } }
+            .flowOn(Dispatchers.IO)
 
     override fun searchPrograms(
         providerId: Long,

@@ -9,11 +9,12 @@ import kotlinx.coroutines.flow.Flow
 interface FavoriteRepository {
     fun getFavorites(providerId: Long, contentType: ContentType? = null): Flow<List<Favorite>>
     fun getFavorites(providerIds: List<Long>, contentType: ContentType? = null): Flow<List<Favorite>>
-    @Deprecated(
-        "Use getFavorites(providerId, contentType) instead",
-        replaceWith = ReplaceWith("getFavorites(providerId, contentType)")
-    )
-    fun getAllFavorites(providerId: Long, contentType: ContentType): Flow<List<Favorite>>
+    /**
+     * Returns every favorite for the provider/content type, including those assigned to a
+     * virtual group. Use this when group membership matters (e.g. VOD group counts); use
+     * [getFavorites] when only ungrouped "global" favorites are needed.
+     */
+    fun getFavoritesIncludingGroups(providerId: Long, contentType: ContentType): Flow<List<Favorite>>
     fun getFavoritesByGroup(groupId: Long): Flow<List<Favorite>>
     fun getGroups(providerId: Long, contentType: ContentType): Flow<List<VirtualGroup>>
     fun getGroups(providerIds: List<Long>, contentType: ContentType): Flow<List<VirtualGroup>>

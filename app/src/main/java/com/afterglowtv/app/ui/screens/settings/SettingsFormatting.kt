@@ -213,18 +213,18 @@ internal fun formatCategorySortModeLabel(mode: CategorySortMode, context: androi
 internal fun categoryTypeLabel(type: ContentType, context: android.content.Context): String {
     return when (type) {
         ContentType.LIVE -> context.getString(R.string.settings_category_sort_live)
-        ContentType.MOVIE -> context.getString(R.string.settings_category_sort_movies)
-        ContentType.SERIES -> context.getString(R.string.settings_category_sort_series)
-        ContentType.SERIES_EPISODE -> context.getString(R.string.settings_category_sort_series)
+        ContentType.MOVIE -> context.getString(R.string.settings_category_sort_vod_movies)
+        ContentType.SERIES -> context.getString(R.string.settings_category_sort_vod_tv)
+        ContentType.SERIES_EPISODE -> context.getString(R.string.settings_category_sort_vod_tv)
     }
 }
 
 internal fun categoryTypeDescription(type: ContentType, context: android.content.Context): String {
     return when (type) {
         ContentType.LIVE -> context.getString(R.string.settings_category_type_live_description)
-        ContentType.MOVIE -> context.getString(R.string.settings_category_type_movies_description)
-        ContentType.SERIES -> context.getString(R.string.settings_category_type_series_description)
-        ContentType.SERIES_EPISODE -> context.getString(R.string.settings_category_type_series_description)
+        ContentType.MOVIE -> context.getString(R.string.settings_category_type_vod_movies_description)
+        ContentType.SERIES -> context.getString(R.string.settings_category_type_vod_tv_description)
+        ContentType.SERIES_EPISODE -> context.getString(R.string.settings_category_type_vod_tv_description)
     }
 }
 
@@ -255,13 +255,13 @@ internal fun LiveTvQuickFilterVisibilityMode.descriptionResId(): Int = when (thi
 internal fun VodViewMode.labelResId(): Int = when (this) {
     VodViewMode.SHELVES -> R.string.settings_vod_view_mode_shelves
     VodViewMode.GRID -> R.string.settings_vod_view_mode_grid
-    VodViewMode.GUIDE -> R.string.settings_vod_view_mode_container
+    VodViewMode.GUIDE -> R.string.settings_vod_view_mode_guide
 }
 
 internal fun VodViewMode.descriptionResId(): Int = when (this) {
     VodViewMode.SHELVES -> R.string.settings_vod_view_mode_shelves_desc
     VodViewMode.GRID -> R.string.settings_vod_view_mode_grid_desc
-    VodViewMode.GUIDE -> R.string.settings_vod_view_mode_container_desc
+    VodViewMode.GUIDE -> R.string.settings_vod_view_mode_guide_desc
 }
 
 internal fun ChannelNumberingMode.labelResId(): Int = when (this) {

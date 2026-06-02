@@ -89,37 +89,6 @@ class ProviderSyncWorkerTest {
     }
 
     @Test
-    fun `background maintenance skips m3u providers because catalog is local after import`() {
-        val provider = ProviderEntity(
-            id = 5L,
-            name = "Playlist",
-            type = ProviderType.M3U,
-            serverUrl = "https://example.com/list.m3u",
-            m3uUrl = "https://example.com/list.m3u",
-            isActive = true,
-            status = ProviderStatus.ACTIVE
-        )
-
-        assertThat(shouldSkipBackgroundProviderSync(provider, requestedProviderId = -1L)).isTrue()
-        assertThat(shouldSkipBackgroundProviderSync(provider, requestedProviderId = provider.id)).isFalse()
-    }
-
-    @Test
-    fun `background maintenance keeps xtream provider sync checks`() {
-        val provider = ProviderEntity(
-            id = 9L,
-            name = "Xtream",
-            type = ProviderType.XTREAM_CODES,
-            serverUrl = "https://example.com",
-            username = "user",
-            isActive = true,
-            status = ProviderStatus.ACTIVE
-        )
-
-        assertThat(shouldSkipBackgroundProviderSync(provider, requestedProviderId = -1L)).isFalse()
-    }
-
-    @Test
     fun `targeted resume success activates provider and stamps sync time`() = runTest {
         val provider = ProviderEntity(
             id = 9L,

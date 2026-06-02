@@ -20,7 +20,7 @@ import java.time.temporal.ChronoUnit
 
 /**
  * 2 dp red vertical "now" line drawn over an EPG grid. Recomputes its X
- * position every 60 s. Matches Afterglow TV:
+ * position every 60 s. Matches AfterglowTV:
  *   - color #F44336 (Material Red 500)
  *   - stroke 2 dp
  *

@@ -1,6 +1,7 @@
 package com.afterglowtv.app.ui.screens.settings
 
 import android.app.Application
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.update.AppUpdateInstaller
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.domain.manager.RecordingManager
@@ -29,6 +30,10 @@ internal fun registerSettingsAppUpdateObservers(
     appUpdateInstaller: AppUpdateInstaller,
     uiState: MutableStateFlow<SettingsUiState>
 ) {
+    if (!StorePolicy.current.enableSideloadUpdates) {
+        return
+    }
+
     scope.launch {
         combine(
             preferencesRepository.autoCheckAppUpdates,
@@ -64,6 +69,7 @@ internal fun registerSettingsAppUpdateObservers(
 internal fun registerCombinedProfileObservers(
     scope: CoroutineScope,
     combinedM3uRepository: CombinedM3uRepository,
+    preferencesRepository: PreferencesRepository,
     uiState: MutableStateFlow<SettingsUiState>
 ) {
     scope.launch {
@@ -74,13 +80,33 @@ internal fun registerCombinedProfileObservers(
 
     scope.launch {
         combinedM3uRepository.getAvailableM3uProviders().collect { providers ->
-            uiState.update { it.copy(availableM3uProviders = providers) }
+            uiState.update {
+                it.copy(availableM3uProviders = providers.filter(StorePolicy.current::isUserVisibleProvider))
+            }
         }
     }
 
     scope.launch {
         combinedM3uRepository.getActiveLiveSource().collect { activeSource ->
             uiState.update { it.copy(activeLiveSource = activeSource) }
+        }
+    }
+
+    scope.launch {
+        preferencesRepository.activeVodSource.collect { activeSource ->
+            uiState.update { it.copy(activeVodSource = activeSource) }
+        }
+    }
+
+    scope.launch {
+        preferencesRepository.activeAdultLiveSource.collect { activeSource ->
+            uiState.update { it.copy(activeAdultLiveSource = activeSource) }
+        }
+    }
+
+    scope.launch {
+        preferencesRepository.activeAdultVodSource.collect { activeSource ->
+            uiState.update { it.copy(activeAdultVodSource = activeSource) }
         }
     }
 }

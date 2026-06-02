@@ -348,6 +348,8 @@ class PlayerViewModel @Inject constructor(
     internal var sleepTimerExitEmitted = false
 
     val castConnectionState: StateFlow<CastConnectionState> = castManager.connectionState
+    val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     private fun setActivePlayerEngine(engine: PlayerEngine) {
         if (activePlayerEngineFlow.value === engine) return
@@ -1081,15 +1083,14 @@ class PlayerViewModel @Inject constructor(
 
     private suspend fun tryAdoptPreviewHandoff(
         requestVersion: Long,
-        internalContentId: Long,
+        internalChannelId: Long,
         providerId: Long
     ): Boolean {
-        if (currentContentType != ContentType.LIVE && currentContentType != ContentType.MOVIE) return false
+        if (currentContentType != ContentType.LIVE) return false
 
         val session = livePreviewHandoffManager.consumeFullscreenHandoff(
-            contentId = internalContentId,
-            providerId = providerId.takeIf { it > 0L },
-            contentType = currentContentType
+            channelId = internalChannelId,
+            providerId = providerId.takeIf { it > 0L }
         ) ?: return false
 
         val adoptedEngine = session.engine
@@ -1122,9 +1123,7 @@ class PlayerViewModel @Inject constructor(
                 )
                 playerEngine.play()
                 startTokenRenewalMonitoring(session.streamInfo.expirationTime)
-                if (currentContentType == ContentType.LIVE) {
-                    maybeStartLiveTimeshift(session.streamInfo)
-                }
+                maybeStartLiveTimeshift(session.streamInfo)
                 true
             }
         }.getOrElse {
@@ -1361,7 +1360,7 @@ class PlayerViewModel @Inject constructor(
                 // Check for resume position after the player is fully prepared (VOD only).
                 // Doing this after preparePlayer ensures pause() acts on the live player instance,
                 // not a stale one that may have already been replaced by prepareInternal().
-                if (showResumePrompt && startPositionMs == null && currentContentType != ContentType.LIVE && currentContentId != -1L && currentProviderId != -1L) {
+                if (showResumePrompt && startPositionMs == null && currentContentType != ContentType.LIVE && currentContentId > 0L && currentProviderId > 0L) {
                     val history = playbackHistoryRepository.getPlaybackHistory(
                         contentId = currentContentId,
                         contentType = currentContentType,
@@ -1396,9 +1395,9 @@ class PlayerViewModel @Inject constructor(
                         it.copy(
                             providerName = provider.name,
                             providerSourceLabel = when (provider.type) {
-                                com.afterglowtv.domain.model.ProviderType.XTREAM_CODES -> "Account Login"
-                                com.afterglowtv.domain.model.ProviderType.M3U -> "Playlist"
-                                com.afterglowtv.domain.model.ProviderType.STALKER_PORTAL -> "Portal"
+                                com.afterglowtv.domain.model.ProviderType.XTREAM_CODES -> "Xtream Codes"
+                                com.afterglowtv.domain.model.ProviderType.M3U -> "M3U Playlist"
+                                com.afterglowtv.domain.model.ProviderType.STALKER_PORTAL -> "Portal/MAG Login"
                             }
                         )
                     }

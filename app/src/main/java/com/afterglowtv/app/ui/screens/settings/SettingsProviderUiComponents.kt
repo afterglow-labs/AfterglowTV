@@ -39,7 +39,7 @@ import androidx.compose.ui.focus.focusRequester
 internal fun ProviderSelectorTab(
     provider: Provider,
     isSelected: Boolean,
-    isActive: Boolean,
+    activeLabels: List<String>,
     onClick: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -93,9 +93,9 @@ internal fun ProviderSelectorTab(
                     color = OnSurfaceDim
                 )
             }
-            if (isActive) {
+            activeLabels.forEach { label ->
                 Text(
-                    text = stringResource(R.string.settings_active),
+                    text = label,
                     style = MaterialTheme.typography.labelSmall,
                     color = Primary,
                     fontWeight = FontWeight.Bold

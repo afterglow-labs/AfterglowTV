@@ -230,7 +230,6 @@ private fun JsonElement.stringListOrNull(): List<String>? {
         is JsonPrimitive -> this.primitiveContentOrNull()?.toLenientStringList()
         is JsonArray -> this.flatMap { element -> element.stringListOrNull().orEmpty() }.normalizeStringList()
         is JsonObject -> this.values.flatMap { element -> element.stringListOrNull().orEmpty() }.normalizeStringList()
-        else -> null
     }
 }
 

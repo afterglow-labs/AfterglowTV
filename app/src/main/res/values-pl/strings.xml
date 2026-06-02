@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Afterglow TV</string>
+    <string name="app_name">AfterglowTV</string>
     <string name="nav_home">Dom</string>
     <string name="nav_live_tv">Telewizja na żywo</string>
     <string name="nav_movies">Filmy</string>
@@ -102,7 +102,7 @@
     <string name="dashboard_provider_no_expiry">Brak podanej daty wygaśnięcia</string>
     <string name="dashboard_warning_title">Dostawca wymaga uwagi</string>
     <string name="dashboard_warning_review">Otwórz szczegóły dostawcy</string>
-    <string name="dashboard_update_title">Dostępny jest Afterglow TV %1$s</string>
+    <string name="dashboard_update_title">Dostępny jest AfterglowTV %1$s</string>
     <string name="dashboard_update_available">Nowsza wersja aplikacji jest zapisana i gotowa do sprawdzenia w Ustawieniach.</string>
     <string name="dashboard_update_install_ready">Najnowsza aktualizacja została już pobrana. Otwórz Ustawienia, aby ją zainstalować.</string>
     <string name="dashboard_update_open_settings">Otwórz aktualizacje</string>
@@ -382,8 +382,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_container">VOD</string>
-    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_guide">VOD Guide</string>
+    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategorie</string>
     <string name="vod_classic_category_search">Szukaj w kategoriach</string>
     <string name="vod_classic_all">Wszystkie</string>
@@ -402,7 +402,7 @@
     <string name="settings_about_subtitle">Wersja, kompilacja i informacje o wsparciu dla tej instalacji.</string>
     <string name="settings_app_version">Wersja aplikacji</string>
     <string name="settings_build">Buduj</string>
-    <string name="settings_build_desc">Afterglow TV dla Android TV</string>
+    <string name="settings_build_desc">AfterglowTV dla Android TV</string>
     <string name="settings_enabled">Włączone</string>
     <string name="settings_disabled">Wyłączone</string>
     <string name="settings_developed_by">Opracowany przez</string>
@@ -412,7 +412,7 @@
     <string name="settings_donate">Wsparcie dla Ko-fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">Aktualizacje</string>
-    <string name="settings_updates_subtitle">Sprawdzaj nowsze wersje Afterglow TV w GitHub Releases bez wychodzenia z aplikacji.</string>
+    <string name="settings_updates_subtitle">Sprawdzaj nowsze wersje AfterglowTV w GitHub Releases bez wychodzenia z aplikacji.</string>
     <string name="settings_update_auto_check">Automatycznie sprawdzaj aktualizacje</string>
     <string name="settings_update_latest_release">Najnowsze wydanie</string>
     <string name="settings_update_status">Status aktualizacji</string>
@@ -436,8 +436,8 @@
     <string name="settings_update_status_check_failed">Ostatnie sprawdzenie nie powiodło się</string>
     <string name="settings_update_status_downloading">Pobieranie aktualizacji</string>
     <string name="settings_update_status_ready_to_install">Gotowe do instalacji</string>
-    <string name="settings_update_available_message">Afterglow TV %1$s jest dostępny.</string>
-    <string name="settings_update_current_message">Masz już najnowszą wersję Afterglow TV.</string>
+    <string name="settings_update_available_message">AfterglowTV %1$s jest dostępny.</string>
+    <string name="settings_update_current_message">Masz już najnowszą wersję AfterglowTV.</string>
     <string name="settings_syncing">Synchronizowanie danych, proszę czekać...</string>
     <string name="settings_syncing_title">Synchronizowanie danych...</string>
     <string name="settings_syncing_subtitle">Poczekaj, aż Twoja lista odtwarzania zostanie zaimportowana.</string>
@@ -700,7 +700,7 @@
     <string name="a11y_catch_up_available">Dostępne Catch-up</string>
     <string name="a11y_now_playing">Teraz odtwarzane %1$s</string>
     <string name="a11y_channel_with_number">Kanał %1$d, %2$s</string>
-    <string name="setup_title_afterglowtv">Afterglow TV</string>
+    <string name="setup_title_afterglowtv">AfterglowTV</string>
     <string name="setup_provider_title">Dodaj dostawcę</string>
     <string name="setup_edit_provider">Edytuj dostawcę</string>
     <string name="setup_update_desc">Zaktualizuj dane swojego dostawcy IPTV</string>
@@ -730,8 +730,6 @@
     <string name="setup_advanced_options_helper">Kontroluj, jak pobierane są dane przewodnika podczas konfiguracji i odświeżania dostawcy.</string>
     <string name="setup_advanced_options_show">Pokaż</string>
     <string name="setup_advanced_options_hide">Ukryj</string>
-    <string name="setup_m3u_vod_classification_label">Klasyfikacja VOD M3U</string>
-    <string name="setup_m3u_vod_classification_helper">Tylko M3U. Użyj adresu URL playlisty i heurystyki group-title, aby sortować pasujące pozycje do Filmów zamiast Telewizji na żywo.</string>
     <string name="setup_epg_sync_mode_label">Synchronizacja EPG</string>
     <string name="setup_epg_sync_mode_helper">Tryb natychmiastowy zachowuje obecne działanie. Tryb w tle kończy najpierw konfigurację, a Pomiń zostawia odświeżanie przewodnika na później.</string>
     <string name="setup_epg_sync_mode_upfront_title">Pełne EPG teraz</string>
@@ -1165,21 +1163,21 @@
     <string name="settings_history_cleared">Historia oglądania i najnowsze filmy zostały usunięte</string>
     <string name="settings_pin_changed">Kod PIN został pomyślnie zapisany</string>
     <string name="home_reorder_channels">Zmień kolejność kanałów</string>
-    <string name="tv_input_setup_scanning_title">Skanowanie kanałów Afterglow TV</string>
+    <string name="tv_input_setup_scanning_title">Skanowanie kanałów AfterglowTV</string>
     <string name="tv_input_setup_success_title">Telewizja na żywo jest gotowa</string>
     <string name="tv_input_setup_no_provider_title">Nie skonfigurowano dostawcy IPTV</string>
     <string name="tv_input_setup_error_title">Automatyczne skanowanie nie powiodło się</string>
     <string name="tv_input_setup_idle_title">Przygotowanie integracji Live TV</string>
-    <string name="tv_input_setup_scanning_body">Afterglow TV synchronizuje Twojego aktywnego dostawcę z Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">AfterglowTV synchronizuje Twojego aktywnego dostawcę z Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">Twoje kanały zostały pomyślnie zsynchronizowane.</string>
-    <string name="tv_input_setup_no_provider_body">Dodaj co najmniej jednego dostawcę IPTV w Afterglow TV, a następnie wróć tutaj, aby skanować kanały do ​​Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">Dodaj co najmniej jednego dostawcę IPTV w AfterglowTV, a następnie wróć tutaj, aby skanować kanały do ​​Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">Synchronizacja wejścia telewizora nie została ukończona.</string>
     <string name="tv_input_setup_idle_body">Proszę czekać.</string>
     <string name="tv_input_setup_source_format">Źródło: %1$s</string>
-    <string name="tv_input_setup_open_setup">Otwórz konfigurację Afterglow TV</string>
+    <string name="tv_input_setup_open_setup">Otwórz konfigurację AfterglowTV</string>
     <string name="tv_input_setup_try_scan_again">Spróbuj ponownie automatycznego skanowania</string>
     <string name="tv_input_setup_retry_scan">Ponów próbę automatycznego skanowania</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV może teraz otwierać Twoje kanały Afterglow TV.</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV może teraz otwierać Twoje kanały AfterglowTV.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1206,8 +1204,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d slotów</string>
     <string name="movie_detail_related">Więcej podobnych</string>
     <string name="movie_detail_resume_from">Wznów od %1$s</string>
-    <string name="notification_permission_recording_alert_required">Włącz powiadomienia dla Afterglow TV, aby otrzymywać alerty o błędach nagrywania.</string>
-    <string name="notification_permission_reminder_required">Włącz powiadomienia dla Afterglow TV, aby otrzymywać przypomnienia programów.</string>
+    <string name="notification_permission_recording_alert_required">Włącz powiadomienia dla AfterglowTV, aby otrzymywać alerty o błędach nagrywania.</string>
+    <string name="notification_permission_reminder_required">Włącz powiadomienia dla AfterglowTV, aby otrzymywać przypomnienia programów.</string>
     <string name="player_action_variants">Warianty</string>
     <string name="player_auto_play_cancel">Anuluj</string>
     <string name="player_auto_play_countdown">Odtwarzanie za %1$d s</string>
@@ -1381,7 +1379,7 @@
     <string name="settings_recording_skipped">Wystąpienie pominięte</string>
     <string name="settings_recording_wifi_only">Nagrywaj tylko przez Wi-Fi</string>
     <string name="settings_reset">Resetuj</string>
-    <string name="settings_restore_subtitle">Wybierz plik kopii zapasowej lub otwórz kopię zapasową za pomocą Afterglow TV z menedżera plików.</string>
+    <string name="settings_restore_subtitle">Wybierz plik kopii zapasowej lub otwórz kopię zapasową za pomocą AfterglowTV z menedżera plików.</string>
     <string name="settings_select_guide_default_category">Wybierz domyślną kategorię przewodnika</string>
     <string name="settings_select_live_timeshift_depth">Wybierz głębokość lokalnego przewijania</string>
     <string name="settings_select_time_format">Wybierz format czasu</string>

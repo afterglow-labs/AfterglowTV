@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import com.afterglowtv.app.ui.interaction.mouseClickable
@@ -55,6 +56,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -64,6 +66,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.*
 import com.afterglowtv.app.R
 import com.afterglowtv.app.device.rememberIsTelevisionDevice
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.components.dialogs.PremiumDialog
 import com.afterglowtv.app.ui.components.dialogs.PremiumDialogFooterButton
 import com.afterglowtv.app.ui.components.shell.StatusPill
@@ -76,6 +80,7 @@ import com.afterglowtv.app.ui.screens.settings.BackupImportPreviewDialog
 import com.afterglowtv.app.ui.theme.*
 import com.afterglowtv.data.util.ProviderInputSanitizer
 import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -86,6 +91,41 @@ import android.widget.Toast
 // Source type
 
 private enum class SourceType { XTREAM, STALKER, M3U_URL, M3U_FILE }
+
+private enum class M3uPlaylistFormType {
+    LIVE_TV,
+    VOD,
+    MIXED
+}
+
+internal enum class ProviderSetupSourceType {
+    SERVER_LOGIN,
+    PORTAL_LOGIN,
+    PLAYLIST_URL,
+    PLAYLIST_FILE
+}
+
+internal fun visibleProviderSetupSourceTypes(policy: StorePolicySnapshot): List<ProviderSetupSourceType> =
+    if (policy.showAdvancedSourceTypes) {
+        listOf(
+            ProviderSetupSourceType.SERVER_LOGIN,
+            ProviderSetupSourceType.PORTAL_LOGIN,
+            ProviderSetupSourceType.PLAYLIST_URL,
+            ProviderSetupSourceType.PLAYLIST_FILE
+        )
+    } else {
+        listOf(
+            ProviderSetupSourceType.PLAYLIST_URL,
+            ProviderSetupSourceType.PLAYLIST_FILE
+        )
+    }
+
+private fun ProviderSetupSourceType.toUiSourceType(): SourceType = when (this) {
+    ProviderSetupSourceType.SERVER_LOGIN -> SourceType.XTREAM
+    ProviderSetupSourceType.PORTAL_LOGIN -> SourceType.STALKER
+    ProviderSetupSourceType.PLAYLIST_URL -> SourceType.M3U_URL
+    ProviderSetupSourceType.PLAYLIST_FILE -> SourceType.M3U_FILE
+}
 
 internal fun shouldInlineProviderSetupActions(
     isTelevisionDevice: Boolean,
@@ -106,16 +146,21 @@ fun ProviderSetupScreen(
     onBack: () -> Unit,
     editProviderId: Long? = null,
     initialImportUri: String? = null,
+    initialM3uPlaylistKind: ProviderM3uPlaylistKind? = null,
     viewModel: ProviderSetupViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val knownLocalM3uUrls by viewModel.knownLocalM3uUrls.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val storePolicy = StorePolicy.current
+    val visibleSourceTypes = remember(storePolicy) {
+        visibleProviderSetupSourceTypes(storePolicy).map { it.toUiSourceType() }.toSet()
+    }
     val coroutineScope = rememberCoroutineScope()
     var appFilesDir by remember { mutableStateOf<java.io.File?>(null) }
 
     // Local form state
-    var selectedTab by rememberSaveable { mutableStateOf(2) }
+    var selectedTab by rememberSaveable { mutableStateOf(if (storePolicy.showAdvancedSourceTypes) 0 else 2) }
     var name by rememberSaveable { mutableStateOf("") }
     var m3uUrl by rememberSaveable { mutableStateOf("") }
     var m3uEpgUrl by rememberSaveable { mutableStateOf("") }
@@ -204,6 +249,14 @@ fun ProviderSetupScreen(
         runCatching { android.net.Uri.parse(importUri) }.getOrNull()?.let(::importM3uUri)
     }
 
+    LaunchedEffect(initialM3uPlaylistKind, editProviderId) {
+        val playlistKind = initialM3uPlaylistKind ?: return@LaunchedEffect
+        if (editProviderId != null) return@LaunchedEffect
+        selectedTab = 2
+        viewModel.updateM3uTab(0)
+        viewModel.updateM3uPlaylistKind(playlistKind)
+    }
+
     LaunchedEffect(uiState.backupImportSuccess) {
         if (uiState.backupImportSuccess) {
             onProviderAdded()
@@ -243,25 +296,21 @@ fun ProviderSetupScreen(
         }
     }
 
-    LaunchedEffect(uiState.developerModeEnabled, uiState.isEditing) {
-        if (!uiState.developerModeEnabled && !uiState.isEditing && selectedTab < 2) {
-            selectedTab = 2
-            viewModel.updateM3uTab(0)
-            viewModel.applySourceDefaults(ProviderSetupViewModel.SetupSourceType.M3U)
-        }
-    }
-
     // Derived UI source type
-    val sourceType = when {
+    val rawSourceType = when {
         selectedTab == 0 -> SourceType.XTREAM
         selectedTab == 1 -> SourceType.STALKER
         uiState.m3uTab == 1 -> SourceType.M3U_FILE
         else -> SourceType.M3U_URL
     }
+    val sourceType = if (uiState.isEditing || rawSourceType in visibleSourceTypes) {
+        rawSourceType
+    } else {
+        visibleSourceTypes.firstOrNull() ?: SourceType.M3U_URL
+    }
 
     fun onSourceTypeSelected(type: SourceType) {
         if (uiState.isEditing) return
-        if (!uiState.developerModeEnabled && type !in setOf(SourceType.M3U_URL, SourceType.M3U_FILE)) return
         when (type) {
             SourceType.XTREAM  -> {
                 selectedTab = 0
@@ -308,7 +357,7 @@ fun ProviderSetupScreen(
     }
 
     // ── Layout ────────────────────────────────────────────────────────────────
-    // Afterglow TV hero treatment: bleed the active palette across the screen
+    // AfterglowTV hero treatment: bleed the active palette across the screen
     // (vertical gradient + warm radial in the top-right corner that echoes the
     // logo's melting-sun motif), drop the brand strip on top, then the form.
     BoxWithConstraints(
@@ -417,7 +466,7 @@ fun ProviderSetupScreen(
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
                 )
                 Column {
-                    // Single-line "Afterglow TV" wordmark. Mixed weight + color so
+                    // Single-line "AfterglowTV" wordmark. Mixed weight + color so
                     // the "TV" reads as a sub-product mark without breaking the line.
                     Row(verticalAlignment = Alignment.Bottom) {
                         androidx.tv.material3.Text(
@@ -457,10 +506,8 @@ fun ProviderSetupScreen(
                 ) {
                     SourceTypeSelectorPanel(
                         sourceType = sourceType,
+                        visibleSourceTypes = visibleSourceTypes,
                         isEditing = uiState.isEditing,
-                        developerModeEnabled = uiState.developerModeEnabled,
-                        isEditLabel = if (uiState.isEditing) androidx.compose.ui.res.stringResource(R.string.setup_edit_provider)
-                                      else androidx.compose.ui.res.stringResource(R.string.setup_provider_title),
                         onSelect = ::onSourceTypeSelected,
                         modifier = Modifier.width(240.dp).fillMaxHeight()
                     )
@@ -473,8 +520,6 @@ fun ProviderSetupScreen(
                         password = password, onPasswordChange = { password = ProviderInputSanitizer.sanitizePasswordForEditing(it) },
                         m3uUrl = m3uUrl, onM3uUrlChange = { m3uUrl = ProviderInputSanitizer.sanitizeUrlForEditing(it) },
                         m3uEpgUrl = m3uEpgUrl, onM3uEpgUrlChange = { m3uEpgUrl = ProviderInputSanitizer.sanitizeUrlForEditing(it) },
-                        m3uEpgUniqueToPlaylist = uiState.m3uEpgUniqueToPlaylist,
-                        onToggleM3uEpgUniqueToPlaylist = { viewModel.updateM3uEpgUniqueToPlaylist(!uiState.m3uEpgUniqueToPlaylist) },
                         httpUserAgent = httpUserAgent, onHttpUserAgentChange = { httpUserAgent = ProviderInputSanitizer.sanitizeHttpUserAgentForEditing(it) },
                         httpHeaders = httpHeaders, onHttpHeadersChange = { httpHeaders = ProviderInputSanitizer.sanitizeHttpHeadersForEditing(it) },
                         stalkerMacAddress = stalkerMacAddress, onStalkerMacAddressChange = { stalkerMacAddress = ProviderInputSanitizer.sanitizeMacAddressForEditing(it) },
@@ -486,7 +531,8 @@ fun ProviderSetupScreen(
                         onLoginXtream = { viewModel.loginXtream(serverUrl, username, password, name, httpUserAgent, httpHeaders) },
                         onLoginStalker = { viewModel.loginStalker(serverUrl, stalkerMacAddress, name, stalkerDeviceProfile, stalkerDeviceTimezone, stalkerDeviceLocale) },
                         onAddM3u = { viewModel.addM3u(m3uUrl, name, httpUserAgent, httpHeaders, m3uEpgUrl) },
-                        onToggleM3uVodClassification = { viewModel.updateM3uVodClassificationEnabled(!uiState.m3uVodClassificationEnabled) },
+                        onSetM3uPlaylistKind = viewModel::updateM3uPlaylistKind,
+                        onSetM3uVodClassificationEnabled = viewModel::updateM3uVodClassificationEnabled,
                         onToggleXtreamFastSync = { viewModel.updateXtreamFastSyncEnabled(!uiState.xtreamFastSyncEnabled) },
                         onSelectEpgSyncMode = viewModel::updateEpgSyncMode,
                         onSelectXtreamLiveSyncMode = viewModel::updateXtreamLiveSyncMode,
@@ -503,8 +549,8 @@ fun ProviderSetupScreen(
                 ) {
                     SourceTypeTabRow(
                         sourceType = sourceType,
+                        visibleSourceTypes = visibleSourceTypes,
                         isEditing = uiState.isEditing,
-                        developerModeEnabled = uiState.developerModeEnabled,
                         onSelect = ::onSourceTypeSelected,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -517,8 +563,6 @@ fun ProviderSetupScreen(
                         password = password, onPasswordChange = { password = ProviderInputSanitizer.sanitizePasswordForEditing(it) },
                         m3uUrl = m3uUrl, onM3uUrlChange = { m3uUrl = ProviderInputSanitizer.sanitizeUrlForEditing(it) },
                         m3uEpgUrl = m3uEpgUrl, onM3uEpgUrlChange = { m3uEpgUrl = ProviderInputSanitizer.sanitizeUrlForEditing(it) },
-                        m3uEpgUniqueToPlaylist = uiState.m3uEpgUniqueToPlaylist,
-                        onToggleM3uEpgUniqueToPlaylist = { viewModel.updateM3uEpgUniqueToPlaylist(!uiState.m3uEpgUniqueToPlaylist) },
                         httpUserAgent = httpUserAgent, onHttpUserAgentChange = { httpUserAgent = ProviderInputSanitizer.sanitizeHttpUserAgentForEditing(it) },
                         httpHeaders = httpHeaders, onHttpHeadersChange = { httpHeaders = ProviderInputSanitizer.sanitizeHttpHeadersForEditing(it) },
                         stalkerMacAddress = stalkerMacAddress, onStalkerMacAddressChange = { stalkerMacAddress = ProviderInputSanitizer.sanitizeMacAddressForEditing(it) },
@@ -530,7 +574,8 @@ fun ProviderSetupScreen(
                         onLoginXtream = { viewModel.loginXtream(serverUrl, username, password, name, httpUserAgent, httpHeaders) },
                         onLoginStalker = { viewModel.loginStalker(serverUrl, stalkerMacAddress, name, stalkerDeviceProfile, stalkerDeviceTimezone, stalkerDeviceLocale) },
                         onAddM3u = { viewModel.addM3u(m3uUrl, name, httpUserAgent, httpHeaders, m3uEpgUrl) },
-                        onToggleM3uVodClassification = { viewModel.updateM3uVodClassificationEnabled(!uiState.m3uVodClassificationEnabled) },
+                        onSetM3uPlaylistKind = viewModel::updateM3uPlaylistKind,
+                        onSetM3uVodClassificationEnabled = viewModel::updateM3uVodClassificationEnabled,
                         onToggleXtreamFastSync = { viewModel.updateXtreamFastSyncEnabled(!uiState.xtreamFastSyncEnabled) },
                         onSelectEpgSyncMode = viewModel::updateEpgSyncMode,
                         onSelectXtreamLiveSyncMode = viewModel::updateXtreamLiveSyncMode,
@@ -671,8 +716,6 @@ private fun ProviderFormContent(
     password: String, onPasswordChange: (String) -> Unit,
     m3uUrl: String, onM3uUrlChange: (String) -> Unit,
     m3uEpgUrl: String, onM3uEpgUrlChange: (String) -> Unit,
-    m3uEpgUniqueToPlaylist: Boolean,
-    onToggleM3uEpgUniqueToPlaylist: () -> Unit,
     httpUserAgent: String, onHttpUserAgentChange: (String) -> Unit,
     httpHeaders: String, onHttpHeadersChange: (String) -> Unit,
     stalkerMacAddress: String, onStalkerMacAddressChange: (String) -> Unit,
@@ -684,7 +727,8 @@ private fun ProviderFormContent(
     onLoginXtream: () -> Unit,
     onLoginStalker: () -> Unit,
     onAddM3u: () -> Unit,
-    onToggleM3uVodClassification: () -> Unit,
+    onSetM3uPlaylistKind: (ProviderM3uPlaylistKind) -> Unit,
+    onSetM3uVodClassificationEnabled: (Boolean) -> Unit,
     onToggleXtreamFastSync: () -> Unit,
     onSelectEpgSyncMode: (ProviderEpgSyncMode) -> Unit,
     onSelectXtreamLiveSyncMode: (ProviderXtreamLiveSyncMode) -> Unit,
@@ -695,6 +739,27 @@ private fun ProviderFormContent(
 ) {
     val scrollState = rememberScrollState()
     val isTelevisionDevice = rememberIsTelevisionDevice()
+    val m3uPlaylistFormType = when {
+        uiState.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD -> M3uPlaylistFormType.VOD
+        uiState.m3uVodClassificationEnabled -> M3uPlaylistFormType.MIXED
+        else -> M3uPlaylistFormType.LIVE_TV
+    }
+    fun selectM3uPlaylistFormType(type: M3uPlaylistFormType) {
+        when (type) {
+            M3uPlaylistFormType.LIVE_TV -> {
+                onSetM3uPlaylistKind(ProviderM3uPlaylistKind.LIVE)
+                onSetM3uVodClassificationEnabled(false)
+            }
+            M3uPlaylistFormType.VOD -> {
+                onSetM3uPlaylistKind(ProviderM3uPlaylistKind.VOD)
+                onSetM3uVodClassificationEnabled(true)
+            }
+            M3uPlaylistFormType.MIXED -> {
+                onSetM3uPlaylistKind(ProviderM3uPlaylistKind.LIVE)
+                onSetM3uVodClassificationEnabled(true)
+            }
+        }
+    }
     val primaryActionText = when (sourceType) {
         SourceType.XTREAM,
         SourceType.STALKER -> when {
@@ -821,7 +886,6 @@ private fun ProviderFormContent(
                                     onHttpUserAgentChange = onHttpUserAgentChange,
                                     httpHeaders = httpHeaders,
                                     onHttpHeadersChange = onHttpHeadersChange,
-                                    onToggleM3uVodClassification = onToggleM3uVodClassification,
                                     onToggleXtreamFastSync = onToggleXtreamFastSync,
                                     onSelectEpgSyncMode = onSelectEpgSyncMode,
                                     onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
@@ -862,7 +926,6 @@ private fun ProviderFormContent(
                                     onHttpUserAgentChange = onHttpUserAgentChange,
                                     httpHeaders = httpHeaders,
                                     onHttpHeadersChange = onHttpHeadersChange,
-                                    onToggleM3uVodClassification = onToggleM3uVodClassification,
                                     onToggleXtreamFastSync = onToggleXtreamFastSync,
                                     onSelectEpgSyncMode = onSelectEpgSyncMode,
                                     onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
@@ -876,101 +939,105 @@ private fun ProviderFormContent(
                                 }
 
                                 SourceType.M3U_URL -> {
-                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    com.afterglowtv.app.ui.components.ClipboardPasteButton(
-                                        onPaste = { onM3uUrlChange(it) },
-                                        label = "Paste M3U URL",
+                                    M3uPlaylistTypeSelector(
+                                        selectedType = m3uPlaylistFormType,
+                                        onSelect = ::selectM3uPlaylistFormType
                                     )
-                                    com.afterglowtv.app.ui.components.ClipboardCopyButton(
-                                        text = m3uUrl,
-                                        label = "Copy"
+                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        com.afterglowtv.app.ui.components.ClipboardPasteButton(
+                                            onPaste = { onM3uUrlChange(it) },
+                                            label = stringResource(R.string.setup_paste_m3u_url),
+                                        )
+                                        com.afterglowtv.app.ui.components.ClipboardCopyButton(
+                                            text = m3uUrl,
+                                            label = "Copy"
+                                        )
+                                        com.afterglowtv.app.ui.components.ClipboardClearButton(
+                                            onClear = { onM3uUrlChange("") },
+                                            label = "Clear",
+                                            enabled = m3uUrl.isNotEmpty()
+                                        )
+                                    }
+                                    ProviderTextField(
+                                        value = m3uUrl,
+                                        onValueChange = onM3uUrlChange,
+                                        placeholder = androidx.compose.ui.res.stringResource(R.string.setup_m3u_hint),
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next)
                                     )
-                                    com.afterglowtv.app.ui.components.ClipboardClearButton(
-                                        onClear = { onM3uUrlChange("") },
-                                        label = "Clear",
-                                        enabled = m3uUrl.isNotEmpty()
+                                    if (m3uPlaylistFormType != M3uPlaylistFormType.VOD) {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            com.afterglowtv.app.ui.components.ClipboardPasteButton(
+                                                onPaste = { onM3uEpgUrlChange(it) },
+                                                label = "Paste EPG URL",
+                                            )
+                                            com.afterglowtv.app.ui.components.ClipboardCopyButton(
+                                                text = m3uEpgUrl,
+                                                label = "Copy"
+                                            )
+                                            com.afterglowtv.app.ui.components.ClipboardClearButton(
+                                                onClear = { onM3uEpgUrlChange("") },
+                                                label = "Clear",
+                                                enabled = m3uEpgUrl.isNotEmpty()
+                                            )
+                                        }
+                                        ProviderTextField(
+                                            value = m3uEpgUrl,
+                                            onValueChange = onM3uEpgUrlChange,
+                                            placeholder = androidx.compose.ui.res.stringResource(R.string.setup_epg_url_hint),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
+                                        )
+                                    }
+                                    AdvancedProviderOptionsSection(
+                                        sourceType = sourceType,
+                                        uiState = uiState,
+                                        httpUserAgent = httpUserAgent,
+                                        onHttpUserAgentChange = onHttpUserAgentChange,
+                                        httpHeaders = httpHeaders,
+                                        onHttpHeadersChange = onHttpHeadersChange,
+                                        onToggleXtreamFastSync = onToggleXtreamFastSync,
+                                        onSelectEpgSyncMode = onSelectEpgSyncMode,
+                                        onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
+                                        stalkerDeviceProfile = stalkerDeviceProfile,
+                                        onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
+                                        stalkerDeviceTimezone = stalkerDeviceTimezone,
+                                        onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
+                                        stalkerDeviceLocale = stalkerDeviceLocale,
+                                        onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
                                     )
-                                }
-                                ProviderTextField(
-                                    value = m3uUrl, onValueChange = onM3uUrlChange,
-                                    placeholder = androidx.compose.ui.res.stringResource(R.string.setup_m3u_hint),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next)
-                                )
-                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    com.afterglowtv.app.ui.components.ClipboardPasteButton(
-                                        onPaste = { onM3uEpgUrlChange(it) },
-                                        label = "Paste EPG URL",
-                                    )
-                                    com.afterglowtv.app.ui.components.ClipboardCopyButton(
-                                        text = m3uEpgUrl,
-                                        label = "Copy"
-                                    )
-                                    com.afterglowtv.app.ui.components.ClipboardClearButton(
-                                        onClear = { onM3uEpgUrlChange("") },
-                                        label = "Clear",
-                                        enabled = m3uEpgUrl.isNotEmpty()
-                                    )
-                                }
-                                ProviderTextField(
-                                    value = m3uEpgUrl, onValueChange = onM3uEpgUrlChange,
-                                    placeholder = androidx.compose.ui.res.stringResource(R.string.setup_epg_url_hint),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
-                                )
-                                AdvancedSwitchOption(
-                                    title = stringResource(R.string.setup_m3u_epg_unique_label),
-                                    helper = stringResource(R.string.setup_m3u_epg_unique_helper),
-                                    checked = m3uEpgUniqueToPlaylist,
-                                    onToggle = onToggleM3uEpgUniqueToPlaylist
-                                )
-                                AdvancedProviderOptionsSection(
-                                    sourceType = sourceType,
-                                    uiState = uiState,
-                                    httpUserAgent = httpUserAgent,
-                                    onHttpUserAgentChange = onHttpUserAgentChange,
-                                    httpHeaders = httpHeaders,
-                                    onHttpHeadersChange = onHttpHeadersChange,
-                                    onToggleM3uVodClassification = onToggleM3uVodClassification,
-                                    onToggleXtreamFastSync = onToggleXtreamFastSync,
-                                    onSelectEpgSyncMode = onSelectEpgSyncMode,
-                                    onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
-                                    stalkerDeviceProfile = stalkerDeviceProfile,
-                                    onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
-                                    stalkerDeviceTimezone = stalkerDeviceTimezone,
-                                    onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
-                                    stalkerDeviceLocale = stalkerDeviceLocale,
-                                    onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
-                                )
                                 }
 
                                 SourceType.M3U_FILE -> {
-                                FileSelectorCard(
-                                    fileName = if (m3uUrl.startsWith("file://")) m3uUrl.substringAfterLast("/") else null,
-                                    fileSelectedHint = androidx.compose.ui.res.stringResource(R.string.setup_file_replace_hint),
-                                    emptySelectionTitle = androidx.compose.ui.res.stringResource(R.string.setup_file_select_title),
-                                    emptySelectionHint = androidx.compose.ui.res.stringResource(R.string.setup_file_browse_hint),
-                                    onClick = onFilePick
-                                )
-                                fileImportError?.let {
-                                    Text(text = it, style = MaterialTheme.typography.bodyMedium, color = ErrorColor)
-                                }
-                                AdvancedProviderOptionsSection(
-                                    sourceType = sourceType,
-                                    uiState = uiState,
-                                    httpUserAgent = httpUserAgent,
-                                    onHttpUserAgentChange = onHttpUserAgentChange,
-                                    httpHeaders = httpHeaders,
-                                    onHttpHeadersChange = onHttpHeadersChange,
-                                    onToggleM3uVodClassification = onToggleM3uVodClassification,
-                                    onToggleXtreamFastSync = onToggleXtreamFastSync,
-                                    onSelectEpgSyncMode = onSelectEpgSyncMode,
-                                    onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
-                                    stalkerDeviceProfile = stalkerDeviceProfile,
-                                    onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
-                                    stalkerDeviceTimezone = stalkerDeviceTimezone,
-                                    onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
-                                    stalkerDeviceLocale = stalkerDeviceLocale,
-                                    onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
-                                )
+                                    M3uPlaylistTypeSelector(
+                                        selectedType = m3uPlaylistFormType,
+                                        onSelect = ::selectM3uPlaylistFormType
+                                    )
+                                    FileSelectorCard(
+                                        fileName = if (m3uUrl.startsWith("file://")) m3uUrl.substringAfterLast("/") else null,
+                                        fileSelectedHint = androidx.compose.ui.res.stringResource(R.string.setup_file_replace_hint),
+                                        emptySelectionTitle = androidx.compose.ui.res.stringResource(R.string.setup_file_select_title),
+                                        emptySelectionHint = androidx.compose.ui.res.stringResource(R.string.setup_file_browse_hint),
+                                        onClick = onFilePick
+                                    )
+                                    fileImportError?.let {
+                                        Text(text = it, style = MaterialTheme.typography.bodyMedium, color = ErrorColor)
+                                    }
+                                    AdvancedProviderOptionsSection(
+                                        sourceType = sourceType,
+                                        uiState = uiState,
+                                        httpUserAgent = httpUserAgent,
+                                        onHttpUserAgentChange = onHttpUserAgentChange,
+                                        httpHeaders = httpHeaders,
+                                        onHttpHeadersChange = onHttpHeadersChange,
+                                        onToggleXtreamFastSync = onToggleXtreamFastSync,
+                                        onSelectEpgSyncMode = onSelectEpgSyncMode,
+                                        onSelectXtreamLiveSyncMode = onSelectXtreamLiveSyncMode,
+                                        stalkerDeviceProfile = stalkerDeviceProfile,
+                                        onStalkerDeviceProfileChange = onStalkerDeviceProfileChange,
+                                        stalkerDeviceTimezone = stalkerDeviceTimezone,
+                                        onStalkerDeviceTimezoneChange = onStalkerDeviceTimezoneChange,
+                                        stalkerDeviceLocale = stalkerDeviceLocale,
+                                        onStalkerDeviceLocaleChange = onStalkerDeviceLocaleChange
+                                    )
                                 }
                             }
                         }
@@ -1132,8 +1199,7 @@ private fun SetupSummaryStrip(
         )
         SourceType.STALKER -> listOf(
             R.string.setup_badge_live_tv,
-            R.string.setup_badge_portal,
-            R.string.badge_beta
+            R.string.setup_badge_portal
         )
         SourceType.M3U_URL -> listOf(
             R.string.setup_badge_live_tv,
@@ -1198,7 +1264,6 @@ private fun AdvancedProviderOptionsSection(
     onHttpUserAgentChange: (String) -> Unit,
     httpHeaders: String,
     onHttpHeadersChange: (String) -> Unit,
-    onToggleM3uVodClassification: () -> Unit,
     onToggleXtreamFastSync: () -> Unit,
     onSelectEpgSyncMode: (ProviderEpgSyncMode) -> Unit,
     onSelectXtreamLiveSyncMode: (ProviderXtreamLiveSyncMode) -> Unit,
@@ -1217,13 +1282,12 @@ private fun AdvancedProviderOptionsSection(
         uiState.epgSyncMode,
         uiState.xtreamFastSyncEnabled,
         uiState.xtreamLiveSyncMode,
-        sourceType
+            sourceType
     ) {
         val hasNonDefaultSelection = ((sourceType == SourceType.XTREAM || sourceType == SourceType.STALKER) && uiState.epgSyncMode != defaultEpgSyncMode) ||
             (sourceType == SourceType.XTREAM && !uiState.xtreamFastSyncEnabled) ||
             (sourceType == SourceType.XTREAM && uiState.xtreamLiveSyncMode != ProviderXtreamLiveSyncMode.AUTO) ||
-            ((sourceType == SourceType.M3U_URL || sourceType == SourceType.M3U_FILE) && uiState.m3uVodClassificationEnabled) ||
-            ((sourceType == SourceType.XTREAM || sourceType == SourceType.M3U_URL || sourceType == SourceType.M3U_FILE) &&
+            ((sourceType == SourceType.XTREAM || isM3uSource(sourceType)) &&
                 (httpUserAgent.isNotBlank() || httpHeaders.isNotBlank())) ||
             (sourceType == SourceType.STALKER && (stalkerDeviceProfile.isNotBlank() || stalkerDeviceTimezone.isNotBlank() || stalkerDeviceLocale.isNotBlank()))
         if (uiState.isEditing && hasNonDefaultSelection) {
@@ -1287,16 +1351,7 @@ private fun AdvancedProviderOptionsSection(
 
         AnimatedVisibility(visible = showAdvancedOptions) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (sourceType == SourceType.M3U_URL || sourceType == SourceType.M3U_FILE) {
-                    AdvancedSwitchOption(
-                        title = stringResource(R.string.setup_m3u_vod_classification_label),
-                        helper = stringResource(R.string.setup_m3u_vod_classification_helper),
-                        checked = uiState.m3uVodClassificationEnabled,
-                        onToggle = onToggleM3uVodClassification
-                    )
-                }
-
-                if (sourceType == SourceType.XTREAM || sourceType == SourceType.M3U_URL || sourceType == SourceType.M3U_FILE) {
+                if (sourceType == SourceType.XTREAM || isM3uSource(sourceType)) {
                     ProviderTextField(
                         value = httpUserAgent,
                         onValueChange = onHttpUserAgentChange,
@@ -1410,6 +1465,110 @@ private fun AdvancedProviderOptionsSection(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun M3uPlaylistTypeSelector(
+    selectedType: M3uPlaylistFormType,
+    onSelect: (M3uPlaylistFormType) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Surface, RoundedCornerShape(12.dp))
+            .border(1.dp, SurfaceHighlight, RoundedCornerShape(12.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.setup_m3u_playlist_type_label),
+            style = MaterialTheme.typography.titleSmall,
+            color = TextPrimary
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            M3uPlaylistTypeOption(
+                title = stringResource(R.string.setup_m3u_playlist_type_live_title),
+                description = stringResource(R.string.setup_m3u_playlist_type_live_description),
+                selected = selectedType == M3uPlaylistFormType.LIVE_TV,
+                onSelect = { onSelect(M3uPlaylistFormType.LIVE_TV) },
+                modifier = Modifier.weight(1f)
+            )
+            M3uPlaylistTypeOption(
+                title = stringResource(R.string.setup_m3u_playlist_type_vod_title),
+                description = stringResource(R.string.setup_m3u_playlist_type_vod_description),
+                selected = selectedType == M3uPlaylistFormType.VOD,
+                onSelect = { onSelect(M3uPlaylistFormType.VOD) },
+                modifier = Modifier.weight(1f)
+            )
+            M3uPlaylistTypeOption(
+                title = stringResource(R.string.setup_m3u_playlist_type_mixed_title),
+                description = stringResource(R.string.setup_m3u_playlist_type_mixed_description),
+                selected = selectedType == M3uPlaylistFormType.MIXED,
+                onSelect = { onSelect(M3uPlaylistFormType.MIXED) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun M3uPlaylistTypeOption(
+    title: String,
+    description: String,
+    selected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onSelect,
+        modifier = modifier
+            .height(92.dp)
+            .mouseClickable(onClick = onSelect),
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = if (selected) {
+                com.afterglowtv.app.ui.design.AppColors.SurfaceAccent.copy(alpha = 0.95f)
+            } else {
+                SurfaceElevated
+            },
+            focusedContainerColor = com.afterglowtv.app.ui.design.AppColors.SurfaceAccent
+        ),
+        border = ClickableSurfaceDefaults.border(
+            border = Border(
+                BorderStroke(
+                    if (selected) 2.dp else 1.dp,
+                    if (selected) Primary.copy(alpha = 0.7f) else SurfaceHighlight
+                )
+            ),
+            focusedBorder = Border(BorderStroke(3.dp, PrimaryLight))
+        ),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                color = if (selected) PrimaryLight else TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceDim,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
@@ -1619,9 +1778,8 @@ private fun FormErrors(validationError: String?, error: String?) {
 @Composable
 private fun SourceTypeSelectorPanel(
     sourceType: SourceType,
+    visibleSourceTypes: Set<SourceType>,
     isEditing: Boolean,
-    developerModeEnabled: Boolean,
-    isEditLabel: String,
     onSelect: (SourceType) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -1632,25 +1790,13 @@ private fun SourceTypeSelectorPanel(
         colors = SurfaceDefaults.colors(containerColor = Surface.copy(alpha = 0.92f))
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(14.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = isEditLabel,
-                style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary
-            )
-            Text(
-                text = androidx.compose.ui.res.stringResource(R.string.setup_shell_subtitle),
-                style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceDim
-            )
-            Text(
-                text = androidx.compose.ui.res.stringResource(R.string.setup_source_type_label),
-                style = MaterialTheme.typography.labelSmall,
-                color = TextTertiary
-            )
-            if ((developerModeEnabled && !isEditing) || sourceType == SourceType.XTREAM) {
+            if (shouldShowProviderSetupSourceType(SourceType.XTREAM, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_xtream),
                     subtitle = androidx.compose.ui.res.stringResource(R.string.setup_info_xtream_body),
@@ -1659,17 +1805,16 @@ private fun SourceTypeSelectorPanel(
                     onClick = { onSelect(SourceType.XTREAM) }
                 )
             }
-            if ((developerModeEnabled && !isEditing) || sourceType == SourceType.STALKER) {
+            if (shouldShowProviderSetupSourceType(SourceType.STALKER, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_stalker),
-                    badge = androidx.compose.ui.res.stringResource(R.string.badge_beta),
                     subtitle = androidx.compose.ui.res.stringResource(R.string.setup_info_stalker_body),
                     selected = sourceType == SourceType.STALKER,
                     enabled = !isEditing,
                     onClick = { onSelect(SourceType.STALKER) }
                 )
             }
-            if (!isEditing || sourceType == SourceType.M3U_URL) {
+            if (shouldShowProviderSetupSourceType(SourceType.M3U_URL, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_tab_url),
                     subtitle = androidx.compose.ui.res.stringResource(R.string.setup_info_m3u_body),
@@ -1678,7 +1823,7 @@ private fun SourceTypeSelectorPanel(
                     onClick = { onSelect(SourceType.M3U_URL) }
                 )
             }
-            if (!isEditing || sourceType == SourceType.M3U_FILE) {
+            if (shouldShowProviderSetupSourceType(SourceType.M3U_FILE, visibleSourceTypes, sourceType, isEditing)) {
                 SourceTypeCard(
                     title = androidx.compose.ui.res.stringResource(R.string.setup_tab_file),
                     subtitle = androidx.compose.ui.res.stringResource(R.string.setup_file_browse_hint),
@@ -1758,35 +1903,37 @@ private fun SourceTypeCard(
 @Composable
 private fun SourceTypeTabRow(
     sourceType: SourceType,
+    visibleSourceTypes: Set<SourceType>,
     isEditing: Boolean,
-    developerModeEnabled: Boolean,
     onSelect: (SourceType) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if ((developerModeEnabled && !isEditing) || sourceType == SourceType.XTREAM) {
+    Row(
+        modifier = modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (shouldShowProviderSetupSourceType(SourceType.XTREAM, visibleSourceTypes, sourceType, isEditing)) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_xtream),
                 isSelected = sourceType == SourceType.XTREAM,
                 onClick = { if (!isEditing) onSelect(SourceType.XTREAM) }
             )
         }
-        if ((developerModeEnabled && !isEditing) || sourceType == SourceType.STALKER) {
+        if (shouldShowProviderSetupSourceType(SourceType.STALKER, visibleSourceTypes, sourceType, isEditing)) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_stalker),
-                badge = androidx.compose.ui.res.stringResource(R.string.badge_beta),
                 isSelected = sourceType == SourceType.STALKER,
                 onClick = { if (!isEditing) onSelect(SourceType.STALKER) }
             )
         }
-        if (!isEditing || sourceType == SourceType.M3U_URL) {
+        if (shouldShowProviderSetupSourceType(SourceType.M3U_URL, visibleSourceTypes, sourceType, isEditing)) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_tab_url),
                 isSelected = sourceType == SourceType.M3U_URL,
                 onClick = { if (!isEditing) onSelect(SourceType.M3U_URL) }
             )
         }
-        if (!isEditing || sourceType == SourceType.M3U_FILE) {
+        if (shouldShowProviderSetupSourceType(SourceType.M3U_FILE, visibleSourceTypes, sourceType, isEditing)) {
             TabButton(
                 text = androidx.compose.ui.res.stringResource(R.string.setup_tab_file),
                 isSelected = sourceType == SourceType.M3U_FILE,
@@ -1795,6 +1942,22 @@ private fun SourceTypeTabRow(
         }
     }
 }
+
+private fun shouldShowProviderSetupSourceType(
+    candidate: SourceType,
+    visibleSourceTypes: Set<SourceType>,
+    currentSourceType: SourceType,
+    isEditing: Boolean
+): Boolean =
+    if (isEditing) {
+        candidate == currentSourceType && candidate in visibleSourceTypes
+    } else {
+        candidate in visibleSourceTypes
+    }
+
+private fun isM3uSource(sourceType: SourceType): Boolean =
+    sourceType == SourceType.M3U_URL ||
+        sourceType == SourceType.M3U_FILE
 
 // ProviderTextField
 //

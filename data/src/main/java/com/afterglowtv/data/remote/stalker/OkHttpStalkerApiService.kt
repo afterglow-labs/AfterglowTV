@@ -3,6 +3,7 @@ package com.afterglowtv.data.remote.stalker
 import android.util.Log
 import com.google.gson.JsonObject as GsonJsonObject
 import com.google.gson.JsonParser
+import com.google.gson.Strictness
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.afterglowtv.domain.model.Result
@@ -756,7 +757,7 @@ class OkHttpStalkerApiService @Inject constructor(
             val body = response.body ?: throw IOException("Portal returned an empty response${actionSuffix(action)}.")
             val charset = body.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
             val reader = JsonReader(InputStreamReader(body.byteStream(), charset))
-            reader.isLenient = true
+            reader.setStrictness(Strictness.LENIENT)
             try {
                 streamStalkerItems(reader, onItem)
             } catch (error: IllegalStateException) {
@@ -909,7 +910,7 @@ class OkHttpStalkerApiService @Inject constructor(
                 }
             )
             val reader = JsonReader(InputStreamReader(limited, charset))
-            reader.isLenient = true
+            reader.setStrictness(Strictness.LENIENT)
             try {
                 streamStalkerPrograms(reader, channelIdOverride, onProgram)
             } catch (error: IllegalStateException) {
