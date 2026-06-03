@@ -62,14 +62,14 @@ class EpgScreenStateTest {
     }
 
     @Test
-    fun `explicit xxx guide category uses xxx guide`() {
+    fun `explicit adult category uses adult surface`() {
         val state = EpgUiState(
-            selectedCategoryId = VirtualCategoryIds.ADULT_GUIDE,
-            categories = listOf(Category(id = VirtualCategoryIds.ADULT_GUIDE, name = "XXX Guide", isAdult = true, isVirtual = true)),
+            selectedCategoryId = VirtualCategoryIds.ADULT,
+            categories = listOf(Category(id = VirtualCategoryIds.ADULT, name = "Adult", isAdult = true, isVirtual = true)),
             channels = listOf(Channel(id = 1L, name = "MILF TV", providerId = 1L, categoryId = 10L))
         )
 
-        assertThat(shouldUseAdultGuide(state)).isTrue()
+        assertThat(shouldUseAdult(state)).isTrue()
     }
 
     @Test
@@ -80,7 +80,7 @@ class EpgScreenStateTest {
             channels = listOf(Channel(id = 1L, name = "MILF TV", providerId = 1L, categoryId = 10L))
         )
 
-        assertThat(shouldUseAdultGuide(state)).isFalse()
+        assertThat(shouldUseAdult(state)).isFalse()
     }
 
     @Test
@@ -94,7 +94,7 @@ class EpgScreenStateTest {
             )
         )
 
-        assertThat(shouldUseAdultGuide(state)).isFalse()
+        assertThat(shouldUseAdult(state)).isFalse()
     }
 
     @Test
@@ -108,11 +108,11 @@ class EpgScreenStateTest {
             )
         )
 
-        assertThat(shouldUseAdultGuide(state)).isFalse()
+        assertThat(shouldUseAdult(state)).isFalse()
     }
 
     @Test
-    fun `mixed normal provider does not use xxx guide`() {
+    fun `mixed normal provider does not use adult surface`() {
         val state = EpgUiState(
             selectedCategoryId = ChannelRepository.ALL_CHANNELS_ID,
             categories = listOf(Category(id = 10L, name = "Sports")),
@@ -122,7 +122,7 @@ class EpgScreenStateTest {
             )
         )
 
-        assertThat(shouldUseAdultGuide(state)).isFalse()
+        assertThat(shouldUseAdult(state)).isFalse()
     }
 
 }

@@ -169,8 +169,8 @@ internal fun resolveGuideEmptyAction(state: EpgUiState): GuideEmptyAction {
     }
 }
 
-internal fun shouldUseAdultGuide(state: EpgUiState): Boolean {
-    return state.selectedCategoryId == VirtualCategoryIds.ADULT_GUIDE && state.channels.isNotEmpty()
+internal fun shouldUseAdult(state: EpgUiState): Boolean {
+    return state.selectedCategoryId == VirtualCategoryIds.ADULT && state.channels.isNotEmpty()
 }
 
 internal fun shouldShowGuideRecordingActions(
@@ -502,13 +502,13 @@ fun FullEpgScreen(
                 }
 
                 else -> {
-                    val useAdultGuide = shouldUseAdultGuide(uiState)
-                    val adultSortRemaining = if (useAdultGuide) {
-                        (uiState.loadedChannelCount - uiState.adultGuideCategorizedChannelCount).coerceAtLeast(0)
+                    val useAdult = shouldUseAdult(uiState)
+                    val adultSortRemaining = if (useAdult) {
+                        (uiState.loadedChannelCount - uiState.adultCategorizedChannelCount).coerceAtLeast(0)
                     } else {
                         0
                     }
-                    val adultSortBatchSize = uiState.adultGuideSortBatchSize
+                    val adultSortBatchSize = uiState.adultSortBatchSize
                     GuideNowProvider {
                         GuideHeroSection(
                             uiState = uiState,
@@ -527,9 +527,9 @@ fun FullEpgScreen(
                         selectedCategoryName = uiState.categories
                             .firstOrNull { it.id == uiState.selectedCategoryId }
                             ?.name
-                            ?: stringResource(if (fixedCategoryId == VirtualCategoryIds.ADULT_GUIDE) titleRes else R.string.epg_filter_short),
+                            ?: stringResource(if (fixedCategoryId == VirtualCategoryIds.ADULT) titleRes else R.string.epg_filter_short),
                         firstButtonFocusRequester = guideToolbarFocusRequester,
-                        manualSortLabel = if (uiState.isAdultGuideCategorizing) {
+                        manualSortLabel = if (uiState.isAdultCategorizing) {
                             "Sorting..."
                         } else if (adultSortRemaining > 0) {
                             "Sort next ${adultSortRemaining.coerceAtMost(adultSortBatchSize)}"
@@ -550,7 +550,7 @@ fun FullEpgScreen(
                         onOpenOptions = {
                             showGuideOptions = true
                         },
-                        onManualSort = viewModel::categorizeNextAdultGuideChunk,
+                        onManualSort = viewModel::categorizeNextAdultChunk,
                         onGuideInteract = { topNavVisible = true },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -615,61 +615,61 @@ fun FullEpgScreen(
                             }
                         )
                     } else {
-                        val adultGuideCategories = if (useAdultGuide) {
-                            uiState.adultGuideCategories
+                        val adultCategories = if (useAdult) {
+                            uiState.adultCategories
                         } else {
                             emptyList()
                         }
-                        var selectedAdultGuideCategoryKey by rememberSaveable(
+                        var selectedAdultCategoryKey by rememberSaveable(
                             uiState.currentProviderName,
                             uiState.selectedCategoryId,
                             uiState.showFavoritesOnly
                         ) {
                             mutableStateOf("")
                         }
-                        LaunchedEffect(adultGuideCategories, selectedAdultGuideCategoryKey) {
+                        LaunchedEffect(adultCategories, selectedAdultCategoryKey) {
                             if (
-                                adultGuideCategories.isNotEmpty() && (
-                                    selectedAdultGuideCategoryKey.isBlank() ||
-                                        adultGuideCategories.none { it.key == selectedAdultGuideCategoryKey }
+                                adultCategories.isNotEmpty() && (
+                                    selectedAdultCategoryKey.isBlank() ||
+                                        adultCategories.none { it.key == selectedAdultCategoryKey }
                                     )
                             ) {
-                                selectedAdultGuideCategoryKey = adultGuideCategories
-                                    .firstOrNull { it.key != com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }
+                                selectedAdultCategoryKey = adultCategories
+                                    .firstOrNull { it.key != com.afterglowtv.app.ui.model.AdultCategoryBuilder.ALL_CATEGORY_KEY }
                                     ?.key
-                                    ?: adultGuideCategories.first().key
+                                    ?: adultCategories.first().key
                             }
                         }
                         GuideNowProvider {
-                            if (useAdultGuide && adultGuideCategories.isEmpty()) {
+                            if (useAdult && adultCategories.isEmpty()) {
                                 GuideMessageState(
                                     modifier = Modifier.weight(1f),
-                                    title = "XXX Guide is ready",
+                                    title = "Adult is ready",
                                     subtitle = "Press Sort next $adultSortBatchSize to categorize channels in small chunks.",
-                                    actionLabel = if (uiState.isAdultGuideCategorizing) {
+                                    actionLabel = if (uiState.isAdultCategorizing) {
                                         "Sorting..."
                                     } else {
                                         "Sort next ${adultSortRemaining.coerceAtMost(adultSortBatchSize)}"
                                     },
-                                    onAction = if (uiState.isAdultGuideCategorizing) {
+                                    onAction = if (uiState.isAdultCategorizing) {
                                         {}
                                     } else {
-                                        viewModel::categorizeNextAdultGuideChunk
+                                        viewModel::categorizeNextAdultChunk
                                     }
                                 )
-                            } else if (useAdultGuide && adultGuideCategories.isNotEmpty()) {
-                                AdultGuideSurface(
+                            } else if (useAdult && adultCategories.isNotEmpty()) {
+                                AdultSurface(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .weight(1f),
-                                    categories = adultGuideCategories,
-                                    selectedCategoryKey = selectedAdultGuideCategoryKey,
+                                    categories = adultCategories,
+                                    selectedCategoryKey = selectedAdultCategoryKey,
                                     favoriteChannelIds = uiState.favoriteChannelIds,
-                                    hasMoreChannels = uiState.isAdultGuideCategorizing,
+                                    hasMoreChannels = uiState.isAdultCategorizing,
                                     isChannelLocked = { channel ->
                                         isGuideChannelLocked(channel, categoriesById, uiState.parentalControlLevel)
                                     },
-                                    onCategorySelected = { selectedAdultGuideCategoryKey = it },
+                                    onCategorySelected = { selectedAdultCategoryKey = it },
                                     onChannelClick = { channel ->
                                         selectChannelForPreviewOrFullscreen(channel)
                                     },

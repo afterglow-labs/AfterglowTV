@@ -107,7 +107,64 @@ class VodSourceSelectionTest {
     }
 
     @Test
-    fun `vod guide layout scopes loaded titles to selected category range`() {
+    fun `vod container defaults to movie vod without leaking tv vod entries`() {
+        val provider = Provider(
+            id = 6L,
+            name = "VOD",
+            type = ProviderType.M3U,
+            serverUrl = "https://example.com/vod.m3u"
+        )
+
+        val state = buildVodUiState(
+            provider = provider,
+            movies = listOf(
+                Movie(id = 1L, providerId = provider.id, name = "Movie One", categoryName = "Movie VOD"),
+                Movie(id = 2L, providerId = provider.id, name = "Show Episode", categoryName = "TV VOD"),
+                Movie(id = 3L, providerId = provider.id, name = "Standalone", categoryName = "Studio")
+            ),
+            hiddenCategoryIds = emptySet(),
+            searchQuery = "",
+            visibleLimit = 120
+        )
+
+        assertThat(state.selectedContentKind).isEqualTo(VodContentKind.MOVIE)
+        assertThat(state.contentTabs.map { it.label }).containsExactly("Movie VOD", "TV VOD").inOrder()
+        assertThat(state.contentTabs.associate { it.kind to it.count })
+            .containsExactly(VodContentKind.MOVIE, 2, VodContentKind.TV, 1)
+        assertThat(state.items.map(Movie::name)).containsExactly("Movie One", "Standalone").inOrder()
+        assertThat(state.sections.flatMap { it.items }.map(Movie::name))
+            .doesNotContain("Show Episode")
+    }
+
+    @Test
+    fun `vod container can switch to tv vod entries`() {
+        val provider = Provider(
+            id = 7L,
+            name = "VOD",
+            type = ProviderType.M3U,
+            serverUrl = "https://example.com/vod.m3u"
+        )
+
+        val state = buildVodUiState(
+            provider = provider,
+            movies = listOf(
+                Movie(id = 1L, providerId = provider.id, name = "Movie One", categoryName = "Movie VOD"),
+                Movie(id = 2L, providerId = provider.id, name = "Show Episode", categoryName = "TV VOD"),
+                Movie(id = 3L, providerId = provider.id, name = "Another Show", categoryName = "TV VOD")
+            ),
+            hiddenCategoryIds = emptySet(),
+            searchQuery = "",
+            visibleLimit = 120,
+            selectedContentKind = VodContentKind.TV
+        )
+
+        assertThat(state.selectedContentKind).isEqualTo(VodContentKind.TV)
+        assertThat(state.items.map(Movie::name)).containsExactly("Another Show", "Show Episode").inOrder()
+        assertThat(state.categories.map { it.label }).containsExactly("A-D", "Q-T").inOrder()
+    }
+
+    @Test
+    fun `vod container layout scopes loaded titles to selected category range`() {
         val provider = Provider(
             id = 5L,
             name = "VOD",
@@ -126,10 +183,10 @@ class VodSourceSelectionTest {
             searchQuery = "",
             visibleLimit = 120,
             selectedCategoryKey = "A-D",
-            viewMode = VodViewMode.GUIDE
+            viewMode = VodViewMode.CONTAINER
         )
 
-        assertThat(state.viewMode).isEqualTo(VodViewMode.GUIDE)
+        assertThat(state.viewMode).isEqualTo(VodViewMode.CONTAINER)
         assertThat(state.selectedItems.map(Movie::name)).containsExactly("Adam", "Drew").inOrder()
         assertThat(state.visibleItemCount).isEqualTo(2)
         assertThat(state.totalItemCount).isEqualTo(2)

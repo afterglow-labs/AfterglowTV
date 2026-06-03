@@ -94,7 +94,7 @@
     <string name="dashboard_provider_status">Estado</string>
     <string name="dashboard_provider_source">Fonte</string>
     <string name="dashboard_provider_connections">Conexões</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">Lista de reprodução M3U</string>
     <string name="dashboard_provider_no_sync">Nenhuma sincronização recente</string>
     <string name="dashboard_provider_synced_at">Sincronizado %1$s</string>
@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Ordenação de Categorias</string>
     <string name="settings_category_sorting_subtitle">Ordene as categorias da playlist ativa. Bloqueio e ocultação agora ficam em Controles de Categoria.</string>
     <string name="settings_category_sort_live">Categorias de TV ao Vivo</string>
-    <string name="settings_category_sort_movies">Categorias de Filmes</string>
-    <string name="settings_category_sort_series">Categorias de Séries</string>
     <string name="settings_hidden_categories_title">Categorias Ocultas</string>
     <string name="settings_hidden_categories_subtitle">Restaure qualquer categoria do provedor que você tenha ocultado das telas de navegação.</string>
     <string name="settings_hidden_categories_none">Nenhuma oculta</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Mais itens primeiro</string>
     <string name="settings_category_sort_least_items">Menos itens primeiro</string>
     <string name="settings_category_type_live_description">Ordene e oculte os grupos ao vivo do provedor mantendo Todos os canais, Favoritos, Recentes e grupos personalizados nas posições fixadas.</string>
-    <string name="settings_category_type_movies_description">Ordene e oculte as categorias de filmes do provedor sem afetar Favoritos, Continuar assistindo ou prateleiras personalizadas.</string>
-    <string name="settings_category_type_series_description">Ordene e oculte as categorias de séries do provedor sem afetar Favoritos, Continuar assistindo ou prateleiras personalizadas.</string>
     <string name="settings_playback">Reprodução</string>
     <string name="settings_browsing">Navegação</string>
     <string name="settings_playback_subtitle">Ajuste o comportamento do decodificador e do buffer para uma reprodução mais suave.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Categorias</string>
     <string name="vod_classic_category_search">Pesquisar nas categorias</string>
     <string name="vod_classic_all">Todos</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">Use um link de lista de reprodução ou importe um arquivo local.</string>
     <string name="setup_info_manage_title">Você pode gerenciar provedores mais tarde</string>
     <string name="setup_info_manage_body">Atualize, edite ou substitua-o mais tarde em Configurações.</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">Lista de reprodução M3U</string>
     <string name="setup_name_hint">Nome da lista de reprodução (opcional)</string>
     <string name="setup_server_hint">URL do servidor</string>

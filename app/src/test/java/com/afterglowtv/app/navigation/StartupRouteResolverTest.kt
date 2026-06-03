@@ -11,20 +11,20 @@ class StartupRouteResolverTest {
         assertThat(resolveStartupRoute(StartupDestination.IPTV_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.EPG)
         assertThat(resolveStartupRoute(StartupDestination.VOD_CONTAINER, developerModeEnabled = false)).isEqualTo(Routes.VOD_CONTAINER)
         assertThat(resolveStartupRoute(StartupDestination.PERSONAL_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.LOCAL_MEDIA)
-        assertThat(resolveStartupRoute(StartupDestination.XXX_GUIDE, developerModeEnabled = true)).isEqualTo(
-            if (StorePolicy.current.showAdultSurfaces) Routes.ADULT_GUIDE else Routes.HOME
+        assertThat(resolveStartupRoute(StartupDestination.ADULT, developerModeEnabled = true)).isEqualTo(
+            if (StorePolicy.current.showAdultSurfaces) Routes.ADULT else Routes.HOME
         )
     }
 
     @Test
-    fun `startup route falls back home for xxx guide when developer mode is locked`() {
-        assertThat(resolveStartupRoute(StartupDestination.XXX_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.HOME)
+    fun `startup route falls back home for adult surface when developer mode is locked`() {
+        assertThat(resolveStartupRoute(StartupDestination.ADULT, developerModeEnabled = false)).isEqualTo(Routes.HOME)
     }
 
     @Test
-    fun `startup destination list hides only xxx guide while developer mode is locked`() {
+    fun `startup destination list hides only adult surface while developer mode is locked`() {
         assertThat(StartupDestination.visibleEntries(developerModeEnabled = false)).doesNotContain(
-            StartupDestination.XXX_GUIDE
+            StartupDestination.ADULT
         )
         assertThat(StartupDestination.visibleEntries(developerModeEnabled = false)).containsAtLeast(
             StartupDestination.VOD_CONTAINER,
@@ -32,9 +32,9 @@ class StartupRouteResolverTest {
         )
         val developerModeEntries = StartupDestination.visibleEntries(developerModeEnabled = true)
         if (StorePolicy.current.showAdultSurfaces) {
-            assertThat(developerModeEntries).contains(StartupDestination.XXX_GUIDE)
+            assertThat(developerModeEntries).contains(StartupDestination.ADULT)
         } else {
-            assertThat(developerModeEntries).doesNotContain(StartupDestination.XXX_GUIDE)
+            assertThat(developerModeEntries).doesNotContain(StartupDestination.ADULT)
         }
     }
 
@@ -42,17 +42,17 @@ class StartupRouteResolverTest {
     fun `hidden startup destination displays as home while developer mode is locked`() {
         assertThat(
             StartupDestination.visibleOrDefault(
-                destination = StartupDestination.XXX_GUIDE,
+                destination = StartupDestination.ADULT,
                 developerModeEnabled = false
             )
         ).isEqualTo(StartupDestination.HOME)
         assertThat(
             StartupDestination.visibleOrDefault(
-                destination = StartupDestination.XXX_GUIDE,
+                destination = StartupDestination.ADULT,
                 developerModeEnabled = true
             )
         ).isEqualTo(
-            if (StorePolicy.current.showAdultSurfaces) StartupDestination.XXX_GUIDE else StartupDestination.HOME
+            if (StorePolicy.current.showAdultSurfaces) StartupDestination.ADULT else StartupDestination.HOME
         )
     }
 }

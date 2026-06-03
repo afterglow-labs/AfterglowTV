@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Kategori Sıralaması</string>
     <string name="settings_category_sorting_subtitle">Etkin oynatma listesi için kategorileri sıralayın. Kilitleme ve gizleme artık Kategori Kontrolleri\'nde.</string>
     <string name="settings_category_sort_live">Canlı TV Kategorileri</string>
-    <string name="settings_category_sort_movies">Film Kategorileri</string>
-    <string name="settings_category_sort_series">Dizi Kategorileri</string>
     <string name="settings_hidden_categories_title">Gizli Kategoriler</string>
     <string name="settings_hidden_categories_subtitle">Daha önce göz atma alanlarından gizlediğiniz sağlayıcı kategorilerini geri yükleyin.</string>
     <string name="settings_hidden_categories_none">Gizli yok</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Önce En Çok Öğe</string>
     <string name="settings_category_sort_least_items">Önce En Az Öğe</string>
     <string name="settings_category_type_live_description">Sağlayıcının canlı gruplarını sıralayıp gizleyin; Tüm Kanallar, Favoriler, Son İzlenenler ve özel gruplar sabit konumlarında kalır.</string>
-    <string name="settings_category_type_movies_description">Favoriler, Devam Et, veya özel rafları etkilemeden sağlayıcı film kategorilerini sıralayıp gizleyin.</string>
-    <string name="settings_category_type_series_description">Favoriler, İzlemeye Devam Et veya özel rafları etkilemeden sağlayıcı dizi kategorilerini sıralayıp gizleyin.</string>
     <string name="settings_playback">Oynatma</string>
     <string name="settings_browsing">Göz atma</string>
     <string name="settings_playback_subtitle">Daha akıcı oynatma için kod çözücü ve arabellek davranışını ayarlayın.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategoriler</string>
     <string name="vod_classic_category_search">Kategorilerde ara</string>
     <string name="vod_classic_all">Tümü</string>

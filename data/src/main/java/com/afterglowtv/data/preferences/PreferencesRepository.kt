@@ -70,21 +70,21 @@ private fun sanitizePlaybackTimerMinutes(minutes: Int): Int = when (minutes) {
     else -> 120
 }
 
-internal fun shouldRepairAdultGuideTabVisibility(
+internal fun shouldRepairAdultTabVisibility(
     developerModeEnabled: Boolean,
-    showAdultGuideTab: Boolean?
-): Boolean = developerModeEnabled && showAdultGuideTab != true
+    showAdultTab: Boolean?
+): Boolean = developerModeEnabled && showAdultTab != true
 
-internal fun adultGuideTabVisibilityForDeveloperMode(enabled: Boolean): Boolean = enabled
+internal fun adultTabVisibilityForDeveloperMode(enabled: Boolean): Boolean = enabled
 
 @Serializable
-data class AdultGuideCategoryCache(
+data class AdultCategoryCache(
     val categorizedChannelCount: Int,
-    val categories: List<AdultGuideCategoryCacheEntry>
+    val categories: List<AdultCategoryCacheEntry>
 )
 
 @Serializable
-data class AdultGuideCategoryCacheEntry(
+data class AdultCategoryCacheEntry(
     val key: String,
     val title: String,
     val channelIds: List<Long>
@@ -171,8 +171,8 @@ class PreferencesRepository @Inject constructor(
         val LIVE_TV_CATEGORY_FILTERS = stringPreferencesKey("live_tv_category_filters")
         val LIVE_TV_QUICK_FILTER_VISIBILITY = stringPreferencesKey("live_tv_quick_filter_visibility")
         val DEVELOPER_MODE_ENABLED = booleanPreferencesKey("developer_mode_enabled")
-        val SHOW_ADULT_GUIDE_TAB = booleanPreferencesKey("show_adult_guide_tab")
-        val ADULT_GUIDE_SORT_BATCH_SIZE = intPreferencesKey("adult_guide_sort_batch_size")
+        val SHOW_ADULT_TAB = booleanPreferencesKey("show_adult_tab")
+        val ADULT_SORT_BATCH_SIZE = intPreferencesKey("adult_sort_batch_size")
         val LIVE_CHANNEL_NUMBERING_MODE = stringPreferencesKey("live_channel_numbering_mode")
         val LIVE_CHANNEL_GROUPING_MODE = stringPreferencesKey("live_channel_grouping_mode")
         val GROUPED_CHANNEL_LABEL_MODE = stringPreferencesKey("grouped_channel_label_mode")
@@ -334,7 +334,7 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
-    private val adultGuideCacheJson = Json {
+    private val adultCacheJson = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
@@ -784,43 +784,43 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
-    fun adultGuideCategorizedChannelCount(providerId: Long): Flow<Int> =
+    fun adultCategorizedChannelCount(providerId: Long): Flow<Int> =
         context.dataStore.data.map { preferences ->
-            preferences[intPreferencesKey(adultGuideCategorizedChannelCountKey(providerId))]
+            preferences[intPreferencesKey(adultCategorizedChannelCountKey(providerId))]
                 ?.coerceAtLeast(0)
                 ?: 0
         }
 
-    fun adultGuideCategoryCache(providerId: Long): Flow<AdultGuideCategoryCache?> =
+    fun adultCategoryCache(providerId: Long): Flow<AdultCategoryCache?> =
         context.dataStore.data.map { preferences ->
-            val raw = preferences[stringPreferencesKey(adultGuideCategoryCacheKey(providerId))]
+            val raw = preferences[stringPreferencesKey(adultCategoryCacheKey(providerId))]
                 ?: return@map null
             runCatching {
-                adultGuideCacheJson.decodeFromString<AdultGuideCategoryCache>(raw)
+                adultCacheJson.decodeFromString<AdultCategoryCache>(raw)
             }.getOrNull()
         }
 
-    val adultGuideSortBatchSize: Flow<Int> = context.dataStore.data.map { preferences ->
-        normalizeAdultGuideSortBatchSize(preferences[PreferencesKeys.ADULT_GUIDE_SORT_BATCH_SIZE])
+    val adultSortBatchSize: Flow<Int> = context.dataStore.data.map { preferences ->
+        normalizeAdultSortBatchSize(preferences[PreferencesKeys.ADULT_SORT_BATCH_SIZE])
     }
 
-    suspend fun setAdultGuideCategorizedChannelCount(providerId: Long, count: Int) {
+    suspend fun setAdultCategorizedChannelCount(providerId: Long, count: Int) {
         context.dataStore.edit { preferences ->
-            preferences[intPreferencesKey(adultGuideCategorizedChannelCountKey(providerId))] = count.coerceAtLeast(0)
+            preferences[intPreferencesKey(adultCategorizedChannelCountKey(providerId))] = count.coerceAtLeast(0)
         }
     }
 
-    suspend fun setAdultGuideCategoryCache(providerId: Long, cache: AdultGuideCategoryCache) {
+    suspend fun setAdultCategoryCache(providerId: Long, cache: AdultCategoryCache) {
         context.dataStore.edit { preferences ->
-            preferences[stringPreferencesKey(adultGuideCategoryCacheKey(providerId))] = adultGuideCacheJson.encodeToString(cache)
-            preferences[intPreferencesKey(adultGuideCategorizedChannelCountKey(providerId))] =
+            preferences[stringPreferencesKey(adultCategoryCacheKey(providerId))] = adultCacheJson.encodeToString(cache)
+            preferences[intPreferencesKey(adultCategorizedChannelCountKey(providerId))] =
                 cache.categorizedChannelCount.coerceAtLeast(0)
         }
     }
 
-    suspend fun setAdultGuideSortBatchSize(size: Int) {
+    suspend fun setAdultSortBatchSize(size: Int) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.ADULT_GUIDE_SORT_BATCH_SIZE] = normalizeAdultGuideSortBatchSize(size)
+            preferences[PreferencesKeys.ADULT_SORT_BATCH_SIZE] = normalizeAdultSortBatchSize(size)
         }
     }
 
@@ -1512,8 +1512,8 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
-    val showAdultGuideTab: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] ?: true
+    val showAdultTab: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.SHOW_ADULT_TAB] ?: true
     }
 
     val developerModeEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -1523,25 +1523,25 @@ class PreferencesRepository @Inject constructor(
     suspend fun setDeveloperModeEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] = enabled
-            preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = adultGuideTabVisibilityForDeveloperMode(enabled)
+            preferences[PreferencesKeys.SHOW_ADULT_TAB] = adultTabVisibilityForDeveloperMode(enabled)
         }
     }
 
-    suspend fun setShowAdultGuideTab(enabled: Boolean) {
+    suspend fun setShowAdultTab(enabled: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = enabled
+            preferences[PreferencesKeys.SHOW_ADULT_TAB] = enabled
         }
     }
 
-    suspend fun ensureAdultGuideTabVisibleForDeveloperMode() {
+    suspend fun ensureAdultTabVisibleForDeveloperMode() {
         context.dataStore.edit { preferences ->
             if (
-                shouldRepairAdultGuideTabVisibility(
+                shouldRepairAdultTabVisibility(
                     developerModeEnabled = preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] ?: false,
-                    showAdultGuideTab = preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB]
+                    showAdultTab = preferences[PreferencesKeys.SHOW_ADULT_TAB]
                 )
             ) {
-                preferences[PreferencesKeys.SHOW_ADULT_GUIDE_TAB] = true
+                preferences[PreferencesKeys.SHOW_ADULT_TAB] = true
             }
         }
     }
@@ -2201,14 +2201,14 @@ class PreferencesRepository @Inject constructor(
     private fun xtreamTextImportAppliedGenerationKey(providerId: Long): String =
         "xtream_text_import_applied_generation_$providerId"
 
-    private fun adultGuideCategorizedChannelCountKey(providerId: Long): String =
-        "adult_guide_categorized_channel_count_$providerId"
+    private fun adultCategorizedChannelCountKey(providerId: Long): String =
+        "adult_categorized_channel_count_$providerId"
 
-    private fun adultGuideCategoryCacheKey(providerId: Long): String =
-        "adult_guide_category_cache_$providerId"
+    private fun adultCategoryCacheKey(providerId: Long): String =
+        "adult_category_cache_$providerId"
 }
 
-private fun normalizeAdultGuideSortBatchSize(size: Int?): Int = when (val value = size ?: 200) {
+private fun normalizeAdultSortBatchSize(size: Int?): Int = when (val value = size ?: 200) {
     in Int.MIN_VALUE..49 -> 50
     in 50..2_000 -> value
     else -> 2_000

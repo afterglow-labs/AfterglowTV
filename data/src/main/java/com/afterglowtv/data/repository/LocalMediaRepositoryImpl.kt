@@ -131,37 +131,20 @@ class LocalMediaRepositoryImpl @Inject constructor(
     override suspend fun addSmbLibrary(config: SmbShareConfig): Result<LocalMediaScanResult> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val reference = SmbShareUri.fromConfig(config)
-                val rootUri = SmbShareUri.buildRoot(reference)
-                val now = System.currentTimeMillis()
-                val existing = libraryDao.getLibraryByRootUri(rootUri)
-                val name = config.displayName?.takeIf { it.isNotBlank() }
-                    ?: existing?.name
-                    ?: SmbShareUri.displayName(reference)
-                val entity = LocalMediaLibraryEntity(
-                    id = existing?.id ?: 0L,
-                    name = name,
-                    rootUri = rootUri,
-                    sourceType = LocalMediaLibrarySourceType.SMB,
-                    displayName = config.displayName?.takeIf { it.isNotBlank() } ?: existing?.displayName,
-                    enabled = true,
-                    itemCount = existing?.itemCount ?: 0,
-                    addedAtMs = existing?.addedAtMs ?: now,
-                    updatedAtMs = now,
-                    lastScannedAtMs = existing?.lastScannedAtMs,
-                    smbHost = reference.host,
-                    smbPort = reference.port,
-                    smbShare = reference.shareName,
-                    smbPath = reference.path.takeIf { it.isNotBlank() },
-                    smbDomain = config.domain.trim().takeIf { it.isNotBlank() },
-                    smbUsername = config.username.trim().takeIf { it.isNotBlank() },
-                    smbPassword = config.password.takeIf { it.isNotBlank() }?.let(credentialCrypto::encryptIfNeeded)
-                        ?: existing?.smbPassword
-                )
-                val insertedId = libraryDao.upsertLibrary(entity)
-                val libraryId = existing?.id ?: insertedId
-                val savedLibrary = libraryDao.getLibrary(libraryId) ?: entity.copy(id = libraryId)
-                scanLibrary(savedLibrary)
+                scanLibrary(upsertSmbLibrary(config))
+            }.fold(
+                onSuccess = { Result.success(it) },
+                onFailure = { error ->
+                    if (error is CancellationException) throw error
+                    Result.error(error.message ?: "Failed to add network share.", error)
+                }
+            )
+        }
+
+    override suspend fun addSmbLibraryReference(config: SmbShareConfig): Result<LocalMediaLibrary> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                upsertSmbLibrary(config).toDomain()
             }.fold(
                 onSuccess = { Result.success(it) },
                 onFailure = { error ->
@@ -250,6 +233,39 @@ class LocalMediaRepositoryImpl @Inject constructor(
             scannedAtMs = now,
             updatedAtMs = now
         )
+    }
+
+    private suspend fun upsertSmbLibrary(config: SmbShareConfig): LocalMediaLibraryEntity {
+        val reference = SmbShareUri.fromConfig(config)
+        val rootUri = SmbShareUri.buildRoot(reference)
+        val now = System.currentTimeMillis()
+        val existing = libraryDao.getLibraryByRootUri(rootUri)
+        val name = config.displayName?.takeIf { it.isNotBlank() }
+            ?: existing?.name
+            ?: SmbShareUri.displayName(reference)
+        val entity = LocalMediaLibraryEntity(
+            id = existing?.id ?: 0L,
+            name = name,
+            rootUri = rootUri,
+            sourceType = LocalMediaLibrarySourceType.SMB,
+            displayName = config.displayName?.takeIf { it.isNotBlank() } ?: existing?.displayName,
+            enabled = true,
+            itemCount = existing?.itemCount ?: 0,
+            addedAtMs = existing?.addedAtMs ?: now,
+            updatedAtMs = now,
+            lastScannedAtMs = existing?.lastScannedAtMs,
+            smbHost = reference.host,
+            smbPort = reference.port,
+            smbShare = reference.shareName,
+            smbPath = reference.path.takeIf { it.isNotBlank() },
+            smbDomain = config.domain.trim().takeIf { it.isNotBlank() },
+            smbUsername = config.username.trim().takeIf { it.isNotBlank() },
+            smbPassword = config.password.takeIf { it.isNotBlank() }?.let(credentialCrypto::encryptIfNeeded)
+                ?: existing?.smbPassword
+        )
+        val insertedId = libraryDao.upsertLibrary(entity)
+        val libraryId = existing?.id ?: insertedId
+        return libraryDao.getLibrary(libraryId) ?: entity.copy(id = libraryId)
     }
 
     private suspend fun browseSmbLibrary(

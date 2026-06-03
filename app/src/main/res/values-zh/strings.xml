@@ -94,7 +94,7 @@
     <string name="dashboard_provider_status">状态</string>
     <string name="dashboard_provider_source">来源</string>
     <string name="dashboard_provider_connections">连接</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">M3U 播放列表</string>
     <string name="dashboard_provider_no_sync">暂无最近同步</string>
     <string name="dashboard_provider_synced_at">已同步 %1$s</string>
@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">分类排序</string>
     <string name="settings_category_sorting_subtitle">为当前播放列表排序分类。锁定和隐藏现在已移至分类控制。</string>
     <string name="settings_category_sort_live">直播电视分类</string>
-    <string name="settings_category_sort_movies">电影分类</string>
-    <string name="settings_category_sort_series">剧集分类</string>
     <string name="settings_hidden_categories_title">已隐藏的分类</string>
     <string name="settings_hidden_categories_subtitle">恢复你之前从浏览界面隐藏的任何提供商分类。</string>
     <string name="settings_hidden_categories_none">未隐藏</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">最多项目优先</string>
     <string name="settings_category_sort_least_items">最少项目优先</string>
     <string name="settings_category_type_live_description">排序并隐藏提供商直播分组，同时保持全部频道、收藏、最近和自定义分组在固定位置。</string>
-    <string name="settings_category_type_movies_description">排序并隐藏提供商电影分类，不影响收藏、继续观看或自定义栏目。</string>
-    <string name="settings_category_type_series_description">对提供商的剧集分类进行排序和隐藏，不影响收藏、继续观看或自定义栏目。</string>
     <string name="settings_playback">播放</string>
     <string name="settings_browsing">浏览</string>
     <string name="settings_playback_subtitle">调整解码器和缓冲行为，让播放更流畅。</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">分类</string>
     <string name="vod_classic_category_search">在分类中搜索</string>
     <string name="vod_classic_all">全部</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">使用播放列表链接或导入本地文件。</string>
     <string name="setup_info_manage_title">之后可管理提供商</string>
     <string name="setup_info_manage_body">之后可在设置中刷新、编辑或替换。</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">M3U 播放列表</string>
     <string name="setup_name_hint">播放列表名称（可选）</string>
     <string name="setup_server_hint">服务器 URL</string>

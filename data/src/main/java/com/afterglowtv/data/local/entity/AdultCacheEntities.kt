@@ -7,7 +7,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "adult_guide_cache_meta",
+    tableName = "adult_cache_meta",
     foreignKeys = [
         ForeignKey(
             entity = ProviderEntity::class,
@@ -18,7 +18,7 @@ import androidx.room.PrimaryKey
     ],
     indices = [Index(value = ["provider_id"], unique = true)]
 )
-data class AdultGuideCacheMetaEntity(
+data class AdultCacheMetaEntity(
     @PrimaryKey
     @ColumnInfo(name = "provider_id")
     val providerId: Long,
@@ -31,7 +31,7 @@ data class AdultGuideCacheMetaEntity(
 )
 
 @Entity(
-    tableName = "adult_guide_cache_categories",
+    tableName = "adult_cache_categories",
     primaryKeys = ["provider_id", "playlist_fingerprint", "category_key"],
     foreignKeys = [
         ForeignKey(
@@ -46,7 +46,7 @@ data class AdultGuideCacheMetaEntity(
         Index(value = ["provider_id"])
     ]
 )
-data class AdultGuideCacheCategoryEntity(
+data class AdultCacheCategoryEntity(
     @ColumnInfo(name = "provider_id")
     val providerId: Long,
     @ColumnInfo(name = "playlist_fingerprint")
@@ -60,7 +60,7 @@ data class AdultGuideCacheCategoryEntity(
 )
 
 @Entity(
-    tableName = "adult_guide_cache_category_channels",
+    tableName = "adult_cache_category_channels",
     primaryKeys = ["provider_id", "playlist_fingerprint", "category_key", "channel_id"],
     foreignKeys = [
         ForeignKey(
@@ -82,7 +82,7 @@ data class AdultGuideCacheCategoryEntity(
         Index(value = ["channel_id"])
     ]
 )
-data class AdultGuideCacheCategoryChannelEntity(
+data class AdultCacheCategoryChannelEntity(
     @ColumnInfo(name = "provider_id")
     val providerId: Long,
     @ColumnInfo(name = "playlist_fingerprint")

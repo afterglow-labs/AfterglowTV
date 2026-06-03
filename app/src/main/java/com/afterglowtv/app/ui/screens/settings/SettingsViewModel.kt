@@ -22,6 +22,7 @@ import com.afterglowtv.data.local.dao.XtreamIndexJobDao
 import com.afterglowtv.data.local.dao.XtreamLiveOnboardingDao
 import com.afterglowtv.data.local.entity.XtreamIndexJobEntity
 import com.afterglowtv.data.preferences.PreferencesRepository
+import com.afterglowtv.data.repository.LocalMediaScanWorker
 import com.afterglowtv.data.sync.SyncManager
 import com.afterglowtv.data.sync.SyncRepairSection
 import com.afterglowtv.domain.manager.BackupConflictStrategy
@@ -453,7 +454,7 @@ class SettingsViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     developerModeEnabled = enabled,
-                    showAdultGuideTab = enabled,
+                    showAdultTab = enabled,
                     userMessage = if (enabled) "Developer Mode unlocked" else "Developer Mode disabled"
                 )
             }
@@ -466,9 +467,9 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setShowAdultGuideTab(enabled: Boolean) {
+    fun setShowAdultTab(enabled: Boolean) {
         viewModelScope.launch {
-            preferencesRepository.setShowAdultGuideTab(enabled)
+            preferencesRepository.setShowAdultTab(enabled)
         }
     }
 
@@ -1064,14 +1065,47 @@ class SettingsViewModel @Inject constructor(
                 append(path.replace('/', '\\'))
             }
         }
-        startLocalMediaScan("Trying to connect to $target...") {
-            localMediaRepository.addSmbLibrary(config)
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isScanningLocalMedia = false,
+                    localMediaScanStatus = null,
+                    userMessage = "Adding network share $target..."
+                )
+            }
+            when (val result = localMediaRepository.addSmbLibraryReference(config)) {
+                is Result.Success -> {
+                    LocalMediaScanWorker.enqueue(appContext, result.data.id)
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            localMediaScanStatus = null,
+                            userMessage = "Network share added. Full scan is running in the background."
+                        )
+                    }
+                }
+                is Result.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isScanningLocalMedia = false,
+                            localMediaScanStatus = null,
+                            userMessage = result.message
+                        )
+                    }
+                }
+                Result.Loading -> Unit
+            }
         }
     }
 
     fun rescanLocalMediaLibrary(libraryId: Long) {
-        startLocalMediaScan("Rescanning local media library...") {
-            localMediaRepository.rescanLibrary(libraryId)
+        LocalMediaScanWorker.enqueue(appContext, libraryId)
+        _uiState.update {
+            it.copy(
+                isScanningLocalMedia = false,
+                localMediaScanStatus = null,
+                userMessage = "Full local media scan is running in the background."
+            )
         }
     }
 

@@ -12,7 +12,8 @@ class VodPresentationTest {
     fun vodViewModeKeepsLegacyStorageValuesCompatible() {
         assertThat(VodViewMode.fromStorage("modern")).isEqualTo(VodViewMode.SHELVES)
         assertThat(VodViewMode.fromStorage("classic")).isEqualTo(VodViewMode.GRID)
-        assertThat(VodViewMode.fromStorage("guide")).isEqualTo(VodViewMode.GUIDE)
+        assertThat(VodViewMode.fromStorage("container")).isEqualTo(VodViewMode.CONTAINER)
+        assertThat(VodViewMode.fromStorage("unknown")).isEqualTo(VodViewMode.SHELVES)
         assertThat(VodViewMode.fromStorage(null)).isEqualTo(VodViewMode.SHELVES)
     }
 
@@ -53,13 +54,13 @@ class VodPresentationTest {
     }
 
     @Test
-    fun guideRowsPreserveWholeGuideSortOrderInsteadOfSortingInsideEachRow() {
-        val rows = VodGuideRowBuilder.build(
+    fun containerRowsPreserveWholeContainerSortOrderInsteadOfSortingInsideEachRow() {
+        val rows = VodContainerRowBuilder.build(
             items = listOf(
-                VodGuideItem(id = "1", title = "Alpha", providerCategory = "Drama"),
-                VodGuideItem(id = "2", title = "Bravo", providerCategory = "Action"),
-                VodGuideItem(id = "3", title = "Zulu", providerCategory = "Drama"),
-                VodGuideItem(id = "4", title = "Omega", providerCategory = null)
+                VodContainerItem(id = "1", title = "Alpha", providerCategory = "Drama"),
+                VodContainerItem(id = "2", title = "Bravo", providerCategory = "Action"),
+                VodContainerItem(id = "3", title = "Zulu", providerCategory = "Drama"),
+                VodContainerItem(id = "4", title = "Omega", providerCategory = null)
             ),
             uncategorizedTitle = "Other"
         )
@@ -69,19 +70,19 @@ class VodPresentationTest {
     }
 
     @Test
-    fun adultGuideRowsUseKeywordCategoriesAndDoNotCollapseIntoGenericXxxRow() {
-        val multiMatch = VodGuideItem(
+    fun adultRowsUseKeywordCategoriesAndDoNotCollapseIntoGenericXxxRow() {
+        val multiMatch = VodContainerItem(
             id = "1",
             title = "Blonde Trans MILF Cousin",
             providerCategory = "XXX"
         )
-        val fallback = VodGuideItem(
+        val fallback = VodContainerItem(
             id = "2",
             title = "Late Night Feature",
             providerCategory = "XXX"
         )
 
-        val rows = VodGuideRowBuilder.buildAdultRows(
+        val rows = VodContainerRowBuilder.buildAdultRows(
             items = listOf(multiMatch, fallback),
             uncategorizedTitle = "Other"
         )

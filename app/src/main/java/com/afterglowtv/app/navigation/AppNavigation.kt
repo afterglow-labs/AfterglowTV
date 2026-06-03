@@ -81,7 +81,7 @@ object Routes {
     const val LIVE_TV_DESTINATION = "live_tv?categoryId={categoryId}"
     const val LOCAL_MEDIA = "local_media"
     const val VOD_CONTAINER = "vod_container"
-    const val ADULT_GUIDE = "adult_guide"
+    const val ADULT = "adult"
     const val EPG = "epg"
     const val EPG_DESTINATION = "epg?categoryId={categoryId}&anchorTime={anchorTime}&favoritesOnly={favoritesOnly}"
     const val SETTINGS = "settings"
@@ -312,10 +312,10 @@ internal fun resolveStartupRoute(
     }
 
 private fun isDeveloperLockedRoute(route: String): Boolean =
-    route == Routes.ADULT_GUIDE
+    route == Routes.ADULT
 
 private fun isStoreLockedRoute(route: String): Boolean =
-    route == Routes.ADULT_GUIDE && !StorePolicy.current.showAdultSurfaces
+    route == Routes.ADULT && !StorePolicy.current.showAdultSurfaces
 
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
@@ -576,7 +576,7 @@ fun AppNavigation(mainActivity: MainActivity) {
             )
         }
 
-        composable(Routes.ADULT_GUIDE) {
+        composable(Routes.ADULT) {
             if (!developerModeEnabled || !StorePolicy.current.showAdultSurfaces) {
                 LaunchedEffect(Unit) {
                     navController.navigate(Routes.HOME) {
@@ -590,19 +590,19 @@ fun AppNavigation(mainActivity: MainActivity) {
                     navController.navigateToPlayer(
                         Routes.livePlayer(
                             channel = channel,
-                            categoryId = adultGuidePlaybackCategoryId(category),
+                            categoryId = adultPlaybackCategoryId(category),
                             providerId = provider?.id ?: channel.providerId,
                             isVirtual = true,
                             combinedProfileId = combinedProfileId,
                             combinedSourceFilterProviderId = combinedSourceFilterProviderId,
-                            returnRoute = Routes.ADULT_GUIDE
+                            returnRoute = Routes.ADULT
                         )
                     )
                 },
                 onNavigate = { route -> tabNavigate(route) },
-                currentRoute = Routes.ADULT_GUIDE,
-                adultGuideMode = true,
-                titleRes = R.string.nav_adult_guide
+                currentRoute = Routes.ADULT,
+                adultMode = true,
+                titleRes = R.string.nav_adult
             )
         }
 

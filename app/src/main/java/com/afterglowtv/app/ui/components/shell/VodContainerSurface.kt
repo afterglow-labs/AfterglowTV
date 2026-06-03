@@ -42,7 +42,7 @@ import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.FocusSpec
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 
-data class VodGuideProgramCard(
+data class VodContainerProgramCard(
     val key: String,
     val title: String,
     val subtitle: String?,
@@ -54,10 +54,10 @@ data class VodGuideProgramCard(
 )
 
 @Composable
-fun VodGuideLane(
+fun VodContainerLane(
     title: String,
     subtitle: String,
-    programs: List<VodGuideProgramCard>,
+    programs: List<VodContainerProgramCard>,
     modifier: Modifier = Modifier,
     initialFocusRequester: FocusRequester? = null,
     rowHeight: Dp = 118.dp,
@@ -71,7 +71,7 @@ fun VodGuideLane(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        VodGuideLaneHeader(
+        VodContainerLaneHeader(
             title = title,
             subtitle = subtitle,
             modifier = Modifier
@@ -87,7 +87,7 @@ fun VodGuideLane(
             contentPadding = PaddingValues(end = 16.dp)
         ) {
             itemsIndexed(programs, key = { _, program -> program.key }) { index, program ->
-                VodGuideProgramSurface(
+                VodContainerProgramSurface(
                     program = program,
                     textFirstMissingArtwork = textFirstMissingArtwork,
                     modifier = Modifier
@@ -107,7 +107,7 @@ fun VodGuideLane(
 }
 
 @Composable
-private fun VodGuideLaneHeader(
+private fun VodContainerLaneHeader(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier
@@ -145,8 +145,8 @@ private fun VodGuideLaneHeader(
 }
 
 @Composable
-private fun VodGuideProgramSurface(
-    program: VodGuideProgramCard,
+private fun VodContainerProgramSurface(
+    program: VodContainerProgramCard,
     textFirstMissingArtwork: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -183,13 +183,13 @@ private fun VodGuideProgramSurface(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (showTextFirstFallback) {
-                VodGuideArtworkMarker(
+                VodContainerArtworkMarker(
                     modifier = Modifier
                         .width(5.dp)
                         .fillMaxHeight()
                 )
             } else {
-                VodGuideThumbnail(
+                VodContainerThumbnail(
                     imageUrl = program.imageUrl,
                     title = program.title,
                     modifier = Modifier
@@ -222,10 +222,10 @@ private fun VodGuideProgramSurface(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     program.badge?.takeIf { it.isNotBlank() }?.let {
-                        VodGuideBadge(label = it)
+                        VodContainerBadge(label = it)
                     }
                     if (program.isLocked) {
-                        VodGuideBadge(label = lockedLabel, emphasis = true)
+                        VodContainerBadge(label = lockedLabel, emphasis = true)
                     }
                 }
             }
@@ -234,7 +234,7 @@ private fun VodGuideProgramSurface(
 }
 
 @Composable
-private fun VodGuideArtworkMarker(modifier: Modifier = Modifier) {
+private fun VodContainerArtworkMarker(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
@@ -250,7 +250,7 @@ private fun VodGuideArtworkMarker(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun VodGuideThumbnail(
+private fun VodContainerThumbnail(
     imageUrl: String?,
     title: String,
     modifier: Modifier = Modifier
@@ -287,7 +287,7 @@ private fun VodGuideThumbnail(
 }
 
 @Composable
-private fun VodGuideBadge(
+private fun VodContainerBadge(
     label: String,
     emphasis: Boolean = false
 ) {

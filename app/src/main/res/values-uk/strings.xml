@@ -94,7 +94,7 @@
     <string name="dashboard_provider_status">Статус</string>
     <string name="dashboard_provider_source">Джерело</string>
     <string name="dashboard_provider_connections">Підключення</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">Плейлист M3U</string>
     <string name="dashboard_provider_no_sync">Немає нещодавньої синхронізації</string>
     <string name="dashboard_provider_synced_at">Синхронізовано %1$s</string>
@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Сортування категорій</string>
     <string name="settings_category_sorting_subtitle">Сортуйте категорії для активного плейлиста. Блокування та приховування тепер у Керуванні категоріями.</string>
     <string name="settings_category_sort_live">Категорії Live TV</string>
-    <string name="settings_category_sort_movies">Категорії фільмів</string>
-    <string name="settings_category_sort_series">Категорії серіалів</string>
     <string name="settings_hidden_categories_title">Приховані категорії</string>
     <string name="settings_hidden_categories_subtitle">Відновіть будь-які категорії провайдера, які ви раніше приховали в розділах перегляду.</string>
     <string name="settings_hidden_categories_none">Немає прихованих</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Спочатку найбільше елементів</string>
     <string name="settings_category_sort_least_items">Спочатку найменше елементів</string>
     <string name="settings_category_type_live_description">Сортуйте та приховуйте групи провайдера для Live TV, зберігаючи Усі канали, Обране, Нещодавні та власні групи в закріплених позиціях.</string>
-    <string name="settings_category_type_movies_description">Сортуйте та приховуйте категорії фільмів провайдера, не впливаючи на Обране, Продовжити перегляд або власні розділи.</string>
-    <string name="settings_category_type_series_description">Сортуйте та приховуйте категорії серіалів провайдера, не впливаючи на Обране, Продовжити перегляд або власні розділи.</string>
     <string name="settings_playback">Відтворення</string>
     <string name="settings_browsing">Перегляд</string>
     <string name="settings_playback_subtitle">Налаштуйте декодер і буферизацію для плавнішого відтворення.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Категорії</string>
     <string name="vod_classic_category_search">Пошук у категоріях</string>
     <string name="vod_classic_all">Усі</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">Використайте посилання на плейлист або імпортуйте локальний файл.</string>
     <string name="setup_info_manage_title">Керувати провайдерами можна пізніше</string>
     <string name="setup_info_manage_body">Оновіть, відредагуйте або замініть його пізніше в Налаштуваннях.</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">Плейлист M3U</string>
     <string name="setup_name_hint">Назва плейлиста (необов’язково)</string>
     <string name="setup_server_hint">URL сервера</string>

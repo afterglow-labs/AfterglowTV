@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.stateIn
 internal class AppShellViewModel @Inject constructor(
     preferencesRepository: PreferencesRepository
 ) : ViewModel() {
-    val showAdultGuideTab: StateFlow<Boolean> = combine(
+    val showAdultTab: StateFlow<Boolean> = combine(
         preferencesRepository.developerModeEnabled,
-        preferencesRepository.showAdultGuideTab
-    ) { developerModeEnabled, showAdultGuideTab ->
-        StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultGuideTab
+        preferencesRepository.showAdultTab
+    ) { developerModeEnabled, showAdultTab ->
+        StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultTab
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),

@@ -1,4 +1,4 @@
 package com.afterglowtv.app.ui.screens.vod
 
-internal fun canShowAdultVodGuideEntry(developerModeEnabled: Boolean): Boolean =
+internal fun canShowAdultVodEntry(developerModeEnabled: Boolean): Boolean =
     developerModeEnabled

@@ -103,17 +103,17 @@ internal data class LiveContentPaneWeights(
 )
 
 internal fun liveContentPaneWeights(
-    adultGuideMode: Boolean,
+    adultMode: Boolean,
     isProMode: Boolean
 ): LiveContentPaneWeights = when {
     !isProMode -> LiveContentPaneWeights(channelList = 1f, preview = 0f)
-    adultGuideMode -> LiveContentPaneWeights(channelList = 0.62f, preview = 1.38f)
+    adultMode -> LiveContentPaneWeights(channelList = 0.62f, preview = 1.38f)
     else -> LiveContentPaneWeights(channelList = 1.08f, preview = 0.92f)
 }
 
-internal fun canHideHomeCategory(category: Category, adultGuideMode: Boolean): Boolean =
-    if (adultGuideMode) {
-        category.id != VirtualCategoryIds.ADULT_GUIDE
+internal fun canHideHomeCategory(category: Category, adultMode: Boolean): Boolean =
+    if (adultMode) {
+        category.id != VirtualCategoryIds.ADULT
     } else {
         !category.isVirtual && category.id != ChannelRepository.ALL_CHANNELS_ID
     }
@@ -186,7 +186,7 @@ fun HomeScreen(
     onNavigate: (String) -> Unit,
     currentRoute: String,
     initialCategoryId: Long? = null,
-    adultGuideMode: Boolean = false,
+    adultMode: Boolean = false,
     titleRes: Int = R.string.nav_live_tv,
     viewModel: HomeViewModel = hiltViewModel(),
     multiViewViewModel: MultiViewViewModel = hiltViewModel()
@@ -200,9 +200,9 @@ fun HomeScreen(
     }
     val shouldShowLiveSourceSwitcher = uiState.showLiveSourceSwitcher && uiState.liveSourceOptions.isNotEmpty()
     val isReorderMode = uiState.isChannelReorderMode
-    val isProMode = adultGuideMode || uiState.liveTvChannelMode == LiveTvChannelMode.PRO
-    val isDenseMode = adultGuideMode || uiState.liveTvChannelMode != LiveTvChannelMode.COMFORTABLE
-    val paneWeights = liveContentPaneWeights(adultGuideMode = adultGuideMode, isProMode = isProMode)
+    val isProMode = adultMode || uiState.liveTvChannelMode == LiveTvChannelMode.PRO
+    val isDenseMode = adultMode || uiState.liveTvChannelMode != LiveTvChannelMode.COMFORTABLE
+    val paneWeights = liveContentPaneWeights(adultMode = adultMode, isProMode = isProMode)
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val isTelevisionDevice = rememberIsTelevisionDevice()
     val sidebarWidth = if (screenWidth < 900.dp) {
@@ -223,14 +223,14 @@ fun HomeScreen(
     } else {
         340.dp
     }
-    val channelRowHeight = if (adultGuideMode) {
+    val channelRowHeight = if (adultMode) {
         52.dp
     } else when (uiState.liveTvChannelMode) {
         LiveTvChannelMode.COMFORTABLE -> 92.dp
         LiveTvChannelMode.COMPACT -> 54.dp
         LiveTvChannelMode.PRO -> 52.dp
     }
-    val channelListSpacing = if (adultGuideMode) {
+    val channelListSpacing = if (adultMode) {
         2.dp
     } else when (uiState.liveTvChannelMode) {
         LiveTvChannelMode.COMFORTABLE -> 8.dp
@@ -257,11 +257,11 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    LaunchedEffect(adultGuideMode) {
-        viewModel.setAdultGuideMode(adultGuideMode)
+    LaunchedEffect(adultMode) {
+        viewModel.setAdultMode(adultMode)
     }
 
-    LaunchedEffect(initialCategoryId, adultGuideMode) {
+    LaunchedEffect(initialCategoryId, adultMode) {
         viewModel.setPreferredInitialCategory(initialCategoryId)
     }
 
@@ -979,18 +979,18 @@ fun HomeScreen(
                                         color = OnSurfaceDim,
                                         maxLines = 1
                                     )
-                                    if (adultGuideMode) {
+                                    if (adultMode) {
                                         TvButton(
-                                            onClick = { viewModel.resyncAdultGuideCache() },
-                                            enabled = !uiState.isAdultGuideCacheRefreshing && !isReorderMode,
+                                            onClick = { viewModel.resyncAdultCache() },
+                                            enabled = !uiState.isAdultCacheRefreshing && !isReorderMode,
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                         ) {
                                             Text(
                                                 text = stringResource(
-                                                    if (uiState.isAdultGuideCacheRefreshing) {
-                                                        R.string.home_adult_guide_syncing
+                                                    if (uiState.isAdultCacheRefreshing) {
+                                                        R.string.home_adult_syncing
                                                     } else {
-                                                        R.string.home_adult_guide_resync
+                                                        R.string.home_adult_resync
                                                     }
                                                 ),
                                                 style = MaterialTheme.typography.labelMedium
@@ -1245,8 +1245,8 @@ fun HomeScreen(
                                         isReorderMode = uiState.isChannelReorderMode,
                                         isDragging = isDraggingThis,
                                         rowHeight = channelRowHeight,
-                                        fallbackProgramLabelRes = liveChannelFallbackProgramLabelRes(adultGuideMode),
-                                        separateChannelNumber = adultGuideMode,
+                                        fallbackProgramLabelRes = liveChannelFallbackProgramLabelRes(adultMode),
+                                        separateChannelNumber = adultMode,
                                         onClick = {
                                             if (isReorderMode) {
                                                 draggingChannel = if (isDraggingThis) null else channel

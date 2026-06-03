@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Kategorioiden lajittelu</string>
     <string name="settings_category_sorting_subtitle">Lajittele kategoriat aktiiviselle soittolistalle. Lukitus ja piilotus ovat nyt Kategorian hallinnassa.</string>
     <string name="settings_category_sort_live">Live-TV-kategoriat</string>
-    <string name="settings_category_sort_movies">Elokuvakategoriat</string>
-    <string name="settings_category_sort_series">Sarjakategoriat</string>
     <string name="settings_hidden_categories_title">Piilotetut kategoriat</string>
     <string name="settings_hidden_categories_subtitle">Palauta kaikki aiemmin selausnäkymistä piilottamasi palveluntarjoajan kategoriat.</string>
     <string name="settings_hidden_categories_none">Ei piilotettuja</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Eniten kohteita ensin</string>
     <string name="settings_category_sort_least_items">Vähiten kohteita ensin</string>
     <string name="settings_category_type_live_description">Lajittele ja piilota palveluntarjoajan live-ryhmiä säilyttäen Kaikki kanavat, Suosikit, Viimeisimmät ja mukautetut ryhmät kiinnitetyissä paikoissaan.</string>
-    <string name="settings_category_type_movies_description">Lajittele ja piilota palveluntarjoajan elokuvakategorioita vaikuttamatta Suosikkeihin, Jatka katsomista tai mukautettuihin hyllyihin.</string>
-    <string name="settings_category_type_series_description">Lajittele ja piilota palveluntarjoajan sarjakategorioita vaikuttamatta Suosikkeihin, Jatka katsomista tai mukautettuihin hyllyihin.</string>
     <string name="settings_playback">Toisto</string>
     <string name="settings_browsing">Selaus</string>
     <string name="settings_playback_subtitle">Viritä dekooderi ja puskurointi sujuvampaan toistoon.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategoriat</string>
     <string name="vod_classic_category_search">Hae kategorioista</string>
     <string name="vod_classic_all">Kaikki</string>

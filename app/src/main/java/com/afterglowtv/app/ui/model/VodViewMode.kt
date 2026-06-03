@@ -3,7 +3,7 @@ package com.afterglowtv.app.ui.model
 enum class VodViewMode(val storageValue: String) {
     SHELVES("shelves"),
     GRID("grid"),
-    GUIDE("guide");
+    CONTAINER("container");
 
     companion object {
         fun fromStorage(value: String?): VodViewMode {

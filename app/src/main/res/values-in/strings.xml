@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Pengurutan Kategori</string>
     <string name="settings_category_sorting_subtitle">Urutkan kategori untuk playlist aktif. Mengunci dan menyembunyikan kini ada di Kontrol Kategori.</string>
     <string name="settings_category_sort_live">Kategori Live TV</string>
-    <string name="settings_category_sort_movies">Kategori Film</string>
-    <string name="settings_category_sort_series">Kategori Serial</string>
     <string name="settings_hidden_categories_title">Kategori Tersembunyi</string>
     <string name="settings_hidden_categories_subtitle">Pulihkan kategori provider yang sebelumnya Anda sembunyikan dari tampilan penelusuran.</string>
     <string name="settings_hidden_categories_none">Tidak ada yang disembunyikan</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Item Terbanyak Dulu</string>
     <string name="settings_category_sort_least_items">Item Tersedikit Dulu</string>
     <string name="settings_category_type_live_description">Urutkan dan sembunyikan grup live provider sambil mempertahankan Semua Saluran, Favorit, Terbaru, dan grup kustom di posisi yang dipin.</string>
-    <string name="settings_category_type_movies_description">Urutkan dan sembunyikan kategori film provider tanpa memengaruhi Favorit, Lanjutkan, atau rak kustom.</string>
-    <string name="settings_category_type_series_description">Urutkan dan sembunyikan kategori serial provider tanpa memengaruhi Favorit, Lanjutkan Menonton, atau rak kustom.</string>
     <string name="settings_playback">Pemutaran</string>
     <string name="settings_browsing">Penelusuran</string>
     <string name="settings_playback_subtitle">Sesuaikan perilaku decoder dan buffering untuk pemutaran yang lebih lancar.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategori</string>
     <string name="vod_classic_category_search">Cari dalam kategori</string>
     <string name="vod_classic_all">Semua</string>

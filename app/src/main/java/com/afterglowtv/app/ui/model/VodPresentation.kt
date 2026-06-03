@@ -115,33 +115,33 @@ data class VodShelfSection(
     val items: List<VodShelfItem>
 )
 
-data class VodGuideItem(
+data class VodContainerItem(
     val id: String,
     val title: String,
     val providerCategory: String?
 )
 
-data class VodGuideRow(
+data class VodContainerRow(
     val title: String,
-    val items: List<VodGuideItem>
+    val items: List<VodContainerItem>
 )
 
-object VodGuideRowBuilder {
+object VodContainerRowBuilder {
     fun build(
-        items: List<VodGuideItem>,
+        items: List<VodContainerItem>,
         uncategorizedTitle: String,
         maximumItemsPerRow: Int = 36
-    ): List<VodGuideRow> {
+    ): List<VodContainerRow> {
         if (items.isEmpty()) return emptyList()
 
-        val grouped = linkedMapOf<String, MutableList<VodGuideItem>>()
+        val grouped = linkedMapOf<String, MutableList<VodContainerItem>>()
         items.forEach { item ->
             val category = item.providerCategory?.takeIf(String::isNotBlank) ?: uncategorizedTitle
             grouped.getOrPut(category) { mutableListOf() }.add(item)
         }
 
         return grouped.map { (title, rowItems) ->
-            VodGuideRow(
+            VodContainerRow(
                 title = title,
                 items = rowItems.take(maximumItemsPerRow)
             )
@@ -149,15 +149,15 @@ object VodGuideRowBuilder {
     }
 
     fun buildAdultRows(
-        items: List<VodGuideItem>,
+        items: List<VodContainerItem>,
         uncategorizedTitle: String
-    ): List<VodGuideRow> {
+    ): List<VodContainerRow> {
         if (items.isEmpty()) return emptyList()
 
-        val grouped = linkedMapOf<String, MutableList<VodGuideItem>>()
+        val grouped = linkedMapOf<String, MutableList<VodContainerItem>>()
         val titlesByKey = linkedMapOf<String, String>()
         items.forEach { item ->
-            val matches = AdultGuideCategoryBuilder.keywordCategoryMatches(
+            val matches = AdultCategoryBuilder.keywordCategoryMatches(
                 primaryValue = item.title,
                 contextValues = arrayOf(item.providerCategory)
             )
@@ -173,7 +173,7 @@ object VodGuideRowBuilder {
         }
 
         return grouped.map { (key, rowItems) ->
-            VodGuideRow(
+            VodContainerRow(
                 title = titlesByKey[key] ?: key,
                 items = rowItems.distinctBy { it.id }
             )

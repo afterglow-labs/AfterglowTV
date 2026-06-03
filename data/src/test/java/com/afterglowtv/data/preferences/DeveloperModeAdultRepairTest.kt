@@ -3,32 +3,32 @@ package com.afterglowtv.data.preferences
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class DeveloperModeAdultGuideRepairTest {
+class DeveloperModeAdultRepairTest {
     @Test
-    fun `developer mode repairs missing or disabled adult guide tab setting`() {
-        assertThat(shouldRepairAdultGuideTabVisibility(developerModeEnabled = true, showAdultGuideTab = null))
+    fun `developer mode repairs missing or disabled adult tab setting`() {
+        assertThat(shouldRepairAdultTabVisibility(developerModeEnabled = true, showAdultTab = null))
             .isTrue()
-        assertThat(shouldRepairAdultGuideTabVisibility(developerModeEnabled = true, showAdultGuideTab = false))
+        assertThat(shouldRepairAdultTabVisibility(developerModeEnabled = true, showAdultTab = false))
             .isTrue()
     }
 
     @Test
-    fun `developer mode does not rewrite an already visible adult guide tab`() {
-        assertThat(shouldRepairAdultGuideTabVisibility(developerModeEnabled = true, showAdultGuideTab = true))
+    fun `developer mode does not rewrite an already visible adult tab`() {
+        assertThat(shouldRepairAdultTabVisibility(developerModeEnabled = true, showAdultTab = true))
             .isFalse()
     }
 
     @Test
-    fun `locked developer mode does not expose adult guide tab`() {
-        assertThat(shouldRepairAdultGuideTabVisibility(developerModeEnabled = false, showAdultGuideTab = null))
+    fun `locked developer mode does not expose adult tab`() {
+        assertThat(shouldRepairAdultTabVisibility(developerModeEnabled = false, showAdultTab = null))
             .isFalse()
-        assertThat(shouldRepairAdultGuideTabVisibility(developerModeEnabled = false, showAdultGuideTab = false))
+        assertThat(shouldRepairAdultTabVisibility(developerModeEnabled = false, showAdultTab = false))
             .isFalse()
     }
 
     @Test
-    fun `developer mode state controls adult guide tab visibility`() {
-        assertThat(adultGuideTabVisibilityForDeveloperMode(enabled = true)).isTrue()
-        assertThat(adultGuideTabVisibilityForDeveloperMode(enabled = false)).isFalse()
+    fun `developer mode state controls adult tab visibility`() {
+        assertThat(adultTabVisibilityForDeveloperMode(enabled = true)).isTrue()
+        assertThat(adultTabVisibilityForDeveloperMode(enabled = false)).isFalse()
     }
 }

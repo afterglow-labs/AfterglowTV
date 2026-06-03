@@ -1122,7 +1122,7 @@ class AfterglowTVDatabaseMigrationTest {
     }
 
     @Test
-    fun migrate54To55_createsAdultGuideCacheTables() {
+    fun migrate54To55_createsAdultCacheTables() {
         migrationTestHelper.createDatabase("afterglowtv-54-55-test", 54).close()
 
         val migratedDb = migrationTestHelper.runMigrationsAndValidate(
@@ -1132,14 +1132,14 @@ class AfterglowTVDatabaseMigrationTest {
             AfterglowTVDatabase.MIGRATION_54_55
         )
 
-        assertEquals(1, countRows(migratedDb, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'adult_guide_cache_meta'"))
-        assertEquals(1, countRows(migratedDb, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'adult_guide_cache_categories'"))
-        assertEquals(1, countRows(migratedDb, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'adult_guide_cache_category_channels'"))
+        assertEquals(1, countRows(migratedDb, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'adult_cache_meta'"))
+        assertEquals(1, countRows(migratedDb, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'adult_cache_categories'"))
+        assertEquals(1, countRows(migratedDb, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'adult_cache_category_channels'"))
         assertEquals(
             1,
             countRows(
                 migratedDb,
-                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'index_adult_guide_cache_category_channels_provider_id_playlist_fingerprint_category_key_position'"
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'index_adult_cache_category_channels_provider_id_playlist_fingerprint_category_key_position'"
             )
         )
 

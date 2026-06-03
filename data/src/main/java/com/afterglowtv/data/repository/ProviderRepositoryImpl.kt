@@ -574,7 +574,7 @@ class ProviderRepositoryImpl @Inject constructor(
                     is Result.Loading -> Result.error("Unexpected loading state")
                 }
             }
-            ProviderType.M3U -> Result.error("On-demand guide lookup is unavailable for this provider.")
+            ProviderType.M3U -> Result.error("On-demand catalog lookup is unavailable for this provider.")
         }
     }
 
@@ -646,7 +646,7 @@ class ProviderRepositoryImpl @Inject constructor(
                 results
             }
             ProviderType.M3U -> normalizedRequests.associateWith {
-                Result.error("On-demand guide lookup is unavailable for this provider.")
+                Result.error("On-demand catalog lookup is unavailable for this provider.")
             }
         }
     }
@@ -748,7 +748,7 @@ class ProviderRepositoryImpl @Inject constructor(
             ?: return Result.error("Provider $providerId not found")
         val provider = providerEntity.toPublicDomain()
         if (provider.type != ProviderType.XTREAM_CODES) {
-            return Result.error("On-demand guide lookup is available only for Xtream providers.")
+            return Result.error("On-demand catalog lookup is available only for Xtream providers.")
         }
 
         val providerPassword = try {
@@ -815,7 +815,7 @@ class ProviderRepositoryImpl @Inject constructor(
                 )
                     .distinct()
                     .joinToString(separator = " / ")
-                    .ifBlank { "Failed to load on-demand guide" }
+                    .ifBlank { "Failed to load on-demand catalog" }
                 Result.error(combinedMessage, fullProgramsResult.exception ?: shortError?.exception)
             }
             is Result.Loading -> Result.error("Unexpected loading state")

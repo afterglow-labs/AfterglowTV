@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">מיון קטגוריות</string>
     <string name="settings_category_sorting_subtitle">מיין קטגוריות עבור הפלייליסט הפעיל. נעילה והסתרה נמצאות כעת בבקרות קטגוריות.</string>
     <string name="settings_category_sort_live">קטגוריות Live TV</string>
-    <string name="settings_category_sort_movies">קטגוריות סרטים</string>
-    <string name="settings_category_sort_series">קטגוריות סדרות</string>
     <string name="settings_hidden_categories_title">קטגוריות מוסתרות</string>
     <string name="settings_hidden_categories_subtitle">שחזר כל קטגוריית ספק שהסתרת בעבר ממסכי הגלישה.</string>
     <string name="settings_hidden_categories_none">אין מוסתרות</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">הכי הרבה פריטים תחילה</string>
     <string name="settings_category_sort_least_items">הכי מעט פריטים תחילה</string>
     <string name="settings_category_type_live_description">מיין והסתר קבוצות Live של הספק תוך שמירה על All Channels, Favorites, Recent וקבוצות מותאמות אישית במיקומים הקבועים שלהן.</string>
-    <string name="settings_category_type_movies_description">מיין והסתר קטגוריות סרטים של הספק בלי להשפיע על מועדפים, המשך צפייה או מדפים מותאמים אישית.</string>
-    <string name="settings_category_type_series_description">מיין והסתר קטגוריות סדרות של הספק בלי להשפיע על מועדפים, המשך צפייה או מדפים מותאמים אישית.</string>
     <string name="settings_playback">השמעה</string>
     <string name="settings_browsing">עיון</string>
     <string name="settings_playback_subtitle">כוונון מפענח והתנהגות חציצה להשמעה חלקה יותר.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">קטגוריות</string>
     <string name="vod_classic_category_search">חיפוש בקטגוריות</string>
     <string name="vod_classic_all">הכול</string>

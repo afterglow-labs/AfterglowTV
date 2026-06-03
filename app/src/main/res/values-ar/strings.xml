@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">ترتيب الفئات</string>
     <string name="settings_category_sorting_subtitle">رتّب الفئات لقائمة التشغيل النشطة. أصبح القفل والإخفاء الآن ضمن عناصر تحكم الفئات.</string>
     <string name="settings_category_sort_live">فئات البث المباشر</string>
-    <string name="settings_category_sort_movies">فئات الأفلام</string>
-    <string name="settings_category_sort_series">فئات المسلسلات</string>
     <string name="settings_hidden_categories_title">الفئات المخفية</string>
     <string name="settings_hidden_categories_subtitle">استعد أي فئات من المزوّد أخفيتها سابقًا من شاشات التصفح.</string>
     <string name="settings_hidden_categories_none">لا شيء مخفي</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">الأكثر عناصر أولًا</string>
     <string name="settings_category_sort_least_items">الأقل عناصر أولًا</string>
     <string name="settings_category_type_live_description">رتّب وأخفِ مجموعات البث المباشر من المزوّد مع إبقاء كل القنوات، والمفضلة، والحديثة، والمجموعات المخصصة في أماكنها المثبتة.</string>
-    <string name="settings_category_type_movies_description">رتّب وأخفِ فئات الأفلام من المزوّد دون التأثير على المفضلة، أو الاستئناف، أو الأرفف المخصصة.</string>
-    <string name="settings_category_type_series_description">رتّب وأخفِ فئات المسلسلات من المزوّد دون التأثير على المفضلة، أو متابعة المشاهدة، أو الأرفف المخصصة.</string>
     <string name="settings_playback">التشغيل</string>
     <string name="settings_browsing">التصفح</string>
     <string name="settings_playback_subtitle">اضبط سلوك وحدة فك الترميز والتخزين المؤقت لتشغيل أكثر سلاسة.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">الفئات</string>
     <string name="vod_classic_category_search">البحث في الفئات</string>
     <string name="vod_classic_all">الكل</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">استخدم رابط قائمة تشغيل أو استورد ملفًا محليًا.</string>
     <string name="setup_info_manage_title">يمكنك إدارة المزوّدين لاحقًا</string>
     <string name="setup_info_manage_body">يمكنك التحديث أو التعديل أو الاستبدال لاحقًا من الإعدادات.</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">M3U Playlist</string>
     <string name="setup_name_hint">اسم قائمة التشغيل (اختياري)</string>
     <string name="setup_server_hint">عنوان الخادم</string>

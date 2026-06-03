@@ -48,7 +48,7 @@ import com.afterglowtv.domain.usecase.ScheduleRecordingCommand
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.domain.repository.CombinedM3uRepository
 import com.afterglowtv.domain.repository.EpgRepository
-import com.afterglowtv.domain.repository.AdultGuideCacheRepository
+import com.afterglowtv.domain.repository.AdultCacheRepository
 import com.afterglowtv.domain.repository.MovieRepository
 import com.afterglowtv.domain.repository.PlaybackHistoryRepository
 import com.afterglowtv.domain.repository.SeriesRepository
@@ -88,7 +88,7 @@ class PlayerViewModel @Inject constructor(
     internal val favoriteRepository: com.afterglowtv.domain.repository.FavoriteRepository,
     internal val playbackHistoryRepository: PlaybackHistoryRepository,
     internal val providerRepository: com.afterglowtv.domain.repository.ProviderRepository,
-    internal val adultGuideCacheRepository: AdultGuideCacheRepository,
+    internal val adultCacheRepository: AdultCacheRepository,
     internal val combinedM3uRepository: CombinedM3uRepository,
     internal val preferencesRepository: com.afterglowtv.data.preferences.PreferencesRepository,
     internal val getCustomCategories: GetCustomCategories,
@@ -1395,7 +1395,7 @@ class PlayerViewModel @Inject constructor(
                         it.copy(
                             providerName = provider.name,
                             providerSourceLabel = when (provider.type) {
-                                com.afterglowtv.domain.model.ProviderType.XTREAM_CODES -> "Xtream Codes"
+                                com.afterglowtv.domain.model.ProviderType.XTREAM_CODES -> "Xtream"
                                 com.afterglowtv.domain.model.ProviderType.M3U -> "M3U Playlist"
                                 com.afterglowtv.domain.model.ProviderType.STALKER_PORTAL -> "Portal/MAG Login"
                             }

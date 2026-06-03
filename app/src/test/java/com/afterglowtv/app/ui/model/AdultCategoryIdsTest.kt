@@ -1,33 +1,33 @@
 package com.afterglowtv.app.ui.model
 
 import com.afterglowtv.domain.model.VirtualCategoryIds
-import com.afterglowtv.domain.repository.AdultGuideCachedCategory
-import com.afterglowtv.domain.repository.AdultGuideCacheSnapshot
+import com.afterglowtv.domain.repository.AdultCachedCategory
+import com.afterglowtv.domain.repository.AdultCacheSnapshot
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class AdultGuideCategoryIdsTest {
+class AdultCategoryIdsTest {
 
     @Test
     fun `generated adult category ids are distinct from generic virtual groups`() {
-        val blondesId = adultGuideCategoryId("blondes")
+        val blondesId = adultCategoryId("blondes")
 
-        assertThat(blondesId).isNotEqualTo(VirtualCategoryIds.ADULT_GUIDE)
-        assertThat(isAdultGuideGeneratedCategoryId(blondesId)).isTrue()
-        assertThat(isAdultGuideGeneratedCategoryId(-42L)).isFalse()
+        assertThat(blondesId).isNotEqualTo(VirtualCategoryIds.ADULT)
+        assertThat(isAdultGeneratedCategoryId(blondesId)).isTrue()
+        assertThat(isAdultGeneratedCategoryId(-42L)).isFalse()
     }
 
     @Test
     fun `cached adult category ids resolve only that category playlist`() {
         val cache = adultCache(
-            AdultGuideCachedCategory("blondes", "Blondes", listOf(10L, 20L)),
-            AdultGuideCachedCategory("trans", "Trans", listOf(30L))
+            AdultCachedCategory("blondes", "Blondes", listOf(10L, 20L)),
+            AdultCachedCategory("trans", "Trans", listOf(30L))
         )
 
         assertThat(
-            adultGuideCachedChannelIdsForCategory(
+            adultCachedChannelIdsForCategory(
                 cache = cache,
-                categoryId = adultGuideCategoryId("blondes")
+                categoryId = adultCategoryId("blondes")
             )
         ).containsExactly(10L, 20L).inOrder()
     }
@@ -35,14 +35,14 @@ class AdultGuideCategoryIdsTest {
     @Test
     fun `all adult category resolves all cached channels without duplicates`() {
         val cache = adultCache(
-            AdultGuideCachedCategory("blondes", "Blondes", listOf(10L, 20L)),
-            AdultGuideCachedCategory("milf", "MILF", listOf(20L, 30L))
+            AdultCachedCategory("blondes", "Blondes", listOf(10L, 20L)),
+            AdultCachedCategory("milf", "MILF", listOf(20L, 30L))
         )
 
         assertThat(
-            adultGuideCachedChannelIdsForCategory(
+            adultCachedChannelIdsForCategory(
                 cache = cache,
-                categoryId = VirtualCategoryIds.ADULT_GUIDE
+                categoryId = VirtualCategoryIds.ADULT
             )
         ).containsExactly(10L, 20L, 30L).inOrder()
     }
@@ -50,11 +50,11 @@ class AdultGuideCategoryIdsTest {
     @Test
     fun `non adult virtual category does not resolve from adult cache`() {
         val cache = adultCache(
-            AdultGuideCachedCategory("blondes", "Blondes", listOf(10L, 20L))
+            AdultCachedCategory("blondes", "Blondes", listOf(10L, 20L))
         )
 
         assertThat(
-            adultGuideCachedChannelIdsForCategory(
+            adultCachedChannelIdsForCategory(
                 cache = cache,
                 categoryId = -42L
             )
@@ -62,8 +62,8 @@ class AdultGuideCategoryIdsTest {
     }
 
     private fun adultCache(
-        vararg categories: AdultGuideCachedCategory
-    ): AdultGuideCacheSnapshot = AdultGuideCacheSnapshot(
+        vararg categories: AdultCachedCategory
+    ): AdultCacheSnapshot = AdultCacheSnapshot(
         providerId = 7L,
         playlistFingerprint = "provider:7:live:1234:3",
         categorizedChannelCount = 3,

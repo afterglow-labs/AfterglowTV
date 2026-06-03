@@ -63,7 +63,7 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         CrashReportStore.install(this)
         applySavedVisualPreferencesBeforeUi()
-        repairDeveloperModeAdultGuideVisibility()
+        repairDeveloperModeAdultVisibility()
         if (StorePolicy.current.enableHiddenFallbackSource) {
             applicationScope.launch {
                 runCatching {
@@ -79,10 +79,10 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         scheduleDeferredStartupWork()
     }
 
-    private fun repairDeveloperModeAdultGuideVisibility() {
+    private fun repairDeveloperModeAdultVisibility() {
         applicationScope.launch {
             runCatching {
-                startupEntryPoint().preferencesRepository().ensureAdultGuideTabVisibleForDeveloperMode()
+                startupEntryPoint().preferencesRepository().ensureAdultTabVisibleForDeveloperMode()
             }.onFailure { error ->
                 Log.w(TAG, "Unable to repair developer guide visibility", error)
             }

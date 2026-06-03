@@ -94,7 +94,7 @@
     <string name="dashboard_provider_status">Állapot</string>
     <string name="dashboard_provider_source">Forrás</string>
     <string name="dashboard_provider_connections">Kapcsolatok</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">M3U lejátszási lista</string>
     <string name="dashboard_provider_no_sync">Nincs friss szinkronizálás</string>
     <string name="dashboard_provider_synced_at">Szinkronizálva %1$s</string>
@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Kategóriarendezés</string>
     <string name="settings_category_sorting_subtitle">Rendezze a kategóriákat az aktív lejátszási listához. A zárolás és elrejtés most a Kategóriavezérlésben található.</string>
     <string name="settings_category_sort_live">Élő TV kategóriák</string>
-    <string name="settings_category_sort_movies">Film kategóriák</string>
-    <string name="settings_category_sort_series">Sorozat kategóriák</string>
     <string name="settings_hidden_categories_title">Rejtett kategóriák</string>
     <string name="settings_hidden_categories_subtitle">Állítsa vissza azokat a szolgáltatói kategóriákat, amelyeket korábban elrejtett a böngészési felületekről.</string>
     <string name="settings_hidden_categories_none">Nincs rejtve</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Legtöbb elem először</string>
     <string name="settings_category_sort_least_items">Legkevesebb elem először</string>
     <string name="settings_category_type_live_description">Rendezze és rejtse el a szolgáltató élő csoportjait, miközben az Összes csatorna, Kedvencek, Legutóbbiak és az egyéni csoportok a rögzített helyükön maradnak.</string>
-    <string name="settings_category_type_movies_description">Rendezze és rejtse el a szolgáltató filmkategóriáit anélkül, hogy ez érintené a Kedvenceket, a Folytatás elemet vagy az egyéni polcokat.</string>
-    <string name="settings_category_type_series_description">Rendezze és rejtse el a szolgáltató sorozatkategóriáit anélkül, hogy ez érintené a Kedvencek, a Nézés folytatása vagy az egyéni polcok elemeit.</string>
     <string name="settings_playback">Lejátszás</string>
     <string name="settings_browsing">Böngészés</string>
     <string name="settings_playback_subtitle">Hangolja a dekóder és a pufferelés működését a simább lejátszásért.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategóriák</string>
     <string name="vod_classic_category_search">Keresés a kategóriákban</string>
     <string name="vod_classic_all">Összes</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">Lejátszási lista hivatkozásának használata vagy helyi fájl importálása.</string>
     <string name="setup_info_manage_title">A szolgáltatókat később is kezelheti</string>
     <string name="setup_info_manage_body">Frissítse, szerkessze vagy cserélje ki később a Beállításokban.</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">M3U lejátszási lista</string>
     <string name="setup_name_hint">Lejátszási lista neve (opcionális)</string>
     <string name="setup_server_hint">Szerver URL</string>

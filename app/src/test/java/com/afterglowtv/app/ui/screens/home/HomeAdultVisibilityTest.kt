@@ -6,10 +6,10 @@ import com.afterglowtv.domain.repository.ChannelRepository
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class HomeAdultGuideVisibilityTest {
+class HomeAdultVisibilityTest {
 
     @Test
-    fun `adult guide can hide generated categories`() {
+    fun `adult can hide generated categories`() {
         val category = Category(
             id = -88001L,
             name = "Blondes",
@@ -18,7 +18,7 @@ class HomeAdultGuideVisibilityTest {
             isAdult = true
         )
 
-        assertThat(canHideHomeCategory(category, adultGuideMode = true)).isTrue()
+        assertThat(canHideHomeCategory(category, adultMode = true)).isTrue()
     }
 
     @Test
@@ -30,12 +30,12 @@ class HomeAdultGuideVisibilityTest {
             isVirtual = true
         )
 
-        assertThat(canHideHomeCategory(category, adultGuideMode = false)).isFalse()
+        assertThat(canHideHomeCategory(category, adultMode = false)).isFalse()
     }
 
     @Test
-    fun `adult guide visibility removes hidden categories and their channels from every category`() {
-        val context = AdultGuideLiveContext(
+    fun `adult visibility removes hidden categories and their channels from every category`() {
+        val context = AdultLiveContext(
             categories = listOf(
                 Category(id = 101L, name = "Blondes", type = ContentType.LIVE, isAdult = true),
                 Category(id = 102L, name = "MILF", type = ContentType.LIVE, isAdult = true)
@@ -46,7 +46,7 @@ class HomeAdultGuideVisibilityTest {
             )
         )
 
-        val filtered = filterAdultGuideVisibility(
+        val filtered = filterAdultVisibility(
             context = context,
             hiddenCategoryIds = setOf(102L),
             hiddenChannelIds = setOf(2L)

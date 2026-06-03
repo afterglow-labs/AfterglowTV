@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Categorievolgorde</string>
     <string name="settings_category_sorting_subtitle">Sorteer categorieën voor de actieve playlist. Vergrendelen en verbergen staan nu in Categoriebeheer.</string>
     <string name="settings_category_sort_live">Live TV-categorieën</string>
-    <string name="settings_category_sort_movies">Filmcategorieën</string>
-    <string name="settings_category_sort_series">Seriecategorieën</string>
     <string name="settings_hidden_categories_title">Verborgen categorieën</string>
     <string name="settings_hidden_categories_subtitle">Herstel providercategorieën die je eerder hebt verborgen in de browseweergaven.</string>
     <string name="settings_hidden_categories_none">Geen verborgen</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Meeste items eerst</string>
     <string name="settings_category_sort_least_items">Minste items eerst</string>
     <string name="settings_category_type_live_description">Sorteer en verberg livegroepen van de provider, terwijl Alle zenders, Favorieten, Recent en aangepaste groepen op hun vaste plek blijven.</string>
-    <string name="settings_category_type_movies_description">Sorteer en verberg filtcategorieën van de provider zonder Favorieten, Hervatten of aangepaste rijen te beïnvloeden.</string>
-    <string name="settings_category_type_series_description">Sorteer en verberg seriecategorieën van de provider zonder Favorieten, Verder kijken of aangepaste rijen te beïnvloeden.</string>
     <string name="settings_playback">Afspelen</string>
     <string name="settings_browsing">Bladeren</string>
     <string name="settings_playback_subtitle">Stem het decoder- en buffergedrag af voor vloeiender afspelen.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Categorieën</string>
     <string name="vod_classic_category_search">Zoeken in categorieën</string>
     <string name="vod_classic_all">Alles</string>

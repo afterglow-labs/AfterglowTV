@@ -31,7 +31,7 @@ abstract class RepositoryModule {
     abstract fun bindProviderRepository(impl: ProviderRepositoryImpl): ProviderRepository
 
     @Binds @Singleton
-    abstract fun bindAdultGuideCacheRepository(impl: AdultGuideCacheRepositoryImpl): AdultGuideCacheRepository
+    abstract fun bindAdultCacheRepository(impl: AdultCacheRepositoryImpl): AdultCacheRepository
 
     @Binds @Singleton
     abstract fun bindChannelRepository(impl: ChannelRepositoryImpl): ChannelRepository

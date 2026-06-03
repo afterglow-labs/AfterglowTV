@@ -255,13 +255,13 @@ internal fun LiveTvQuickFilterVisibilityMode.descriptionResId(): Int = when (thi
 internal fun VodViewMode.labelResId(): Int = when (this) {
     VodViewMode.SHELVES -> R.string.settings_vod_view_mode_shelves
     VodViewMode.GRID -> R.string.settings_vod_view_mode_grid
-    VodViewMode.GUIDE -> R.string.settings_vod_view_mode_guide
+    VodViewMode.CONTAINER -> R.string.settings_vod_view_mode_container
 }
 
 internal fun VodViewMode.descriptionResId(): Int = when (this) {
     VodViewMode.SHELVES -> R.string.settings_vod_view_mode_shelves_desc
     VodViewMode.GRID -> R.string.settings_vod_view_mode_grid_desc
-    VodViewMode.GUIDE -> R.string.settings_vod_view_mode_guide_desc
+    VodViewMode.CONTAINER -> R.string.settings_vod_view_mode_container_desc
 }
 
 internal fun ChannelNumberingMode.labelResId(): Int = when (this) {

@@ -3,7 +3,7 @@ package com.afterglowtv.domain.provider
 import com.afterglowtv.domain.model.*
 
 /**
- * Shared interface for all IPTV providers (Xtream Codes, M3U, etc.).
+ * Shared interface for all IPTV providers (Xtream, M3U, etc.).
  * Each provider type implements this to normalize data into domain models.
  */
 interface IptvProvider {

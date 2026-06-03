@@ -22,7 +22,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Xtream Codes provider implementation.
+ * Xtream provider implementation.
  * Converts Xtream API responses to domain models.
  */
 class XtreamProvider(
@@ -64,7 +64,7 @@ class XtreamProvider(
         /**
          * Local (no timezone) formatters for Xtream EPG textual timestamps.
          * Values parsed with these are assumed to be UTC, which is the
-         * convention used by Xtream Codes providers.
+         * convention used by Xtream providers.
          */
         private val xtreamEpgLocalFormats: List<DateTimeFormatter> = listOf(
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.US),

@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Sắp xếp danh mục</string>
     <string name="settings_category_sorting_subtitle">Sắp xếp danh mục cho playlist đang hoạt động. Khóa và ẩn hiện đã chuyển sang Điều khiển danh mục.</string>
     <string name="settings_category_sort_live">Danh mục Live TV</string>
-    <string name="settings_category_sort_movies">Danh mục phim</string>
-    <string name="settings_category_sort_series">Danh mục series</string>
     <string name="settings_hidden_categories_title">Danh mục đã ẩn</string>
     <string name="settings_hidden_categories_subtitle">Khôi phục bất kỳ danh mục nào của nhà cung cấp mà bạn đã ẩn khỏi màn hình duyệt.</string>
     <string name="settings_hidden_categories_none">Không có mục ẩn</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Nhiều mục nhất trước</string>
     <string name="settings_category_sort_least_items">Ít mục nhất trước</string>
     <string name="settings_category_type_live_description">Sắp xếp và ẩn các nhóm trực tiếp của nhà cung cấp, đồng thời giữ All Channels, Favorites, Recent và các nhóm tùy chỉnh ở vị trí ghim.</string>
-    <string name="settings_category_type_movies_description">Sắp xếp và ẩn các danh mục phim của nhà cung cấp mà không ảnh hưởng đến Favorites, Resume hoặc các kệ tùy chỉnh.</string>
-    <string name="settings_category_type_series_description">Sắp xếp và ẩn các danh mục series của nhà cung cấp mà không ảnh hưởng đến Favorites, Continue Watching hoặc các kệ tùy chỉnh.</string>
     <string name="settings_playback">Phát lại</string>
     <string name="settings_browsing">Duyệt</string>
     <string name="settings_playback_subtitle">Tinh chỉnh bộ giải mã và bộ đệm để phát mượt hơn.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Danh mục</string>
     <string name="vod_classic_category_search">Tìm trong danh mục</string>
     <string name="vod_classic_all">Tất cả</string>

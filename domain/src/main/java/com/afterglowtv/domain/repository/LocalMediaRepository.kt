@@ -24,6 +24,7 @@ interface LocalMediaRepository {
     ): Flow<Int>
 
     suspend fun addLibrary(rootUri: String, displayName: String?): Result<LocalMediaScanResult>
+    suspend fun addSmbLibraryReference(config: SmbShareConfig): Result<LocalMediaLibrary>
     suspend fun addSmbLibrary(config: SmbShareConfig): Result<LocalMediaScanResult>
     suspend fun browseLibrary(libraryId: Long, path: String = ""): Result<LocalMediaBrowseResult>
     suspend fun rescanLibrary(libraryId: Long): Result<LocalMediaScanResult>

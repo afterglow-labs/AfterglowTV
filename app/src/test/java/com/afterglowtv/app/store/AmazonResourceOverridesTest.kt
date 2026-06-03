@@ -15,10 +15,10 @@ class AmazonResourceOverridesTest {
     }
 
     @Test
-    fun `developer gated adult guide labels remain explicit after unlock`() {
+    fun `developer gated adult labels remain explicit after unlock`() {
         val amazonStrings = File("src/amazon/res/values/strings.xml").readText()
 
-        assertThat(amazonStrings).contains("""<string name="nav_adult_guide">XXX Guide</string>""")
-        assertThat(amazonStrings).contains("""<string name="settings_show_adult_guide_tab">Show XXX Guide Tab</string>""")
+        assertThat(amazonStrings).contains("""<string name="nav_adult">Adult</string>""")
+        assertThat(amazonStrings).contains("""<string name="settings_show_adult_tab">Show Adult Tab</string>""")
     }
 }

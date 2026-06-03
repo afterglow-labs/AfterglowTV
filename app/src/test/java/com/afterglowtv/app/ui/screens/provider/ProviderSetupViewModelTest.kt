@@ -179,9 +179,48 @@ class ProviderSetupViewModelTest {
         verify(validateAndAddProvider).addM3u(command.capture(), any())
         assertThat(command.firstValue.m3uPlaylistKind).isEqualTo(ProviderM3uPlaylistKind.VOD)
         assertThat(command.firstValue.m3uVodClassificationEnabled).isTrue()
-        assertThat(command.firstValue.epgSyncMode).isEqualTo(ProviderEpgSyncMode.SKIP)
+        assertThat(command.firstValue.epgSyncMode).isEqualTo(ProviderEpgSyncMode.BACKGROUND)
         assertThat(viewModel.uiState.value.pendingCombinedAttachProfileId).isNull()
         assertThat(viewModel.uiState.value.loginSuccess).isTrue()
+    }
+
+    @Test
+    fun `adding m3u as vod playlist keeps supplied epg url`() = runTest {
+        val createdProvider = Provider(
+            id = 18L,
+            name = "Adult VOD",
+            type = ProviderType.M3U,
+            serverUrl = "https://example.com/vod.m3u",
+            m3uUrl = "https://example.com/vod.m3u",
+            epgUrl = "https://example.com/vod.xml",
+            m3uPlaylistKind = ProviderM3uPlaylistKind.VOD
+        )
+        whenever(validateAndAddProvider.addM3u(any(), any())).thenReturn(
+            ValidateAndAddProviderResult.Success(createdProvider)
+        )
+
+        val viewModel = ProviderSetupViewModel(
+            providerRepository = providerRepository,
+            combinedM3uRepository = combinedM3uRepository,
+            preferencesRepository = preferencesRepository,
+            validateAndAddProvider = validateAndAddProvider,
+            importBackup = importBackup
+        )
+
+        viewModel.updateM3uPlaylistKind(ProviderM3uPlaylistKind.VOD)
+        viewModel.addM3u(
+            url = "https://example.com/vod.m3u",
+            name = "Adult VOD",
+            httpUserAgent = "",
+            httpHeaders = "",
+            epgUrl = "https://example.com/vod.xml"
+        )
+        advanceUntilIdle()
+
+        val command = argumentCaptor<M3uProviderSetupCommand>()
+        verify(validateAndAddProvider).addM3u(command.capture(), any())
+        assertThat(command.firstValue.epgUrl).isEqualTo("https://example.com/vod.xml")
+        assertThat(command.firstValue.epgSyncMode).isEqualTo(ProviderEpgSyncMode.BACKGROUND)
     }
 
     @Test

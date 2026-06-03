@@ -12,7 +12,7 @@
     <string name="nav_epg">Guide</string>
     <string name="nav_iptv_guide">IPTV Guide</string>
     <string name="nav_vod_container">VOD</string>
-    <string name="nav_adult_guide">XXX Guide</string>
+    <string name="nav_adult">Adult</string>
     <string name="nav_settings">Settings</string>
 
     
@@ -33,8 +33,8 @@
     <string name="home_incorrect_pin">Incorrect PIN</string>
     <string name="home_loading_categories">Loading categories...</string>
     <string name="home_loading_channels">Loading channels...</string>
-    <string name="home_adult_guide_resync">Resync</string>
-    <string name="home_adult_guide_syncing">Syncing...</string>
+    <string name="home_adult_resync">Resync</string>
+    <string name="home_adult_syncing">Syncing...</string>
     <string name="home_categories_title">Categories</string>
     <string name="home_search_categories">Search categories...</string>
     <string name="home_quick_filters_title">Quick filters</string>
@@ -112,7 +112,7 @@
     <string name="dashboard_provider_status">Status</string>
     <string name="dashboard_provider_source">Source</string>
     <string name="dashboard_provider_connections">Connections</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">M3U Playlist</string>
     <string name="dashboard_provider_no_sync">No recent sync</string>
     <string name="dashboard_provider_synced_at">Synced %1$s</string>
@@ -244,10 +244,10 @@
     <string name="movies_reorder_subtitle">Use the remote to move posters, then save the shelf order for this group.</string>
     <string name="library_full_browse_title_movies">Browse Full Movie Library</string>
     <string name="library_full_browse_subtitle">%1$d titles available in the current provider</string>
-    <string name="vod_guide_title">VOD</string>
-    <string name="vod_guide_detail">VOD browsing</string>
-    <string name="xxx_vod_guide_title">XXX VOD</string>
-    <string name="xxx_vod_guide_detail">Adult VOD only</string>
+    <string name="vod_container_title">VOD</string>
+    <string name="vod_container_detail">VOD browsing</string>
+    <string name="adult_vod_title">Adult VOD</string>
+    <string name="adult_vod_detail">Adult VOD only</string>
 
     
     <string name="series_incorrect_pin">Incorrect PIN</string>
@@ -411,9 +411,9 @@
     <string name="settings_guide_no_data_show_channel_text">Show Text In Empty Guide Blocks</string>
     <string name="settings_guide_no_data_show_channel_text_on">Show channel name and a no-guide description.</string>
     <string name="settings_guide_no_data_show_channel_text_off">Leave empty guide blocks blank for faster browsing.</string>
-    <string name="settings_show_adult_guide_tab">Show XXX Guide Tab</string>
-    <string name="settings_show_adult_guide_tab_on">XXX Guide appears in the main navigation.</string>
-    <string name="settings_show_adult_guide_tab_off">XXX Guide is hidden from the main navigation.</string>
+    <string name="settings_show_adult_tab">Show Adult Tab</string>
+    <string name="settings_show_adult_tab_on">Adult appears in the main navigation.</string>
+    <string name="settings_show_adult_tab_off">Adult is hidden from the main navigation.</string>
     <string name="settings_time_format">Time Format</string>
     <string name="settings_select_time_format">Select time format</string>
     <string name="settings_time_format_system">System Default</string>
@@ -516,13 +516,13 @@
     <string name="settings_live_channel_numbering_hidden">Hidden</string>
     <string name="settings_live_channel_numbering_hidden_desc">Never show channel numbers anywhere in the app.</string>
     <string name="settings_vod_view_mode">VOD layout</string>
-    <string name="settings_vod_view_mode_subtitle">Choose shelf rows, a poster grid, or the VOD guide.</string>
+    <string name="settings_vod_view_mode_subtitle">Choose shelf rows, a poster grid, or the VOD container layout.</string>
     <string name="settings_vod_view_mode_shelves">Shelf Rows</string>
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD</string>
-    <string name="settings_vod_view_mode_guide_desc">Category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="settings_vod_infinite_scroll">Infinite scroll</string>
     <string name="settings_vod_infinite_scroll_on">Auto-load more category rows as you scroll near the end.</string>
     <string name="settings_vod_infinite_scroll_off">Show a Load more button to fetch the next batch of category rows.</string>
@@ -812,8 +812,8 @@
     <string name="settings_recording_retry_count_label">Retries</string>
     <string name="settings_recording_pattern_hint">Use tokens like ChannelName, ProgramTitle, yyyy-MM-dd_HH-mm</string>
     <string name="settings_save">Save</string>
-    <string name="settings_capability_xtream_with_epg">Xtream source with XMLTV guide support and on-demand guide fallback. Catch-up is available when the provider exposes replay streams.</string>
-    <string name="settings_capability_xtream_without_epg">Xtream source with on-demand guide fallback. Catch-up depends on provider replay support.</string>
+    <string name="settings_capability_xtream_with_epg">Xtream source with XMLTV guide support and on-demand schedule fallback. Catch-up is available when the provider exposes replay streams.</string>
+    <string name="settings_capability_xtream_without_epg">Xtream source with on-demand schedule fallback. Catch-up depends on provider replay support.</string>
     <string name="settings_capability_m3u_with_epg">M3U source with XMLTV guide. Archive support depends on provider stream templates.</string>
     <string name="settings_capability_m3u_without_epg">M3U source without guide URL. Guide and archive coverage may be limited.</string>
 
@@ -942,7 +942,7 @@
     <string name="setup_shell_subtitle">Login, MAC address, M3U link, or a local file — pick whichever your service hands you.</string>
     <string name="setup_form_subtitle">Pick a connection type, fill it in, hit go.</string>
     <string name="setup_source_type_label">How are we connecting?</string>
-    <string name="setup_info_xtream_title">Xtream Codes</string>
+    <string name="setup_info_xtream_title">Xtream</string>
     <string name="setup_info_xtream_body">Server URL + username + password.</string>
     <string name="setup_info_stalker_body">Portal URL + registered MAC address.</string>
     <string name="setup_info_m3u_title">M3U Playlist</string>
@@ -951,7 +951,7 @@
     <string name="setup_info_manage_body">Edit, refresh, or replace from Settings whenever.</string>
     <string name="setup_import_backup">Restore from backup</string>
     <string name="badge_beta">Beta</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_stalker">Portal Login</string>
     <string name="setup_m3u">M3U Playlist</string>
     <string name="setup_name_hint">Name this playlist (optional)</string>

@@ -7,18 +7,18 @@ import com.afterglowtv.domain.model.Movie
 import com.afterglowtv.domain.model.Series
 import java.util.Locale
 
-data class AdultGuideCategory(
+data class AdultCategory(
     val key: String,
     val title: String,
     val channels: List<Channel>
 )
 
-internal data class AdultGuideCategoryMatch(
+internal data class AdultCategoryMatch(
     val key: String,
     val title: String
 )
 
-object AdultGuideCategoryBuilder {
+object AdultCategoryBuilder {
     const val ALL_CATEGORY_KEY = "all"
 
     private const val OTHER_CATEGORY_KEY = "other"
@@ -49,10 +49,10 @@ object AdultGuideCategoryBuilder {
         "threesome",
         "orgy"
     )
-    private val normalizedExplicitAdultSignals = explicitAdultSignals.map(::normalizeAdultGuideText)
+    private val normalizedExplicitAdultSignals = explicitAdultSignals.map(::normalizeAdultText)
     private val categoryRules = listOf(
-        AdultGuideRule("milf", "MILF", listOf("milf", "milfs", "stepmom", "step mom")),
-        AdultGuideRule(
+        AdultRule("milf", "MILF", listOf("milf", "milfs", "stepmom", "step mom")),
+        AdultRule(
             "taboo",
             "Taboo",
             listOf(
@@ -72,50 +72,50 @@ object AdultGuideCategoryBuilder {
                 "uncle"
             )
         ),
-        AdultGuideRule("interracial", "Interracial", listOf("interracial", "ir")),
-        AdultGuideRule("blondes", "Blondes", listOf("blonde", "blondes")),
-        AdultGuideRule("brunettes", "Brunettes", listOf("brunette", "brunettes")),
-        AdultGuideRule("trans", "Trans", listOf("trans", "transgender", "tg", "ts")),
-        AdultGuideRule("latina", "Latina", listOf("latina", "latinas", "latin")),
-        AdultGuideRule("asian", "Asian", listOf("asian", "japanese", "korean", "chinese")),
-        AdultGuideRule("ebony", "Ebony", listOf("ebony", "black")),
-        AdultGuideRule("amateur", "Amateur", listOf("amateur", "homemade")),
-        AdultGuideRule("lesbian", "Lesbian", listOf("lesbian", "lesbians")),
-        AdultGuideRule("gay", "Gay", listOf("gay")),
-        AdultGuideRule("bbw", "BBW", listOf("bbw")),
-        AdultGuideRule("mature", "Mature", listOf("mature", "cougar", "cougars")),
-        AdultGuideRule("pov", "POV", listOf("pov")),
-        AdultGuideRule("group", "Group", listOf("group", "threesome", "orgy")),
-        AdultGuideRule("fetish", "Fetish", listOf("fetish", "bdsm", "bondage")),
-        AdultGuideRule("reality", "Reality", listOf("reality", "casting", "audition")),
-        AdultGuideRule("vr", "VR", listOf("vr", "virtual reality")),
-        AdultGuideRule("4k", "4K", listOf("4k", "uhd"))
+        AdultRule("interracial", "Interracial", listOf("interracial", "ir")),
+        AdultRule("blondes", "Blondes", listOf("blonde", "blondes")),
+        AdultRule("brunettes", "Brunettes", listOf("brunette", "brunettes")),
+        AdultRule("trans", "Trans", listOf("trans", "transgender", "tg", "ts")),
+        AdultRule("latina", "Latina", listOf("latina", "latinas", "latin")),
+        AdultRule("asian", "Asian", listOf("asian", "japanese", "korean", "chinese")),
+        AdultRule("ebony", "Ebony", listOf("ebony", "black")),
+        AdultRule("amateur", "Amateur", listOf("amateur", "homemade")),
+        AdultRule("lesbian", "Lesbian", listOf("lesbian", "lesbians")),
+        AdultRule("gay", "Gay", listOf("gay")),
+        AdultRule("bbw", "BBW", listOf("bbw")),
+        AdultRule("mature", "Mature", listOf("mature", "cougar", "cougars")),
+        AdultRule("pov", "POV", listOf("pov")),
+        AdultRule("group", "Group", listOf("group", "threesome", "orgy")),
+        AdultRule("fetish", "Fetish", listOf("fetish", "bdsm", "bondage")),
+        AdultRule("reality", "Reality", listOf("reality", "casting", "audition")),
+        AdultRule("vr", "VR", listOf("vr", "virtual reality")),
+        AdultRule("4k", "4K", listOf("4k", "uhd"))
     )
 
     fun build(
         channels: List<Channel>,
         providerCategories: List<Category>,
         includeAllCategory: Boolean = true
-    ): List<AdultGuideCategory> {
+    ): List<AdultCategory> {
         if (channels.isEmpty()) return emptyList()
 
         val providerCategoryById = providerCategories.associateBy { it.id }
-        val grouped = linkedMapOf<String, AdultGuideMutableCategory>()
+        val grouped = linkedMapOf<String, AdultMutableCategory>()
         if (includeAllCategory) {
-            grouped[ALL_CATEGORY_KEY] = AdultGuideMutableCategory(ALL_CATEGORY_KEY, "All", channels.toMutableList())
+            grouped[ALL_CATEGORY_KEY] = AdultMutableCategory(ALL_CATEGORY_KEY, "All", channels.toMutableList())
         }
 
         channels.forEach { channel ->
             val matches = keywordCategoryMatches(channel.name, channel.categoryName, channel.groupTitle)
             if (matches.isEmpty()) {
                 val sourceCategory = channel.categoryId?.let(providerCategoryById::get)
-                if (isAdultGuideChannel(channel, sourceCategory)) {
-                    val fallbackCategory = sourceCategory?.takeIf(::isAdultGuideCategory)
+                if (isAdultChannel(channel, sourceCategory)) {
+                    val fallbackCategory = sourceCategory?.takeIf(::isAdultCategory)
                         ?: channel.categoryName
-                            ?.takeIf(::isAdultGuideText)
+                            ?.takeIf(::isAdultText)
                             ?.let { Category(id = Long.MIN_VALUE, name = it, isAdult = true) }
                     val key = fallbackCategory?.name
-                        ?.let(::adultGuideCategoryKey)
+                        ?.let(::adultCategoryKey)
                         ?.takeIf(String::isNotBlank)
                         ?: OTHER_CATEGORY_KEY
                     val title = fallbackCategory?.name
@@ -123,13 +123,13 @@ object AdultGuideCategoryBuilder {
                         ?.takeIf(String::isNotBlank)
                         ?: "Other"
                     grouped.getOrPut(key) {
-                        AdultGuideMutableCategory(key, title, mutableListOf())
+                        AdultMutableCategory(key, title, mutableListOf())
                     }.channels.add(channel)
                 }
             } else {
                 matches.forEach { rule ->
                     grouped.getOrPut(rule.key) {
-                        AdultGuideMutableCategory(rule.key, rule.title, mutableListOf())
+                        AdultMutableCategory(rule.key, rule.title, mutableListOf())
                     }.channels.add(channel)
                 }
             }
@@ -137,7 +137,7 @@ object AdultGuideCategoryBuilder {
 
         return grouped.values
             .map { category ->
-                AdultGuideCategory(
+                AdultCategory(
                     key = category.key,
                     title = category.title,
                     channels = category.channels.distinctBy { it.id }
@@ -147,7 +147,7 @@ object AdultGuideCategoryBuilder {
     }
 
     fun matchesGeneratedCategory(value: String?): Boolean =
-        normalizeAdultGuideText(value)
+        normalizeAdultText(value)
             .takeIf(String::isNotBlank)
             ?.let { normalized -> categoryRules.any { it.matchesNormalized(normalized) } }
             ?: false
@@ -155,24 +155,24 @@ object AdultGuideCategoryBuilder {
     internal fun keywordCategoryMatches(
         primaryValue: String?,
         vararg contextValues: String?
-    ): List<AdultGuideCategoryMatch> {
-        val normalizedPrimary = normalizeAdultGuideText(primaryValue)
+    ): List<AdultCategoryMatch> {
+        val normalizedPrimary = normalizeAdultText(primaryValue)
         val normalizedContextValues = contextValues
-            .map(::normalizeAdultGuideText)
+            .map(::normalizeAdultText)
             .filter(String::isNotBlank)
         val primaryMatches = categoryRules
             .filter { rule -> rule.matchesNormalized(normalizedPrimary) }
-            .map { rule -> AdultGuideCategoryMatch(rule.key, rule.title) }
+            .map { rule -> AdultCategoryMatch(rule.key, rule.title) }
         val primaryKeys = primaryMatches.mapTo(mutableSetOf()) { it.key }
         val contextMatches = categoryRules
             .filterNot { rule -> rule.key in primaryKeys }
             .filter { rule -> normalizedContextValues.any(rule::matchesNormalized) }
-            .map { rule -> AdultGuideCategoryMatch(rule.key, rule.title) }
+            .map { rule -> AdultCategoryMatch(rule.key, rule.title) }
         return primaryMatches + contextMatches
     }
 
     fun matchesExplicitAdultSignal(value: String?): Boolean {
-        val normalized = normalizeAdultGuideText(value)
+        val normalized = normalizeAdultText(value)
         if (normalized.isBlank()) return false
         return normalizedExplicitAdultSignals.any { normalizedSignal ->
             normalized == normalizedSignal ||
@@ -183,82 +183,82 @@ object AdultGuideCategoryBuilder {
     }
 }
 
-internal fun isAdultGuideCategory(category: Category?): Boolean {
+internal fun isAdultCategory(category: Category?): Boolean {
     if (category == null) return false
-    return category.isAdult || isAdultGuideText(category.name)
+    return category.isAdult || isAdultText(category.name)
 }
 
-internal fun isLikelyAdultGuideCategory(category: Category?): Boolean {
+internal fun isLikelyAdultCategory(category: Category?): Boolean {
     if (category == null) return false
-    return isAdultGuideCategory(category) || AdultGuideCategoryBuilder.matchesExplicitAdultSignal(category.name)
+    return isAdultCategory(category) || AdultCategoryBuilder.matchesExplicitAdultSignal(category.name)
 }
 
-internal fun isAdultGuideChannel(channel: Channel, category: Category? = null): Boolean {
+internal fun isAdultChannel(channel: Channel, category: Category? = null): Boolean {
     return channel.isAdult ||
-        isLikelyAdultGuideCategory(category) ||
-        isAdultGuideText(channel.categoryName) ||
-        isAdultGuideText(channel.groupTitle) ||
-        isAdultGuideText(channel.name) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(channel.categoryName) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(channel.groupTitle) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(channel.name)
+        isLikelyAdultCategory(category) ||
+        isAdultText(channel.categoryName) ||
+        isAdultText(channel.groupTitle) ||
+        isAdultText(channel.name) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(channel.categoryName) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(channel.groupTitle) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(channel.name)
 }
 
-internal fun isExplicitAdultGuideChannel(channel: Channel): Boolean {
+internal fun isExplicitAdultChannel(channel: Channel): Boolean {
     return channel.isAdult ||
-        isAdultGuideText(channel.categoryName) ||
-        isAdultGuideText(channel.groupTitle) ||
-        isAdultGuideText(channel.name) ||
-        AdultGuideCategoryBuilder.matchesExplicitAdultSignal(channel.categoryName) ||
-        AdultGuideCategoryBuilder.matchesExplicitAdultSignal(channel.groupTitle) ||
-        AdultGuideCategoryBuilder.matchesExplicitAdultSignal(channel.name)
+        isAdultText(channel.categoryName) ||
+        isAdultText(channel.groupTitle) ||
+        isAdultText(channel.name) ||
+        AdultCategoryBuilder.matchesExplicitAdultSignal(channel.categoryName) ||
+        AdultCategoryBuilder.matchesExplicitAdultSignal(channel.groupTitle) ||
+        AdultCategoryBuilder.matchesExplicitAdultSignal(channel.name)
 }
 
 internal fun isAdultVodMovie(movie: Movie, category: Category? = null): Boolean =
     movie.isAdult ||
-        isAdultGuideCategory(category) ||
-        isAdultGuideText(movie.categoryName) ||
-        isAdultGuideText(movie.genre) ||
-        isAdultGuideText(movie.name) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(movie.categoryName) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(movie.genre) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(movie.name)
+        isAdultCategory(category) ||
+        isAdultText(movie.categoryName) ||
+        isAdultText(movie.genre) ||
+        isAdultText(movie.name) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(movie.categoryName) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(movie.genre) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(movie.name)
 
 internal fun isAdultVodSeries(series: Series, category: Category? = null): Boolean =
     series.isAdult ||
-        isAdultGuideCategory(category) ||
-        isAdultGuideText(series.categoryName) ||
-        isAdultGuideText(series.genre) ||
-        isAdultGuideText(series.name) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(series.categoryName) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(series.genre) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(series.name)
+        isAdultCategory(category) ||
+        isAdultText(series.categoryName) ||
+        isAdultText(series.genre) ||
+        isAdultText(series.name) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(series.categoryName) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(series.genre) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(series.name)
 
 internal fun isAdultLocalMediaItem(item: LocalMediaItem): Boolean =
-    isAdultGuideText(item.title) ||
-        isAdultGuideText(item.displayName) ||
-        isAdultGuideText(item.genre) ||
-        isAdultGuideText(item.description) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(item.title) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(item.displayName) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(item.genre) ||
-        AdultGuideCategoryBuilder.matchesGeneratedCategory(item.description)
+    isAdultText(item.title) ||
+        isAdultText(item.displayName) ||
+        isAdultText(item.genre) ||
+        isAdultText(item.description) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(item.title) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(item.displayName) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(item.genre) ||
+        AdultCategoryBuilder.matchesGeneratedCategory(item.description)
 
-private data class AdultGuideMutableCategory(
+private data class AdultMutableCategory(
     val key: String,
     val title: String,
     val channels: MutableList<Channel>
 )
 
-private data class AdultGuideRule(
+private data class AdultRule(
     val key: String,
     val title: String,
     val aliases: List<String>
 ) {
-    private val normalizedAliases = aliases.map(::normalizeAdultGuideText)
+    private val normalizedAliases = aliases.map(::normalizeAdultText)
 
     fun matches(value: String?): Boolean {
-        val normalized = normalizeAdultGuideText(value)
+        val normalized = normalizeAdultText(value)
         return matchesNormalized(normalized)
     }
 
@@ -273,33 +273,33 @@ private data class AdultGuideRule(
     }
 }
 
-private fun isAdultGuideText(value: String?): Boolean {
-    val normalized = normalizeAdultGuideText(value)
+private fun isAdultText(value: String?): Boolean {
+    val normalized = normalizeAdultText(value)
     if (normalized.isBlank()) return false
-    return normalized.containsWholeAdultGuideTerm("xxx") ||
-        normalized.containsWholeAdultGuideTerm("adult") ||
-        normalized.containsWholeAdultGuideTerm("18 plus") ||
-        normalized.containsWholeAdultGuideTerm("x rated") ||
-        normalized.containsWholeAdultGuideTerm("porn")
+    return normalized.containsWholeAdultTerm("xxx") ||
+        normalized.containsWholeAdultTerm("adult") ||
+        normalized.containsWholeAdultTerm("18 plus") ||
+        normalized.containsWholeAdultTerm("x rated") ||
+        normalized.containsWholeAdultTerm("porn")
 }
 
-private fun String.containsWholeAdultGuideTerm(term: String): Boolean =
+private fun String.containsWholeAdultTerm(term: String): Boolean =
     this == term ||
         startsWith("$term ") ||
         endsWith(" $term") ||
         contains(" $term ")
 
-private val adultGuideNonAlphaNumericRegex = Regex("""[^a-z0-9]+""")
-private val adultGuideWhitespaceRegex = Regex("""\s+""")
+private val adultNonAlphaNumericRegex = Regex("""[^a-z0-9]+""")
+private val adultWhitespaceRegex = Regex("""\s+""")
 
-private fun normalizeAdultGuideText(value: String?): String =
+private fun normalizeAdultText(value: String?): String =
     value
         .orEmpty()
         .lowercase(Locale.US)
         .replace("+", " plus ")
-        .replace(adultGuideNonAlphaNumericRegex, " ")
-        .replace(adultGuideWhitespaceRegex, " ")
+        .replace(adultNonAlphaNumericRegex, " ")
+        .replace(adultWhitespaceRegex, " ")
         .trim()
 
-private fun adultGuideCategoryKey(value: String): String =
-    normalizeAdultGuideText(value).replace(" ", "_")
+private fun adultCategoryKey(value: String): String =
+    normalizeAdultText(value).replace(" ", "_")

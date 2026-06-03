@@ -43,8 +43,8 @@ import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.components.ChannelLogoBadge
 import com.afterglowtv.app.ui.design.FocusSpec
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
-import com.afterglowtv.app.ui.model.AdultGuideCategory
-import com.afterglowtv.app.ui.model.AdultGuideCategoryBuilder
+import com.afterglowtv.app.ui.model.AdultCategory
+import com.afterglowtv.app.ui.model.AdultCategoryBuilder
 import com.afterglowtv.app.ui.theme.FocusBorder
 import com.afterglowtv.app.ui.theme.OnSurface
 import com.afterglowtv.app.ui.theme.OnSurfaceDim
@@ -56,9 +56,9 @@ import com.afterglowtv.domain.model.Channel
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun AdultGuideSurface(
+internal fun AdultSurface(
     modifier: Modifier = Modifier,
-    categories: List<AdultGuideCategory>,
+    categories: List<AdultCategory>,
     selectedCategoryKey: String,
     favoriteChannelIds: Set<Long>,
     hasMoreChannels: Boolean,
@@ -71,7 +71,7 @@ internal fun AdultGuideSurface(
 ) {
     if (categories.isEmpty()) return
     val selectedCategory = categories.firstOrNull { it.key == selectedCategoryKey }
-        ?: categories.firstOrNull { it.key != AdultGuideCategoryBuilder.ALL_CATEGORY_KEY }
+        ?: categories.firstOrNull { it.key != AdultCategoryBuilder.ALL_CATEGORY_KEY }
         ?: categories.first()
 
     Row(
@@ -80,7 +80,7 @@ internal fun AdultGuideSurface(
             .padding(horizontal = 12.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        AdultGuideCategoryRail(
+        AdultCategoryRail(
             categories = categories,
             selectedCategoryKey = selectedCategory.key,
             onCategorySelected = onCategorySelected,
@@ -88,7 +88,7 @@ internal fun AdultGuideSurface(
                 .width(220.dp)
                 .fillMaxHeight()
         )
-        AdultGuideChannelList(
+        AdultChannelList(
             category = selectedCategory,
             favoriteChannelIds = favoriteChannelIds,
             hasMoreChannels = hasMoreChannels,
@@ -105,8 +105,8 @@ internal fun AdultGuideSurface(
 }
 
 @Composable
-private fun AdultGuideCategoryRail(
-    categories: List<AdultGuideCategory>,
+private fun AdultCategoryRail(
+    categories: List<AdultCategory>,
     selectedCategoryKey: String,
     onCategorySelected: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -117,7 +117,7 @@ private fun AdultGuideCategoryRail(
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         items(categories, key = { it.key }) { category ->
-            AdultGuideCategoryButton(
+            AdultCategoryButton(
                 category = category,
                 selected = category.key == selectedCategoryKey,
                 onClick = { onCategorySelected(category.key) }
@@ -127,8 +127,8 @@ private fun AdultGuideCategoryRail(
 }
 
 @Composable
-private fun AdultGuideCategoryButton(
-    category: AdultGuideCategory,
+private fun AdultCategoryButton(
+    category: AdultCategory,
     selected: Boolean,
     onClick: () -> Unit
 ) {
@@ -185,8 +185,8 @@ private fun AdultGuideCategoryButton(
 }
 
 @Composable
-private fun AdultGuideChannelList(
-    category: AdultGuideCategory,
+private fun AdultChannelList(
+    category: AdultCategory,
     favoriteChannelIds: Set<Long>,
     hasMoreChannels: Boolean,
     isChannelLocked: (Channel) -> Boolean,
@@ -233,13 +233,13 @@ private fun AdultGuideChannelList(
         contentPadding = PaddingValues(bottom = 18.dp)
     ) {
         item(key = "adult-guide-header:${category.key}") {
-            AdultGuideGridHeader(category = category)
+            AdultGridHeader(category = category)
         }
         itemsIndexed(
             items = category.channels,
             key = { index, channel -> "adult-row:${category.key}:$index:${channel.id}" }
         ) { rowIndex, channel ->
-            AdultGuideChannelCard(
+            AdultChannelCard(
                 channel = channel,
                 isFavorite = channel.id in favoriteChannelIds,
                 isLocked = isChannelLocked(channel),
@@ -271,7 +271,7 @@ private fun AdultGuideChannelList(
 }
 
 @Composable
-private fun AdultGuideGridHeader(category: AdultGuideCategory) {
+private fun AdultGridHeader(category: AdultCategory) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -297,7 +297,7 @@ private fun AdultGuideGridHeader(category: AdultGuideCategory) {
 }
 
 @Composable
-private fun AdultGuideChannelCard(
+private fun AdultChannelCard(
     channel: Channel,
     isFavorite: Boolean,
     isLocked: Boolean,
@@ -368,12 +368,12 @@ private fun AdultGuideChannelCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AdultGuideBadge(label = "Loops daily")
+                    AdultBadge(label = "Loops daily")
                     if (isFavorite) {
-                        AdultGuideBadge(label = stringResource(R.string.epg_favorite_badge))
+                        AdultBadge(label = stringResource(R.string.epg_favorite_badge))
                     }
                     if (isLocked) {
-                        AdultGuideBadge(label = stringResource(R.string.home_locked_short), emphasis = true)
+                        AdultBadge(label = stringResource(R.string.home_locked_short), emphasis = true)
                     }
                 }
             }
@@ -382,7 +382,7 @@ private fun AdultGuideChannelCard(
 }
 
 @Composable
-private fun AdultGuideBadge(
+private fun AdultBadge(
     label: String,
     emphasis: Boolean = false
 ) {

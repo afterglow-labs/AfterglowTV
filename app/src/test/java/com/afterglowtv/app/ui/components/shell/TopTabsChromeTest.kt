@@ -10,7 +10,7 @@ class TopTabsChromeTest {
     fun `program guide destinations are separate top level tabs`() {
         val tabs = defaultTopTabs(
             developerModeEnabled = true,
-            showAdultGuideTab = true
+            showAdultTab = true
         )
 
         val expectedIds = buildList {
@@ -18,7 +18,7 @@ class TopTabsChromeTest {
             add("live_tv")
             add("epg")
             add("vod_container")
-            if (StorePolicy.current.showAdultSurfaces) add("adult_guide")
+            if (StorePolicy.current.showAdultSurfaces) add("adult")
             add("local_media")
             add("favorites")
             add("search")
@@ -29,7 +29,7 @@ class TopTabsChromeTest {
             add("Live TV")
             add(if (StorePolicy.current.amazonReviewBuild) "TV Guide" else "IPTV Guide")
             add(if (StorePolicy.current.amazonReviewBuild) "Video" else "VOD")
-            if (StorePolicy.current.showAdultSurfaces) add("XXX Guide")
+            if (StorePolicy.current.showAdultSurfaces) add("Adult")
             add("Personal Library")
             add("Favorites")
             add("Search")
@@ -41,10 +41,10 @@ class TopTabsChromeTest {
     }
 
     @Test
-    fun `adult guide tab is hidden until developer mode is unlocked`() {
+    fun `adult tab is hidden until developer mode is unlocked`() {
         val tabs = defaultTopTabs(
             developerModeEnabled = false,
-            showAdultGuideTab = true
+            showAdultTab = true
         )
 
         assertThat(tabs.map { it.id }).containsExactly(
@@ -60,10 +60,10 @@ class TopTabsChromeTest {
     }
 
     @Test
-    fun `developer mode still respects adult guide visibility preference`() {
+    fun `developer mode still respects adult visibility preference`() {
         val tabs = defaultTopTabs(
             developerModeEnabled = true,
-            showAdultGuideTab = false
+            showAdultTab = false
         )
 
         assertThat(tabs.map { it.id }).containsExactly(

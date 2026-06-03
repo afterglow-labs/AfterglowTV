@@ -94,7 +94,7 @@
     <string name="dashboard_provider_status">ステータス</string>
     <string name="dashboard_provider_source">ソース</string>
     <string name="dashboard_provider_connections">接続数</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">M3U プレイリスト</string>
     <string name="dashboard_provider_no_sync">最近の同期なし</string>
     <string name="dashboard_provider_synced_at">%1$s に同期済み</string>
@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">カテゴリの並び替え</string>
     <string name="settings_category_sorting_subtitle">アクティブなプレイリストのカテゴリを並べ替えます。ロックと非表示は「カテゴリ管理」に移動しました。</string>
     <string name="settings_category_sort_live">ライブ TV カテゴリ</string>
-    <string name="settings_category_sort_movies">映画カテゴリ</string>
-    <string name="settings_category_sort_series">シリーズカテゴリ</string>
     <string name="settings_hidden_categories_title">非表示のカテゴリ</string>
     <string name="settings_hidden_categories_subtitle">これまでブラウズ画面で非表示にしたプロバイダーのカテゴリを復元できます。</string>
     <string name="settings_hidden_categories_none">非表示なし</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">項目が多い順</string>
     <string name="settings_category_sort_least_items">項目が少ない順</string>
     <string name="settings_category_type_live_description">プロバイダーのライブグループを並べ替え・非表示にしつつ、「すべてのチャンネル」「お気に入り」「最近」「カスタムグループ」は固定位置のままにします。</string>
-    <string name="settings_category_type_movies_description">プロバイダーの映画カテゴリを並べ替え・非表示にしつつ、「お気に入り」「再開」「カスタム棚」には影響しません。</string>
-    <string name="settings_category_type_series_description">プロバイダーのシリーズカテゴリを並べ替え・非表示にしつつ、「お気に入り」「視聴を続ける」「カスタム棚」には影響しません。</string>
     <string name="settings_playback">再生</string>
     <string name="settings_browsing">ブラウズ</string>
     <string name="settings_playback_subtitle">より滑らかに再生できるよう、デコーダーとバッファリングの動作を調整します。</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">カテゴリ</string>
     <string name="vod_classic_category_search">カテゴリ内を検索</string>
     <string name="vod_classic_all">すべて</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">プレイリストのリンクを使用するか、ローカルファイルをインポートします。</string>
     <string name="setup_info_manage_title">プロバイダーは後で管理できます</string>
     <string name="setup_info_manage_body">後で設定から更新、編集、または置き換えできます。</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">M3Uプレイリスト</string>
     <string name="setup_name_hint">プレイリスト名（任意）</string>
     <string name="setup_server_hint">サーバーURL</string>

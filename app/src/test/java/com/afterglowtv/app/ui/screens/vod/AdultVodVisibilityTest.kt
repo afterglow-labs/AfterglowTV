@@ -3,11 +3,11 @@ package com.afterglowtv.app.ui.screens.vod
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class AdultVodGuideVisibilityTest {
+class AdultVodVisibilityTest {
 
     @Test
-    fun `adult vod guide entry is hidden until developer mode is unlocked`() {
-        assertThat(canShowAdultVodGuideEntry(developerModeEnabled = false)).isFalse()
-        assertThat(canShowAdultVodGuideEntry(developerModeEnabled = true)).isTrue()
+    fun `adult vod entry is hidden until developer mode is unlocked`() {
+        assertThat(canShowAdultVodEntry(developerModeEnabled = false)).isFalse()
+        assertThat(canShowAdultVodEntry(developerModeEnabled = true)).isTrue()
     }
 }

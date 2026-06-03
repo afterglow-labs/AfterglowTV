@@ -77,7 +77,7 @@ internal data class SettingsPreferenceSnapshot(
     val liveTvCategoryFilters: List<String>,
     val liveTvQuickFilterVisibilityMode: LiveTvQuickFilterVisibilityMode,
     val developerModeEnabled: Boolean,
-    val showAdultGuideTab: Boolean,
+    val showAdultTab: Boolean,
     val liveChannelNumberingMode: ChannelNumberingMode,
     val liveChannelGroupingMode: LiveChannelGroupingMode,
     val groupedChannelLabelMode: GroupedChannelLabelMode,

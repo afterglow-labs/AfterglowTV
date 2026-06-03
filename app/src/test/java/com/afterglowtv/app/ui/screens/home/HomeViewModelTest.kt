@@ -21,8 +21,8 @@ import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.SyncState
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.*
-import com.afterglowtv.domain.repository.AdultGuideCachedCategory
-import com.afterglowtv.domain.repository.AdultGuideCacheSnapshot
+import com.afterglowtv.domain.repository.AdultCachedCategory
+import com.afterglowtv.domain.repository.AdultCacheSnapshot
 import com.afterglowtv.domain.usecase.GetCustomCategories
 import com.afterglowtv.domain.usecase.UnlockParentalCategory
 import com.afterglowtv.player.PlayerEngine
@@ -44,7 +44,7 @@ import kotlinx.coroutines.runBlocking
 class HomeViewModelTest {
 
     private val providerRepository: ProviderRepository = mock()
-    private val adultGuideCacheRepository: AdultGuideCacheRepository = mock()
+    private val adultCacheRepository: AdultCacheRepository = mock()
     private val combinedM3uRepository: CombinedM3uRepository = mock()
     private val channelRepository: ChannelRepository = mock()
     private val categoryRepository: CategoryRepository = mock()
@@ -94,8 +94,8 @@ class HomeViewModelTest {
         whenever(preferencesRepository.multiViewCenterTwoSlotLayout).thenReturn(flowOf(false))
         whenever(preferencesRepository.liveChannelNumberingMode).thenReturn(flowOf(ChannelNumberingMode.PROVIDER))
         whenever(preferencesRepository.isIncognitoMode).thenReturn(flowOf(false))
-        whenever(adultGuideCacheRepository.observeProviderCache(any<Long>())).thenReturn(flowOf(null))
-        whenever(adultGuideCacheRepository.observeProviderCache(any(), any())).thenReturn(flowOf(null))
+        whenever(adultCacheRepository.observeProviderCache(any<Long>())).thenReturn(flowOf(null))
+        whenever(adultCacheRepository.observeProviderCache(any(), any())).thenReturn(flowOf(null))
         whenever(preferencesRepository.getHiddenCategoryIds(any(), any())).thenReturn(flowOf(emptySet()))
         whenever(preferencesRepository.getCategorySortMode(any(), any())).thenReturn(flowOf(CategorySortMode.DEFAULT))
         whenever(preferencesRepository.getPinnedCategoryIds(any(), any())).thenReturn(flowOf(emptySet()))
@@ -108,8 +108,8 @@ class HomeViewModelTest {
         runBlocking {
             whenever(epgRepository.getResolvedProgramsForChannels(any(), any(), any(), any())).thenReturn(emptyMap())
             whenever(preferencesRepository.setLastActiveProviderId(any())).thenReturn(Unit)
-            whenever(adultGuideCacheRepository.replaceProviderCache(any(), any(), any(), any())).thenReturn(Unit)
-            whenever(adultGuideCacheRepository.clearProviderCache(any())).thenReturn(Unit)
+            whenever(adultCacheRepository.replaceProviderCache(any(), any(), any(), any())).thenReturn(Unit)
+            whenever(adultCacheRepository.clearProviderCache(any())).thenReturn(Unit)
         }
         whenever(playerEngineProvider.get()).thenReturn(playerEngine)
 
@@ -128,7 +128,7 @@ class HomeViewModelTest {
         HomeViewModel(
             application = application,
             providerRepository = providerRepository,
-            adultGuideCacheRepository = adultGuideCacheRepository,
+            adultCacheRepository = adultCacheRepository,
             combinedM3uRepository = combinedM3uRepository,
             channelRepository = channelRepository,
             categoryRepository = categoryRepository,
@@ -462,7 +462,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `adult guide mode reads matching persisted cache without full channel scan`() = runTest {
+    fun `adult mode reads matching persisted cache without full channel scan`() = runTest {
         val provider = Provider(
             id = 29L,
             name = "Provider",
@@ -487,20 +487,20 @@ class HomeViewModelTest {
         whenever(channelRepository.getChannelsByCategoryPage(eq(provider.id), eq(ChannelRepository.ALL_CHANNELS_ID), any()))
             .thenReturn(flowOf(emptyList()))
         whenever(channelRepository.getChannelsByIds(listOf(cachedChannel.id))).thenReturn(flowOf(listOf(cachedChannel)))
-        val cacheSnapshot = AdultGuideCacheSnapshot(
+        val cacheSnapshot = AdultCacheSnapshot(
             providerId = provider.id,
             playlistFingerprint = playlistFingerprint,
             categorizedChannelCount = 1,
             categories = listOf(
-                AdultGuideCachedCategory(
+                AdultCachedCategory(
                     key = "trans",
                     title = "Trans",
                     channelIds = listOf(cachedChannel.id)
                 )
             )
         )
-        whenever(adultGuideCacheRepository.observeProviderCache(provider.id)).thenReturn(flowOf(cacheSnapshot))
-        whenever(adultGuideCacheRepository.observeProviderCache(provider.id, playlistFingerprint)).thenReturn(
+        whenever(adultCacheRepository.observeProviderCache(provider.id)).thenReturn(flowOf(cacheSnapshot))
+        whenever(adultCacheRepository.observeProviderCache(provider.id, playlistFingerprint)).thenReturn(
             flowOf(
                 cacheSnapshot
             )
@@ -508,11 +508,11 @@ class HomeViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.setAdultGuideMode(true)
+        viewModel.setAdultMode(true)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertThat(state.isAdultGuideMode).isTrue()
+        assertThat(state.isAdultMode).isTrue()
         assertThat(state.categories.map { it.name }).containsAtLeast("Trans", "All XXX")
         assertThat(state.filteredChannels.map(Channel::id)).containsExactly(cachedChannel.id)
 
@@ -523,7 +523,7 @@ class HomeViewModelTest {
         assertThat(viewModel.uiState.value.filteredChannels.map(Channel::id)).containsExactly(cachedChannel.id)
         verify(channelRepository, never()).getChannels(provider.id)
         verify(preferencesRepository, never()).setLastLiveCategoryId(eq(provider.id), any())
-        verify(adultGuideCacheRepository, never()).replaceProviderCache(
+        verify(adultCacheRepository, never()).replaceProviderCache(
             eq(provider.id),
             any(),
             any(),
@@ -532,7 +532,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `adult guide mode shows persisted cache when playlist metadata load fails`() = runTest {
+    fun `adult mode shows persisted cache when playlist metadata load fails`() = runTest {
         val provider = Provider(
             id = 30L,
             name = "Provider",
@@ -550,14 +550,14 @@ class HomeViewModelTest {
         whenever(channelRepository.getCategories(provider.id)).thenReturn(flow { throw IllegalStateException("metadata failed") })
         whenever(channelRepository.getChannelCount(provider.id)).thenReturn(flowOf(1))
         whenever(channelRepository.getChannelsByIds(listOf(cachedChannel.id))).thenReturn(flowOf(listOf(cachedChannel)))
-        whenever(adultGuideCacheRepository.observeProviderCache(provider.id)).thenReturn(
+        whenever(adultCacheRepository.observeProviderCache(provider.id)).thenReturn(
             flowOf(
-                AdultGuideCacheSnapshot(
+                AdultCacheSnapshot(
                     providerId = provider.id,
                     playlistFingerprint = "provider:30:live:1234:1",
                     categorizedChannelCount = 1,
                     categories = listOf(
-                        AdultGuideCachedCategory(
+                        AdultCachedCategory(
                             key = "milf",
                             title = "MILF",
                             channelIds = listOf(cachedChannel.id)
@@ -569,7 +569,7 @@ class HomeViewModelTest {
 
         viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.setAdultGuideMode(true)
+        viewModel.setAdultMode(true)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -578,11 +578,11 @@ class HomeViewModelTest {
         assertThat(state.isLoading).isFalse()
         assertThat(state.categories.map { it.name }).containsAtLeast("MILF", "All XXX")
         assertThat(state.filteredChannels.map(Channel::id)).containsExactly(cachedChannel.id)
-        verify(adultGuideCacheRepository, never()).replaceProviderCache(eq(provider.id), any(), any(), any())
+        verify(adultCacheRepository, never()).replaceProviderCache(eq(provider.id), any(), any(), any())
     }
 
     @Test
-    fun `manual adult guide resync rebuilds and replaces persisted cache`() = runTest {
+    fun `manual adult resync rebuilds and replaces persisted cache`() = runTest {
         val provider = Provider(
             id = 39L,
             name = "Provider",
@@ -606,18 +606,18 @@ class HomeViewModelTest {
             .thenReturn(flowOf(emptyList()))
         whenever(channelRepository.getChannels(provider.id)).thenReturn(flowOf(listOf(adultChannel)))
         whenever(channelRepository.getChannelsByIds(listOf(adultChannel.id))).thenReturn(flowOf(listOf(adultChannel)))
-        whenever(adultGuideCacheRepository.observeProviderCache(provider.id, playlistFingerprint)).thenReturn(flowOf(null))
+        whenever(adultCacheRepository.observeProviderCache(provider.id, playlistFingerprint)).thenReturn(flowOf(null))
 
         viewModel = createViewModel()
         advanceUntilIdle()
-        viewModel.setAdultGuideMode(true)
+        viewModel.setAdultMode(true)
         advanceUntilIdle()
 
-        viewModel.resyncAdultGuideCache()
+        viewModel.resyncAdultCache()
         advanceUntilIdle()
 
         verify(channelRepository, timeout(2_000).atLeastOnce()).getChannels(provider.id)
-        verify(adultGuideCacheRepository, timeout(2_000).atLeastOnce()).replaceProviderCache(
+        verify(adultCacheRepository, timeout(2_000).atLeastOnce()).replaceProviderCache(
             eq(provider.id),
             eq(playlistFingerprint),
             eq(1),

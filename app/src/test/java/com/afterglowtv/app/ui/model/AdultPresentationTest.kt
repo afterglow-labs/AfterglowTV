@@ -5,7 +5,7 @@ import com.afterglowtv.domain.model.Channel
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class AdultGuidePresentationTest {
+class AdultPresentationTest {
 
     @Test
     fun `generated adult categories include every title keyword match`() {
@@ -16,7 +16,7 @@ class AdultGuidePresentationTest {
             categoryName = "XXX"
         )
 
-        val categories = AdultGuideCategoryBuilder.build(
+        val categories = AdultCategoryBuilder.build(
             channels = listOf(channel),
             providerCategories = emptyList()
         )
@@ -43,7 +43,7 @@ class AdultGuidePresentationTest {
             categoryName = "XXX"
         )
 
-        val categories = AdultGuideCategoryBuilder.build(
+        val categories = AdultCategoryBuilder.build(
             channels = listOf(channel),
             providerCategories = emptyList(),
             includeAllCategory = false
@@ -55,11 +55,11 @@ class AdultGuidePresentationTest {
 
     @Test
     fun `broad adult sorting labels are not automatically explicit adult categories`() {
-        assertThat(isLikelyAdultGuideCategory(Category(id = 1L, name = "MILF"))).isTrue()
-        assertThat(isLikelyAdultGuideCategory(Category(id = 2L, name = "Family"))).isFalse()
-        assertThat(isLikelyAdultGuideCategory(Category(id = 3L, name = "Asian"))).isFalse()
-        assertThat(isLikelyAdultGuideCategory(Category(id = 4L, name = "Reality"))).isFalse()
-        assertThat(isLikelyAdultGuideCategory(Category(id = 5L, name = "4K"))).isFalse()
+        assertThat(isLikelyAdultCategory(Category(id = 1L, name = "MILF"))).isTrue()
+        assertThat(isLikelyAdultCategory(Category(id = 2L, name = "Family"))).isFalse()
+        assertThat(isLikelyAdultCategory(Category(id = 3L, name = "Asian"))).isFalse()
+        assertThat(isLikelyAdultCategory(Category(id = 4L, name = "Reality"))).isFalse()
+        assertThat(isLikelyAdultCategory(Category(id = 5L, name = "4K"))).isFalse()
     }
 
     @Test
@@ -72,7 +72,7 @@ class AdultGuidePresentationTest {
             categoryName = "Trans"
         )
 
-        val categories = AdultGuideCategoryBuilder.build(
+        val categories = AdultCategoryBuilder.build(
             channels = listOf(channel),
             providerCategories = listOf(Category(id = 10L, name = "Trans", isAdult = true))
         )
@@ -91,7 +91,7 @@ class AdultGuidePresentationTest {
             isAdult = true
         )
 
-        val categories = AdultGuideCategoryBuilder.build(
+        val categories = AdultCategoryBuilder.build(
             channels = listOf(channel),
             providerCategories = listOf(Category(id = 30L, name = "Adult Premium", isAdult = true))
         )
@@ -99,6 +99,6 @@ class AdultGuidePresentationTest {
         assertThat(categories.category("Adult Premium").channels).containsExactly(channel)
     }
 
-    private fun List<AdultGuideCategory>.category(title: String): AdultGuideCategory =
+    private fun List<AdultCategory>.category(title: String): AdultCategory =
         single { it.title == title }
 }

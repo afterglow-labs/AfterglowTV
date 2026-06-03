@@ -964,29 +964,10 @@ private fun ProviderFormContent(
                                         placeholder = androidx.compose.ui.res.stringResource(R.string.setup_m3u_hint),
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next)
                                     )
-                                    if (m3uPlaylistFormType != M3uPlaylistFormType.VOD) {
-                                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                            com.afterglowtv.app.ui.components.ClipboardPasteButton(
-                                                onPaste = { onM3uEpgUrlChange(it) },
-                                                label = "Paste EPG URL",
-                                            )
-                                            com.afterglowtv.app.ui.components.ClipboardCopyButton(
-                                                text = m3uEpgUrl,
-                                                label = "Copy"
-                                            )
-                                            com.afterglowtv.app.ui.components.ClipboardClearButton(
-                                                onClear = { onM3uEpgUrlChange("") },
-                                                label = "Clear",
-                                                enabled = m3uEpgUrl.isNotEmpty()
-                                            )
-                                        }
-                                        ProviderTextField(
-                                            value = m3uEpgUrl,
-                                            onValueChange = onM3uEpgUrlChange,
-                                            placeholder = androidx.compose.ui.res.stringResource(R.string.setup_epg_url_hint),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
-                                        )
-                                    }
+                                    M3uEpgUrlField(
+                                        m3uEpgUrl = m3uEpgUrl,
+                                        onM3uEpgUrlChange = onM3uEpgUrlChange
+                                    )
                                     AdvancedProviderOptionsSection(
                                         sourceType = sourceType,
                                         uiState = uiState,
@@ -1021,6 +1002,10 @@ private fun ProviderFormContent(
                                     fileImportError?.let {
                                         Text(text = it, style = MaterialTheme.typography.bodyMedium, color = ErrorColor)
                                     }
+                                    M3uEpgUrlField(
+                                        m3uEpgUrl = m3uEpgUrl,
+                                        onM3uEpgUrlChange = onM3uEpgUrlChange
+                                    )
                                     AdvancedProviderOptionsSection(
                                         sourceType = sourceType,
                                         uiState = uiState,
@@ -1958,6 +1943,24 @@ private fun shouldShowProviderSetupSourceType(
 private fun isM3uSource(sourceType: SourceType): Boolean =
     sourceType == SourceType.M3U_URL ||
         sourceType == SourceType.M3U_FILE
+
+@Composable
+private fun M3uEpgUrlField(
+    m3uEpgUrl: String,
+    onM3uEpgUrlChange: (String) -> Unit
+) {
+    ProviderTextField(
+        value = m3uEpgUrl,
+        onValueChange = onM3uEpgUrlChange,
+        placeholder = androidx.compose.ui.res.stringResource(R.string.setup_epg_url_hint),
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.None,
+            autoCorrectEnabled = false,
+            keyboardType = KeyboardType.Uri,
+            imeAction = ImeAction.Next
+        )
+    )
+}
 
 // ProviderTextField
 //

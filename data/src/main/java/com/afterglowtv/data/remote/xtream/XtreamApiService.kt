@@ -10,7 +10,7 @@ import com.afterglowtv.data.remote.dto.XtreamStream
 import com.afterglowtv.data.remote.dto.XtreamVodInfoResponse
 
 /**
- * Xtream Codes player API abstraction.
+ * Xtream player API abstraction.
  */
 interface XtreamApiService {
     suspend fun authenticate(

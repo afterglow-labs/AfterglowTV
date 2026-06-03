@@ -163,14 +163,14 @@ private fun buildCapabilitySummary(application: Application, provider: Provider)
             if (provider.epgUrl.isNotBlank()) {
                 "Portal catalog with MAC auth, XMLTV import, and on-demand playback link resolution."
             } else {
-                "Portal catalog with MAC auth and on-demand guide/playback resolution."
+                "Portal catalog with MAC auth and on-demand catalog/playback resolution."
             }
         }
     }
 }
 
 private fun Provider.sourceLabel(): String = when (type) {
-    ProviderType.XTREAM_CODES -> "Xtream Codes"
+    ProviderType.XTREAM_CODES -> "Xtream"
     ProviderType.M3U -> "M3U Playlist"
     ProviderType.STALKER_PORTAL -> "Portal/MAG Login"
 }

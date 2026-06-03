@@ -94,7 +94,7 @@
     <string name="dashboard_provider_status">Stav</string>
     <string name="dashboard_provider_source">Zdroj</string>
     <string name="dashboard_provider_connections">Spojení</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">Seznam skladeb M3U</string>
     <string name="dashboard_provider_no_sync">Žádná nedávná synchronizace</string>
     <string name="dashboard_provider_synced_at">Synchronizováno %1$s</string>
@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Řazení kategorií</string>
     <string name="settings_category_sorting_subtitle">Seřaďte kategorie pro aktivní playlist. Zamykání a skrývání jsou nyní v Ovládání kategorií.</string>
     <string name="settings_category_sort_live">Kategorie živého TV</string>
-    <string name="settings_category_sort_movies">Kategorie filmů</string>
-    <string name="settings_category_sort_series">Kategorie seriálů</string>
     <string name="settings_hidden_categories_title">Skryté kategorie</string>
     <string name="settings_hidden_categories_subtitle">Obnovte libovolné kategorie poskytovatele, které jste dříve skryli z prohlížení.</string>
     <string name="settings_hidden_categories_none">Nic skryto</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Nejprve nejvíce položek</string>
     <string name="settings_category_sort_least_items">Nejprve nejméně položek</string>
     <string name="settings_category_type_live_description">Seřadí a skryje skupiny živého vysílání poskytovatele, přičemž Všechny kanály, Oblíbené, Nedávné a vlastní skupiny zůstanou na připnutých místech.</string>
-    <string name="settings_category_type_movies_description">Seřadí a skryje filmové kategorie poskytovatele, aniž by to ovlivnilo Oblíbené, Pokračovat ve sledování nebo vlastní police.</string>
-    <string name="settings_category_type_series_description">Seřadí a skryje seriálové kategorie poskytovatele, aniž by to ovlivnilo Oblíbené, Pokračovat ve sledování nebo vlastní police.</string>
     <string name="settings_playback">Přehrávání</string>
     <string name="settings_browsing">Procházení</string>
     <string name="settings_playback_subtitle">Upravte chování dekodéru a vyrovnávací paměti pro plynulejší přehrávání.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Kategorie</string>
     <string name="vod_classic_category_search">Hledat v kategoriích</string>
     <string name="vod_classic_all">Vše</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">Použijte odkaz na playlist nebo importujte místní soubor.</string>
     <string name="setup_info_manage_title">Poskytovatele můžete spravovat později</string>
     <string name="setup_info_manage_body">Později jej můžete obnovit, upravit nebo nahradit v Nastavení.</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">Seznam skladeb M3U</string>
     <string name="setup_name_hint">Název seznamu videí (volitelné)</string>
     <string name="setup_server_hint">Adresa URL serveru</string>

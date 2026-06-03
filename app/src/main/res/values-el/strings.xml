@@ -94,7 +94,7 @@
     <string name="dashboard_provider_status">Κατάσταση</string>
     <string name="dashboard_provider_source">Πηγή</string>
     <string name="dashboard_provider_connections">Συνδέσεις</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">Λίστα αναπαραγωγής M3U</string>
     <string name="dashboard_provider_no_sync">Καμία πρόσφατη συγχρονισμένη ενημέρωση</string>
     <string name="dashboard_provider_synced_at">Συγχρονίστηκε %1$s</string>
@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Ταξινόμηση Κατηγοριών</string>
     <string name="settings_category_sorting_subtitle">Ταξινομήστε τις κατηγορίες για την ενεργή playlist. Το κλείδωμα και η απόκρυψη βρίσκονται τώρα στους Ελέγχους Κατηγοριών.</string>
     <string name="settings_category_sort_live">Κατηγορίες Live TV</string>
-    <string name="settings_category_sort_movies">Κατηγορίες Ταινιών</string>
-    <string name="settings_category_sort_series">Κατηγορίες Σειρών</string>
     <string name="settings_hidden_categories_title">Κρυφές Κατηγορίες</string>
     <string name="settings_hidden_categories_subtitle">Επαναφέρετε οποιεσδήποτε κατηγορίες παρόχου είχατε αποκρύψει από τις οθόνες περιήγησης.</string>
     <string name="settings_hidden_categories_none">Καμία κρυφή</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Πρώτα τα Περισσότερα</string>
     <string name="settings_category_sort_least_items">Πρώτα τα Λιγότερα</string>
     <string name="settings_category_type_live_description">Ταξινομήστε και αποκρύψτε τις ομάδες ζωντανής τηλεόρασης του παρόχου, διατηρώντας τα All Channels, Favorites, Recent και τις προσαρμοσμένες ομάδες στις καρφιτσωμένες θέσεις τους.</string>
-    <string name="settings_category_type_movies_description">Ταξινομήστε και αποκρύψτε τις κατηγορίες ταινιών του παρόχου χωρίς να επηρεάζονται τα Favorites, Resume ή οι προσαρμοσμένες ράφες.</string>
-    <string name="settings_category_type_series_description">Ταξινομήστε και αποκρύψτε τις κατηγορίες σειρών του παρόχου χωρίς να επηρεάζονται τα Favorites, Continue Watching ή οι προσαρμοσμένες ράφες.</string>
     <string name="settings_playback">Αναπαραγωγή</string>
     <string name="settings_browsing">Περιήγηση</string>
     <string name="settings_playback_subtitle">Ρυθμίστε τον αποκωδικοποιητή και τη συμπεριφορά προσωρινής αποθήκευσης για πιο ομαλή αναπαραγωγή.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Κατηγορίες</string>
     <string name="vod_classic_category_search">Αναζήτηση στις κατηγορίες</string>
     <string name="vod_classic_all">Όλα</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">Χρησιμοποιήστε σύνδεσμο λίστας αναπαραγωγής ή εισαγάγετε τοπικό αρχείο.</string>
     <string name="setup_info_manage_title">Μπορείτε να διαχειριστείτε τους παρόχους αργότερα</string>
     <string name="setup_info_manage_body">Ανανέωση, επεξεργασία ή αντικατάσταση αργότερα από τις Ρυθμίσεις.</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">Λίστα αναπαραγωγής M3U</string>
     <string name="setup_name_hint">Όνομα λίστας αναπαραγωγής (Προαιρετικό)</string>
     <string name="setup_server_hint">URL διακομιστή</string>

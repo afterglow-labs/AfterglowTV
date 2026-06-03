@@ -173,13 +173,13 @@ internal fun LazyListScope.settingsBrowsingSection(
         )
         if (StorePolicy.current.showAdultSurfaces && uiState.developerModeEnabled) {
             SwitchSettingsRow(
-                label = stringResource(R.string.settings_show_adult_guide_tab),
+                label = stringResource(R.string.settings_show_adult_tab),
                 value = stringResource(
-                    if (uiState.showAdultGuideTab) R.string.settings_show_adult_guide_tab_on
-                    else R.string.settings_show_adult_guide_tab_off
+                    if (uiState.showAdultTab) R.string.settings_show_adult_tab_on
+                    else R.string.settings_show_adult_tab_off
                 ),
-                checked = uiState.showAdultGuideTab,
-                onCheckedChange = viewModel::setShowAdultGuideTab
+                checked = uiState.showAdultTab,
+                onCheckedChange = viewModel::setShowAdultTab
             )
         }
         ClickableSettingsRow(

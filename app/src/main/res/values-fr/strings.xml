@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Tri des catégories</string>
     <string name="settings_category_sorting_subtitle">Triez les catégories de la playlist active. Le verrouillage et le masquage se trouvent maintenant dans les Contrôles des catégories.</string>
     <string name="settings_category_sort_live">Catégories TV en direct</string>
-    <string name="settings_category_sort_movies">Catégories de films</string>
-    <string name="settings_category_sort_series">Catégories de séries</string>
     <string name="settings_hidden_categories_title">Catégories masquées</string>
     <string name="settings_hidden_categories_subtitle">Restaurez les catégories du fournisseur que vous avez masquées des écrans de navigation.</string>
     <string name="settings_hidden_categories_none">Aucune masquée</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Plus d’éléments d’abord</string>
     <string name="settings_category_sort_least_items">Moins d’éléments d’abord</string>
     <string name="settings_category_type_live_description">Trier et masquer les groupes Live du fournisseur tout en conservant Tous les chaînes, Favoris, Récents et les groupes personnalisés à leurs emplacements épinglés.</string>
-    <string name="settings_category_type_movies_description">Trier et masquer les catégories de films du fournisseur sans affecter Favoris, Reprendre ou les étagères personnalisées.</string>
-    <string name="settings_category_type_series_description">Trier et masquer les catégories de séries du fournisseur sans affecter Favoris, Continuer à regarder ou les étagères personnalisées.</string>
     <string name="settings_playback">Lecture</string>
     <string name="settings_browsing">Navigation</string>
     <string name="settings_playback_subtitle">Ajustez le comportement du décodeur et de la mise en mémoire tampon pour une lecture plus fluide.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Catégories</string>
     <string name="vod_classic_category_search">Rechercher dans les catégories</string>
     <string name="vod_classic_all">Tous</string>

@@ -94,7 +94,7 @@
     <string name="dashboard_provider_status">상태</string>
     <string name="dashboard_provider_source">소스</string>
     <string name="dashboard_provider_connections">연결</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">M3U 재생목록</string>
     <string name="dashboard_provider_no_sync">최근 동기화 없음</string>
     <string name="dashboard_provider_synced_at">%1$s에 동기화됨</string>
@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">카테고리 정렬</string>
     <string name="settings_category_sorting_subtitle">현재 재생목록의 카테고리를 정렬합니다. 잠금과 숨기기는 이제 카테고리 제어에 있습니다.</string>
     <string name="settings_category_sort_live">라이브 TV 카테고리</string>
-    <string name="settings_category_sort_movies">영화 카테고리</string>
-    <string name="settings_category_sort_series">시리즈 카테고리</string>
     <string name="settings_hidden_categories_title">숨긴 카테고리</string>
     <string name="settings_hidden_categories_subtitle">이전에 탐색 화면에서 숨긴 제공자 카테고리를 다시 표시할 수 있습니다.</string>
     <string name="settings_hidden_categories_none">숨긴 항목 없음</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">항목 많은 순</string>
     <string name="settings_category_sort_least_items">항목 적은 순</string>
     <string name="settings_category_type_live_description">제공자 라이브 그룹을 정렬하고 숨기면서 All Channels, Favorites, Recent 및 사용자 지정 그룹은 고정된 위치에 유지합니다.</string>
-    <string name="settings_category_type_movies_description">Favorites, Resume 또는 사용자 지정 선반에는 영향을 주지 않고 제공자 영화 카테고리를 정렬하고 숨깁니다.</string>
-    <string name="settings_category_type_series_description">Favorites, Continue Watching 또는 사용자 지정 선반에는 영향을 주지 않고 제공자 시리즈 카테고리를 정렬하고 숨깁니다.</string>
     <string name="settings_playback">재생</string>
     <string name="settings_browsing">탐색</string>
     <string name="settings_playback_subtitle">더 부드러운 재생을 위해 디코더와 버퍼링 동작을 조정하세요.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">카테고리</string>
     <string name="vod_classic_category_search">카테고리 검색</string>
     <string name="vod_classic_all">전체</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">재생목록 링크를 사용하거나 로컬 파일을 가져오세요.</string>
     <string name="setup_info_manage_title">공급자는 나중에 관리할 수 있습니다</string>
     <string name="setup_info_manage_body">나중에 설정에서 새로고침, 수정 또는 교체할 수 있습니다.</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">M3U 재생목록</string>
     <string name="setup_name_hint">재생목록 이름(선택 사항)</string>
     <string name="setup_server_hint">서버 URL</string>

@@ -1,13 +1,13 @@
 package com.afterglowtv.data.repository
 
-import com.afterglowtv.data.local.dao.AdultGuideCacheDao
-import com.afterglowtv.data.local.dao.AdultGuideCacheChannelRefRow
-import com.afterglowtv.data.local.entity.AdultGuideCacheCategoryChannelEntity
-import com.afterglowtv.data.local.entity.AdultGuideCacheCategoryEntity
-import com.afterglowtv.data.local.entity.AdultGuideCacheMetaEntity
-import com.afterglowtv.domain.repository.AdultGuideCachedCategory
-import com.afterglowtv.domain.repository.AdultGuideCacheRepository
-import com.afterglowtv.domain.repository.AdultGuideCacheSnapshot
+import com.afterglowtv.data.local.dao.AdultCacheDao
+import com.afterglowtv.data.local.dao.AdultCacheChannelRefRow
+import com.afterglowtv.data.local.entity.AdultCacheCategoryChannelEntity
+import com.afterglowtv.data.local.entity.AdultCacheCategoryEntity
+import com.afterglowtv.data.local.entity.AdultCacheMetaEntity
+import com.afterglowtv.domain.repository.AdultCachedCategory
+import com.afterglowtv.domain.repository.AdultCacheRepository
+import com.afterglowtv.domain.repository.AdultCacheSnapshot
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
 @Singleton
-class AdultGuideCacheRepositoryImpl @Inject constructor(
-    private val dao: AdultGuideCacheDao
-) : AdultGuideCacheRepository {
-    override fun observeProviderCache(providerId: Long): Flow<AdultGuideCacheSnapshot?> =
+class AdultCacheRepositoryImpl @Inject constructor(
+    private val dao: AdultCacheDao
+) : AdultCacheRepository {
+    override fun observeProviderCache(providerId: Long): Flow<AdultCacheSnapshot?> =
         observeProviderCacheRows(
             providerId = providerId,
             meta = dao.observeMeta(providerId),
@@ -31,7 +31,7 @@ class AdultGuideCacheRepositoryImpl @Inject constructor(
     override fun observeProviderCache(
         providerId: Long,
         playlistFingerprint: String
-    ): Flow<AdultGuideCacheSnapshot?> =
+    ): Flow<AdultCacheSnapshot?> =
         observeProviderCacheRows(
             providerId = providerId,
             meta = dao.observeMeta(providerId, playlistFingerprint),
@@ -41,16 +41,16 @@ class AdultGuideCacheRepositoryImpl @Inject constructor(
 
     private fun observeProviderCacheRows(
         providerId: Long,
-        meta: Flow<AdultGuideCacheMetaEntity?>,
-        categories: Flow<List<AdultGuideCacheCategoryEntity>>,
-        refs: Flow<List<AdultGuideCacheChannelRefRow>>
-    ): Flow<AdultGuideCacheSnapshot?> =
+        meta: Flow<AdultCacheMetaEntity?>,
+        categories: Flow<List<AdultCacheCategoryEntity>>,
+        refs: Flow<List<AdultCacheChannelRefRow>>
+    ): Flow<AdultCacheSnapshot?> =
         combine(meta, categories, refs) { cacheMeta, cacheCategories, cacheRefs ->
             if (cacheMeta == null) {
                 null
             } else {
                 val refsByCategory = cacheRefs.groupBy { it.categoryKey }
-                AdultGuideCacheSnapshot(
+                AdultCacheSnapshot(
                     providerId = providerId,
                     playlistFingerprint = cacheMeta.playlistFingerprint,
                     categorizedChannelCount = cacheMeta.categorizedChannelCount,
@@ -63,7 +63,7 @@ class AdultGuideCacheRepositoryImpl @Inject constructor(
                         if (channelIds.isEmpty()) {
                             null
                         } else {
-                            AdultGuideCachedCategory(
+                            AdultCachedCategory(
                                 key = category.categoryKey,
                                 title = category.title,
                                 channelIds = channelIds
@@ -78,7 +78,7 @@ class AdultGuideCacheRepositoryImpl @Inject constructor(
         providerId: Long,
         playlistFingerprint: String,
         categorizedChannelCount: Int,
-        categories: List<AdultGuideCachedCategory>
+        categories: List<AdultCachedCategory>
     ) = withContext(Dispatchers.IO) {
         val persistedCategories = categories
             .map { category ->
@@ -87,14 +87,14 @@ class AdultGuideCacheRepositoryImpl @Inject constructor(
             .filter { category -> category.key.isNotBlank() && category.channelIds.isNotEmpty() }
 
         dao.replaceProviderCache(
-            meta = AdultGuideCacheMetaEntity(
+            meta = AdultCacheMetaEntity(
                 providerId = providerId,
                 playlistFingerprint = playlistFingerprint,
                 categorizedChannelCount = categorizedChannelCount.coerceAtLeast(0),
                 updatedAt = System.currentTimeMillis()
             ),
             categories = persistedCategories.mapIndexed { index, category ->
-                AdultGuideCacheCategoryEntity(
+                AdultCacheCategoryEntity(
                     providerId = providerId,
                     playlistFingerprint = playlistFingerprint,
                     categoryKey = category.key,
@@ -105,7 +105,7 @@ class AdultGuideCacheRepositoryImpl @Inject constructor(
             },
             channelRefs = persistedCategories.flatMap { category ->
                 category.channelIds.mapIndexed { index, channelId ->
-                    AdultGuideCacheCategoryChannelEntity(
+                    AdultCacheCategoryChannelEntity(
                         providerId = providerId,
                         playlistFingerprint = playlistFingerprint,
                         categoryKey = category.key,

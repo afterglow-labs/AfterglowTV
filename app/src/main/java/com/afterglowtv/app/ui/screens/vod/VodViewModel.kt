@@ -46,6 +46,17 @@ data class VodAlphaCategory(
     val count: Int
 )
 
+enum class VodContentKind(val label: String) {
+    MOVIE("Movie VOD"),
+    TV("TV VOD")
+}
+
+data class VodContentTab(
+    val kind: VodContentKind,
+    val label: String,
+    val count: Int
+)
+
 data class VodBrowseSection(
     val key: String,
     val label: String,
@@ -58,6 +69,8 @@ data class VodUiState(
     val isLoading: Boolean = true,
     val searchQuery: String = "",
     val viewMode: VodViewMode = VodViewMode.SHELVES,
+    val selectedContentKind: VodContentKind = VodContentKind.MOVIE,
+    val contentTabs: List<VodContentTab> = defaultVodContentTabs(),
     val selectedCategoryKey: String? = null,
     val categories: List<VodAlphaCategory> = emptyList(),
     val sections: List<VodBrowseSection> = emptyList(),
@@ -84,6 +97,7 @@ class VodViewModel @Inject constructor(
     private val searchQuery = MutableStateFlow("")
     private val visibleLimit = MutableStateFlow(INITIAL_VOD_PAGE_SIZE)
     private val selectedCategoryKey = MutableStateFlow<String?>(null)
+    private val selectedContentKind = MutableStateFlow(VodContentKind.MOVIE)
     private val selectedPreviewMovieId = MutableStateFlow<Long?>(null)
     private val previewPlayerState = MutableStateFlow(VodPreviewPlayerState())
     private var previewPlaybackJob: Job? = null
@@ -103,18 +117,32 @@ class VodViewModel @Inject constructor(
         )
     }.distinctUntilChanged { old, new -> old?.id == new?.id }
 
-    private val browserInputs = combine(
+    private val browserControls = combine(
         searchQuery,
         visibleLimit,
         selectedCategoryKey,
-        selectedPreviewMovieId,
-        preferencesRepository.vodViewMode.map(VodViewMode::fromStorage)
-    ) { query, limit, categoryKey, previewMovieId, viewMode ->
-        VodBrowserInputs(
+        selectedContentKind,
+        selectedPreviewMovieId
+    ) { query, limit, categoryKey, contentKind, previewMovieId ->
+        VodBrowserControls(
             searchQuery = query,
             visibleLimit = limit,
             selectedCategoryKey = categoryKey,
-            previewMovieId = previewMovieId,
+            selectedContentKind = contentKind,
+            previewMovieId = previewMovieId
+        )
+    }
+
+    private val browserInputs = combine(
+        browserControls,
+        preferencesRepository.vodViewMode.map(VodViewMode::fromStorage)
+    ) { controls, viewMode ->
+        VodBrowserInputs(
+            searchQuery = controls.searchQuery,
+            visibleLimit = controls.visibleLimit,
+            selectedCategoryKey = controls.selectedCategoryKey,
+            selectedContentKind = controls.selectedContentKind,
+            previewMovieId = controls.previewMovieId,
             viewMode = viewMode
         )
     }
@@ -134,6 +162,7 @@ class VodViewModel @Inject constructor(
                     isLoading = false,
                     searchQuery = query.inputs.searchQuery,
                     viewMode = query.inputs.viewMode,
+                    selectedContentKind = query.inputs.selectedContentKind,
                     selectedCategoryKey = query.inputs.selectedCategoryKey,
                     previewPlayerEngine = query.previewPlayerState.playerEngine,
                     isPreviewLoading = query.previewPlayerState.isLoading,
@@ -151,6 +180,7 @@ class VodViewModel @Inject constructor(
                     hiddenCategoryIds = hiddenCategoryIds,
                     searchQuery = query.inputs.searchQuery,
                     visibleLimit = query.inputs.visibleLimit,
+                    selectedContentKind = query.inputs.selectedContentKind,
                     selectedPreviewMovieId = query.inputs.previewMovieId,
                     selectedCategoryKey = query.inputs.selectedCategoryKey,
                     viewMode = query.inputs.viewMode
@@ -169,6 +199,14 @@ class VodViewModel @Inject constructor(
 
     fun selectCategory(categoryKey: String) {
         selectedCategoryKey.value = categoryKey
+        visibleLimit.value = INITIAL_VOD_PAGE_SIZE
+    }
+
+    fun selectContentKind(kind: VodContentKind) {
+        if (selectedContentKind.value == kind) return
+        clearPreview()
+        selectedContentKind.value = kind
+        selectedCategoryKey.value = null
         visibleLimit.value = INITIAL_VOD_PAGE_SIZE
     }
 
@@ -285,10 +323,19 @@ private data class VodQuery(
     val previewPlayerState: VodPreviewPlayerState
 )
 
+private data class VodBrowserControls(
+    val searchQuery: String,
+    val visibleLimit: Int,
+    val selectedCategoryKey: String?,
+    val selectedContentKind: VodContentKind,
+    val previewMovieId: Long?
+)
+
 private data class VodBrowserInputs(
     val searchQuery: String,
     val visibleLimit: Int,
     val selectedCategoryKey: String?,
+    val selectedContentKind: VodContentKind,
     val previewMovieId: Long?,
     val viewMode: VodViewMode
 )
@@ -305,6 +352,7 @@ internal fun buildVodUiState(
     hiddenCategoryIds: Set<Long>,
     searchQuery: String,
     visibleLimit: Int,
+    selectedContentKind: VodContentKind = VodContentKind.MOVIE,
     selectedPreviewMovieId: Long? = null,
     selectedCategoryKey: String? = null,
     viewMode: VodViewMode = VodViewMode.SHELVES
@@ -313,8 +361,14 @@ internal fun buildVodUiState(
         .asSequence()
         .filterNot { movie -> movie.categoryId in hiddenCategoryIds }
         .toList()
+    val contentTabs = buildVodContentTabs(visibleMovies)
+    val resolvedContentKind = resolveVodContentKind(selectedContentKind, contentTabs)
+    val contentMovies = visibleMovies
+        .asSequence()
+        .filter { movie -> vodContentKindFor(movie) == resolvedContentKind }
+        .toList()
     val normalizedQuery = searchQuery.trim()
-    val filtered = visibleMovies
+    val filtered = contentMovies
         .asSequence()
         .filter { movie ->
             normalizedQuery.isBlank() ||
@@ -340,17 +394,17 @@ internal fun buildVodUiState(
     }
     val visibleCount = when (viewMode) {
         VodViewMode.SHELVES -> sections.sumOf { section -> section.items.size }
-        VodViewMode.GUIDE -> selectedItems.size
+        VodViewMode.CONTAINER -> selectedItems.size
         VodViewMode.GRID -> items.size
     }
     val totalCount = when (viewMode) {
-        VodViewMode.GUIDE -> categories.firstOrNull { category -> category.key == resolvedCategoryKey }?.count ?: 0
+        VodViewMode.CONTAINER -> categories.firstOrNull { category -> category.key == resolvedCategoryKey }?.count ?: 0
         VodViewMode.SHELVES,
         VodViewMode.GRID -> filtered.size
     }
     val canLoadMore = when (viewMode) {
         VodViewMode.SHELVES -> sections.any { section -> section.items.size < section.count }
-        VodViewMode.GUIDE -> selectedItems.size < totalCount
+        VodViewMode.CONTAINER -> selectedItems.size < totalCount
         VodViewMode.GRID -> items.size < filtered.size
     }
 
@@ -359,6 +413,8 @@ internal fun buildVodUiState(
         isLoading = false,
         searchQuery = searchQuery,
         viewMode = viewMode,
+        selectedContentKind = resolvedContentKind,
+        contentTabs = contentTabs,
         selectedCategoryKey = resolvedCategoryKey,
         categories = categories,
         sections = sections,
@@ -370,6 +426,20 @@ internal fun buildVodUiState(
         previewMovie = previewMovie
     )
 }
+
+internal fun buildVodContentTabs(movies: List<Movie>): List<VodContentTab> {
+    val counts = movies.groupingBy(::vodContentKindFor).eachCount()
+    return VodContentKind.values().map { kind ->
+        VodContentTab(
+            kind = kind,
+            label = kind.label,
+            count = counts[kind] ?: 0
+        )
+    }
+}
+
+internal fun vodContentKindFor(movie: Movie): VodContentKind =
+    if (isTvVodCategory(movie.categoryName)) VodContentKind.TV else VodContentKind.MOVIE
 
 internal fun buildAlphabetCategories(movies: List<Movie>): List<VodAlphaCategory> {
     if (movies.isEmpty()) return emptyList()
@@ -400,6 +470,41 @@ private fun vodMovieComparator(): Comparator<Movie> =
     }.thenBy { movie ->
         movie.id
     }
+
+private fun defaultVodContentTabs(): List<VodContentTab> =
+    VodContentKind.values().map { kind -> VodContentTab(kind = kind, label = kind.label, count = 0) }
+
+private fun resolveVodContentKind(
+    selectedContentKind: VodContentKind,
+    tabs: List<VodContentTab>
+): VodContentKind {
+    val selectedCount = tabs.firstOrNull { it.kind == selectedContentKind }?.count ?: 0
+    val movieCount = tabs.firstOrNull { it.kind == VodContentKind.MOVIE }?.count ?: 0
+    val tvCount = tabs.firstOrNull { it.kind == VodContentKind.TV }?.count ?: 0
+    return when {
+        selectedCount > 0 -> selectedContentKind
+        selectedContentKind == VodContentKind.MOVIE && movieCount == 0 && tvCount > 0 -> VodContentKind.TV
+        else -> selectedContentKind
+    }
+}
+
+private fun isTvVodCategory(categoryName: String?): Boolean {
+    val normalized = categoryName
+        ?.lowercase(Locale.US)
+        ?.replace(Regex("[^a-z0-9]+"), " ")
+        ?.trim()
+        ?: return false
+
+    return normalized in setOf(
+        "tv vod",
+        "vod tv",
+        "series vod",
+        "vod series",
+        "tv shows",
+        "tv show vod",
+        "shows vod"
+    )
+}
 
 private fun buildVodBrowseSections(
     categories: List<VodAlphaCategory>,

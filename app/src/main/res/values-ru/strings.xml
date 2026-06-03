@@ -94,7 +94,7 @@
     <string name="dashboard_provider_status">Статус</string>
     <string name="dashboard_provider_source">Источник</string>
     <string name="dashboard_provider_connections">Подключения</string>
-    <string name="dashboard_provider_xtream">Xtream Codes</string>
+    <string name="dashboard_provider_xtream">Xtream</string>
     <string name="dashboard_provider_m3u">Плейлист M3U</string>
     <string name="dashboard_provider_no_sync">Недавней синхронизации нет</string>
     <string name="dashboard_provider_synced_at">Синхронизировано %1$s</string>
@@ -257,8 +257,6 @@
     <string name="settings_category_sorting_title">Сортировка категорий</string>
     <string name="settings_category_sorting_subtitle">Сортируйте категории для активного плейлиста. Блокировка и скрытие теперь находятся в Управлении категориями.</string>
     <string name="settings_category_sort_live">Категории Live TV</string>
-    <string name="settings_category_sort_movies">Категории фильмов</string>
-    <string name="settings_category_sort_series">Категории сериалов</string>
     <string name="settings_hidden_categories_title">Скрытые категории</string>
     <string name="settings_hidden_categories_subtitle">Восстановите любые категории провайдера, которые вы ранее скрыли из просмотра.</string>
     <string name="settings_hidden_categories_none">Нет скрытых</string>
@@ -274,8 +272,6 @@
     <string name="settings_category_sort_most_items">Сначала больше элементов</string>
     <string name="settings_category_sort_least_items">Сначала меньше элементов</string>
     <string name="settings_category_type_live_description">Сортируйте и скрывайте группы Live TV от провайдера, сохраняя All Channels, Favorites, Recent и пользовательские группы в закреплённых местах.</string>
-    <string name="settings_category_type_movies_description">Сортируйте и скрывайте категории фильмов от провайдера, не затрагивая Favorites, Resume и пользовательские полки.</string>
-    <string name="settings_category_type_series_description">Сортируйте и скрывайте категории сериалов от провайдера, не затрагивая Favorites, Continue Watching и пользовательские полки.</string>
     <string name="settings_playback">Воспроизведение</string>
     <string name="settings_browsing">Просмотр</string>
     <string name="settings_playback_subtitle">Настройте декодер и буферизацию для более плавного воспроизведения.</string>
@@ -382,8 +378,8 @@
     <string name="settings_vod_view_mode_shelves_desc">Sectioned rows with horizontal browsing inside each row.</string>
     <string name="settings_vod_view_mode_grid">Poster Grid</string>
     <string name="settings_vod_view_mode_grid_desc">Full-library poster grid for browsing the whole VOD catalog vertically.</string>
-    <string name="settings_vod_view_mode_guide">VOD Guide</string>
-    <string name="settings_vod_view_mode_guide_desc">Guide-style category rail with VOD results on the right.</string>
+    <string name="settings_vod_view_mode_container">VOD</string>
+    <string name="settings_vod_view_mode_container_desc">Category rail with VOD results on the right.</string>
     <string name="vod_classic_categories_title">Категории</string>
     <string name="vod_classic_category_search">Поиск по категориям</string>
     <string name="vod_classic_all">Все</string>
@@ -715,7 +711,7 @@
     <string name="setup_info_m3u_body">Используйте ссылку на плейлист или импортируйте локальный файл.</string>
     <string name="setup_info_manage_title">Позже можно управлять провайдерами</string>
     <string name="setup_info_manage_body">Позже можно обновить, изменить или заменить в настройках.</string>
-    <string name="setup_xtream">Xtream Codes</string>
+    <string name="setup_xtream">Xtream</string>
     <string name="setup_m3u">Плейлист M3U</string>
     <string name="setup_name_hint">Название плейлиста (необязательно)</string>
     <string name="setup_server_hint">URL сервера</string>

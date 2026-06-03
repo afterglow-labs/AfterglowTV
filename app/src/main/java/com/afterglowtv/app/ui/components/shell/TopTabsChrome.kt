@@ -29,14 +29,14 @@ data class TopTab(val id: String, val label: String)
 
 fun defaultTopTabs(
     developerModeEnabled: Boolean = false,
-    showAdultGuideTab: Boolean = true
+    showAdultTab: Boolean = true
 ): List<TopTab> = buildList {
     add(TopTab("home", "Home"))
     add(TopTab("live_tv", "Live TV"))
     add(TopTab("epg", if (StorePolicy.current.amazonReviewBuild) "TV Guide" else "IPTV Guide"))
     add(TopTab("vod_container", if (StorePolicy.current.amazonReviewBuild) "Video" else "VOD"))
-    if (StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultGuideTab) {
-        add(TopTab("adult_guide", "XXX Guide"))
+    if (StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultTab) {
+        add(TopTab("adult", "Adult"))
     }
     add(TopTab("local_media", "Personal Library"))
     add(TopTab("favorites", "Favorites"))

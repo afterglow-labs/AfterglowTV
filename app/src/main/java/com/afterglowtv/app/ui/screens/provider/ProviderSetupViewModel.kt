@@ -143,12 +143,7 @@ class ProviderSetupViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 m3uPlaylistKind = kind,
-                m3uVodClassificationEnabled = if (kind == ProviderM3uPlaylistKind.VOD) true else it.m3uVodClassificationEnabled,
-                epgSyncMode = if (kind == ProviderM3uPlaylistKind.VOD && !it.hasCustomizedEpgSyncMode) {
-                    ProviderEpgSyncMode.SKIP
-                } else {
-                    it.epgSyncMode
-                }
+                m3uVodClassificationEnabled = if (kind == ProviderM3uPlaylistKind.VOD) true else it.m3uVodClassificationEnabled
             )
         }
     }
@@ -369,11 +364,7 @@ class ProviderSetupViewModel @Inject constructor(
                     name = name,
                     httpUserAgent = httpUserAgent,
                     httpHeaders = httpHeaders,
-                    epgSyncMode = if (_uiState.value.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD) {
-                        ProviderEpgSyncMode.SKIP
-                    } else {
-                        _uiState.value.epgSyncMode
-                    },
+                    epgSyncMode = _uiState.value.epgSyncMode,
                     m3uVodClassificationEnabled = _uiState.value.m3uVodClassificationEnabled ||
                         _uiState.value.m3uPlaylistKind == ProviderM3uPlaylistKind.VOD,
                     m3uPlaylistKind = _uiState.value.m3uPlaylistKind,

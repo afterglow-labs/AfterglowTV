@@ -138,5 +138,5 @@ object DatabaseModule {
     @Provides fun provideLocalMediaItemDao(db: AfterglowTVDatabase): LocalMediaItemDao = db.localMediaItemDao()
     @Provides fun provideLocalMediaChannelDao(db: AfterglowTVDatabase): LocalMediaChannelDao = db.localMediaChannelDao()
     @Provides fun provideLocalMediaProgramDao(db: AfterglowTVDatabase): LocalMediaProgramDao = db.localMediaProgramDao()
-    @Provides fun provideAdultGuideCacheDao(db: AfterglowTVDatabase): AdultGuideCacheDao = db.adultGuideCacheDao()
+    @Provides fun provideAdultCacheDao(db: AfterglowTVDatabase): AdultCacheDao = db.adultCacheDao()
 }

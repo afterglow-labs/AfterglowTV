@@ -112,6 +112,7 @@ fun VodScreen(
                 uiState = uiState,
                 onSearchQueryChange = viewModel::setSearchQuery,
                 onCategoryClick = viewModel::selectCategory,
+                onContentKindClick = viewModel::selectContentKind,
                 onLoadMore = viewModel::loadMore,
                 onLoadAll = viewModel::loadAll,
                 onMovieClick = { movie ->
@@ -162,6 +163,7 @@ private fun VodBrowser(
     uiState: VodUiState,
     onSearchQueryChange: (String) -> Unit,
     onCategoryClick: (String) -> Unit,
+    onContentKindClick: (VodContentKind) -> Unit,
     onLoadMore: () -> Unit,
     onLoadAll: () -> Unit,
     onMovieClick: (Movie) -> Unit,
@@ -174,6 +176,7 @@ private fun VodBrowser(
         VodContentHeader(
             uiState = uiState,
             onSearchQueryChange = onSearchQueryChange,
+            onContentKindClick = onContentKindClick,
             onLoadMore = onLoadMore,
             onLoadAll = onLoadAll,
             modifier = Modifier
@@ -184,7 +187,7 @@ private fun VodBrowser(
             uiState.isLoading -> VodEmptyMessage("Loading VOD...")
             uiState.provider == null -> VodEmptyMessage("No active VOD source")
             uiState.items.isEmpty() -> VodEmptyMessage("No VOD titles found")
-            uiState.viewMode == VodViewMode.GUIDE -> VodGuideRailBrowser(
+            uiState.viewMode == VodViewMode.CONTAINER -> VodContainerRailBrowser(
                 uiState = uiState,
                 onCategoryClick = onCategoryClick,
                 onMovieClick = onMovieClick,
@@ -298,6 +301,7 @@ private fun VodCategoryRow(
 private fun VodContentHeader(
     uiState: VodUiState,
     onSearchQueryChange: (String) -> Unit,
+    onContentKindClick: (VodContentKind) -> Unit,
     onLoadMore: () -> Unit,
     onLoadAll: () -> Unit,
     modifier: Modifier = Modifier
@@ -309,23 +313,37 @@ private fun VodContentHeader(
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             Text(
-                text = "VOD",
+                text = "VOD Container",
                 style = MaterialTheme.typography.headlineSmall,
                 color = AppColors.TextPrimary
             )
-            Text(
-                text = "${uiState.visibleItemCount} of ${uiState.totalItemCount} titles",
-                style = MaterialTheme.typography.bodySmall,
-                color = AppColors.TextSecondary
-            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                contentPadding = PaddingValues(end = 8.dp)
+            ) {
+                items(uiState.contentTabs, key = { it.kind.name }) { tab ->
+                    VodContentKindChip(
+                        tab = tab,
+                        selected = tab.kind == uiState.selectedContentKind,
+                        onClick = { onContentKindClick(tab.kind) }
+                    )
+                }
+            }
         }
+        Text(
+            text = "${uiState.visibleItemCount} of ${uiState.totalItemCount} titles",
+            style = MaterialTheme.typography.bodySmall,
+            color = AppColors.TextSecondary,
+            maxLines = 1,
+            modifier = Modifier.width(112.dp)
+        )
         SearchInput(
             value = uiState.searchQuery,
             onValueChange = onSearchQueryChange,
-            placeholder = "Search VOD",
+            placeholder = "Search ${uiState.selectedContentKind.label}",
             modifier = Modifier.width(180.dp)
         )
         TvButton(
@@ -358,7 +376,54 @@ private fun VodContentHeader(
 }
 
 @Composable
-private fun VodGuideRailBrowser(
+private fun VodContentKindChip(
+    tab: VodContentTab,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    TvClickableSurface(
+        onClick = onClick,
+        modifier = Modifier.width(120.dp),
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = if (selected) AppColors.Brand.copy(alpha = 0.28f) else AppColors.SurfaceElevated,
+            focusedContainerColor = AppColors.SurfaceEmphasis,
+            contentColor = if (selected) AppColors.BrandStrong else AppColors.TextPrimary,
+            focusedContentColor = AppColors.TextPrimary
+        ),
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                shape = RoundedCornerShape(999.dp)
+            )
+        ),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = FocusSpec.FocusedScale)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 5.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = tab.label,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = tab.count.toString(),
+                style = MaterialTheme.typography.labelSmall,
+                color = AppColors.TextSecondary,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+private fun VodContainerRailBrowser(
     uiState: VodUiState,
     onCategoryClick: (String) -> Unit,
     onMovieClick: (Movie) -> Unit,

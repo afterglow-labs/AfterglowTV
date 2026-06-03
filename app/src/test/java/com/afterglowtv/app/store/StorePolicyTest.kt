@@ -58,18 +58,18 @@ class StorePolicyTest {
     @Test
     fun `amazon startup allows adult route only after developer mode unlock`() {
         val lockedRoute = resolveStartupRoute(
-            destination = StartupDestination.XXX_GUIDE,
+            destination = StartupDestination.ADULT,
             developerModeEnabled = false,
             policy = StorePolicySnapshot.amazon
         )
         val route = resolveStartupRoute(
-            destination = StartupDestination.XXX_GUIDE,
+            destination = StartupDestination.ADULT,
             developerModeEnabled = true,
             policy = StorePolicySnapshot.amazon
         )
 
         assertThat(lockedRoute).isEqualTo(Routes.HOME)
-        assertThat(route).isEqualTo(Routes.ADULT_GUIDE)
+        assertThat(route).isEqualTo(Routes.ADULT)
     }
 
     @Test
