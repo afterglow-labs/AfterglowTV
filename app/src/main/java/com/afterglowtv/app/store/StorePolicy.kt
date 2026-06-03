@@ -22,10 +22,36 @@ data class StorePolicySnapshot(
     val allowXtreamPlaylistAutoDetection: Boolean,
     val enableSideloadUpdates: Boolean,
     val enableDvr: Boolean,
-    val allowDvrDeveloperUnlock: Boolean
+    val allowDvrDeveloperUnlock: Boolean,
+    val dateUnlocksHiddenFeatures: Boolean = false,
+    val featureReleaseUnlockEpochMs: Long = 0L,
+    val premiumPreviewFreeUntilEpochMs: Long = 0L
 ) {
     fun canUseDvr(developerModeEnabled: Boolean): Boolean =
         enableDvr || (allowDvrDeveloperUnlock && developerModeEnabled)
+
+    fun isFeatureReleaseUnlocked(nowMs: Long): Boolean =
+        dateUnlocksHiddenFeatures &&
+            featureReleaseUnlockEpochMs > 0L &&
+            nowMs >= featureReleaseUnlockEpochMs
+
+    fun isPremiumPreviewFree(nowMs: Long): Boolean =
+        premiumPreviewFreeUntilEpochMs <= 0L || nowMs < premiumPreviewFreeUntilEpochMs
+
+    fun effectiveDeveloperModeEnabled(storedDeveloperModeEnabled: Boolean, nowMs: Long): Boolean =
+        storedDeveloperModeEnabled || isFeatureReleaseUnlocked(nowMs)
+
+    fun effectiveFor(storedDeveloperModeEnabled: Boolean, nowMs: Long): StorePolicySnapshot =
+        if (dateUnlocksHiddenFeatures && effectiveDeveloperModeEnabled(storedDeveloperModeEnabled, nowMs)) {
+            copy(
+                showAdvancedSourceTypes = true,
+                allowXtreamPlaylistAutoDetection = true,
+                enableSideloadUpdates = true,
+                enableDvr = true
+            )
+        } else {
+            this
+        }
 
     fun isHiddenFallbackProvider(provider: Provider): Boolean {
         return enableHiddenFallbackSource &&
@@ -49,6 +75,8 @@ data class StorePolicySnapshot(
 
     companion object {
         const val HIDDEN_FALLBACK_DIRECTORY = "hidden_fallback"
+        const val DIRECT_PREVIEW_UNLOCK_EPOCH_MS = 1_782_864_000_000L
+        const val DIRECT_PREVIEW_FREE_UNTIL_EPOCH_MS = 1_790_812_800_000L
 
         val standard = StorePolicySnapshot(
             amazonReviewBuild = false,
@@ -91,8 +119,23 @@ data class StorePolicySnapshot(
             allowDvrDeveloperUnlock = true
         )
 
+        val direct = amazon.copy(
+            dateUnlocksHiddenFeatures = true,
+            featureReleaseUnlockEpochMs = DIRECT_PREVIEW_UNLOCK_EPOCH_MS,
+            premiumPreviewFreeUntilEpochMs = DIRECT_PREVIEW_FREE_UNTIL_EPOCH_MS
+        )
+
         val current: StorePolicySnapshot
-            get() = StorePolicySnapshot(
+            get() = fromBuildConfig().effectiveFor(
+                storedDeveloperModeEnabled = false,
+                nowMs = System.currentTimeMillis()
+            )
+
+        val rawCurrent: StorePolicySnapshot
+            get() = fromBuildConfig()
+
+        private fun fromBuildConfig(): StorePolicySnapshot =
+            StorePolicySnapshot(
                 amazonReviewBuild = BuildConfig.AMAZON_REVIEW_BUILD,
                 showAdvancedSourceTypes = BuildConfig.SHOW_ADVANCED_SOURCE_TYPES,
                 showAdultSurfaces = BuildConfig.SHOW_ADULT_SURFACES,
@@ -102,7 +145,10 @@ data class StorePolicySnapshot(
                 allowXtreamPlaylistAutoDetection = BuildConfig.ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION,
                 enableSideloadUpdates = BuildConfig.ENABLE_SIDELOAD_UPDATES,
                 enableDvr = BuildConfig.ENABLE_DVR,
-                allowDvrDeveloperUnlock = BuildConfig.ALLOW_DVR_DEVELOPER_UNLOCK
+                allowDvrDeveloperUnlock = BuildConfig.ALLOW_DVR_DEVELOPER_UNLOCK,
+                dateUnlocksHiddenFeatures = BuildConfig.DATE_UNLOCKS_HIDDEN_FEATURES,
+                featureReleaseUnlockEpochMs = BuildConfig.FEATURE_RELEASE_UNLOCK_EPOCH_MS,
+                premiumPreviewFreeUntilEpochMs = BuildConfig.PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS
             )
 
         private fun parseHiddenFallbackSourceSpecs(rawSpecs: String): List<HiddenFallbackSourceSpec> =
@@ -126,4 +172,15 @@ data class StorePolicySnapshot(
 object StorePolicy {
     val current: StorePolicySnapshot
         get() = StorePolicySnapshot.current
+
+    val rawCurrent: StorePolicySnapshot
+        get() = StorePolicySnapshot.rawCurrent
+
+    fun currentTimeMillis(): Long = System.currentTimeMillis()
+
+    fun currentFor(storedDeveloperModeEnabled: Boolean, nowMs: Long = currentTimeMillis()): StorePolicySnapshot =
+        rawCurrent.effectiveFor(storedDeveloperModeEnabled, nowMs)
+
+    fun effectiveDeveloperModeEnabled(storedDeveloperModeEnabled: Boolean, nowMs: Long = currentTimeMillis()): Boolean =
+        rawCurrent.effectiveDeveloperModeEnabled(storedDeveloperModeEnabled, nowMs)
 }

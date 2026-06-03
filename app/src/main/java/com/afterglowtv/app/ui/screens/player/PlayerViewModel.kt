@@ -11,6 +11,7 @@ import com.afterglowtv.app.di.MainPlayerEngine
 import com.afterglowtv.app.player.LivePreviewHandoffManager
 import com.afterglowtv.app.player.PlayerNowPlayingState
 import com.afterglowtv.app.player.PlayerNowPlayingStore
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.util.isPlaybackComplete
 import com.afterglowtv.app.tv.LauncherRecommendationsManager
 import com.afterglowtv.app.tv.WatchNextManager
@@ -349,6 +350,7 @@ class PlayerViewModel @Inject constructor(
 
     val castConnectionState: StateFlow<CastConnectionState> = castManager.connectionState
     val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+        .map(StorePolicy::effectiveDeveloperModeEnabled)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     private fun setActivePlayerEngine(engine: PlayerEngine) {

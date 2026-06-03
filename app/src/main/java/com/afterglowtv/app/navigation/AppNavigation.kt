@@ -270,6 +270,7 @@ class AppStartupDestinationViewModel @Inject constructor(
     preferencesRepository: PreferencesRepository
 ) : ViewModel() {
     val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+        .map(StorePolicy::effectiveDeveloperModeEnabled)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000L),

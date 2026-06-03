@@ -4,6 +4,7 @@ import android.app.Application
 import com.afterglowtv.app.R
 import com.afterglowtv.app.di.AuxiliaryPlayerEngine
 import com.afterglowtv.app.player.LivePreviewHandoffManager
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.model.AdultCategory
 import com.afterglowtv.app.ui.model.AdultCategoryBuilder
 import com.afterglowtv.app.ui.model.isArchivePlayable
@@ -307,6 +308,7 @@ class EpgViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(EpgUiState())
     val uiState: StateFlow<EpgUiState> = _uiState.asStateFlow()
     val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+        .map(StorePolicy::effectiveDeveloperModeEnabled)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     private val selectedCategoryId = MutableStateFlow(ChannelRepository.ALL_CHANNELS_ID)

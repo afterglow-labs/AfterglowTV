@@ -89,7 +89,10 @@ internal fun LazyListScope.providerSection(
                     )
                 }
 
-                if (providerCategory == ProviderSettingsCategory.LIVE_TV && StorePolicy.current.showAdvancedSourceTypes) {
+                if (
+                    providerCategory == ProviderSettingsCategory.LIVE_TV &&
+                    StorePolicy.currentFor(uiState.developerModeEnabled).showAdvancedSourceTypes
+                ) {
                     CombinedM3uProfilesCard(
                         profiles = uiState.combinedProfiles,
                         availableProviders = uiState.availableM3uProviders,

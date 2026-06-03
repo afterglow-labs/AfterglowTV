@@ -152,7 +152,7 @@ fun ProviderSetupScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val knownLocalM3uUrls by viewModel.knownLocalM3uUrls.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val storePolicy = StorePolicy.current
+    val storePolicy = StorePolicy.currentFor(uiState.developerModeEnabled)
     val visibleSourceTypes = remember(storePolicy) {
         visibleProviderSetupSourceTypes(storePolicy).map { it.toUiSourceType() }.toSet()
     }

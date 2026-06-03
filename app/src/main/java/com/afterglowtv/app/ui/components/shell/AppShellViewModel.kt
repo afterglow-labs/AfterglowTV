@@ -19,7 +19,9 @@ internal class AppShellViewModel @Inject constructor(
         preferencesRepository.developerModeEnabled,
         preferencesRepository.showAdultTab
     ) { developerModeEnabled, showAdultTab ->
-        StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultTab
+        StorePolicy.current.showAdultSurfaces &&
+            StorePolicy.effectiveDeveloperModeEnabled(developerModeEnabled) &&
+            showAdultTab
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),

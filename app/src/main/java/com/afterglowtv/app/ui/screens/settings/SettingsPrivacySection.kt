@@ -90,7 +90,7 @@ internal fun LazyListScope.settingsPrivacySection(
                 Switch(checked = uiState.isIncognitoMode, onCheckedChange = null)
             }
         }
-        if (showAdvancedTextImportSettings()) {
+        if (showAdvancedTextImportSettings(StorePolicy.currentFor(uiState.developerModeEnabled))) {
             Spacer(Modifier.height(2.dp))
             TvClickableSurface(
                 onClick = { viewModel.toggleXtreamTextClassification() },

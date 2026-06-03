@@ -53,6 +53,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
         buildConfigField("String", "OFFICIAL_SIGNING_CERT_SHA256", "\"$officialSigningCertSha256\"")
+        buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "false")
+        buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "0L")
+        buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "0L")
     }
 
     flavorDimensions += "store"
@@ -95,6 +98,32 @@ android {
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
             buildConfigField("boolean", "ENABLE_DVR", "false")
             buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
+        }
+
+        create("direct") {
+            dimension = "store"
+            applicationIdSuffix = ".direct"
+            versionNameSuffix = "-direct"
+            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
+            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
+            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
+            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
+            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
+            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
+            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "true")
+            buildConfigField(
+                "String",
+                "HIDDEN_FALLBACK_SOURCE_SPECS",
+                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::AfterglowTV::LIVE::false|amazon_fallback/playlist_usa_vod.m3u8::afterglow_amazon_vod.m3u8::Afterglow Videos::VOD::true\""
+            )
+            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
+            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
+            buildConfigField("boolean", "ENABLE_DVR", "false")
+            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
+            buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "true")
+            buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "1782864000000L")
+            buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "1790812800000L")
         }
 
         create("corey") {
@@ -160,10 +189,20 @@ android {
     testOptions {
         animationsDisabled = true
     }
+
+    sourceSets {
+        getByName("direct") {
+            res.srcDir("src/amazon/res")
+            assets.srcDir("src/amazon/assets")
+        }
+    }
 }
 
 androidComponents {
     onVariants(selector().withFlavor("store", "amazon")) { variant ->
+        variant.androidResources.localeFilters.add("en")
+    }
+    onVariants(selector().withFlavor("store", "direct")) { variant ->
         variant.androidResources.localeFilters.add("en")
     }
 }

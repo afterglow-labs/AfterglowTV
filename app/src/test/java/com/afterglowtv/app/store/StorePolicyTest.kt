@@ -12,6 +12,7 @@ import com.afterglowtv.domain.model.ProviderSourceSlot
 import com.afterglowtv.domain.model.ProviderType
 import com.google.common.truth.Truth.assertThat
 import java.io.File
+import java.time.Instant
 import org.junit.Test
 
 class StorePolicyTest {
@@ -28,7 +29,10 @@ class StorePolicyTest {
     @Test
     fun `amazon build uses AfterglowTV package identity`() {
         if (BuildConfig.AMAZON_REVIEW_BUILD) {
-            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglowtv.app.amazon")
+            assertThat(BuildConfig.APPLICATION_ID).isAnyOf(
+                "com.afterglowtv.app.amazon",
+                "com.afterglowtv.app.direct"
+            )
             assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
         } else {
             assertThat(BuildConfig.APPLICATION_ID).startsWith("com.afterglowtv.app")
@@ -46,6 +50,81 @@ class StorePolicyTest {
             ProviderSetupSourceType.PLAYLIST_URL,
             ProviderSetupSourceType.PLAYLIST_FILE
         ).inOrder()
+    }
+
+    @Test
+    fun `direct preview matches amazon hidden defaults before release date`() {
+        val beforeRelease = utcMs("2026-06-30T23:59:59Z")
+        val locked = StorePolicySnapshot.direct.effectiveFor(
+            storedDeveloperModeEnabled = false,
+            nowMs = beforeRelease
+        )
+
+        assertThat(locked.showAdvancedSourceTypes).isFalse()
+        assertThat(locked.canUseDvr(developerModeEnabled = false)).isFalse()
+        assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(false, beforeRelease)).isFalse()
+        assertThat(visibleProviderSetupSourceTypes(locked)).containsExactly(
+            ProviderSetupSourceType.PLAYLIST_URL,
+            ProviderSetupSourceType.PLAYLIST_FILE
+        ).inOrder()
+    }
+
+    @Test
+    fun `direct preview developer mode unlocks full feature set before release date`() {
+        val beforeRelease = utcMs("2026-06-30T23:59:59Z")
+        val unlocked = StorePolicySnapshot.direct.effectiveFor(
+            storedDeveloperModeEnabled = true,
+            nowMs = beforeRelease
+        )
+
+        assertThat(unlocked.showAdvancedSourceTypes).isTrue()
+        assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
+        assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(true, beforeRelease)).isTrue()
+        assertThat(visibleProviderSetupSourceTypes(unlocked)).containsExactly(
+            ProviderSetupSourceType.SERVER_LOGIN,
+            ProviderSetupSourceType.PORTAL_LOGIN,
+            ProviderSetupSourceType.PLAYLIST_URL,
+            ProviderSetupSourceType.PLAYLIST_FILE
+        ).inOrder()
+    }
+
+    @Test
+    fun `direct preview unlocks full feature set on release date`() {
+        val releaseDate = utcMs("2026-07-01T00:00:00Z")
+        val unlocked = StorePolicySnapshot.direct.effectiveFor(
+            storedDeveloperModeEnabled = false,
+            nowMs = releaseDate
+        )
+
+        assertThat(unlocked.showAdvancedSourceTypes).isTrue()
+        assertThat(unlocked.allowXtreamPlaylistAutoDetection).isTrue()
+        assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
+        assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(false, releaseDate)).isTrue()
+        assertThat(visibleProviderSetupSourceTypes(unlocked)).containsExactly(
+            ProviderSetupSourceType.SERVER_LOGIN,
+            ProviderSetupSourceType.PORTAL_LOGIN,
+            ProviderSetupSourceType.PLAYLIST_URL,
+            ProviderSetupSourceType.PLAYLIST_FILE
+        ).inOrder()
+    }
+
+    @Test
+    fun `amazon does not unlock full feature set by date`() {
+        val releaseDate = utcMs("2026-07-01T00:00:00Z")
+        val amazon = StorePolicySnapshot.amazon.effectiveFor(
+            storedDeveloperModeEnabled = false,
+            nowMs = releaseDate
+        )
+
+        assertThat(amazon.showAdvancedSourceTypes).isFalse()
+        assertThat(amazon.canUseDvr(developerModeEnabled = false)).isFalse()
+        assertThat(StorePolicySnapshot.amazon.effectiveDeveloperModeEnabled(false, releaseDate)).isFalse()
+    }
+
+    @Test
+    fun `direct premium preview free window ends on october first`() {
+        assertThat(StorePolicySnapshot.direct.isPremiumPreviewFree(utcMs("2026-09-30T23:59:59Z"))).isTrue()
+        assertThat(StorePolicySnapshot.direct.isPremiumPreviewFree(utcMs("2026-10-01T00:00:00Z"))).isFalse()
     }
 
     @Test
@@ -242,4 +321,6 @@ class StorePolicyTest {
 
     private fun amazonAsset(fileName: String): File =
         File("src/amazon/assets/amazon_fallback/$fileName")
+
+    private fun utcMs(value: String): Long = Instant.parse(value).toEpochMilli()
 }

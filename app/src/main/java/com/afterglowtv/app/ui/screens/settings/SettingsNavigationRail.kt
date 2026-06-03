@@ -74,8 +74,8 @@ internal fun SettingsNavigationRail(
     onNavigate: (String) -> Unit = {},
 ) {
     val visibleCategoryIds = visibleSettingsCategoryIds(
-        policy = StorePolicy.current,
-        developerModeEnabled = developerModeEnabled
+        policy = StorePolicy.currentFor(developerModeEnabled),
+        developerModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(developerModeEnabled)
     )
     val entries = listOf(
         SettingsNavEntry(
