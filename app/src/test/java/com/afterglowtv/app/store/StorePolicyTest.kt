@@ -28,12 +28,12 @@ class StorePolicyTest {
 
     @Test
     fun `amazon build uses AfterglowTV package identity`() {
-        if (BuildConfig.AMAZON_REVIEW_BUILD) {
-            assertThat(BuildConfig.APPLICATION_ID).isAnyOf(
-                "com.afterglowtv.app.amazon",
-                "com.afterglowtv.app.direct"
-            )
-            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
+        if (BuildConfig.DATE_UNLOCKS_HIDDEN_FEATURES) {
+            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglow.tv.fire")
+            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglow.tv.fire")
+        } else if (BuildConfig.AMAZON_REVIEW_BUILD) {
+            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglow.tv.fire")
+            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglow.tv.fire")
         } else {
             assertThat(BuildConfig.APPLICATION_ID).startsWith("com.afterglowtv.app")
             assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")

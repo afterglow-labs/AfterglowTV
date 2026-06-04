@@ -79,9 +79,9 @@ android {
 
         create("amazon") {
             dimension = "store"
-            applicationIdSuffix = ".amazon"
+            applicationId = "com.afterglow.tv.fire"
             versionNameSuffix = "-amazon"
-            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
+            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglow.tv.fire\"")
             buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
             buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
             buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
@@ -102,9 +102,9 @@ android {
 
         create("direct") {
             dimension = "store"
-            applicationIdSuffix = ".direct"
+            applicationId = "com.afterglow.tv.fire"
             versionNameSuffix = "-direct"
-            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
+            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglow.tv.fire\"")
             buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
             buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
             buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
