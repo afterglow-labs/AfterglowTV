@@ -21,24 +21,38 @@ enum class StartupDestination(
     companion object {
         val default: StartupDestination = HOME
 
-        fun visibleEntries(developerModeEnabled: Boolean): List<StartupDestination> =
-            entries.filter {
+        fun visibleEntries(developerModeEnabled: Boolean): List<StartupDestination> {
+            val policy = StorePolicy.currentFor(developerModeEnabled)
+            if (policy.guideOnlyReviewSurface) return listOf(HOME, LIVE_TV, IPTV_GUIDE, SETTINGS)
+            return entries.filter {
                 (developerModeEnabled || !it.requiresDeveloperMode) &&
-                    (StorePolicy.current.showAdultSurfaces || !it.requiresDeveloperMode)
+                    (policy.showAdultSurfaces || !it.requiresDeveloperMode)
             }
+        }
 
         fun visibleOrDefault(
             destination: StartupDestination,
             developerModeEnabled: Boolean
-        ): StartupDestination =
-            if (
+        ): StartupDestination {
+            val policy = StorePolicy.currentFor(developerModeEnabled)
+            if (policy.guideOnlyReviewSurface) {
+                return when (destination) {
+                    HOME,
+                    LIVE_TV,
+                    IPTV_GUIDE,
+                    SETTINGS -> destination
+                    else -> HOME
+                }
+            }
+            return if (
                 (developerModeEnabled || !destination.requiresDeveloperMode) &&
-                (StorePolicy.current.showAdultSurfaces || !destination.requiresDeveloperMode)
+                (policy.showAdultSurfaces || !destination.requiresDeveloperMode)
             ) {
                 destination
             } else {
                 default
             }
+        }
 
         fun fromStorage(value: String?): StartupDestination =
             entries.firstOrNull { it.storageValue == value || it.route == value } ?: default

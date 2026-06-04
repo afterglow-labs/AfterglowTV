@@ -51,6 +51,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
 import com.afterglowtv.app.navigation.Routes
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.components.shell.AppMessageState
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
@@ -140,18 +141,19 @@ class LocalMediaViewModel @Inject constructor(
         pageLimit,
         browseState
     ) { libraries, selectedSection, developerModeEnabled, limit, browse ->
-        val section = selectedSection.takeIf { it != LocalMediaSection.XXX || developerModeEnabled }
+        val effectiveDeveloperModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(developerModeEnabled)
+        val section = selectedSection.takeIf { it != LocalMediaSection.XXX || effectiveDeveloperModeEnabled }
             ?: LocalMediaSection.ALL
-        val libraryGroups = LocalMediaLibraryGroups.from(libraries, developerModeEnabled)
+        val libraryGroups = LocalMediaLibraryGroups.from(libraries, effectiveDeveloperModeEnabled)
         val librariesById = libraries.associateBy(LocalMediaLibrary::id)
         val sectionLibraryIds = section.libraryIdsForQuery(libraryGroups)
         val visibleLibraries = libraries
             .filter { library -> sectionLibraryIds == null || library.id in sectionLibraryIds }
-            .filter { library -> developerModeEnabled || !library.looksAdult() }
+            .filter { library -> effectiveDeveloperModeEnabled || !library.looksAdult() }
         val browseResult = browse.result?.takeIf { it.library.id == browse.libraryId }
         val visibleItems = browseResult
             ?.items
-            ?.let { items -> visibleLocalMediaItems(items, section, developerModeEnabled, librariesById) }
+            ?.let { items -> visibleLocalMediaItems(items, section, effectiveDeveloperModeEnabled, librariesById) }
             .orEmpty()
             .take(limit)
         LocalMediaUiState(
@@ -162,7 +164,7 @@ class LocalMediaViewModel @Inject constructor(
             selectedLibraryName = browse.libraryId?.let { librariesById[it]?.displayName ?: librariesById[it]?.name },
             currentPath = browse.path,
             folders = browseResult?.folders.orEmpty(),
-            developerModeEnabled = developerModeEnabled,
+            developerModeEnabled = effectiveDeveloperModeEnabled,
             items = visibleItems,
             sectionCounts = librarySectionCounts(libraries, libraryGroups),
             totalItemCount = browseResult?.items?.size ?: visibleLibraries.size,

@@ -1,6 +1,6 @@
 package com.afterglowtv.app.ui.components.shell
 
-import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -10,41 +10,40 @@ class TopTabsChromeTest {
     fun `program guide destinations are separate top level tabs`() {
         val tabs = defaultTopTabs(
             developerModeEnabled = true,
-            showAdultTab = true
+            showAdultTab = true,
+            policy = StorePolicySnapshot.standard
         )
 
-        val expectedIds = buildList {
-            add("home")
-            add("live_tv")
-            add("epg")
-            add("vod_container")
-            if (StorePolicy.current.showAdultSurfaces) add("adult")
-            add("local_media")
-            add("favorites")
-            add("search")
-            add("settings")
-        }
-        val expectedLabels = buildList {
-            add("Home")
-            add("Live TV")
-            add(if (StorePolicy.current.amazonReviewBuild) "TV Guide" else "IPTV Guide")
-            add(if (StorePolicy.current.amazonReviewBuild) "Video" else "VOD")
-            if (StorePolicy.current.showAdultSurfaces) add("Adult")
-            add("Personal Library")
-            add("Favorites")
-            add("Search")
-            add("Settings")
-        }
-
-        assertThat(tabs.map { it.id }).containsExactlyElementsIn(expectedIds).inOrder()
-        assertThat(tabs.map { it.label }).containsExactlyElementsIn(expectedLabels).inOrder()
+        assertThat(tabs.map { it.id }).containsExactly(
+            "home",
+            "live_tv",
+            "epg",
+            "vod_container",
+            "adult",
+            "local_media",
+            "favorites",
+            "search",
+            "settings"
+        ).inOrder()
+        assertThat(tabs.map { it.label }).containsExactly(
+            "Home",
+            "Live TV",
+            "IPTV Guide",
+            "VOD",
+            "Adult",
+            "Personal Library",
+            "Favorites",
+            "Search",
+            "Settings"
+        ).inOrder()
     }
 
     @Test
     fun `adult tab is hidden until developer mode is unlocked`() {
         val tabs = defaultTopTabs(
             developerModeEnabled = false,
-            showAdultTab = true
+            showAdultTab = true,
+            policy = StorePolicySnapshot.standard
         )
 
         assertThat(tabs.map { it.id }).containsExactly(
@@ -63,7 +62,8 @@ class TopTabsChromeTest {
     fun `developer mode still respects adult visibility preference`() {
         val tabs = defaultTopTabs(
             developerModeEnabled = true,
-            showAdultTab = false
+            showAdultTab = false,
+            policy = StorePolicySnapshot.standard
         )
 
         assertThat(tabs.map { it.id }).containsExactly(
@@ -76,5 +76,32 @@ class TopTabsChromeTest {
             "search",
             "settings"
         ).inOrder()
+    }
+
+    @Test
+    fun `locked amazon review surface shows live tv guide and settings`() {
+        val tabs = defaultTopTabs(
+            developerModeEnabled = false,
+            showAdultTab = true,
+            policy = StorePolicySnapshot.amazon
+        )
+
+        assertThat(tabs.map { it.id }).containsExactly("home", "live_tv", "epg", "settings").inOrder()
+        assertThat(tabs.map { it.label }).containsExactly("Home", "Live TV", "TV Guide", "Settings").inOrder()
+    }
+
+    @Test
+    fun `unlocked amazon review surface keeps vod label`() {
+        val tabs = defaultTopTabs(
+            developerModeEnabled = true,
+            showAdultTab = true,
+            policy = StorePolicySnapshot.amazon.effectiveFor(
+                storedDeveloperModeEnabled = true,
+                nowMs = 0L
+            )
+        )
+
+        assertThat(tabs.single { it.id == "vod_container" }.label).isEqualTo("VOD")
+        assertThat(tabs.map { it.label }).doesNotContain("Video")
     }
 }

@@ -83,7 +83,7 @@ object UrlSecurityPolicy {
     fun validateOptionalEpgUrl(url: String): String? {
         return when {
             url.isBlank() -> null
-            url.startsWith("content://") -> null  // SAF local file; validated by OS file picker
+            !containsNewlines(url) && hasAllowedScheme(url, localSchemes) -> null
             // Allow http:// as well as https:// — many IPTV portals serve their XMLTV
             // EPG endpoint over plain HTTP on non-standard ports (same policy as playlists).
             !containsNewlines(url) && hasAllowedScheme(url, playlistSourceSchemes) -> null

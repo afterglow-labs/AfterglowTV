@@ -6,7 +6,7 @@ import org.junit.Test
 
 class SettingsNavigationRailTest {
     @Test
-    fun `amazon settings navigation hides recording and keeps later section ids stable`() {
+    fun `locked amazon settings navigation keeps normal app settings`() {
         assertThat(
             visibleSettingsCategoryIds(
                 StorePolicySnapshot.amazon,
@@ -14,15 +14,27 @@ class SettingsNavigationRailTest {
             )
         ).containsExactly(
             SETTINGS_CATEGORY_PROVIDERS,
-            SETTINGS_CATEGORY_PROVIDERS_VOD,
             SETTINGS_CATEGORY_PLAYBACK,
             SETTINGS_CATEGORY_BROWSING,
             SETTINGS_CATEGORY_PRIVACY,
-            SETTINGS_CATEGORY_LOCAL_MEDIA,
             SETTINGS_CATEGORY_BACKUP,
             SETTINGS_CATEGORY_EPG_SOURCES,
             SETTINGS_CATEGORY_ABOUT
         ).inOrder()
+    }
+
+    @Test
+    fun `locked amazon settings navigation still hides gated feature settings`() {
+        assertThat(
+            visibleSettingsCategoryIds(
+                StorePolicySnapshot.amazon,
+                developerModeEnabled = false
+            )
+        ).containsNoneOf(
+            SETTINGS_CATEGORY_PROVIDERS_VOD,
+            SETTINGS_CATEGORY_RECORDING,
+            SETTINGS_CATEGORY_LOCAL_MEDIA
+        )
     }
 
     @Test

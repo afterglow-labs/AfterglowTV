@@ -28,9 +28,8 @@ class HiddenFallbackSourceSeeder @Inject constructor(
     suspend fun seedIfNeeded(policy: StorePolicySnapshot = StorePolicy.current) {
         if (!policy.enableHiddenFallbackSource) return
         var providers = providerRepository.getProviders().first()
-        if (!policy.shouldEnsureHiddenFallback(providers)) return
 
-        var liveFallbackProviderId: Long? = null
+        var liveFallbackProviderIdToActivate: Long? = null
         policy.hiddenFallbackSources.forEach { spec ->
             val fallbackUrl = prepareHiddenFallbackPlaylistFile(spec) ?: return@forEach
             providers = providerRepository.getProviders().first()
@@ -38,21 +37,25 @@ class HiddenFallbackSourceSeeder @Inject constructor(
                 provider.m3uUrl.contains(spec.providerFileName) ||
                     provider.serverUrl.contains(spec.providerFileName)
             }
-            val providerId = existingFallback?.id ?: when (
-                val result = validateAndAddProvider.addM3u(
-                    M3uProviderSetupCommand(
-                        url = fallbackUrl,
-                        name = spec.providerName,
-                        epgSyncMode = ProviderEpgSyncMode.SKIP,
-                        m3uVodClassificationEnabled = spec.m3uVodClassificationEnabled,
-                        existingProviderId = existingFallback?.id,
-                        allowXtreamPlaylistAutoDetection = false
+            val providerId = existingFallback?.id ?: if (policy.shouldEnsureHiddenFallback(providers)) {
+                when (
+                    val result = validateAndAddProvider.addM3u(
+                        M3uProviderSetupCommand(
+                            url = fallbackUrl,
+                            name = spec.providerName,
+                            epgSyncMode = ProviderEpgSyncMode.SKIP,
+                            m3uVodClassificationEnabled = spec.m3uVodClassificationEnabled,
+                            existingProviderId = existingFallback?.id,
+                            allowXtreamPlaylistAutoDetection = false
+                        )
                     )
-                )
-            ) {
-                is ValidateAndAddProviderResult.Success -> result.provider.id
-                is ValidateAndAddProviderResult.SavedWithWarning -> result.provider.id
-                else -> null
+                ) {
+                    is ValidateAndAddProviderResult.Success -> result.provider.id
+                    is ValidateAndAddProviderResult.SavedWithWarning -> result.provider.id
+                    else -> null
+                }
+            } else {
+                null
             }
 
             if (providerId != null) {
@@ -76,14 +79,14 @@ class HiddenFallbackSourceSeeder @Inject constructor(
                         spec.sourceSlot,
                         ActiveLiveSource.ProviderSource(providerId)
                     )
-                }
-                if (spec.sourceSlot == ProviderSourceSlot.LIVE) {
-                    liveFallbackProviderId = providerId
+                    if (spec.sourceSlot == ProviderSourceSlot.LIVE) {
+                        liveFallbackProviderIdToActivate = providerId
+                    }
                 }
             }
         }
 
-        liveFallbackProviderId?.let {
+        liveFallbackProviderIdToActivate?.let {
             providerRepository.setActiveProvider(it)
             preferencesRepository.setLastActiveProviderId(it)
         }
@@ -127,6 +130,7 @@ internal fun shouldUseHiddenFallbackSourceForSlot(
     currentSource: ActiveLiveSource?,
     fallbackProviderId: Long
 ): Boolean {
-    if (!policy.shouldEnsureHiddenFallback(providers)) return false
+    val onlyBundledSources = providers.isNotEmpty() && providers.all(policy::isHiddenFallbackProvider)
+    if (!policy.enableHiddenFallbackSource || !onlyBundledSources) return false
     return currentSource != ActiveLiveSource.ProviderSource(fallbackProviderId)
 }

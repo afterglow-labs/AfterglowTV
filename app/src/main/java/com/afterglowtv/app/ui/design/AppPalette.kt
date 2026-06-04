@@ -93,34 +93,34 @@ data class AppPalette(
             glowIntensity = 0.35f,
         )
 
-        /** Pure black OLED-friendly with blue-steel accent and muted signal-blue edges. */
-        val CyberPunk = AppPalette(
-            id = "cyber_punk",
+        /** Blue-gray steel surfaces with cool blue focus and softened chrome edges. */
+        val BlueSteel = AppPalette(
+            id = "blue_steel",
             displayName = "Blue Steel",
-            description = "Pitch black with blue-steel highlights and cool signal-blue edges. Maximum contrast for OLED panels.",
-            surfaceDeep = Color(0xFF000000),
-            surfaceBase = Color(0xFF0A0A0A),
-            surfaceCool = Color(0xFF111111),
-            surfaceAccent = Color(0xFF1A1A1A),
-            accent = Color(0xFF6F8FA8),
-            accentLight = Color(0xFFB7C9D8),
-            accentMuted = Color(0x666F8FA8),
-            panelScrim = Color(0xE6000000),
-            osdScrim = Color(0xB3000000),
-            nowLine = Color(0xFF9BB7CC),
-            nowFill = Color(0x336F8FA8),
-            live = Color(0xFF9BB7CC),
-            pipPreviewOutline = Color(0xFFB7C9D8),
-            focusFill = Color(0x336F8FA8),
-            textPrimary = Color(0xFFFFFFFF),
-            textSecondary = Color(0xCCFFFFFF),
-            textTertiary = Color(0x99FFFFFF),
-            textDisabled = Color(0x66FFFFFF),
-            success = Color(0xFF9BB7CC),
-            warning = Color(0xFFFFAA00),
-            info = Color(0xFFB7C9D8),
-            divider = Color(0x226F8FA8),
-            outline = Color(0x556F8FA8),
+            description = "Layered blue-gray steel with cool chrome highlights and soft signal-blue edges.",
+            surfaceDeep = Color(0xFF13212B),
+            surfaceBase = Color(0xFF1A2B37),
+            surfaceCool = Color(0xFF263A48),
+            surfaceAccent = Color(0xFF365163),
+            accent = Color(0xFF89A8BC),
+            accentLight = Color(0xFFD1DEE8),
+            accentMuted = Color(0x6689A8BC),
+            panelScrim = Color(0xE613212B),
+            osdScrim = Color(0xB313212B),
+            nowLine = Color(0xFFB8CEDD),
+            nowFill = Color(0x3389A8BC),
+            live = Color(0xFFB8CEDD),
+            pipPreviewOutline = Color(0xFFD1DEE8),
+            focusFill = Color(0x3389A8BC),
+            textPrimary = Color(0xFFF5FAFF),
+            textSecondary = Color(0xD9D8E7F0),
+            textTertiary = Color(0x99D8E7F0),
+            textDisabled = Color(0x66D8E7F0),
+            success = Color(0xFF9FC3D6),
+            warning = Color(0xFFE8B468),
+            info = Color(0xFFD1DEE8),
+            divider = Color(0x2289A8BC),
+            outline = Color(0x6689A8BC),
             glowIntensity = 0.35f,
         )
 
@@ -802,35 +802,32 @@ data class AppPalette(
             glowIntensity = 0.35f,
         )
 
-        /** All available presets, in display order. Afterglow Dark 1-4 first
-         *  in numerical order (Dark 2 is the default), then the gray
-         *  variant, then Afterglow Light 1-4, then the gray light, then the
-         *  generic-named bundles last. */
+        /** All available presets, alphabetized by display name for theme picker browsing. */
         val ALL: List<AppPalette> = listOf(
+            AmberNoir,            // Afterglow Amber Noir
+            CopperFjord,          // Afterglow Copper Fjord
             Afterglow1,           // Afterglow Dark 1
             AfterglowSunset,      // Afterglow Dark 2 — default
             Afterglow3,           // Afterglow Dark 3
             Afterglow4,           // Afterglow Dark 4
             AfterglowGray,        // Afterglow Gray (dark monochrome)
-            UltravioletSpectrum,  // Afterglow Violet Spectrum
-            CopperFjord,          // Afterglow Copper Fjord
-            AmberNoir,            // Afterglow Amber Noir
-            SunsetAurora,         // Rachel's Sunset (dark dedication palette)
+            AfterglowGrayLight,
             AfterglowLight1,
             AfterglowLight2,
             AfterglowLight3,
             AfterglowLight4,
-            AfterglowGrayLight,
-            RachelsSunsetLight,   // Rachel's Sunset Light
-            Vaporwave,
-            Synthwave,
-            NeonDusk,
-            MineralSlate,
-            GoldenSlate,
-            CyberPunk,
-            ForestMist,
-            PureOnyx,
+            UltravioletSpectrum,  // Afterglow Violet Spectrum
+            BlueSteel,
             ClassicBlue,
+            ForestMist,
+            GoldenSlate,
+            MineralSlate,
+            NeonDusk,
+            PureOnyx,
+            SunsetAurora,         // Rachel's Sunset
+            RachelsSunsetLight,   // Rachel's Sunset Light
+            Synthwave,
+            Vaporwave,
         )
 
         fun byId(id: String?): AppPalette = ALL.firstOrNull { it.id == id } ?: AfterglowSunset

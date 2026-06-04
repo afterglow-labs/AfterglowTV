@@ -137,6 +137,7 @@ class PreferencesRepository @Inject constructor(
         val ACTIVE_ADULT_VOD_SOURCE_ID = longPreferencesKey("active_adult_vod_source_id")
         val DEFAULT_VIEW_MODE = stringPreferencesKey("default_view_mode")
         val STARTUP_DESTINATION = stringPreferencesKey("startup_destination")
+        val STARTUP_DESTINATION_HOME_DEFAULT_MIGRATED = booleanPreferencesKey("startup_destination_home_default_migrated")
         val PARENTAL_CONTROL_LEVEL = intPreferencesKey("parental_control_level")
         val PARENTAL_V2_MIGRATED = booleanPreferencesKey("parental_v2_migrated")
         val LEGACY_PARENTAL_PIN = stringPreferencesKey("parental_pin")
@@ -558,6 +559,21 @@ class PreferencesRepository @Inject constructor(
     suspend fun setStartupDestination(destination: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.STARTUP_DESTINATION] = destination
+            preferences[PreferencesKeys.STARTUP_DESTINATION_HOME_DEFAULT_MIGRATED] = true
+        }
+    }
+
+    suspend fun migrateStartupDestinationToHomeDefault() {
+        context.dataStore.edit { preferences ->
+            if (preferences[PreferencesKeys.STARTUP_DESTINATION_HOME_DEFAULT_MIGRATED] == true) {
+                return@edit
+            }
+            if (preferences[PreferencesKeys.STARTUP_DESTINATION].isNullOrBlank() ||
+                preferences[PreferencesKeys.STARTUP_DESTINATION] == "iptv_guide"
+            ) {
+                preferences[PreferencesKeys.STARTUP_DESTINATION] = "home"
+            }
+            preferences[PreferencesKeys.STARTUP_DESTINATION_HOME_DEFAULT_MIGRATED] = true
         }
     }
 
@@ -1332,7 +1348,7 @@ class PreferencesRepository @Inject constructor(
     }
 
     val backgroundGradientsEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.BACKGROUND_GRADIENTS_ENABLED] ?: false
+        preferences[PreferencesKeys.BACKGROUND_GRADIENTS_ENABLED] ?: true
     }
 
     suspend fun setBackgroundGradientsEnabled(enabled: Boolean) {
@@ -1386,7 +1402,7 @@ class PreferencesRepository @Inject constructor(
             stylePill = preferences[PreferencesKeys.STYLE_PILL],
             styleFocus = preferences[PreferencesKeys.STYLE_FOCUS],
             styleProgress = preferences[PreferencesKeys.STYLE_PROGRESS],
-            backgroundGradientsEnabled = preferences[PreferencesKeys.BACKGROUND_GRADIENTS_ENABLED] ?: false,
+            backgroundGradientsEnabled = preferences[PreferencesKeys.BACKGROUND_GRADIENTS_ENABLED] ?: true,
             glowIntensity = preferences[PreferencesKeys.GLOW_INTENSITY]?.toFloatOrNull() ?: 1f,
             glowFocusSpecs = preferences[PreferencesKeys.GLOW_FOCUS_SPECS] ?: "",
             glowLiveSpecs = preferences[PreferencesKeys.GLOW_LIVE_SPECS] ?: "",

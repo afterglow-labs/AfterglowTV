@@ -62,14 +62,36 @@ class AppPaletteTest {
     }
 
     @Test
-    fun `blue steel replaces cyan cyber punk accent`() {
-        val palette = AppPalette.CyberPunk
+    fun `bundled themes are alphabetized by display name`() {
+        val displayNames = AppPalette.ALL.map { it.displayName }
+
+        assertThat(displayNames).containsExactlyElementsIn(
+            displayNames.sortedBy { it.lowercase() }
+        ).inOrder()
+    }
+
+    @Test
+    fun `blue steel uses blue steel surfaces instead of black surfaces`() {
+        val palette = AppPalette.BlueSteel
 
         assertThat(palette.displayName).contains("Steel")
         assertThat(palette.description.lowercase()).doesNotContain("cyan")
-        assertThat(palette.accent).isEqualTo(Color(0xFF6F8FA8))
+        assertThat(palette.description.lowercase()).doesNotContain("black")
+        assertThat(palette.accent).isEqualTo(Color(0xFF89A8BC))
         assertThat(palette.accent.green).isGreaterThan(palette.accent.red)
         assertThat(palette.accent.blue).isGreaterThan(palette.accent.green)
+        listOf(
+            palette.surfaceDeep,
+            palette.surfaceBase,
+            palette.surfaceCool,
+            palette.surfaceAccent,
+            palette.panelScrim,
+            palette.osdScrim,
+        ).forEach { color ->
+            assertThat(colorDistance(color, Color.Black)).isAtLeast(0.18f)
+            assertThat(color.blue).isGreaterThan(color.green)
+            assertThat(color.green).isGreaterThan(color.red)
+        }
     }
 
     @Test

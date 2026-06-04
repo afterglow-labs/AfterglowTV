@@ -1,8 +1,14 @@
 package com.afterglowtv.app.navigation
 
 import android.net.Uri
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
@@ -20,6 +26,7 @@ import androidx.navigation.navArgument
 import com.afterglowtv.app.R
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.store.StorePolicySnapshot
+import com.afterglowtv.app.store.amazon.AmazonAppstoreBridge
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Episode
@@ -29,6 +36,7 @@ import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.app.ui.screens.dashboard.DashboardScreen
+import com.afterglowtv.app.ui.components.dialogs.AmazonPremiumPurchaseDialog
 import com.afterglowtv.app.ui.screens.multiview.MultiViewScreen
 import com.afterglowtv.app.ui.screens.home.HomeScreen
 import com.afterglowtv.app.ui.screens.local.LocalMediaScreen
@@ -47,6 +55,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 private const val PLAYER_REQUEST_KEY = "player_request"
@@ -269,7 +279,28 @@ private fun NavHostController.navigateToExternalPlayer(request: PlayerNavigation
 class AppStartupDestinationViewModel @Inject constructor(
     preferencesRepository: PreferencesRepository
 ) : ViewModel() {
-    val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+    init {
+        viewModelScope.launch {
+            preferencesRepository.migrateStartupDestinationToHomeDefault()
+        }
+    }
+
+    val storedDeveloperModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = false
+        )
+
+    val developerModeEnabled: StateFlow<Boolean> = combine(
+        storedDeveloperModeEnabled,
+        AmazonAppstoreBridge.premiumEntitled
+    ) { storedDeveloperModeEnabled, amazonPremiumEntitled ->
+        StorePolicy.effectiveDeveloperModeEnabled(
+            storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+            amazonPremiumEntitled = amazonPremiumEntitled
+        )
+    }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000L),
@@ -295,7 +326,7 @@ class AppStartupDestinationViewModel @Inject constructor(
 }
 
 internal fun resolveStartupRoute(destination: StartupDestination, developerModeEnabled: Boolean): String =
-    resolveStartupRoute(destination, developerModeEnabled, StorePolicy.current)
+    resolveStartupRoute(destination, developerModeEnabled, StorePolicy.currentFor(developerModeEnabled))
 
 internal fun resolveStartupRoute(
     destination: StartupDestination,
@@ -303,6 +334,7 @@ internal fun resolveStartupRoute(
     policy: StorePolicySnapshot
 ): String =
     if (
+        (policy.guideOnlyReviewSurface && !isGuideOnlyAllowedRoute(destination.route)) ||
         (destination.requiresDeveloperMode && (!developerModeEnabled || !policy.showAdultSurfaces)) ||
         (destination.route == Routes.WELCOME && !policy.showWelcomeRoute)
     ) {
@@ -315,16 +347,77 @@ private fun isDeveloperLockedRoute(route: String): Boolean =
     route == Routes.ADULT
 
 private fun isStoreLockedRoute(route: String): Boolean =
-    route == Routes.ADULT && !StorePolicy.current.showAdultSurfaces
+    isStoreLockedRoute(route, developerModeEnabled = false)
+
+private fun isStoreLockedRoute(
+    route: String,
+    developerModeEnabled: Boolean,
+    policy: StorePolicySnapshot = StorePolicy.currentFor(developerModeEnabled)
+): Boolean {
+    return (policy.guideOnlyReviewSurface && !isGuideOnlyAllowedRoute(route)) ||
+        (route == Routes.ADULT && !policy.showAdultSurfaces)
+}
+
+private fun isGuideOnlyAllowedRoute(route: String): Boolean {
+    val baseRoute = route.substringBefore('?')
+    return baseRoute in setOf(
+        Routes.HOME,
+        Routes.LIVE_TV,
+        Routes.EPG,
+        Routes.PLAYER,
+        Routes.PROVIDER_SETUP.substringBefore('?'),
+        Routes.SETTINGS,
+        Routes.THEMES,
+        Routes.GLOW_SETTINGS,
+        Routes.STYLE_CUSTOMIZER
+    )
+}
 
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
     val navController = rememberNavController()
     val startupDestinationViewModel: AppStartupDestinationViewModel = hiltViewModel()
     val startupRoute = startupDestinationViewModel.startupRoute.collectAsStateWithLifecycle().value
-    val developerModeEnabled = startupDestinationViewModel.developerModeEnabled.collectAsStateWithLifecycle().value
+    val storedDeveloperModeEnabled = startupDestinationViewModel.storedDeveloperModeEnabled.collectAsStateWithLifecycle().value
+    val amazonPremiumEntitled = AmazonAppstoreBridge.premiumEntitled.collectAsStateWithLifecycle().value
+    var nowMs by remember { mutableLongStateOf(StorePolicy.currentTimeMillis()) }
+    val developerModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(
+        storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+        amazonPremiumEntitled = amazonPremiumEntitled,
+        nowMs = nowMs
+    )
+    val policy = StorePolicy.currentFor(
+        storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+        amazonPremiumEntitled = amazonPremiumEntitled,
+        nowMs = nowMs
+    )
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val externalNavigationRequest = mainActivity.externalNavigationRequestFlow.collectAsStateWithLifecycle().value
+    var premiumPurchaseDialogDismissed by remember { mutableStateOf(false) }
+    val shouldShowPremiumPurchaseOptions = StorePolicy.rawCurrent.shouldShowPremiumPurchaseOptions(
+        storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+        amazonPremiumEntitled = amazonPremiumEntitled,
+        nowMs = nowMs
+    )
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            nowMs = StorePolicy.currentTimeMillis()
+            delay(1_000L)
+        }
+    }
+
+    LaunchedEffect(policy.guideOnlyReviewSurface, currentBackStackEntry?.destination?.route, developerModeEnabled) {
+        val currentRoute = currentBackStackEntry?.destination?.route ?: return@LaunchedEffect
+        if (isStoreLockedRoute(currentRoute, developerModeEnabled, policy)) {
+            navController.navigate(Routes.EPG) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
+        }
+    }
 
     LaunchedEffect(externalNavigationRequest, currentBackStackEntry?.lifecycle?.currentState) {
         when (val request = externalNavigationRequest) {
@@ -336,7 +429,7 @@ fun AppNavigation(mainActivity: MainActivity) {
 
             is ExternalNavigationRequest.Destination -> {
                 val route = request.destination.toRoute()
-                if (isStoreLockedRoute(route) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
+                if (isStoreLockedRoute(route, developerModeEnabled, policy) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
                     mainActivity.clearExternalNavigationRequest()
                 } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
@@ -344,19 +437,28 @@ fun AppNavigation(mainActivity: MainActivity) {
             }
 
             is ExternalNavigationRequest.ImportM3u -> {
-                if (navController.navigateIfResumed(Routes.providerSetup(importUri = request.uri)) { launchSingleTop = true }) {
+                val route = Routes.providerSetup(importUri = request.uri)
+                if (isStoreLockedRoute(route, developerModeEnabled, policy)) {
+                    mainActivity.clearExternalNavigationRequest()
+                } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
                 }
             }
 
             is ExternalNavigationRequest.ImportBackup -> {
-                if (navController.navigateIfResumed(Routes.settings(backupUri = request.uri)) { launchSingleTop = true }) {
+                val route = Routes.settings(backupUri = request.uri)
+                if (isStoreLockedRoute(route, developerModeEnabled, policy)) {
+                    mainActivity.clearExternalNavigationRequest()
+                } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
                 }
             }
 
             is ExternalNavigationRequest.Search -> {
-                if (navController.navigateIfResumed(Routes.search(request.query)) { launchSingleTop = true }) {
+                val route = Routes.search(request.query)
+                if (isStoreLockedRoute(route, developerModeEnabled, policy)) {
+                    mainActivity.clearExternalNavigationRequest()
+                } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
                 }
             }
@@ -368,7 +470,7 @@ fun AppNavigation(mainActivity: MainActivity) {
     // NAV-M02/NAV-H02: Single helper replacing repeated tab lambdas without serializing
     // each tab's full UI tree into saved state on every switch.
     fun tabNavigate(route: String) {
-        if (isStoreLockedRoute(route) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
+        if (isStoreLockedRoute(route, developerModeEnabled, policy) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
             return
         }
         val entry = navController.currentBackStackEntry ?: return
@@ -385,10 +487,11 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = startupRoute
-    ) {
+    Box {
+        NavHost(
+            navController = navController,
+            startDestination = startupRoute
+        ) {
         composable(Routes.WELCOME) {
             WelcomeScreen(
                 onNavigateToHome = dropUnlessResumed {
@@ -577,7 +680,7 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
 
         composable(Routes.ADULT) {
-            if (!developerModeEnabled || !StorePolicy.current.showAdultSurfaces) {
+            if (!developerModeEnabled || !policy.showAdultSurfaces) {
                 LaunchedEffect(Unit) {
                     navController.navigate(Routes.HOME) {
                         launchSingleTop = true
@@ -804,6 +907,13 @@ fun AppNavigation(mainActivity: MainActivity) {
         composable(Routes.MULTI_VIEW) {
             MultiViewScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+        }
+
+        if (shouldShowPremiumPurchaseOptions && !premiumPurchaseDialogDismissed) {
+            AmazonPremiumPurchaseDialog(
+                onDismissRequest = { premiumPurchaseDialogDismissed = true }
             )
         }
     }

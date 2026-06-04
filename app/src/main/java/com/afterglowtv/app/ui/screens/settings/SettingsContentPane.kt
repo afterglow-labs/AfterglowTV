@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 
@@ -34,8 +35,13 @@ internal fun SettingsContentPane(
     onOpenUri: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val policy = StorePolicy.currentFor(uiState.developerModeEnabled)
+    val effectiveDeveloperModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(uiState.developerModeEnabled)
     val selectedCategory = dialogState.selectedCategory.takeIf {
-        it in visibleSettingsCategoryIds(developerModeEnabled = uiState.developerModeEnabled)
+        it in visibleSettingsCategoryIds(
+            policy = policy,
+            developerModeEnabled = effectiveDeveloperModeEnabled
+        )
     } ?: SETTINGS_CATEGORY_PROVIDERS
 
     LazyColumn(

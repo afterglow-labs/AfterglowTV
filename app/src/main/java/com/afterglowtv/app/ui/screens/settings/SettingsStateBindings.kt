@@ -185,7 +185,7 @@ internal fun observeSettingsPreferenceSnapshot(
             liveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.fromStorage(visibilityMode)
         )
     }.combine(preferencesRepository.developerModeEnabled) { snapshot, developerModeEnabled ->
-        snapshot.copy(developerModeEnabled = developerModeEnabled)
+        snapshot.copy(developerModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(developerModeEnabled))
     }.combine(preferencesRepository.showAdultTab) { snapshot, showAdultTab ->
         snapshot.copy(showAdultTab = showAdultTab)
     }.combine(preferencesRepository.liveChannelNumberingMode) { snapshot, liveChannelNumberingMode ->

@@ -20,7 +20,7 @@ object AppColors {
         private set
 
     /** Whether large app backdrops should use blended gradients instead of solid surfaces. */
-    var backgroundGradientsEnabled: Boolean by mutableStateOf(false)
+    var backgroundGradientsEnabled: Boolean by mutableStateOf(true)
         private set
 
     /** Swap the active palette. Triggers a Compose recomposition. */

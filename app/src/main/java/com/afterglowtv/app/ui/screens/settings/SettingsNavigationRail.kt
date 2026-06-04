@@ -44,6 +44,16 @@ internal fun visibleSettingsCategoryIds(
     policy: StorePolicySnapshot = StorePolicy.current,
     developerModeEnabled: Boolean = false
 ): List<Int> = buildList {
+    if (policy.guideOnlyReviewSurface && !developerModeEnabled) {
+        add(SETTINGS_CATEGORY_PROVIDERS)
+        add(SETTINGS_CATEGORY_PLAYBACK)
+        add(SETTINGS_CATEGORY_BROWSING)
+        add(SETTINGS_CATEGORY_PRIVACY)
+        add(SETTINGS_CATEGORY_BACKUP)
+        add(SETTINGS_CATEGORY_EPG_SOURCES)
+        add(SETTINGS_CATEGORY_ABOUT)
+        return@buildList
+    }
     add(SETTINGS_CATEGORY_PROVIDERS)
     add(SETTINGS_CATEGORY_PROVIDERS_VOD)
     add(SETTINGS_CATEGORY_PLAYBACK)
@@ -73,9 +83,11 @@ internal fun SettingsNavigationRail(
     onCategorySelected: (Int) -> Unit,
     onNavigate: (String) -> Unit = {},
 ) {
+    val policy = StorePolicy.currentFor(developerModeEnabled)
+    val effectiveDeveloperModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(developerModeEnabled)
     val visibleCategoryIds = visibleSettingsCategoryIds(
-        policy = StorePolicy.current,
-        developerModeEnabled = developerModeEnabled
+        policy = policy,
+        developerModeEnabled = effectiveDeveloperModeEnabled
     )
     val entries = listOf(
         SettingsNavEntry(
@@ -136,38 +148,42 @@ internal fun SettingsNavigationRail(
         contentPadding = PaddingValues(top = 76.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        item {
-            SettingsNavItem(
-                label = stringResource(R.string.settings_providers),
-                badgeIcon = Icons.Default.Settings,
-                accentColor = Primary,
-                isSelected = false,
-                onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS) }
-            )
+        if (SETTINGS_CATEGORY_PROVIDERS in visibleCategoryIds) {
+            item {
+                SettingsNavItem(
+                    label = stringResource(R.string.settings_providers),
+                    badgeIcon = Icons.Default.Settings,
+                    accentColor = Primary,
+                    isSelected = false,
+                    onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS) }
+                )
+            }
+            item {
+                SettingsNavItem(
+                    label = "Live TV",
+                    badgeIcon = Icons.Default.PlayArrow,
+                    accentColor = Primary,
+                    isSelected = selectedCategory == SETTINGS_CATEGORY_PROVIDERS,
+                    modifier = if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS) Modifier.focusRequester(focusRequester) else Modifier,
+                    indent = 28.dp,
+                    compact = true,
+                    onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS) }
+                )
+            }
         }
-        item {
-            SettingsNavItem(
-                label = "Live TV",
-                badgeIcon = Icons.Default.PlayArrow,
-                accentColor = Primary,
-                isSelected = selectedCategory == SETTINGS_CATEGORY_PROVIDERS,
-                modifier = if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS) Modifier.focusRequester(focusRequester) else Modifier,
-                indent = 28.dp,
-                compact = true,
-                onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS) }
-            )
-        }
-        item {
-            SettingsNavItem(
-                label = "VOD",
-                badgeIcon = Icons.Default.Star,
-                accentColor = Color(0xFFFFA64D),
-                isSelected = selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD,
-                modifier = if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD) Modifier.focusRequester(focusRequester) else Modifier,
-                indent = 28.dp,
-                compact = true,
-                onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS_VOD) }
-            )
+        if (SETTINGS_CATEGORY_PROVIDERS_VOD in visibleCategoryIds) {
+            item {
+                SettingsNavItem(
+                    label = "VOD",
+                    badgeIcon = Icons.Default.Star,
+                    accentColor = Color(0xFFFFA64D),
+                    isSelected = selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD,
+                    modifier = if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD) Modifier.focusRequester(focusRequester) else Modifier,
+                    indent = 28.dp,
+                    compact = true,
+                    onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS_VOD) }
+                )
+            }
         }
         items(entries, key = { it.categoryId }) { entry ->
             SettingsNavItem(
@@ -181,10 +197,21 @@ internal fun SettingsNavigationRail(
         }
         item {
             SettingsNavItem(
+                label = "Appearance",
+                badgeIcon = Icons.Default.Star,
+                accentColor = Color(0xFFFF77FF),
+                isSelected = false,
+                onClick = { onNavigate(com.afterglowtv.app.navigation.Routes.THEMES) },
+            )
+        }
+        item {
+            SettingsNavItem(
                 label = "Themes",
                 badgeIcon = Icons.Default.Star,
                 accentColor = Color(0xFFFF77FF),
                 isSelected = false,
+                indent = 28.dp,
+                compact = true,
                 onClick = { onNavigate(com.afterglowtv.app.navigation.Routes.THEMES) },
             )
         }

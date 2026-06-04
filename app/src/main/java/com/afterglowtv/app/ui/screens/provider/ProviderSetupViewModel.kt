@@ -91,6 +91,13 @@ class ProviderSetupViewModel @Inject constructor(
                     .toSet()
             }
         }
+        viewModelScope.launch {
+            preferencesRepository.developerModeEnabled.collect { developerModeEnabled ->
+                _uiState.update {
+                    it.copy(developerModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(developerModeEnabled))
+                }
+            }
+        }
     }
 
     fun loadProvider(id: Long) {
@@ -370,7 +377,9 @@ class ProviderSetupViewModel @Inject constructor(
                     m3uPlaylistKind = _uiState.value.m3uPlaylistKind,
                     existingProviderId = existingId,
                     epgUrl = epgUrl.takeIf { it.isNotBlank() },
-                    allowXtreamPlaylistAutoDetection = StorePolicy.current.allowXtreamPlaylistAutoDetection
+                    allowXtreamPlaylistAutoDetection = StorePolicy.currentFor(
+                        _uiState.value.developerModeEnabled
+                    ).allowXtreamPlaylistAutoDetection
                 ),
                 onProgress = { msg -> _uiState.update { it.copy(syncProgress = msg) } }
             )) {
@@ -751,6 +760,7 @@ data class ProviderSetupState(
     val xtreamFastSyncEnabled: Boolean = true,
     val xtreamLiveSyncMode: ProviderXtreamLiveSyncMode = ProviderXtreamLiveSyncMode.AUTO,
     val hasCustomizedEpgSyncMode: Boolean = false,
+    val developerModeEnabled: Boolean = false,
     val m3uPlaylistKind: ProviderM3uPlaylistKind = ProviderM3uPlaylistKind.LIVE,
     // Opt-in only. A plain M3U playlist should be treated as Live TV unless the
     // user explicitly asks AfterglowTV to classify VOD/movie-looking entries.

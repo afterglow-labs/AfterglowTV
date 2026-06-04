@@ -106,7 +106,12 @@ internal enum class ProviderSetupSourceType {
 }
 
 internal fun visibleProviderSetupSourceTypes(policy: StorePolicySnapshot): List<ProviderSetupSourceType> =
-    if (policy.showAdvancedSourceTypes) {
+    if (policy.guideOnlyReviewSurface) {
+        listOf(
+            ProviderSetupSourceType.PLAYLIST_URL,
+            ProviderSetupSourceType.PLAYLIST_FILE
+        )
+    } else if (policy.showAdvancedSourceTypes) {
         listOf(
             ProviderSetupSourceType.SERVER_LOGIN,
             ProviderSetupSourceType.PORTAL_LOGIN,
@@ -152,10 +157,11 @@ fun ProviderSetupScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val knownLocalM3uUrls by viewModel.knownLocalM3uUrls.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val storePolicy = StorePolicy.current
+    val storePolicy = StorePolicy.currentFor(uiState.developerModeEnabled)
     val visibleSourceTypes = remember(storePolicy) {
         visibleProviderSetupSourceTypes(storePolicy).map { it.toUiSourceType() }.toSet()
     }
+    val allowM3uPlaylistTypeSelection = !storePolicy.guideOnlyReviewSurface
     val coroutineScope = rememberCoroutineScope()
     var appFilesDir by remember { mutableStateOf<java.io.File?>(null) }
 
@@ -255,6 +261,13 @@ fun ProviderSetupScreen(
         selectedTab = 2
         viewModel.updateM3uTab(0)
         viewModel.updateM3uPlaylistKind(playlistKind)
+    }
+
+    LaunchedEffect(allowM3uPlaylistTypeSelection) {
+        if (!allowM3uPlaylistTypeSelection) {
+            viewModel.updateM3uPlaylistKind(ProviderM3uPlaylistKind.LIVE)
+            viewModel.updateM3uVodClassificationEnabled(false)
+        }
     }
 
     LaunchedEffect(uiState.backupImportSuccess) {
@@ -533,6 +546,7 @@ fun ProviderSetupScreen(
                         onAddM3u = { viewModel.addM3u(m3uUrl, name, httpUserAgent, httpHeaders, m3uEpgUrl) },
                         onSetM3uPlaylistKind = viewModel::updateM3uPlaylistKind,
                         onSetM3uVodClassificationEnabled = viewModel::updateM3uVodClassificationEnabled,
+                        allowM3uPlaylistTypeSelection = allowM3uPlaylistTypeSelection,
                         onToggleXtreamFastSync = { viewModel.updateXtreamFastSyncEnabled(!uiState.xtreamFastSyncEnabled) },
                         onSelectEpgSyncMode = viewModel::updateEpgSyncMode,
                         onSelectXtreamLiveSyncMode = viewModel::updateXtreamLiveSyncMode,
@@ -576,6 +590,7 @@ fun ProviderSetupScreen(
                         onAddM3u = { viewModel.addM3u(m3uUrl, name, httpUserAgent, httpHeaders, m3uEpgUrl) },
                         onSetM3uPlaylistKind = viewModel::updateM3uPlaylistKind,
                         onSetM3uVodClassificationEnabled = viewModel::updateM3uVodClassificationEnabled,
+                        allowM3uPlaylistTypeSelection = allowM3uPlaylistTypeSelection,
                         onToggleXtreamFastSync = { viewModel.updateXtreamFastSyncEnabled(!uiState.xtreamFastSyncEnabled) },
                         onSelectEpgSyncMode = viewModel::updateEpgSyncMode,
                         onSelectXtreamLiveSyncMode = viewModel::updateXtreamLiveSyncMode,
@@ -729,6 +744,7 @@ private fun ProviderFormContent(
     onAddM3u: () -> Unit,
     onSetM3uPlaylistKind: (ProviderM3uPlaylistKind) -> Unit,
     onSetM3uVodClassificationEnabled: (Boolean) -> Unit,
+    allowM3uPlaylistTypeSelection: Boolean,
     onToggleXtreamFastSync: () -> Unit,
     onSelectEpgSyncMode: (ProviderEpgSyncMode) -> Unit,
     onSelectXtreamLiveSyncMode: (ProviderXtreamLiveSyncMode) -> Unit,
@@ -939,10 +955,12 @@ private fun ProviderFormContent(
                                 }
 
                                 SourceType.M3U_URL -> {
-                                    M3uPlaylistTypeSelector(
-                                        selectedType = m3uPlaylistFormType,
-                                        onSelect = ::selectM3uPlaylistFormType
-                                    )
+                                    if (allowM3uPlaylistTypeSelection) {
+                                        M3uPlaylistTypeSelector(
+                                            selectedType = m3uPlaylistFormType,
+                                            onSelect = ::selectM3uPlaylistFormType
+                                        )
+                                    }
                                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         com.afterglowtv.app.ui.components.ClipboardPasteButton(
                                             onPaste = { onM3uUrlChange(it) },
@@ -988,10 +1006,12 @@ private fun ProviderFormContent(
                                 }
 
                                 SourceType.M3U_FILE -> {
-                                    M3uPlaylistTypeSelector(
-                                        selectedType = m3uPlaylistFormType,
-                                        onSelect = ::selectM3uPlaylistFormType
-                                    )
+                                    if (allowM3uPlaylistTypeSelection) {
+                                        M3uPlaylistTypeSelector(
+                                            selectedType = m3uPlaylistFormType,
+                                            onSelect = ::selectM3uPlaylistFormType
+                                        )
+                                    }
                                     FileSelectorCard(
                                         fileName = if (m3uUrl.startsWith("file://")) m3uUrl.substringAfterLast("/") else null,
                                         fileSelectedHint = androidx.compose.ui.res.stringResource(R.string.setup_file_replace_hint),

@@ -29,6 +29,7 @@ import com.afterglowtv.app.ui.theme.*
 import com.afterglowtv.domain.model.Provider
 import androidx.compose.ui.res.stringResource
 import com.afterglowtv.app.R
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.design.requestFocusSafely
 import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import kotlinx.coroutines.delay
@@ -166,9 +167,12 @@ fun SettingsScreen(
     }
 
     LaunchedEffect(uiState.developerModeEnabled, dialogState.selectedCategory) {
+        val policy = StorePolicy.currentFor(uiState.developerModeEnabled)
+        val effectiveDeveloperModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(uiState.developerModeEnabled)
         if (
             dialogState.selectedCategory !in visibleSettingsCategoryIds(
-                developerModeEnabled = uiState.developerModeEnabled
+                policy = policy,
+                developerModeEnabled = effectiveDeveloperModeEnabled
             )
         ) {
             dialogState.selectedCategory = SETTINGS_CATEGORY_PROVIDERS

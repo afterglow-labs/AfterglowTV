@@ -68,6 +68,12 @@
 -keep class androidx.media3.exoplayer.DefaultRenderersFactory { *; }
 -dontwarn androidx.media3.**
 
+# ── Amazon Appstore SDK / Fire IAP + DRM ───────────────────
+-keep class com.amazon.device.iap.** { *; }
+-keep class com.amazon.device.drm.** { *; }
+-keep class com.afterglowtv.app.store.amazon.AmazonAppstoreBridge { *; }
+-dontwarn com.amazon.**
+
 # ── Coroutines ──────────────────────────────────────────────
 -keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
 -keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}

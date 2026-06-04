@@ -73,7 +73,7 @@ class ThemePickerViewModel @Inject constructor(
     val backgroundGradientsEnabled = preferences.backgroundGradientsEnabled.stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
-        false,
+        true,
     )
 
     fun select(palette: AppPalette) {
