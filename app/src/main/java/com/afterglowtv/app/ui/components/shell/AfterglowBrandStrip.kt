@@ -19,8 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
@@ -94,16 +99,16 @@ fun AfterglowBackdrop(modifier: Modifier = Modifier) {
 }
 
 /**
- * Compact horizontal brand strip — logo + "Afterglow / [wordmark]" + tagline.
+ * Compact horizontal brand strip — logo + "AfterglowTV / [wordmark]" + tagline.
  *
- * Use at the top of a screen's content area to anchor the Afterglow identity
+ * Use at the top of a screen's content area to anchor the AfterglowTV identity
  * without consuming much vertical space. ~88dp tall.
  *
  * For full-screen splash/settings hero, use [AfterglowHero] instead.
  *
- * @param wordmark The accent half of the title (e.g. "Themes", "Movies",
+ * @param wordmark The accent half of the title (e.g. "Themes", "VOD",
  *     "Series", "Live TV", "Guide", "Settings"). Rendered in accent color
- *     beside "Afterglow".
+ *     beside "AfterglowTV".
  * @param tagline One-line subtitle in Afterglow voice.
  * @param logoSize 40-64dp. Defaults to 48dp for compact use.
  */
@@ -113,6 +118,7 @@ fun AfterglowBrandStrip(
     tagline: String,
     modifier: Modifier = Modifier,
     logoSize: Dp = 48.dp,
+    showBrandName: Boolean = true,
 ) {
     Row(
         modifier = modifier,
@@ -135,28 +141,41 @@ fun AfterglowBrandStrip(
         )
         Column {
             Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = "Afterglow",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = TextUnit(28f, TextUnitType.Sp),
-                    ),
-                    color = AppColors.TextPrimary,
-                )
-                Spacer(Modifier.size(10.dp))
-                Text(
-                    text = wordmark,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = TextUnit(24f, TextUnitType.Sp),
-                    ),
-                    color = AppColors.TiviAccent,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(2.dp))
-                        .afterglow(
-                            specs = listOf(GlowSpec(AppColors.TiviAccent, 8.dp, 0.45f)),
+                if (showBrandName) {
+                    AfterglowWordmarkText(
+                        text = "AfterglowTV",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(28f, TextUnitType.Sp),
                         ),
+                    )
+                    Spacer(Modifier.size(10.dp))
+                }
+                val wordmarkStyle = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = TextUnit(if (showBrandName) 24f else 28f, TextUnitType.Sp),
                 )
+                val wordmarkModifier = Modifier
+                    .clip(RoundedCornerShape(2.dp))
+                    .afterglow(
+                        specs = listOf(GlowSpec(AppColors.TiviAccent, 8.dp, 0.45f)),
+                    )
+                if (wordmark.isAfterglowWordmark()) {
+                    AfterglowWordmarkText(
+                        text = "AfterglowTV",
+                        style = wordmarkStyle.copy(
+                            fontWeight = FontWeight.Bold,
+                        ),
+                        modifier = wordmarkModifier,
+                    )
+                } else {
+                    Text(
+                        text = wordmark,
+                        style = wordmarkStyle,
+                        color = AppColors.TiviAccent,
+                        modifier = wordmarkModifier,
+                    )
+                }
             }
             if (tagline.isNotBlank()) {
                 Text(
@@ -171,7 +190,7 @@ fun AfterglowBrandStrip(
 
 /**
  * Full-screen hero block — [AfterglowBackdrop] + centered logo + large
- * "Afterglow / [wordmark]" + tagline. For Welcome and major settings screens
+ * "AfterglowTV / [wordmark]" + tagline. For Welcome and major settings screens
  * that should feel premium and identity-forward.
  *
  * Pass [content] to render slot children below the hero header (e.g. a
@@ -208,13 +227,12 @@ fun AfterglowHero(
             )
             Spacer(Modifier.size(20.dp))
             Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = "Afterglow",
+                AfterglowWordmarkText(
+                    text = "AfterglowTV",
                     style = MaterialTheme.typography.displayMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = TextUnit(52f, TextUnitType.Sp),
                     ),
-                    color = AppColors.TextPrimary,
                 )
                 Spacer(Modifier.size(12.dp))
                 Text(
@@ -243,3 +261,49 @@ fun AfterglowHero(
         }
     }
 }
+
+@Composable
+private fun AfterglowWordmarkText(
+    text: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    color: Color = AppColors.TextPrimary,
+) {
+    val glowStart = text.indexOf("glow", ignoreCase = true)
+    if (glowStart < 0) {
+        Text(
+            text = text,
+            style = style,
+            color = color,
+            modifier = modifier,
+        )
+        return
+    }
+
+    val glowEnd = glowStart + "glow".length
+    Text(
+        text = buildAnnotatedString {
+            append(text.substring(0, glowStart))
+            withStyle(
+                SpanStyle(
+                    brush = Brush.linearGradient(
+                        listOf(
+                            Color(0xFFFF7A38),
+                            Color(0xFFFF3FAE),
+                            Color(0xFF8B5CFF),
+                        )
+                    )
+                )
+            ) {
+                append(text.substring(glowStart, glowEnd))
+            }
+            append(text.substring(glowEnd))
+        },
+        style = style,
+        color = color,
+        modifier = modifier,
+    )
+}
+
+private fun String.isAfterglowWordmark(): Boolean =
+    filterNot { it.isWhitespace() }.equals("AfterglowTV", ignoreCase = true)

@@ -72,8 +72,8 @@ android {
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
-            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "false")
-            buildConfigField("String", "HIDDEN_FALLBACK_SOURCE_SPECS", "\"\"")
+            buildConfigField("boolean", "ENABLE_BUNDLED_PUBLIC_SOURCE", "false")
+            buildConfigField("String", "BUNDLED_PUBLIC_SOURCE_SPECS", "\"\"")
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "true")
             buildConfigField("boolean", "ENABLE_DVR", "true")
@@ -91,11 +91,11 @@ android {
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
-            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "true")
+            buildConfigField("boolean", "ENABLE_BUNDLED_PUBLIC_SOURCE", "true")
             buildConfigField(
                 "String",
-                "HIDDEN_FALLBACK_SOURCE_SPECS",
-                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::Free, Authorized Public M3U Playlist::LIVE::false\""
+                "BUNDLED_PUBLIC_SOURCE_SPECS",
+                "\"public_sources/playlist_usa.m3u8::afterglow_public_live.m3u8::Free, Authorized Public M3U Playlist::LIVE::false::afterglow_public_live.xml\""
             )
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
@@ -117,11 +117,11 @@ android {
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
-            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "true")
+            buildConfigField("boolean", "ENABLE_BUNDLED_PUBLIC_SOURCE", "true")
             buildConfigField(
                 "String",
-                "HIDDEN_FALLBACK_SOURCE_SPECS",
-                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::Free, Authorized Public M3U Playlist::LIVE::false\""
+                "BUNDLED_PUBLIC_SOURCE_SPECS",
+                "\"public_sources/playlist_usa.m3u8::afterglow_public_live.m3u8::Free, Authorized Public M3U Playlist::LIVE::false::afterglow_public_live.xml\""
             )
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
@@ -145,8 +145,8 @@ android {
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
             buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
-            buildConfigField("boolean", "ENABLE_HIDDEN_FALLBACK_SOURCE", "false")
-            buildConfigField("String", "HIDDEN_FALLBACK_SOURCE_SPECS", "\"\"")
+            buildConfigField("boolean", "ENABLE_BUNDLED_PUBLIC_SOURCE", "false")
+            buildConfigField("String", "BUNDLED_PUBLIC_SOURCE_SPECS", "\"\"")
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
             buildConfigField("boolean", "ENABLE_DVR", "true")

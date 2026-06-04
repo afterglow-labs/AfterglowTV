@@ -159,6 +159,7 @@ class PreferencesRepository @Inject constructor(
         val STYLE_PROGRESS = stringPreferencesKey("style_progress")
         val BACKGROUND_GRADIENTS_ENABLED = booleanPreferencesKey("background_gradients_enabled")
         val DASHBOARD_WELCOME_SEEN = booleanPreferencesKey("dashboard_welcome_seen")
+        val BUNDLED_PUBLIC_SOURCE_SEEDED = booleanPreferencesKey("bundled_public_source_seeded")
         val GLOW_INTENSITY = stringPreferencesKey("glow_intensity")
         val GLOW_FOCUS_SPECS = stringPreferencesKey("glow_focus_specs")
         val GLOW_LIVE_SPECS = stringPreferencesKey("glow_live_specs")
@@ -1365,6 +1366,16 @@ class PreferencesRepository @Inject constructor(
     suspend fun setDashboardWelcomeSeen(seen: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.DASHBOARD_WELCOME_SEEN] = seen
+        }
+    }
+
+    val bundledPublicSourceSeeded: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.BUNDLED_PUBLIC_SOURCE_SEEDED] ?: false
+    }
+
+    suspend fun setBundledPublicSourceSeeded(seeded: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.BUNDLED_PUBLIC_SOURCE_SEEDED] = seeded
         }
     }
 

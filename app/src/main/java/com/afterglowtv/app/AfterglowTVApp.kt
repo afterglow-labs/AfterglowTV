@@ -12,7 +12,7 @@ import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import com.afterglowtv.app.diagnostics.CrashReportStore
 import com.afterglowtv.app.diagnostics.RuntimeDiagnosticsManager
-import com.afterglowtv.app.store.HiddenFallbackSourceSeeder
+import com.afterglowtv.app.store.BundledPublicSourceSeeder
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.store.amazon.AmazonAppstoreBridge
@@ -66,12 +66,12 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         AmazonAppstoreBridge.initialize(this)
         applySavedVisualPreferencesBeforeUi()
         repairDeveloperModeAdultVisibility()
-        if (StorePolicy.current.enableHiddenFallbackSource) {
+        if (StorePolicy.current.enableBundledPublicSource) {
             applicationScope.launch {
                 runCatching {
-                    startupEntryPoint().hiddenFallbackSourceSeeder().seedIfNeeded()
+                    startupEntryPoint().bundledPublicSourceSeeder().seedIfNeeded()
                 }.onFailure { error ->
-                    Log.w(TAG, "Unable to seed hidden fallback source", error)
+                    Log.w(TAG, "Unable to seed bundled public source", error)
                 }
             }
         }
@@ -331,6 +331,6 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
     interface StartupEntryPoint {
         fun preferencesRepository(): PreferencesRepository
         fun gitHubReleaseChecker(): GitHubReleaseChecker
-        fun hiddenFallbackSourceSeeder(): HiddenFallbackSourceSeeder
+        fun bundledPublicSourceSeeder(): BundledPublicSourceSeeder
     }
 }

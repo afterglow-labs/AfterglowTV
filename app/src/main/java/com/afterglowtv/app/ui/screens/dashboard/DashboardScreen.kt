@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.Border
 import androidx.tv.material3.Button
@@ -216,10 +217,11 @@ private fun HomeCommandHub(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         AfterglowBrandStrip(
-            wordmark = "Jump back in",
-            tagline = providerName?.let { "Connected to $it." } ?: "Set up sources or jump straight into the guide.",
+            wordmark = "AfterglowTV",
+            tagline = "Home Screen",
             modifier = Modifier.fillMaxWidth(),
-            logoSize = 40.dp
+            logoSize = 40.dp,
+            showBrandName = false
         )
         Row(
             modifier = Modifier.weight(1f),
@@ -327,7 +329,7 @@ private fun HomeWatchWindow(
     modifier: Modifier = Modifier
 ) {
     HomeWindow(
-        title = "Watch",
+        title = "Jump back in",
         subtitle = "Fast routes into playback.",
         accent = Color(0xFF60A5FA),
         modifier = modifier
@@ -513,7 +515,7 @@ private fun HomeQuickWindow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Quick",
+                    text = "Quick Settings",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = TextPrimary,
                     maxLines = 1
@@ -756,7 +758,10 @@ private fun HomeSmallTextAction(
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp
+                    ),
                     color = OnSurfaceDim,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -287,18 +286,11 @@ private fun TopNavigationBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleSmall,
-                color = AppColors.TextPrimary,
-                modifier = Modifier.wrapContentWidth(Alignment.Start)
-            )
-            Spacer(modifier = Modifier.width(32.dp)) // Increased spacing to prevent overlap
             Row(
                 modifier = Modifier
                     .weight(1f)
                     .horizontalScroll(scrollState)
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 2.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items.forEach { item ->

@@ -410,7 +410,7 @@ fun AppNavigation(mainActivity: MainActivity) {
     LaunchedEffect(policy.guideOnlyReviewSurface, currentBackStackEntry?.destination?.route, developerModeEnabled) {
         val currentRoute = currentBackStackEntry?.destination?.route ?: return@LaunchedEffect
         if (isStoreLockedRoute(currentRoute, developerModeEnabled, policy)) {
-            navController.navigate(Routes.EPG) {
+            navController.navigate(Routes.HOME) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = false
                 }

@@ -242,7 +242,7 @@ class StorePolicyTest {
                 developerModeEnabled = false,
                 policy = StorePolicySnapshot.amazon
             )
-        ).isEqualTo(Routes.EPG)
+        ).isEqualTo(Routes.HOME)
         assertThat(
             resolveStartupRoute(
                 destination = StartupDestination.LIVE_TV,
@@ -263,7 +263,7 @@ class StorePolicyTest {
                 developerModeEnabled = false,
                 policy = StorePolicySnapshot.amazon
             )
-        ).isEqualTo(Routes.EPG)
+        ).isEqualTo(Routes.HOME)
         val lockedRoute = resolveStartupRoute(
             destination = StartupDestination.ADULT,
             developerModeEnabled = false,
@@ -278,112 +278,113 @@ class StorePolicyTest {
             )
         )
 
-        assertThat(lockedRoute).isEqualTo(Routes.EPG)
+        assertThat(lockedRoute).isEqualTo(Routes.HOME)
         assertThat(route).isEqualTo(Routes.ADULT)
     }
 
     @Test
-    fun `amazon bundled fallback source is visible in user source lists`() {
-        val fallback = provider(
-            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
+    fun `amazon bundled public source is visible in user source lists`() {
+        val bundled = provider(
+            m3uUrl = "file:///data/user/0/com.afterglow.tv.fire/files/bundled_public_sources/afterglow_public_live.m3u8"
         )
         val userProvider = provider(id = 2L, m3uUrl = "https://example.test/user.m3u8")
 
-        val visibleProviders = listOf(fallback, userProvider)
+        val visibleProviders = listOf(bundled, userProvider)
             .filter { StorePolicySnapshot.amazon.isUserVisibleProvider(it) }
 
-        assertThat(visibleProviders).containsExactly(fallback, userProvider).inOrder()
+        assertThat(visibleProviders).containsExactly(bundled, userProvider).inOrder()
     }
 
     @Test
-    fun `amazon should seed fallback only when no source exists`() {
-        val fallback = provider(
-            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
+    fun `amazon should seed bundled public source only before first seed and when no source exists`() {
+        val bundled = provider(
+            m3uUrl = "file:///data/user/0/com.afterglow.tv.fire/files/bundled_public_sources/afterglow_public_live.m3u8"
         )
         val userProvider = provider(id = 2L, m3uUrl = "https://example.test/user.m3u8")
 
-        assertThat(StorePolicySnapshot.amazon.shouldEnsureHiddenFallback(emptyList())).isTrue()
-        assertThat(StorePolicySnapshot.amazon.shouldEnsureHiddenFallback(listOf(fallback))).isFalse()
-        assertThat(StorePolicySnapshot.amazon.shouldEnsureHiddenFallback(listOf(fallback, userProvider))).isFalse()
+        assertThat(StorePolicySnapshot.amazon.shouldSeedBundledPublicSource(emptyList(), seededOnce = false)).isTrue()
+        assertThat(StorePolicySnapshot.amazon.shouldSeedBundledPublicSource(emptyList(), seededOnce = true)).isFalse()
+        assertThat(StorePolicySnapshot.amazon.shouldSeedBundledPublicSource(listOf(bundled), seededOnce = false)).isFalse()
+        assertThat(StorePolicySnapshot.amazon.shouldSeedBundledPublicSource(listOf(bundled, userProvider), seededOnce = false)).isFalse()
     }
 
     @Test
-    fun `amazon fallback source uses bundled playlists instead of remote url`() {
+    fun `amazon bundled public source uses included playlist and generated guide`() {
         val policy = StorePolicySnapshot.amazon
 
-        assertThat(policy.hiddenFallbackSources.map { it.assetPath }).containsExactly(
-            "amazon_fallback/playlist_usa.m3u8"
+        assertThat(policy.bundledPublicSources.map { it.playlistAssetPath }).containsExactly(
+            "public_sources/playlist_usa.m3u8"
         )
-        assertThat(policy.hiddenFallbackSources.map { it.providerFileName }).containsExactly(
-            "afterglow_amazon_live.m3u8"
+        assertThat(policy.bundledPublicSources.map { it.playlistFileName }).containsExactly(
+            "afterglow_public_live.m3u8"
         )
-        assertThat(policy.hiddenFallbackSources.map { it.providerName }).containsExactly(
+        assertThat(policy.bundledPublicSources.map { it.providerName }).containsExactly(
             "Free, Authorized Public M3U Playlist"
         )
-        assertThat(policy.hiddenFallbackSources.map { it.sourceSlot }).containsExactly(
+        assertThat(policy.bundledPublicSources.map { it.sourceSlot }).containsExactly(
             ProviderSourceSlot.LIVE
         )
-        assertThat(policy.hiddenFallbackSources.map { it.m3uVodClassificationEnabled }).containsExactly(
+        assertThat(policy.bundledPublicSources.map { it.m3uVodClassificationEnabled }).containsExactly(
             false
+        )
+        assertThat(policy.bundledPublicSources.map { it.guideFileName }).containsExactly(
+            "afterglow_public_live.xml"
         )
     }
 
     @Test
-    fun `amazon fallback repairs stale active source when no user source exists`() {
-        val fallback = provider(
+    fun `amazon bundled source repairs stale active source when no user source exists`() {
+        val bundled = provider(
             id = 2L,
-            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglow.tv.fire/files/bundled_public_sources/afterglow_public_live.m3u8"
         )
 
         assertThat(
-            shouldUseHiddenFallbackSourceForSlot(
-                policy = StorePolicySnapshot.amazon,
-                providers = listOf(fallback),
+            shouldUseBundledPublicSourceForSlot(
+                providers = listOf(bundled),
                 currentSource = ActiveLiveSource.ProviderSource(1L),
-                fallbackProviderId = fallback.id
+                bundledProviderId = bundled.id
             )
         ).isTrue()
     }
 
     @Test
-    fun `amazon fallback keeps matching active source when no user source exists`() {
-        val fallback = provider(
+    fun `amazon bundled source keeps matching active source when no user source exists`() {
+        val bundled = provider(
             id = 2L,
-            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglow.tv.fire/files/bundled_public_sources/afterglow_public_live.m3u8"
         )
 
         assertThat(
-            shouldUseHiddenFallbackSourceForSlot(
-                policy = StorePolicySnapshot.amazon,
-                providers = listOf(fallback),
-                currentSource = ActiveLiveSource.ProviderSource(fallback.id),
-                fallbackProviderId = fallback.id
+            shouldUseBundledPublicSourceForSlot(
+                providers = listOf(bundled),
+                currentSource = ActiveLiveSource.ProviderSource(bundled.id),
+                bundledProviderId = bundled.id
             )
         ).isFalse()
     }
 
     @Test
-    fun `amazon fallback keeps user source active`() {
+    fun `amazon bundled source keeps user source active`() {
         val userProvider = provider(id = 7L, m3uUrl = "https://example.test/user.m3u8")
 
         assertThat(
-            shouldUseHiddenFallbackSourceForSlot(
-                policy = StorePolicySnapshot.amazon,
+            shouldUseBundledPublicSourceForSlot(
                 providers = listOf(userProvider),
                 currentSource = ActiveLiveSource.ProviderSource(userProvider.id),
-                fallbackProviderId = 2L
+                bundledProviderId = 2L
             )
         ).isFalse()
     }
 
     @Test
-    fun `amazon bundled fallback playlists avoid automatic epg discovery`() {
-        assertThat(amazonAsset("playlist_usa.m3u8").readText()).doesNotContain("x-tvg-url")
+    fun `amazon bundled public playlist avoids automatic epg discovery`() {
+        assertThat(publicSourceAsset("playlist_usa.m3u8").readText()).doesNotContain("x-tvg-url")
     }
 
     @Test
-    fun `amazon bundled live fallback contains known public channels`() {
-        val livePlaylist = amazonAsset("playlist_usa.m3u8").readText()
+    fun `amazon bundled public playlist contains known public channels`() {
+        val livePlaylist = publicSourceAsset("playlist_usa.m3u8").readText()
 
         assertThat(livePlaylist).contains("30A TV Classic Movies")
         assertThat(livePlaylist).contains("30a-tv.com/feeds/pzaz/30atvmovies.m3u8")
@@ -397,8 +398,8 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `amazon bundled live fallback excludes unsupported or review risk sources`() {
-        val livePlaylist = amazonAsset("playlist_usa.m3u8").readText()
+    fun `amazon bundled public playlist excludes unsupported or review risk sources`() {
+        val livePlaylist = publicSourceAsset("playlist_usa.m3u8").readText()
 
         assertThat(livePlaylist).doesNotContain("NASA TV")
         assertThat(livePlaylist).doesNotContain("ntv1.akamaized.net")
@@ -444,8 +445,8 @@ class StorePolicyTest {
             m3uUrl = m3uUrl
         )
 
-    private fun amazonAsset(fileName: String): File =
-        File("src/amazon/assets/amazon_fallback/$fileName")
+    private fun publicSourceAsset(fileName: String): File =
+        File("src/amazon/assets/public_sources/$fileName")
 
     private fun utcMs(value: String): Long = Instant.parse(value).toEpochMilli()
 }

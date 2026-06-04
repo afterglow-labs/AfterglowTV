@@ -204,11 +204,10 @@ class DashboardViewModel @Inject constructor(
         }.combine(observeUpdateNotice().onStart { emit(null) }) { snapshot, updateNotice ->
             snapshot.copy(updateNotice = updateNotice)
         }.combine(syncManager.syncStateForProvider(provider.id).onStart { emit(SyncState.Idle) }) { snapshot, syncState ->
-            val visibleProvider = provider.takeUnless(StorePolicy.current::isHiddenFallbackProvider)
-            val providerDisplayName = visibleProvider?.name ?: appContext.getString(R.string.app_name)
+            val providerDisplayName = provider.name
             DashboardUiState(
                 provider = provider,
-                showProviderChrome = visibleProvider != null,
+                showProviderChrome = true,
                 favoriteChannels = snapshot.shelves.favoriteChannels,
                 recentChannels = snapshot.shelves.recentChannels,
                 continueWatching = snapshot.shelves.continueWatching,
@@ -228,7 +227,7 @@ class DashboardViewModel @Inject constructor(
                     continueWatching = snapshot.shelves.continueWatching,
                     continueWatchingDegraded = snapshot.shelves.continueWatchingDegraded
                 ),
-                providerHealth = visibleProvider?.let {
+                providerHealth = provider.let {
                     DashboardProviderHealth(
                         status = it.status,
                         type = it.type,
