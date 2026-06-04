@@ -39,11 +39,53 @@ data class StorePolicySnapshot(
     fun isPremiumPreviewFree(nowMs: Long): Boolean =
         premiumPreviewFreeUntilEpochMs <= 0L || nowMs < premiumPreviewFreeUntilEpochMs
 
+    fun isPremiumPreviewActive(nowMs: Long): Boolean =
+        isFeatureReleaseUnlocked(nowMs) && isPremiumPreviewFree(nowMs)
+
+    fun isPremiumPaymentRequired(nowMs: Long): Boolean =
+        dateUnlocksHiddenFeatures &&
+            featureReleaseUnlockEpochMs > 0L &&
+            premiumPreviewFreeUntilEpochMs > 0L &&
+            nowMs >= premiumPreviewFreeUntilEpochMs
+
     fun effectiveDeveloperModeEnabled(storedDeveloperModeEnabled: Boolean, nowMs: Long): Boolean =
-        storedDeveloperModeEnabled || isFeatureReleaseUnlocked(nowMs)
+        effectiveDeveloperModeEnabled(
+            storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+            amazonPremiumEntitled = false,
+            nowMs = nowMs
+        )
+
+    fun effectiveDeveloperModeEnabled(
+        storedDeveloperModeEnabled: Boolean,
+        amazonPremiumEntitled: Boolean,
+        nowMs: Long
+    ): Boolean =
+        storedDeveloperModeEnabled ||
+            (amazonReviewBuild && (amazonPremiumEntitled || isPremiumPreviewActive(nowMs)))
+
+    fun shouldShowPremiumPurchaseOptions(
+        storedDeveloperModeEnabled: Boolean,
+        amazonPremiumEntitled: Boolean,
+        nowMs: Long
+    ): Boolean =
+        amazonReviewBuild &&
+            isPremiumPaymentRequired(nowMs) &&
+            !storedDeveloperModeEnabled &&
+            !amazonPremiumEntitled
 
     fun effectiveFor(storedDeveloperModeEnabled: Boolean, nowMs: Long): StorePolicySnapshot =
-        if (amazonReviewBuild && effectiveDeveloperModeEnabled(storedDeveloperModeEnabled, nowMs)) {
+        effectiveFor(
+            storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+            amazonPremiumEntitled = false,
+            nowMs = nowMs
+        )
+
+    fun effectiveFor(
+        storedDeveloperModeEnabled: Boolean,
+        amazonPremiumEntitled: Boolean,
+        nowMs: Long
+    ): StorePolicySnapshot =
+        if (amazonReviewBuild && effectiveDeveloperModeEnabled(storedDeveloperModeEnabled, amazonPremiumEntitled, nowMs)) {
             copy(
                 showAdvancedSourceTypes = true,
                 showAdultSurfaces = true,
@@ -168,17 +210,56 @@ data class StorePolicySnapshot(
 }
 
 object StorePolicy {
+    @Volatile
+    private var amazonPremiumEntitledForProcess = false
+
     val current: StorePolicySnapshot
-        get() = StorePolicySnapshot.current
+        get() = currentFor(storedDeveloperModeEnabled = false)
 
     val rawCurrent: StorePolicySnapshot
         get() = StorePolicySnapshot.rawCurrent
 
     fun currentTimeMillis(): Long = System.currentTimeMillis()
 
+    fun setAmazonPremiumEntitledForProcess(entitled: Boolean) {
+        amazonPremiumEntitledForProcess = entitled
+    }
+
+    fun isAmazonPremiumEntitledForProcess(): Boolean = amazonPremiumEntitledForProcess
+
     fun currentFor(storedDeveloperModeEnabled: Boolean, nowMs: Long = currentTimeMillis()): StorePolicySnapshot =
-        rawCurrent.effectiveFor(storedDeveloperModeEnabled, nowMs)
+        currentFor(
+            storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+            amazonPremiumEntitled = amazonPremiumEntitledForProcess,
+            nowMs = nowMs
+        )
+
+    fun currentFor(
+        storedDeveloperModeEnabled: Boolean,
+        amazonPremiumEntitled: Boolean,
+        nowMs: Long = currentTimeMillis()
+    ): StorePolicySnapshot =
+        rawCurrent.effectiveFor(
+            storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+            amazonPremiumEntitled = amazonPremiumEntitled,
+            nowMs = nowMs
+        )
 
     fun effectiveDeveloperModeEnabled(storedDeveloperModeEnabled: Boolean, nowMs: Long = currentTimeMillis()): Boolean =
-        rawCurrent.effectiveDeveloperModeEnabled(storedDeveloperModeEnabled, nowMs)
+        effectiveDeveloperModeEnabled(
+            storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+            amazonPremiumEntitled = amazonPremiumEntitledForProcess,
+            nowMs = nowMs
+        )
+
+    fun effectiveDeveloperModeEnabled(
+        storedDeveloperModeEnabled: Boolean,
+        amazonPremiumEntitled: Boolean,
+        nowMs: Long = currentTimeMillis()
+    ): Boolean =
+        rawCurrent.effectiveDeveloperModeEnabled(
+            storedDeveloperModeEnabled = storedDeveloperModeEnabled,
+            amazonPremiumEntitled = amazonPremiumEntitled,
+            nowMs = nowMs
+        )
 }
