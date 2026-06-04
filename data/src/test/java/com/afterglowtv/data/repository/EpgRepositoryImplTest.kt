@@ -41,6 +41,7 @@ import com.afterglowtv.domain.repository.EpgSourceRepository
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.zip.GZIPOutputStream
@@ -322,6 +323,39 @@ class EpgRepositoryImplTest {
         val insertedPrograms = argumentCaptor<List<ProgramEntity>>()
         verify(programDao, atLeastOnce()).insertAll(insertedPrograms.capture())
         assertThat(insertedPrograms.allValues.flatten().map { it.title }).contains("CDN Morning News")
+    }
+
+    @Test
+    fun `refreshEpg imports file url without using OkHttp`() = runTest {
+        val guide = File.createTempFile("afterglow-provider-guide", ".xml").apply {
+            writeText(
+                """
+                <tv>
+                  <programme channel="local.one" start="20260101000000 +0000" stop="20260101010000 +0000">
+                    <title>Local File News</title>
+                  </programme>
+                </tv>
+                """.trimIndent()
+            )
+            deleteOnExit()
+        }
+        val okHttpClient: OkHttpClient = mock()
+        val repository = EpgRepositoryImpl(
+            programDao = programDao,
+            providerDao = providerDao,
+            xmltvParser = XmltvParser(),
+            okHttpClient = okHttpClient,
+            transactionRunner = transactionRunner,
+            epgSourceRepository = epgSourceRepository
+        )
+
+        val result = repository.refreshEpg(7L, guide.toURI().toString())
+
+        assertThat(result.isSuccess).isTrue()
+        val insertedPrograms = argumentCaptor<List<ProgramEntity>>()
+        verify(programDao, atLeastOnce()).insertAll(insertedPrograms.capture())
+        assertThat(insertedPrograms.allValues.flatten().map { it.title }).contains("Local File News")
+        verify(okHttpClient, never()).newBuilder()
     }
 
     @Test

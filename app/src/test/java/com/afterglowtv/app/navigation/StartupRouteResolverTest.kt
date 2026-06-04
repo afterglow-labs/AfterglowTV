@@ -8,9 +8,14 @@ class StartupRouteResolverTest {
     @Test
     fun `startup route uses configured destination without provider setup redirect`() {
         assertThat(resolveStartupRoute(StartupDestination.HOME, developerModeEnabled = false)).isEqualTo(Routes.HOME)
+        assertThat(resolveStartupRoute(StartupDestination.LIVE_TV, developerModeEnabled = false)).isEqualTo(Routes.LIVE_TV)
         assertThat(resolveStartupRoute(StartupDestination.IPTV_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.EPG)
-        assertThat(resolveStartupRoute(StartupDestination.VOD_CONTAINER, developerModeEnabled = false)).isEqualTo(Routes.VOD_CONTAINER)
-        assertThat(resolveStartupRoute(StartupDestination.PERSONAL_GUIDE, developerModeEnabled = false)).isEqualTo(Routes.LOCAL_MEDIA)
+        assertThat(resolveStartupRoute(StartupDestination.VOD_CONTAINER, developerModeEnabled = false)).isEqualTo(
+            if (StorePolicy.current.guideOnlyReviewSurface) Routes.HOME else Routes.VOD_CONTAINER
+        )
+        assertThat(resolveStartupRoute(StartupDestination.PERSONAL_GUIDE, developerModeEnabled = false)).isEqualTo(
+            if (StorePolicy.current.guideOnlyReviewSurface) Routes.HOME else Routes.LOCAL_MEDIA
+        )
         assertThat(resolveStartupRoute(StartupDestination.ADULT, developerModeEnabled = true)).isEqualTo(
             if (StorePolicy.current.showAdultSurfaces) Routes.ADULT else Routes.HOME
         )
@@ -26,10 +31,19 @@ class StartupRouteResolverTest {
         assertThat(StartupDestination.visibleEntries(developerModeEnabled = false)).doesNotContain(
             StartupDestination.ADULT
         )
-        assertThat(StartupDestination.visibleEntries(developerModeEnabled = false)).containsAtLeast(
-            StartupDestination.VOD_CONTAINER,
-            StartupDestination.PERSONAL_GUIDE
-        )
+        if (StorePolicy.current.guideOnlyReviewSurface) {
+            assertThat(StartupDestination.visibleEntries(developerModeEnabled = false)).containsExactly(
+                StartupDestination.HOME,
+                StartupDestination.LIVE_TV,
+                StartupDestination.IPTV_GUIDE,
+                StartupDestination.SETTINGS
+            ).inOrder()
+        } else {
+            assertThat(StartupDestination.visibleEntries(developerModeEnabled = false)).containsAtLeast(
+                StartupDestination.VOD_CONTAINER,
+                StartupDestination.PERSONAL_GUIDE
+            )
+        }
         val developerModeEntries = StartupDestination.visibleEntries(developerModeEnabled = true)
         if (StorePolicy.current.showAdultSurfaces) {
             assertThat(developerModeEntries).contains(StartupDestination.ADULT)

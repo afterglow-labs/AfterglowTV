@@ -86,7 +86,22 @@ class TopTabsChromeTest {
             policy = StorePolicySnapshot.amazon
         )
 
-        assertThat(tabs.map { it.id }).containsExactly("live_tv", "epg", "settings").inOrder()
-        assertThat(tabs.map { it.label }).containsExactly("Live TV", "TV Guide", "Settings").inOrder()
+        assertThat(tabs.map { it.id }).containsExactly("home", "live_tv", "epg", "settings").inOrder()
+        assertThat(tabs.map { it.label }).containsExactly("Home", "Live TV", "TV Guide", "Settings").inOrder()
+    }
+
+    @Test
+    fun `unlocked amazon review surface keeps vod label`() {
+        val tabs = defaultTopTabs(
+            developerModeEnabled = true,
+            showAdultTab = true,
+            policy = StorePolicySnapshot.amazon.effectiveFor(
+                storedDeveloperModeEnabled = true,
+                nowMs = 0L
+            )
+        )
+
+        assertThat(tabs.single { it.id == "vod_container" }.label).isEqualTo("VOD")
+        assertThat(tabs.map { it.label }).doesNotContain("Video")
     }
 }

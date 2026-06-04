@@ -23,7 +23,7 @@ enum class StartupDestination(
 
         fun visibleEntries(developerModeEnabled: Boolean): List<StartupDestination> {
             val policy = StorePolicy.currentFor(developerModeEnabled)
-            if (policy.guideOnlyReviewSurface) return listOf(LIVE_TV, IPTV_GUIDE, SETTINGS)
+            if (policy.guideOnlyReviewSurface) return listOf(HOME, LIVE_TV, IPTV_GUIDE, SETTINGS)
             return entries.filter {
                 (developerModeEnabled || !it.requiresDeveloperMode) &&
                     (policy.showAdultSurfaces || !it.requiresDeveloperMode)
@@ -37,10 +37,11 @@ enum class StartupDestination(
             val policy = StorePolicy.currentFor(developerModeEnabled)
             if (policy.guideOnlyReviewSurface) {
                 return when (destination) {
+                    HOME,
                     LIVE_TV,
                     IPTV_GUIDE,
                     SETTINGS -> destination
-                    else -> IPTV_GUIDE
+                    else -> HOME
                 }
             }
             return if (

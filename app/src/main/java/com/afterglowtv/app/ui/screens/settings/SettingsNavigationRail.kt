@@ -46,6 +46,12 @@ internal fun visibleSettingsCategoryIds(
 ): List<Int> = buildList {
     if (policy.guideOnlyReviewSurface && !developerModeEnabled) {
         add(SETTINGS_CATEGORY_PROVIDERS)
+        add(SETTINGS_CATEGORY_PLAYBACK)
+        add(SETTINGS_CATEGORY_BROWSING)
+        add(SETTINGS_CATEGORY_PRIVACY)
+        add(SETTINGS_CATEGORY_BACKUP)
+        add(SETTINGS_CATEGORY_EPG_SOURCES)
+        add(SETTINGS_CATEGORY_ABOUT)
         return@buildList
     }
     add(SETTINGS_CATEGORY_PROVIDERS)
@@ -79,7 +85,6 @@ internal fun SettingsNavigationRail(
 ) {
     val policy = StorePolicy.currentFor(developerModeEnabled)
     val effectiveDeveloperModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(developerModeEnabled)
-    val reviewSafeSurface = policy.guideOnlyReviewSurface && !effectiveDeveloperModeEnabled
     val visibleCategoryIds = visibleSettingsCategoryIds(
         policy = policy,
         developerModeEnabled = effectiveDeveloperModeEnabled
@@ -180,17 +185,24 @@ internal fun SettingsNavigationRail(
                 )
             }
         }
-        if (!reviewSafeSurface) {
-            items(entries, key = { it.categoryId }) { entry ->
-                SettingsNavItem(
-                    label = entry.label,
-                    badgeIcon = entry.icon,
-                    accentColor = entry.accent,
-                    isSelected = selectedCategory == entry.categoryId,
-                    modifier = if (selectedCategory == entry.categoryId) Modifier.focusRequester(focusRequester) else Modifier,
-                    onClick = { onCategorySelected(entry.categoryId) }
-                )
-            }
+        items(entries, key = { it.categoryId }) { entry ->
+            SettingsNavItem(
+                label = entry.label,
+                badgeIcon = entry.icon,
+                accentColor = entry.accent,
+                isSelected = selectedCategory == entry.categoryId,
+                modifier = if (selectedCategory == entry.categoryId) Modifier.focusRequester(focusRequester) else Modifier,
+                onClick = { onCategorySelected(entry.categoryId) }
+            )
+        }
+        item {
+            SettingsNavItem(
+                label = "Appearance",
+                badgeIcon = Icons.Default.Star,
+                accentColor = Color(0xFFFF77FF),
+                isSelected = false,
+                onClick = { onNavigate(com.afterglowtv.app.navigation.Routes.THEMES) },
+            )
         }
         item {
             SettingsNavItem(
@@ -198,6 +210,8 @@ internal fun SettingsNavigationRail(
                 badgeIcon = Icons.Default.Star,
                 accentColor = Color(0xFFFF77FF),
                 isSelected = false,
+                indent = 28.dp,
+                compact = true,
                 onClick = { onNavigate(com.afterglowtv.app.navigation.Routes.THEMES) },
             )
         }

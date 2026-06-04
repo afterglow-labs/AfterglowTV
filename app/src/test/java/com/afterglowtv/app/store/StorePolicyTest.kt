@@ -385,13 +385,11 @@ class StorePolicyTest {
     fun `amazon bundled live fallback contains known public channels`() {
         val livePlaylist = amazonAsset("playlist_usa.m3u8").readText()
 
-        assertThat(livePlaylist).contains("NASA TV")
-        assertThat(livePlaylist).contains("ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8")
         assertThat(livePlaylist).contains("30A TV Classic Movies")
         assertThat(livePlaylist).contains("30a-tv.com/feeds/pzaz/30atvmovies.m3u8")
         assertThat(livePlaylist).contains("Classic Arts Showcase")
         assertThat(livePlaylist).contains("classicarts.akamaized.net/hls/live/1024257/CAS/master.m3u8")
-        assertThat(livePlaylist).contains("Afterglow Music Demo")
+        assertThat(livePlaylist).contains("Boni Records")
         assertThat(livePlaylist).contains("Access Media Productions Channel")
         assertThat(livePlaylist).contains("Access Nashua")
         assertThat(livePlaylist).contains("AccuWeather Now")
@@ -402,6 +400,9 @@ class StorePolicyTest {
     fun `amazon bundled live fallback excludes unsupported or review risk sources`() {
         val livePlaylist = amazonAsset("playlist_usa.m3u8").readText()
 
+        assertThat(livePlaylist).doesNotContain("NASA TV")
+        assertThat(livePlaylist).doesNotContain("ntv1.akamaized.net")
+        assertThat(livePlaylist).doesNotContain("Afterglow Demo")
         assertThat(livePlaylist).doesNotContain("3catdirectes.cat")
         assertThat(livePlaylist).doesNotContain("ztnr.rtve.es")
         assertThat(livePlaylist).doesNotContain("ADN TV+")

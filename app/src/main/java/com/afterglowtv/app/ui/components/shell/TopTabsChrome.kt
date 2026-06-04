@@ -34,6 +34,7 @@ fun defaultTopTabs(
     policy: StorePolicySnapshot = StorePolicy.currentFor(developerModeEnabled)
 ): List<TopTab> = buildList {
     if (policy.guideOnlyReviewSurface) {
+        add(TopTab("home", "Home"))
         add(TopTab("live_tv", "Live TV"))
         add(TopTab("epg", "TV Guide"))
         add(TopTab("settings", "Settings"))
@@ -42,7 +43,7 @@ fun defaultTopTabs(
     add(TopTab("home", "Home"))
     add(TopTab("live_tv", "Live TV"))
     add(TopTab("epg", if (policy.amazonReviewBuild) "TV Guide" else "IPTV Guide"))
-    add(TopTab("vod_container", if (policy.amazonReviewBuild) "Video" else "VOD"))
+    add(TopTab("vod_container", "VOD"))
     if (policy.showAdultSurfaces && developerModeEnabled && showAdultTab) {
         add(TopTab("adult", "Adult"))
     }

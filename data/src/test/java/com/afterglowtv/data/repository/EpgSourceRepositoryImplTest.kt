@@ -27,6 +27,7 @@ import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.model.ProviderType
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.flowOf
@@ -49,6 +50,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoMoreInteractions
@@ -345,6 +347,60 @@ class EpgSourceRepositoryImplTest {
         verify(epgProgrammeDao).moveToSource(-10L, 10L)
         verify(epgSourceDao, times(2)).delete(-10L)
         verify(epgSourceDao).updateRefreshSuccess(eq(10L), any())
+    }
+
+    @Test
+    fun `refreshSource imports file url without using OkHttp`() = runTest {
+        val guide = File.createTempFile("afterglow-source-guide", ".xml").apply {
+            writeText(
+                """
+                <tv>
+                  <channel id="local.one">
+                    <display-name>Local One</display-name>
+                  </channel>
+                  <programme channel="local.one" start="20260101000000 +0000" stop="20260101010000 +0000">
+                    <title>Local File Guide</title>
+                  </programme>
+                </tv>
+                """.trimIndent()
+            )
+            deleteOnExit()
+        }
+        val source = EpgSourceEntity(
+            id = 10L,
+            name = "Local",
+            url = guide.toURI().toString(),
+            lastRefreshAt = 0L
+        )
+        val repositoryWithRealParser = EpgSourceRepositoryImpl(
+            context = context,
+            epgSourceDao = epgSourceDao,
+            providerEpgSourceDao = providerEpgSourceDao,
+            providerDao = providerDao,
+            channelEpgMappingDao = channelEpgMappingDao,
+            epgChannelDao = epgChannelDao,
+            epgProgrammeDao = epgProgrammeDao,
+            xmltvParser = XmltvParser(),
+            okHttpClient = okHttpClient,
+            resolutionEngine = resolutionEngine,
+            preferencesRepository = preferencesRepository,
+            transactionRunner = transactionRunner
+        )
+
+        whenever(epgSourceDao.getById(10L)).thenReturn(source)
+        whenever(providerEpgSourceDao.getProviderIdsForSourceSync(10L)).thenReturn(emptyList())
+
+        val result = repositoryWithRealParser.refreshSource(10L)
+
+        assertThat(result is Result.Success).isTrue()
+        val channelCaptor = argumentCaptor<List<EpgChannelEntity>>()
+        val programmeCaptor = argumentCaptor<List<EpgProgrammeEntity>>()
+        verify(epgChannelDao).insertAll(channelCaptor.capture())
+        verify(epgProgrammeDao).insertAll(programmeCaptor.capture())
+        assertThat(channelCaptor.firstValue.single().displayName).isEqualTo("Local One")
+        assertThat(programmeCaptor.firstValue.single().title).isEqualTo("Local File Guide")
+        verify(okHttpClient, never()).newCall(any())
+        verify(contentResolver, never()).openInputStream(any())
     }
 
     @Test

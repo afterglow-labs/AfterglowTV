@@ -5,13 +5,11 @@ import org.junit.Test
 
 class DashboardStatePolicyTest {
     @Test
-    fun `empty provider prompt is hidden while dashboard is still loading`() {
+    fun `dashboard only shows loading while provider state is unsettled`() {
         val loadingState = DashboardUiState(provider = null, isLoading = true)
         val settledEmptyState = DashboardUiState(provider = null, isLoading = false)
 
         assertThat(shouldShowDashboardLoadingState(loadingState)).isTrue()
-        assertThat(shouldShowDashboardEmptyState(loadingState)).isFalse()
         assertThat(shouldShowDashboardLoadingState(settledEmptyState)).isFalse()
-        assertThat(shouldShowDashboardEmptyState(settledEmptyState)).isTrue()
     }
 }

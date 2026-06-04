@@ -44,8 +44,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.File
 import java.io.FilterInputStream
 import java.io.IOException
+import java.net.URI
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 import com.afterglowtv.data.remote.NetworkTimeoutConfig
@@ -238,6 +241,19 @@ class EpgSourceRepositoryImpl @Inject constructor(
                             epgSourceDao.updateRefreshError(sourceId, err)
                             return@withLock Result.error(err)
                         }
+                } else if (source.url.toLocalFileOrNull() != null) {
+                    val localFile = source.url.toLocalFileOrNull()!!
+                    if (!localFile.exists()) {
+                        val err = "Local EPG file not found"
+                        epgSourceDao.updateRefreshError(sourceId, err)
+                        return@withLock Result.error(err)
+                    }
+                    if (localFile.length() > MAX_EPG_SIZE_BYTES) {
+                        val err = "File too large (${localFile.length() / 1_048_576}MB)"
+                        epgSourceDao.updateRefreshError(sourceId, err)
+                        return@withLock Result.error(err)
+                    }
+                    localFile.inputStream()
                 } else {
                     // Disable OkHttp's transparent gzip by requesting identity encoding.
                     // This prevents double-decompression when the URL ends in .gz:
@@ -602,5 +618,11 @@ class EpgSourceRepositoryImpl @Inject constructor(
                 null
             }
         }
+    }
+
+    private fun String.toLocalFileOrNull(): File? {
+        val uri = runCatching { URI(trim()) }.getOrNull() ?: return null
+        if (uri.scheme?.lowercase(Locale.ROOT) != "file") return null
+        return runCatching { File(uri) }.getOrNull()
     }
 }

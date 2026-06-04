@@ -81,6 +81,7 @@ class UrlSecurityPolicyTest {
         assertThat(UrlSecurityPolicy.validateOptionalEpgUrl("")).isNull()
         assertThat(UrlSecurityPolicy.validateOptionalEpgUrl("http://epg.example.com/guide.xml")).isNull()
         assertThat(UrlSecurityPolicy.validateOptionalEpgUrl("https://epg.example.com/guide.xml")).isNull()
+        assertThat(UrlSecurityPolicy.validateOptionalEpgUrl("file:///storage/emulated/0/guide.xml")).isNull()
         assertThat(UrlSecurityPolicy.validateOptionalEpgUrl("content://downloads/public_downloads/guide.xml")).isNull()
         assertThat(UrlSecurityPolicy.validateOptionalEpgUrl("ftp://epg.example.com/guide.xml"))
             .isEqualTo("EPG URLs must use HTTP, HTTPS, or select a local file.")

@@ -824,6 +824,7 @@ private fun buildDestinationItems(
     policy: StorePolicySnapshot = StorePolicy.current
 ): List<DestinationItem> = buildList {
     if (policy.guideOnlyReviewSurface) {
+        add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))
         add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
         add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
         add(DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings))

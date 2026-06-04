@@ -56,6 +56,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 private const val PLAYER_REQUEST_KEY = "player_request"
@@ -278,6 +279,12 @@ private fun NavHostController.navigateToExternalPlayer(request: PlayerNavigation
 class AppStartupDestinationViewModel @Inject constructor(
     preferencesRepository: PreferencesRepository
 ) : ViewModel() {
+    init {
+        viewModelScope.launch {
+            preferencesRepository.migrateStartupDestinationToHomeDefault()
+        }
+    }
+
     val storedDeveloperModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
         .stateIn(
             scope = viewModelScope,
@@ -331,7 +338,7 @@ internal fun resolveStartupRoute(
         (destination.requiresDeveloperMode && (!developerModeEnabled || !policy.showAdultSurfaces)) ||
         (destination.route == Routes.WELCOME && !policy.showWelcomeRoute)
     ) {
-        if (policy.guideOnlyReviewSurface) Routes.EPG else Routes.HOME
+        Routes.HOME
     } else {
         destination.route
     }
@@ -354,6 +361,7 @@ private fun isStoreLockedRoute(
 private fun isGuideOnlyAllowedRoute(route: String): Boolean {
     val baseRoute = route.substringBefore('?')
     return baseRoute in setOf(
+        Routes.HOME,
         Routes.LIVE_TV,
         Routes.EPG,
         Routes.PLAYER,

@@ -3,6 +3,7 @@ package com.afterglowtv.app.ui.screens.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.BuildConfig
+import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
 import com.afterglowtv.data.preferences.PreferencesRepository
@@ -28,8 +29,6 @@ import com.afterglowtv.domain.usecase.ContinueWatchingResult
 import com.afterglowtv.domain.usecase.ContinueWatchingScope
 import com.afterglowtv.domain.usecase.GetContinueWatching
 import com.afterglowtv.domain.usecase.GetCustomCategories
-import com.afterglowtv.domain.manager.RecordingManager
-import com.afterglowtv.domain.model.RecordingStatus
 import android.content.Context
 import com.afterglowtv.app.R
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -67,8 +66,7 @@ class DashboardViewModel @Inject constructor(
     private val getContinueWatching: GetContinueWatching,
     private val getCustomCategories: GetCustomCategories,
     private val syncManager: SyncManager,
-    private val appUpdateInstaller: AppUpdateInstaller,
-    private val recordingManager: RecordingManager
+    private val appUpdateInstaller: AppUpdateInstaller
 ) : ViewModel() {
     private companion object {
         const val FAVORITE_CHANNEL_LIMIT = 12
@@ -81,33 +79,48 @@ class DashboardViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
-    private val _recordingChannelIds = MutableStateFlow<Set<Long>>(emptySet())
-    val recordingChannelIds: StateFlow<Set<Long>> = _recordingChannelIds.asStateFlow()
+    val startupDestination: StateFlow<StartupDestination> = preferencesRepository.startupDestination
+        .map(StartupDestination::fromStorage)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, StartupDestination.default)
 
-    private val _scheduledChannelIds = MutableStateFlow<Set<Long>>(emptySet())
-    val scheduledChannelIds: StateFlow<Set<Long>> = _scheduledChannelIds.asStateFlow()
+    val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
+        .map(StorePolicy::effectiveDeveloperModeEnabled)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    /** Tracks whether the first-launch Home welcome card has already been shown. */
-    val welcomeSeen: StateFlow<Boolean> = preferencesRepository.dashboardWelcomeSeen
+    val remoteDpadChannelZapping: StateFlow<Boolean> = preferencesRepository.remoteDpadChannelZapping
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
-    fun markWelcomeSeen() {
+    val remoteDpadInvertChannelZapping: StateFlow<Boolean> = preferencesRepository.remoteDpadInvertChannelZapping
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val remoteShowInfoOnZap: StateFlow<Boolean> = preferencesRepository.remoteShowInfoOnZap
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setStartupDestination(destination: StartupDestination) {
         viewModelScope.launch {
-            preferencesRepository.setDashboardWelcomeSeen(true)
+            preferencesRepository.setStartupDestination(destination.storageValue)
+        }
+    }
+
+    fun setRemoteDpadChannelZapping(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setRemoteDpadChannelZapping(enabled)
+        }
+    }
+
+    fun setRemoteDpadInvertChannelZapping(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setRemoteDpadInvertChannelZapping(enabled)
+        }
+    }
+
+    fun setRemoteShowInfoOnZap(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setRemoteShowInfoOnZap(enabled)
         }
     }
 
     init {
-        viewModelScope.launch {
-            recordingManager.observeRecordingItems().collect { items ->
-                _recordingChannelIds.value = items
-                    .filter { it.status == RecordingStatus.RECORDING }
-                    .map { it.channelId }.toSet()
-                _scheduledChannelIds.value = items
-                    .filter { it.status == RecordingStatus.SCHEDULED }
-                    .map { it.channelId }.toSet()
-            }
-        }
         viewModelScope.launch {
             combine(
                 combinedM3uRepository.getActiveLiveSource(),
@@ -168,27 +181,18 @@ class DashboardViewModel @Inject constructor(
         liveProviderIds: List<Long>,
         combinedProfileId: Long?
     ): Flow<DashboardUiState> {
-        val contentShelves = combine(
-            observeFavoriteChannels(liveProviderIds).onStart { emit(emptyList()) },
-            observeRecentChannels(liveProviderIds).onStart { emit(emptyList()) },
-            observeContinueWatching(liveProviderIds.toSet()).onStart { emit(ContinueWatchingShelf()) }
-        ) { favoriteChannels, recentChannels, continueWatchingShelf ->
+        val contentShelves = flowOf(
             DashboardContentShelves(
-                favoriteChannels = favoriteChannels,
-                recentChannels = recentChannels,
-                continueWatching = continueWatchingShelf.items,
-                continueWatchingDegraded = continueWatchingShelf.isDegraded
+                favoriteChannels = emptyList(),
+                recentChannels = emptyList(),
+                continueWatching = emptyList()
             )
-        }
+        )
+        val liveContext = flowOf(DashboardLiveContext(lastVisitedCategory = null, shortcuts = emptyList()))
 
         return combine(
             contentShelves,
-            buildLiveContext(
-                providerIds = liveProviderIds,
-                lastVisitedProviderId = provider.id.takeIf { combinedProfileId == null }
-            ).onStart {
-                emit(DashboardLiveContext(lastVisitedCategory = null, shortcuts = emptyList()))
-            },
+            liveContext,
             observeLiveChannelCount(liveProviderIds).onStart { emit(0) }
         ) { shelves, liveContext, liveChannelCount ->
             DashboardSnapshot(
