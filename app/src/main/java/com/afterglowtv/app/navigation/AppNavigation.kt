@@ -354,8 +354,10 @@ private fun isStoreLockedRoute(
 private fun isGuideOnlyAllowedRoute(route: String): Boolean {
     val baseRoute = route.substringBefore('?')
     return baseRoute in setOf(
+        Routes.LIVE_TV,
         Routes.EPG,
         Routes.PLAYER,
+        Routes.PROVIDER_SETUP.substringBefore('?'),
         Routes.SETTINGS,
         Routes.THEMES,
         Routes.GLOW_SETTINGS,

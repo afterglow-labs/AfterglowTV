@@ -45,6 +45,7 @@ internal fun visibleSettingsCategoryIds(
     developerModeEnabled: Boolean = false
 ): List<Int> = buildList {
     if (policy.guideOnlyReviewSurface && !developerModeEnabled) {
+        add(SETTINGS_CATEGORY_PROVIDERS)
         return@buildList
     }
     add(SETTINGS_CATEGORY_PROVIDERS)
@@ -78,7 +79,7 @@ internal fun SettingsNavigationRail(
 ) {
     val policy = StorePolicy.currentFor(developerModeEnabled)
     val effectiveDeveloperModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(developerModeEnabled)
-    val reviewAppearanceOnly = policy.guideOnlyReviewSurface && !effectiveDeveloperModeEnabled
+    val reviewSafeSurface = policy.guideOnlyReviewSurface && !effectiveDeveloperModeEnabled
     val visibleCategoryIds = visibleSettingsCategoryIds(
         policy = policy,
         developerModeEnabled = effectiveDeveloperModeEnabled
@@ -142,7 +143,7 @@ internal fun SettingsNavigationRail(
         contentPadding = PaddingValues(top = 76.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        if (!reviewAppearanceOnly) {
+        if (SETTINGS_CATEGORY_PROVIDERS in visibleCategoryIds) {
             item {
                 SettingsNavItem(
                     label = stringResource(R.string.settings_providers),
@@ -164,6 +165,8 @@ internal fun SettingsNavigationRail(
                     onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS) }
                 )
             }
+        }
+        if (SETTINGS_CATEGORY_PROVIDERS_VOD in visibleCategoryIds) {
             item {
                 SettingsNavItem(
                     label = "VOD",
@@ -176,6 +179,8 @@ internal fun SettingsNavigationRail(
                     onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS_VOD) }
                 )
             }
+        }
+        if (!reviewSafeSurface) {
             items(entries, key = { it.categoryId }) { entry ->
                 SettingsNavItem(
                     label = entry.label,
@@ -193,7 +198,6 @@ internal fun SettingsNavigationRail(
                 badgeIcon = Icons.Default.Star,
                 accentColor = Color(0xFFFF77FF),
                 isSelected = false,
-                modifier = if (reviewAppearanceOnly) Modifier.focusRequester(focusRequester) else Modifier,
                 onClick = { onNavigate(com.afterglowtv.app.navigation.Routes.THEMES) },
             )
         }

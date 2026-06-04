@@ -5,3 +5,25 @@ https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
 https://30a-tv.com/feeds/pzaz/30atvmovies.m3u8
 #EXTINF:-1 tvg-name="Classic Arts Showcase" tvg-id="ClassicArtsShowcase.us" tvg-chno="3" tvg-country="US" group-title="Public Arts",Classic Arts Showcase
 https://classicarts.akamaized.net/hls/live/1024257/CAS/master.m3u8
+#EXTINF:-1 tvg-name="Afterglow Demo 1" tvg-id="afterglow.demo.1" tvg-chno="4" tvg-country="US" group-title="Public Demo",Afterglow Demo 1
+https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8
+#EXTINF:-1 tvg-name="Afterglow Demo 2" tvg-id="afterglow.demo.2" tvg-chno="5" tvg-country="US" group-title="Public Demo",Afterglow Demo 2
+https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8
+#EXTINF:-1 tvg-name="Afterglow Demo 3" tvg-id="afterglow.demo.3" tvg-chno="6" tvg-country="US" group-title="Public Demo",Afterglow Demo 3
+https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8
+#EXTINF:-1 tvg-name="Afterglow Demo 4" tvg-id="afterglow.demo.4" tvg-chno="7" tvg-country="US" group-title="Public Demo",Afterglow Demo 4
+https://test-streams.mux.dev/test_001/stream.m3u8
+#EXTINF:-1 tvg-name="Afterglow Music Demo" tvg-logo="http://media.boni-records.com/logo.png" tvg-id="Boni-Records.com.us" tvg-chno="8" tvg-country="US" group-title="Public Demo",Afterglow Music Demo
+http://media.boni-records.com/index.m3u8
+#EXTINF:-1 tvg-id="AMP1.us@SD" tvg-logo="https://i.imgur.com/3ZhrthD.png" tvg-chno="9" tvg-country="US" group-title="Public Access",Access Media Productions Channel (720p)
+https://dlttx48mxf9m3.cloudfront.net/vod_clients/amp/live/ch1/video.m3u8
+#EXTINF:-1 tvg-id="AMP2.us@SD" tvg-logo="https://i.imgur.com/nfur3FR.png" tvg-chno="10" tvg-country="US" group-title="Public Access",Access Media Productions Community Channel (720p)
+https://dlttx48mxf9m3.cloudfront.net/vod_clients/amp/live/ch2/video.m3u8
+#EXTINF:-1 tvg-id="TheMontereyChannel.us@SD" tvg-logo="https://i.imgur.com/400m3ow.png" tvg-chno="11" tvg-country="US" group-title="Public Access",Access Media Productions Monterey Channel (720p)
+https://dlttx48mxf9m3.cloudfront.net/vod_clients/amp/live/ch3/video.m3u8
+#EXTINF:-1 tvg-id="AccessNashua.us@SD" tvg-logo="https://i.imgur.com/iv9Vfcb.png" tvg-chno="12" tvg-country="US" group-title="Public Access",Access Nashua (720p)
+https://livestream.telvue.com/nashuanh1/f7b44cfafd5c52223d5498196c8a2e7b.sdp/playlist.m3u8
+#EXTINF:-1 tvg-id="AccuWeatherNOW.us@SD" tvg-logo="https://i.imgur.com/M8wbVYK.png" tvg-chno="13" tvg-country="US" group-title="Public Weather",AccuWeather Now (1080p)
+https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg00684-accuweather-accuweather-plex/playlist.m3u8
+#EXTINF:-1 tvg-id="AFTV.us@SD" tvg-logo="https://i.imgur.com/UoiUwFj.png" tvg-chno="14" tvg-country="US" group-title="Public Access",AFTV (1080p)
+https://livestream.telvue.com/accframingham1/f7b44cfafd5c52223d5498196c8a2e7b.sdp/playlist.m3u8

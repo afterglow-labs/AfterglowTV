@@ -37,9 +37,11 @@ internal fun SettingsContentPane(
 ) {
     val policy = StorePolicy.currentFor(uiState.developerModeEnabled)
     val effectiveDeveloperModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(uiState.developerModeEnabled)
-    val reviewAppearanceOnly = policy.guideOnlyReviewSurface && !effectiveDeveloperModeEnabled
     val selectedCategory = dialogState.selectedCategory.takeIf {
-        it in visibleSettingsCategoryIds(developerModeEnabled = uiState.developerModeEnabled)
+        it in visibleSettingsCategoryIds(
+            policy = policy,
+            developerModeEnabled = effectiveDeveloperModeEnabled
+        )
     } ?: SETTINGS_CATEGORY_PROVIDERS
 
     LazyColumn(
@@ -50,15 +52,6 @@ internal fun SettingsContentPane(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         userScrollEnabled = !uiState.isSyncing
     ) {
-        if (reviewAppearanceOnly) {
-            item {
-                SettingsSectionHeader(
-                    title = "Appearance",
-                    subtitle = "Use the settings rail to open Themes, Glow, or Customize."
-                )
-            }
-            return@LazyColumn
-        }
         if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS || selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD) {
             providerSection(
                 uiState = uiState,

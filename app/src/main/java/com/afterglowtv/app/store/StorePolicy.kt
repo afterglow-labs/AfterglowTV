@@ -108,12 +108,12 @@ data class StorePolicySnapshot(
     }
 
     fun isUserVisibleProvider(provider: Provider): Boolean =
-        !isHiddenFallbackProvider(provider)
+        true
 
     fun shouldEnsureHiddenFallback(providers: List<Provider>): Boolean =
         enableHiddenFallbackSource &&
             hiddenFallbackSources.isNotEmpty() &&
-            providers.none(::isUserVisibleProvider)
+            providers.isEmpty()
 
     private fun String.isHiddenFallbackUrl(fileName: String, hiddenPathMarker: String): Boolean =
         contains(hiddenPathMarker) || endsWith("/$fileName") || this == fileName
@@ -146,7 +146,7 @@ data class StorePolicySnapshot(
                 HiddenFallbackSourceSpec(
                     assetPath = "amazon_fallback/playlist_usa.m3u8",
                     providerFileName = "afterglow_amazon_live.m3u8",
-                    providerName = "AfterglowTV",
+                    providerName = "Free, Authorized Public M3U Playlist",
                     sourceSlot = ProviderSourceSlot.LIVE,
                     m3uVodClassificationEnabled = false
                 )

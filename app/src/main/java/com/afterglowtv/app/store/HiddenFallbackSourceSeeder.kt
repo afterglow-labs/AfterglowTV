@@ -127,6 +127,7 @@ internal fun shouldUseHiddenFallbackSourceForSlot(
     currentSource: ActiveLiveSource?,
     fallbackProviderId: Long
 ): Boolean {
-    if (!policy.shouldEnsureHiddenFallback(providers)) return false
+    val onlyBundledSources = providers.isNotEmpty() && providers.all(policy::isHiddenFallbackProvider)
+    if (!policy.enableHiddenFallbackSource || !onlyBundledSources) return false
     return currentSource != ActiveLiveSource.ProviderSource(fallbackProviderId)
 }

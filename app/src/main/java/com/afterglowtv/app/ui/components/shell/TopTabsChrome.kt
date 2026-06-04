@@ -34,6 +34,7 @@ fun defaultTopTabs(
     policy: StorePolicySnapshot = StorePolicy.currentFor(developerModeEnabled)
 ): List<TopTab> = buildList {
     if (policy.guideOnlyReviewSurface) {
+        add(TopTab("live_tv", "Live TV"))
         add(TopTab("epg", "TV Guide"))
         add(TopTab("settings", "Settings"))
         return@buildList

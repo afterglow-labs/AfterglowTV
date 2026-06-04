@@ -6,13 +6,13 @@ import org.junit.Test
 
 class SettingsNavigationRailTest {
     @Test
-    fun `locked amazon settings navigation is hidden`() {
+    fun `locked amazon settings navigation exposes live tv providers`() {
         assertThat(
             visibleSettingsCategoryIds(
                 StorePolicySnapshot.amazon,
                 developerModeEnabled = false
             )
-        ).isEmpty()
+        ).containsExactly(SETTINGS_CATEGORY_PROVIDERS)
     }
 
     @Test
