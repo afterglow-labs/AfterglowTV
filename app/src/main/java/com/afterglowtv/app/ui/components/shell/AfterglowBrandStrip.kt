@@ -270,6 +270,7 @@ private fun AfterglowWordmarkText(
     color: Color = AppColors.TextPrimary,
 ) {
     val glowStart = text.indexOf("glow", ignoreCase = true)
+    val tvStart = text.indexOf("TV", startIndex = glowStart.coerceAtLeast(0), ignoreCase = true)
     if (glowStart < 0) {
         Text(
             text = text,
@@ -281,28 +282,59 @@ private fun AfterglowWordmarkText(
     }
 
     val glowEnd = glowStart + "glow".length
-    Text(
-        text = buildAnnotatedString {
-            append(text.substring(0, glowStart))
-            withStyle(
-                SpanStyle(
-                    brush = Brush.linearGradient(
-                        listOf(
-                            Color(0xFFFF7A38),
-                            Color(0xFFFF3FAE),
-                            Color(0xFF8B5CFF),
+    val neonOrange = Color(0xFFFF6A00)
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Text(
+            text = text.substring(0, glowStart),
+            style = style,
+            color = color,
+        )
+        Text(
+            text = buildAnnotatedString {
+                withStyle(
+                    SpanStyle(
+                        brush = Brush.linearGradient(
+                            0.00f to Color(0xFFFF2D8D),
+                            0.45f to Color(0xFFFF5A3D),
+                            1.00f to neonOrange,
+                            start = Offset.Zero,
+                            end = Offset(110f, 0f),
                         )
                     )
-                )
-            ) {
-                append(text.substring(glowStart, glowEnd))
-            }
-            append(text.substring(glowEnd))
-        },
-        style = style,
-        color = color,
-        modifier = modifier,
-    )
+                ) {
+                    append(text.substring(glowStart, glowEnd))
+                }
+            },
+            style = style,
+            color = color,
+        )
+        if (tvStart >= glowEnd) {
+            Text(
+                text = text.substring(glowEnd, tvStart),
+                style = style,
+                color = color,
+            )
+            Text(
+                text = text.substring(tvStart, tvStart + "TV".length),
+                style = style,
+                color = neonOrange,
+            )
+            Text(
+                text = text.substring(tvStart + "TV".length),
+                style = style,
+                color = color,
+            )
+        } else {
+            Text(
+                text = text.substring(glowEnd),
+                style = style,
+                color = color,
+            )
+        }
+    }
 }
 
 private fun String.isAfterglowWordmark(): Boolean =
