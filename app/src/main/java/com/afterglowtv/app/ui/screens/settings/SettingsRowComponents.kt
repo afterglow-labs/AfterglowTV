@@ -355,3 +355,45 @@ internal fun SettingsNavItem(
         }
     }
 }
+
+@Composable
+internal fun SettingsNavHeader(
+    label: String,
+    badgeIcon: ImageVector,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 10.dp, end = 10.dp, top = 12.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            Modifier
+                .width(3.dp)
+                .height(22.dp)
+                .background(Color.Transparent, RoundedCornerShape(2.dp))
+        )
+        Box(
+            Modifier
+                .size(28.dp)
+                .background(accentColor.copy(alpha = 0.18f), RoundedCornerShape(7.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = badgeIcon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = accentColor,
+            )
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = OnBackground,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}

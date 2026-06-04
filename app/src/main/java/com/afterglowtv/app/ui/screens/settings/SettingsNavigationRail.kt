@@ -196,12 +196,10 @@ internal fun SettingsNavigationRail(
             )
         }
         item {
-            SettingsNavItem(
+            SettingsNavHeader(
                 label = "Appearance",
                 badgeIcon = Icons.Default.Star,
-                accentColor = Color(0xFFFF77FF),
-                isSelected = false,
-                onClick = { onNavigate(com.afterglowtv.app.navigation.Routes.THEMES) },
+                accentColor = Color(0xFFFF77FF)
             )
         }
         item {
