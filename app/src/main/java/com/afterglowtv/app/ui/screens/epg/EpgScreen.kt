@@ -205,6 +205,7 @@ fun FullEpgScreen(
     val programReminderUiState by viewModel.programReminderUiState.collectAsStateWithLifecycle()
     val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
     val isTelevisionDevice = rememberIsTelevisionDevice()
+    val policy = StorePolicy.currentFor(developerModeEnabled)
     var selectedProgram by remember { mutableStateOf<Pair<Channel, Program>?>(null) }
     var focusedChannel by remember { mutableStateOf<Channel?>(null) }
     var focusedProgram by remember { mutableStateOf<Program?>(null) }
@@ -410,7 +411,7 @@ fun FullEpgScreen(
         title = stringResource(titleRes),
         subtitle = stringResource(R.string.guide_shell_subtitle),
         navigationChrome = AppNavigationChrome.TopBar,
-        topBarVisible = topNavVisible || (!isTelevisionDevice && uiState.channels.isEmpty()),
+        topBarVisible = topNavVisible || policy.guideOnlyReviewSurface || (!isTelevisionDevice && uiState.channels.isEmpty()),
         compactHeader = true,
         showScreenHeader = false,
         fullBleed = true,   // EPG wants every pixel for the program grid

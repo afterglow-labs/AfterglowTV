@@ -35,6 +35,7 @@ fun defaultTopTabs(
 ): List<TopTab> = buildList {
     if (policy.guideOnlyReviewSurface) {
         add(TopTab("epg", "TV Guide"))
+        add(TopTab("settings", "Settings"))
         return@buildList
     }
     add(TopTab("home", "Home"))

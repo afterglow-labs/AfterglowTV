@@ -226,7 +226,7 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `amazon startup allows only guide until developer mode unlock`() {
+    fun `amazon startup allows guide and appearance settings until developer mode unlock`() {
         assertThat(
             resolveStartupRoute(
                 destination = StartupDestination.HOME,
@@ -241,6 +241,13 @@ class StorePolicyTest {
                 policy = StorePolicySnapshot.amazon
             )
         ).isEqualTo(Routes.EPG)
+        assertThat(
+            resolveStartupRoute(
+                destination = StartupDestination.SETTINGS,
+                developerModeEnabled = false,
+                policy = StorePolicySnapshot.amazon
+            )
+        ).isEqualTo(Routes.SETTINGS)
         assertThat(
             resolveStartupRoute(
                 destination = StartupDestination.VOD_CONTAINER,

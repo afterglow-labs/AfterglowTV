@@ -353,7 +353,14 @@ private fun isStoreLockedRoute(
 
 private fun isGuideOnlyAllowedRoute(route: String): Boolean {
     val baseRoute = route.substringBefore('?')
-    return baseRoute == Routes.EPG || baseRoute == Routes.PLAYER
+    return baseRoute in setOf(
+        Routes.EPG,
+        Routes.PLAYER,
+        Routes.SETTINGS,
+        Routes.THEMES,
+        Routes.GLOW_SETTINGS,
+        Routes.STYLE_CUSTOMIZER
+    )
 }
 
 @Composable

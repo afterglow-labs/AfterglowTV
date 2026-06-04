@@ -825,6 +825,7 @@ private fun buildDestinationItems(
 ): List<DestinationItem> = buildList {
     if (policy.guideOnlyReviewSurface) {
         add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
+        add(DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings))
         return@buildList
     }
     add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))

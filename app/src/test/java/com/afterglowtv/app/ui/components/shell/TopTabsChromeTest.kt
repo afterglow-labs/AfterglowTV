@@ -79,14 +79,14 @@ class TopTabsChromeTest {
     }
 
     @Test
-    fun `locked amazon review surface shows only tv guide`() {
+    fun `locked amazon review surface shows tv guide and settings`() {
         val tabs = defaultTopTabs(
             developerModeEnabled = false,
             showAdultTab = true,
             policy = StorePolicySnapshot.amazon
         )
 
-        assertThat(tabs.map { it.id }).containsExactly("epg")
-        assertThat(tabs.map { it.label }).containsExactly("TV Guide")
+        assertThat(tabs.map { it.id }).containsExactly("epg", "settings").inOrder()
+        assertThat(tabs.map { it.label }).containsExactly("TV Guide", "Settings").inOrder()
     }
 }
