@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.LocalAppSpacing
 import com.afterglowtv.app.ui.design.AfterglowFocusRole
@@ -29,13 +30,18 @@ data class TopTab(val id: String, val label: String)
 
 fun defaultTopTabs(
     developerModeEnabled: Boolean = false,
-    showAdultTab: Boolean = true
+    showAdultTab: Boolean = true,
+    policy: StorePolicySnapshot = StorePolicy.currentFor(developerModeEnabled)
 ): List<TopTab> = buildList {
+    if (policy.guideOnlyReviewSurface) {
+        add(TopTab("epg", "TV Guide"))
+        return@buildList
+    }
     add(TopTab("home", "Home"))
     add(TopTab("live_tv", "Live TV"))
-    add(TopTab("epg", if (StorePolicy.current.amazonReviewBuild) "TV Guide" else "IPTV Guide"))
-    add(TopTab("vod_container", if (StorePolicy.current.amazonReviewBuild) "Video" else "VOD"))
-    if (StorePolicy.current.showAdultSurfaces && developerModeEnabled && showAdultTab) {
+    add(TopTab("epg", if (policy.amazonReviewBuild) "TV Guide" else "IPTV Guide"))
+    add(TopTab("vod_container", if (policy.amazonReviewBuild) "Video" else "VOD"))
+    if (policy.showAdultSurfaces && developerModeEnabled && showAdultTab) {
         add(TopTab("adult", "Adult"))
     }
     add(TopTab("local_media", "Personal Library"))

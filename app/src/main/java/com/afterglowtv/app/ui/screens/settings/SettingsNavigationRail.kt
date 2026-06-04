@@ -44,6 +44,9 @@ internal fun visibleSettingsCategoryIds(
     policy: StorePolicySnapshot = StorePolicy.current,
     developerModeEnabled: Boolean = false
 ): List<Int> = buildList {
+    if (policy.guideOnlyReviewSurface && !developerModeEnabled) {
+        return@buildList
+    }
     add(SETTINGS_CATEGORY_PROVIDERS)
     add(SETTINGS_CATEGORY_PROVIDERS_VOD)
     add(SETTINGS_CATEGORY_PLAYBACK)

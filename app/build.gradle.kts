@@ -56,6 +56,9 @@ android {
         buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "false")
         buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "0L")
         buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "0L")
+        buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "false")
+        buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"\"")
+        buildConfigField("String", "AMAZON_PREMIUM_LIFETIME_SKU", "\"\"")
     }
 
     flavorDimensions += "store"
@@ -92,12 +95,15 @@ android {
             buildConfigField(
                 "String",
                 "HIDDEN_FALLBACK_SOURCE_SPECS",
-                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::AfterglowTV::LIVE::false|amazon_fallback/playlist_usa_vod.m3u8::afterglow_amazon_vod.m3u8::Afterglow Videos::VOD::true\""
+                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::AfterglowTV::LIVE::false\""
             )
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
             buildConfigField("boolean", "ENABLE_DVR", "false")
             buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
+            buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "true")
+            buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"afterglow_premium_monthly\"")
+            buildConfigField("String", "AMAZON_PREMIUM_LIFETIME_SKU", "\"afterglow_premium_lifetime\"")
         }
 
         create("direct") {
@@ -115,7 +121,7 @@ android {
             buildConfigField(
                 "String",
                 "HIDDEN_FALLBACK_SOURCE_SPECS",
-                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::AfterglowTV::LIVE::false|amazon_fallback/playlist_usa_vod.m3u8::afterglow_amazon_vod.m3u8::Afterglow Videos::VOD::true\""
+                "\"amazon_fallback/playlist_usa.m3u8::afterglow_amazon_live.m3u8::AfterglowTV::LIVE::false\""
             )
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
@@ -124,6 +130,9 @@ android {
             buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "true")
             buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "1782864000000L")
             buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "1790812800000L")
+            buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "true")
+            buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"afterglow_premium_monthly\"")
+            buildConfigField("String", "AMAZON_PREMIUM_LIFETIME_SKU", "\"afterglow_premium_lifetime\"")
         }
 
         create("corey") {
@@ -289,6 +298,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.mediarouter)
     implementation(libs.play.services.cast.framework)
+    implementation(libs.amazon.appstore.sdk)
 
     // Test
     testImplementation(libs.junit)

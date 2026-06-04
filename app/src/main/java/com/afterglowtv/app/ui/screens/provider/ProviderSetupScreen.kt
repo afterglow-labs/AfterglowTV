@@ -106,7 +106,9 @@ internal enum class ProviderSetupSourceType {
 }
 
 internal fun visibleProviderSetupSourceTypes(policy: StorePolicySnapshot): List<ProviderSetupSourceType> =
-    if (policy.showAdvancedSourceTypes) {
+    if (policy.guideOnlyReviewSurface) {
+        emptyList()
+    } else if (policy.showAdvancedSourceTypes) {
         listOf(
             ProviderSetupSourceType.SERVER_LOGIN,
             ProviderSetupSourceType.PORTAL_LOGIN,

@@ -23,6 +23,7 @@ data class StorePolicySnapshot(
     val enableSideloadUpdates: Boolean,
     val enableDvr: Boolean,
     val allowDvrDeveloperUnlock: Boolean,
+    val guideOnlyReviewSurface: Boolean = false,
     val dateUnlocksHiddenFeatures: Boolean = false,
     val featureReleaseUnlockEpochMs: Long = 0L,
     val premiumPreviewFreeUntilEpochMs: Long = 0L
@@ -42,9 +43,11 @@ data class StorePolicySnapshot(
         storedDeveloperModeEnabled || isFeatureReleaseUnlocked(nowMs)
 
     fun effectiveFor(storedDeveloperModeEnabled: Boolean, nowMs: Long): StorePolicySnapshot =
-        if (dateUnlocksHiddenFeatures && effectiveDeveloperModeEnabled(storedDeveloperModeEnabled, nowMs)) {
+        if (amazonReviewBuild && effectiveDeveloperModeEnabled(storedDeveloperModeEnabled, nowMs)) {
             copy(
                 showAdvancedSourceTypes = true,
+                showAdultSurfaces = true,
+                guideOnlyReviewSurface = false,
                 allowXtreamPlaylistAutoDetection = true,
                 enableSideloadUpdates = true,
                 enableDvr = true
@@ -104,19 +107,13 @@ data class StorePolicySnapshot(
                     providerName = "AfterglowTV",
                     sourceSlot = ProviderSourceSlot.LIVE,
                     m3uVodClassificationEnabled = false
-                ),
-                HiddenFallbackSourceSpec(
-                    assetPath = "amazon_fallback/playlist_usa_vod.m3u8",
-                    providerFileName = "afterglow_amazon_vod.m3u8",
-                    providerName = "Afterglow Videos",
-                    sourceSlot = ProviderSourceSlot.VOD,
-                    m3uVodClassificationEnabled = true
                 )
             ),
             allowXtreamPlaylistAutoDetection = false,
             enableSideloadUpdates = false,
             enableDvr = false,
-            allowDvrDeveloperUnlock = true
+            allowDvrDeveloperUnlock = true,
+            guideOnlyReviewSurface = true
         )
 
         val direct = amazon.copy(
@@ -146,6 +143,7 @@ data class StorePolicySnapshot(
                 enableSideloadUpdates = BuildConfig.ENABLE_SIDELOAD_UPDATES,
                 enableDvr = BuildConfig.ENABLE_DVR,
                 allowDvrDeveloperUnlock = BuildConfig.ALLOW_DVR_DEVELOPER_UNLOCK,
+                guideOnlyReviewSurface = BuildConfig.AMAZON_REVIEW_BUILD,
                 dateUnlocksHiddenFeatures = BuildConfig.DATE_UNLOCKS_HIDDEN_FEATURES,
                 featureReleaseUnlockEpochMs = BuildConfig.FEATURE_RELEASE_UNLOCK_EPOCH_MS,
                 premiumPreviewFreeUntilEpochMs = BuildConfig.PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS

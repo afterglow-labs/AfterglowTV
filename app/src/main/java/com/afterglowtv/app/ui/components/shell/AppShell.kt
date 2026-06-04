@@ -69,6 +69,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.afterglowtv.app.R
 import com.afterglowtv.app.navigation.Routes
+import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.AppMotion
 import com.afterglowtv.app.ui.design.FocusSpec
@@ -260,7 +262,9 @@ private fun TopNavigationBar(
     viewModel: AppShellViewModel = hiltViewModel()
 ) {
     val showAdultTab by viewModel.showAdultTab.collectAsStateWithLifecycle()
-    val items = remember(showAdultTab) { buildDestinationItems(showAdultTab) }
+    val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
+    val policy = StorePolicy.currentFor(developerModeEnabled)
+    val items = remember(showAdultTab, policy) { buildDestinationItems(showAdultTab, policy) }
     val scrollState = rememberScrollState()
 
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
@@ -675,7 +679,9 @@ private fun DestinationRail(
 ) {
     val spacing = LocalAppSpacing.current
     val showAdultTab by viewModel.showAdultTab.collectAsStateWithLifecycle()
-    val items = remember(showAdultTab) { buildDestinationItems(showAdultTab) }
+    val developerModeEnabled by viewModel.developerModeEnabled.collectAsStateWithLifecycle()
+    val policy = StorePolicy.currentFor(developerModeEnabled)
+    val items = remember(showAdultTab, policy) { buildDestinationItems(showAdultTab, policy) }
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
 
     Box(
@@ -813,7 +819,14 @@ private fun findActiveDestinationItem(
         .maxByOrNull { it.route.length }
         ?: items.firstOrNull { it.route == currentRoute }
 
-private fun buildDestinationItems(showAdultTab: Boolean = false): List<DestinationItem> = buildList {
+private fun buildDestinationItems(
+    showAdultTab: Boolean = false,
+    policy: StorePolicySnapshot = StorePolicy.current
+): List<DestinationItem> = buildList {
+    if (policy.guideOnlyReviewSurface) {
+        add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
+        return@buildList
+    }
     add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))
     add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
     add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))

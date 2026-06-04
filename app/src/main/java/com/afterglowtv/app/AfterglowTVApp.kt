@@ -15,6 +15,7 @@ import com.afterglowtv.app.diagnostics.RuntimeDiagnosticsManager
 import com.afterglowtv.app.store.HiddenFallbackSourceSeeder
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.store.StorePolicySnapshot
+import com.afterglowtv.app.store.amazon.AmazonAppstoreBridge
 import com.afterglowtv.app.update.GitHubReleaseChecker
 import com.afterglowtv.app.ui.accessibility.isReducedMotionEnabled
 import com.afterglowtv.app.ui.design.AppColors
@@ -62,6 +63,7 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         CrashReportStore.install(this)
+        AmazonAppstoreBridge.initialize(this)
         applySavedVisualPreferencesBeforeUi()
         repairDeveloperModeAdultVisibility()
         if (StorePolicy.current.enableHiddenFallbackSource) {

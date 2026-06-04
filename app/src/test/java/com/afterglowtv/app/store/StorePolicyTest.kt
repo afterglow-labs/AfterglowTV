@@ -17,13 +17,10 @@ import org.junit.Test
 
 class StorePolicyTest {
     @Test
-    fun `amazon source setup exposes only playlist choices`() {
+    fun `locked amazon source setup exposes no playlist choices`() {
         val sourceTypes = visibleProviderSetupSourceTypes(StorePolicySnapshot.amazon)
 
-        assertThat(sourceTypes).containsExactly(
-            ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
-        ).inOrder()
+        assertThat(sourceTypes).isEmpty()
     }
 
     @Test
@@ -37,6 +34,19 @@ class StorePolicyTest {
         } else {
             assertThat(BuildConfig.APPLICATION_ID).startsWith("com.afterglowtv.app")
             assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
+        }
+    }
+
+    @Test
+    fun `amazon appstore sdk is enabled only for fire builds`() {
+        if (BuildConfig.AMAZON_REVIEW_BUILD) {
+            assertThat(BuildConfig.ENABLE_AMAZON_APPSTORE_SDK).isTrue()
+            assertThat(BuildConfig.AMAZON_PREMIUM_MONTHLY_SKU).isEqualTo("afterglow_premium_monthly")
+            assertThat(BuildConfig.AMAZON_PREMIUM_LIFETIME_SKU).isEqualTo("afterglow_premium_lifetime")
+        } else {
+            assertThat(BuildConfig.ENABLE_AMAZON_APPSTORE_SDK).isFalse()
+            assertThat(BuildConfig.AMAZON_PREMIUM_MONTHLY_SKU).isEmpty()
+            assertThat(BuildConfig.AMAZON_PREMIUM_LIFETIME_SKU).isEmpty()
         }
     }
 
@@ -61,12 +71,10 @@ class StorePolicyTest {
         )
 
         assertThat(locked.showAdvancedSourceTypes).isFalse()
+        assertThat(locked.guideOnlyReviewSurface).isTrue()
         assertThat(locked.canUseDvr(developerModeEnabled = false)).isFalse()
         assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(false, beforeRelease)).isFalse()
-        assertThat(visibleProviderSetupSourceTypes(locked)).containsExactly(
-            ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
-        ).inOrder()
+        assertThat(visibleProviderSetupSourceTypes(locked)).isEmpty()
     }
 
     @Test
@@ -78,6 +86,7 @@ class StorePolicyTest {
         )
 
         assertThat(unlocked.showAdvancedSourceTypes).isTrue()
+        assertThat(unlocked.guideOnlyReviewSurface).isFalse()
         assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
         assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(true, beforeRelease)).isTrue()
         assertThat(visibleProviderSetupSourceTypes(unlocked)).containsExactly(
@@ -97,6 +106,7 @@ class StorePolicyTest {
         )
 
         assertThat(unlocked.showAdvancedSourceTypes).isTrue()
+        assertThat(unlocked.guideOnlyReviewSurface).isFalse()
         assertThat(unlocked.allowXtreamPlaylistAutoDetection).isTrue()
         assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
         assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(false, releaseDate)).isTrue()
@@ -117,6 +127,7 @@ class StorePolicyTest {
         )
 
         assertThat(amazon.showAdvancedSourceTypes).isFalse()
+        assertThat(amazon.guideOnlyReviewSurface).isTrue()
         assertThat(amazon.canUseDvr(developerModeEnabled = false)).isFalse()
         assertThat(StorePolicySnapshot.amazon.effectiveDeveloperModeEnabled(false, releaseDate)).isFalse()
     }
@@ -135,7 +146,28 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `amazon startup allows adult route only after developer mode unlock`() {
+    fun `amazon startup allows only guide until developer mode unlock`() {
+        assertThat(
+            resolveStartupRoute(
+                destination = StartupDestination.HOME,
+                developerModeEnabled = false,
+                policy = StorePolicySnapshot.amazon
+            )
+        ).isEqualTo(Routes.EPG)
+        assertThat(
+            resolveStartupRoute(
+                destination = StartupDestination.LIVE_TV,
+                developerModeEnabled = false,
+                policy = StorePolicySnapshot.amazon
+            )
+        ).isEqualTo(Routes.EPG)
+        assertThat(
+            resolveStartupRoute(
+                destination = StartupDestination.VOD_CONTAINER,
+                developerModeEnabled = false,
+                policy = StorePolicySnapshot.amazon
+            )
+        ).isEqualTo(Routes.EPG)
         val lockedRoute = resolveStartupRoute(
             destination = StartupDestination.ADULT,
             developerModeEnabled = false,
@@ -144,10 +176,13 @@ class StorePolicyTest {
         val route = resolveStartupRoute(
             destination = StartupDestination.ADULT,
             developerModeEnabled = true,
-            policy = StorePolicySnapshot.amazon
+            policy = StorePolicySnapshot.amazon.effectiveFor(
+                storedDeveloperModeEnabled = true,
+                nowMs = utcMs("2026-06-01T00:00:00Z")
+            )
         )
 
-        assertThat(lockedRoute).isEqualTo(Routes.HOME)
+        assertThat(lockedRoute).isEqualTo(Routes.EPG)
         assertThat(route).isEqualTo(Routes.ADULT)
     }
 
@@ -167,7 +202,7 @@ class StorePolicyTest {
     @Test
     fun `amazon should seed fallback only when no user source exists`() {
         val fallback = provider(
-            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_vod.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/hidden_fallback/afterglow_amazon_live.m3u8"
         )
         val userProvider = provider(id = 2L, m3uUrl = "https://example.test/user.m3u8")
 
@@ -181,21 +216,17 @@ class StorePolicyTest {
         val policy = StorePolicySnapshot.amazon
 
         assertThat(policy.hiddenFallbackSources.map { it.assetPath }).containsExactly(
-            "amazon_fallback/playlist_usa.m3u8",
-            "amazon_fallback/playlist_usa_vod.m3u8"
-        ).inOrder()
+            "amazon_fallback/playlist_usa.m3u8"
+        )
         assertThat(policy.hiddenFallbackSources.map { it.providerFileName }).containsExactly(
-            "afterglow_amazon_live.m3u8",
-            "afterglow_amazon_vod.m3u8"
-        ).inOrder()
+            "afterglow_amazon_live.m3u8"
+        )
         assertThat(policy.hiddenFallbackSources.map { it.sourceSlot }).containsExactly(
-            ProviderSourceSlot.LIVE,
-            ProviderSourceSlot.VOD
-        ).inOrder()
+            ProviderSourceSlot.LIVE
+        )
         assertThat(policy.hiddenFallbackSources.map { it.m3uVodClassificationEnabled }).containsExactly(
-            false,
-            true
-        ).inOrder()
+            false
+        )
     }
 
     @Test
@@ -249,19 +280,18 @@ class StorePolicyTest {
     @Test
     fun `amazon bundled fallback playlists avoid automatic epg discovery`() {
         assertThat(amazonAsset("playlist_usa.m3u8").readText()).doesNotContain("x-tvg-url")
-        assertThat(amazonAsset("playlist_usa_vod.m3u8").readText()).doesNotContain("x-tvg-url")
     }
 
     @Test
-    fun `amazon bundled live fallback contains controlled demo and public channels`() {
+    fun `amazon bundled live fallback contains known public channels`() {
         val livePlaylist = amazonAsset("playlist_usa.m3u8").readText()
 
-        assertThat(livePlaylist).contains("Afterglow Music Demo")
-        assertThat(livePlaylist).contains("media.boni-records.com/index.m3u8")
-        assertThat(livePlaylist).contains("Access Media Productions Channel")
-        assertThat(livePlaylist).contains("Access Nashua")
-        assertThat(livePlaylist).contains("AccuWeather Now")
-        assertThat(livePlaylist).contains("AFTV")
+        assertThat(livePlaylist).contains("NASA TV")
+        assertThat(livePlaylist).contains("ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8")
+        assertThat(livePlaylist).contains("30A TV Classic Movies")
+        assertThat(livePlaylist).contains("30a-tv.com/feeds/pzaz/30atvmovies.m3u8")
+        assertThat(livePlaylist).contains("Classic Arts Showcase")
+        assertThat(livePlaylist).contains("classicarts.akamaized.net/hls/live/1024257/CAS/master.m3u8")
     }
 
     @Test
@@ -270,7 +300,6 @@ class StorePolicyTest {
 
         assertThat(livePlaylist).doesNotContain("3catdirectes.cat")
         assertThat(livePlaylist).doesNotContain("ztnr.rtve.es")
-        assertThat(livePlaylist).doesNotContain("30a-tv.com")
         assertThat(livePlaylist).doesNotContain("ADN TV+")
         assertThat(livePlaylist).doesNotContain("Anime Vision")
         assertThat(livePlaylist).doesNotContain("Canal 24 Horas")
@@ -297,17 +326,8 @@ class StorePolicyTest {
         assertThat(livePlaylist).doesNotContain("buzzrota-ono.amagi.tv")
         assertThat(livePlaylist).doesNotContain("bcovlive-a.akamaihd.net")
         assertThat(livePlaylist).doesNotContain("tve-live-lln.warnermediacdn.com")
-        assertThat(livePlaylist).doesNotContain("ntv1.akamaized.net")
         assertThat(livePlaylist).doesNotContain("ntv2.akamaized.net")
         assertThat(livePlaylist).doesNotContain("service-stitcher.clusters.pluto.tv")
-    }
-
-    @Test
-    fun `amazon bundled vod fallback contains direct video files`() {
-        val vodPlaylist = amazonAsset("playlist_usa_vod.m3u8").readText()
-
-        assertThat(vodPlaylist).contains("group-title=\"Demo Videos\"")
-        assertThat(vodPlaylist).containsMatch("""https://[^\n]+\.(m4v|mp4|mov)""")
     }
 
     private fun provider(id: Long = 1L, m3uUrl: String): Provider =

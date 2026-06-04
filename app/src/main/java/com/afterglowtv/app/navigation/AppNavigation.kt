@@ -296,7 +296,7 @@ class AppStartupDestinationViewModel @Inject constructor(
 }
 
 internal fun resolveStartupRoute(destination: StartupDestination, developerModeEnabled: Boolean): String =
-    resolveStartupRoute(destination, developerModeEnabled, StorePolicy.current)
+    resolveStartupRoute(destination, developerModeEnabled, StorePolicy.currentFor(developerModeEnabled))
 
 internal fun resolveStartupRoute(
     destination: StartupDestination,
@@ -304,10 +304,11 @@ internal fun resolveStartupRoute(
     policy: StorePolicySnapshot
 ): String =
     if (
+        (policy.guideOnlyReviewSurface && !isGuideOnlyAllowedRoute(destination.route)) ||
         (destination.requiresDeveloperMode && (!developerModeEnabled || !policy.showAdultSurfaces)) ||
         (destination.route == Routes.WELCOME && !policy.showWelcomeRoute)
     ) {
-        Routes.HOME
+        if (policy.guideOnlyReviewSurface) Routes.EPG else Routes.HOME
     } else {
         destination.route
     }
@@ -316,7 +317,18 @@ private fun isDeveloperLockedRoute(route: String): Boolean =
     route == Routes.ADULT
 
 private fun isStoreLockedRoute(route: String): Boolean =
-    route == Routes.ADULT && !StorePolicy.current.showAdultSurfaces
+    isStoreLockedRoute(route, developerModeEnabled = false)
+
+private fun isStoreLockedRoute(route: String, developerModeEnabled: Boolean): Boolean {
+    val policy = StorePolicy.currentFor(developerModeEnabled)
+    return (policy.guideOnlyReviewSurface && !isGuideOnlyAllowedRoute(route)) ||
+        (route == Routes.ADULT && !policy.showAdultSurfaces)
+}
+
+private fun isGuideOnlyAllowedRoute(route: String): Boolean {
+    val baseRoute = route.substringBefore('?')
+    return baseRoute == Routes.EPG || baseRoute == Routes.PLAYER
+}
 
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
@@ -337,7 +349,7 @@ fun AppNavigation(mainActivity: MainActivity) {
 
             is ExternalNavigationRequest.Destination -> {
                 val route = request.destination.toRoute()
-                if (isStoreLockedRoute(route) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
+                if (isStoreLockedRoute(route, developerModeEnabled) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
                     mainActivity.clearExternalNavigationRequest()
                 } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
@@ -345,19 +357,28 @@ fun AppNavigation(mainActivity: MainActivity) {
             }
 
             is ExternalNavigationRequest.ImportM3u -> {
-                if (navController.navigateIfResumed(Routes.providerSetup(importUri = request.uri)) { launchSingleTop = true }) {
+                val route = Routes.providerSetup(importUri = request.uri)
+                if (isStoreLockedRoute(route, developerModeEnabled)) {
+                    mainActivity.clearExternalNavigationRequest()
+                } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
                 }
             }
 
             is ExternalNavigationRequest.ImportBackup -> {
-                if (navController.navigateIfResumed(Routes.settings(backupUri = request.uri)) { launchSingleTop = true }) {
+                val route = Routes.settings(backupUri = request.uri)
+                if (isStoreLockedRoute(route, developerModeEnabled)) {
+                    mainActivity.clearExternalNavigationRequest()
+                } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
                 }
             }
 
             is ExternalNavigationRequest.Search -> {
-                if (navController.navigateIfResumed(Routes.search(request.query)) { launchSingleTop = true }) {
+                val route = Routes.search(request.query)
+                if (isStoreLockedRoute(route, developerModeEnabled)) {
+                    mainActivity.clearExternalNavigationRequest()
+                } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
                     mainActivity.clearExternalNavigationRequest()
                 }
             }
@@ -369,7 +390,7 @@ fun AppNavigation(mainActivity: MainActivity) {
     // NAV-M02/NAV-H02: Single helper replacing repeated tab lambdas without serializing
     // each tab's full UI tree into saved state on every switch.
     fun tabNavigate(route: String) {
-        if (isStoreLockedRoute(route) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
+        if (isStoreLockedRoute(route, developerModeEnabled) || (isDeveloperLockedRoute(route) && !developerModeEnabled)) {
             return
         }
         val entry = navController.currentBackStackEntry ?: return
