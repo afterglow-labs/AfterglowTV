@@ -22,7 +22,6 @@ import androidx.documentfile.provider.DocumentFile
 import com.afterglowtv.app.backup.BackupFileBridge
 import com.afterglowtv.app.diagnostics.CrashReportStore
 import com.afterglowtv.app.util.OfficialBuildVerifier
-import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
 import com.afterglowtv.app.ui.components.shell.AppScreenScaffold
 import com.afterglowtv.app.ui.theme.*
@@ -194,61 +193,54 @@ fun SettingsScreen(
             compactHeader = true,
             showScreenHeader = false
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                AfterglowBrandStrip(
-                    wordmark = "Settings",
-                    tagline = "",
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
+            Row(modifier = Modifier.fillMaxSize()) {
+                SettingsNavigationRail(
+                    selectedCategory = dialogState.selectedCategory,
+                    developerModeEnabled = uiState.developerModeEnabled,
+                    focusRequester = settingsNavFocusRequester,
+                    onCategorySelected = { dialogState.selectedCategory = it },
+                    onNavigate = onNavigate,
                 )
-                Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                    SettingsNavigationRail(
-                        selectedCategory = dialogState.selectedCategory,
-                        developerModeEnabled = uiState.developerModeEnabled,
-                        focusRequester = settingsNavFocusRequester,
-                        onCategorySelected = { dialogState.selectedCategory = it },
-                        onNavigate = onNavigate,
-                    )
 
-                    Box(
-                        Modifier
-                            .width(1.dp)
-                            .fillMaxHeight()
-                            .background(Color.White.copy(alpha = 0.07f))
-                    )
+                Box(
+                    Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(Color.White.copy(alpha = 0.07f))
+                )
 
-                    SettingsContentPane(
-                        uiState = uiState,
-                        viewModel = viewModel,
-                        context = context,
-                        screenLabels = screenLabels,
-                        dialogState = dialogState,
-                        providerState = providerState,
-                        onAddProvider = onAddProvider,
-                        onEditProvider = onEditProvider,
-                        onNavigateToParentalControl = onNavigateToParentalControl,
-                        onChooseRecordingFolder = { recordingFolderLauncher.launch(null) },
-                        onChooseLocalMediaLibrary = { localMediaFolderLauncher.launch(null) },
-                        onCreateBackup = ::exportBackupToDownloads,
-                        onShareBackup = ::shareBackup,
-                        onViewCrashReport = viewModel::viewCrashReport,
-                        onShareCrashReport = ::shareCrashReport,
-                        onDeleteCrashReport = viewModel::deleteCrashReport,
-                        onRestoreBackup = {
-                            openDocumentLauncher.launch(
-                                arrayOf("application/json", "text/json", "application/x-json", "application/octet-stream", "*/*")
-                            )
-                        },
-                        onOpenUri = uriHandler::openUri,
-                        modifier = Modifier.weight(1f)
-                    )
-                    SettingsNowPlayingSidecar(
-                        onReturnToPlayer = onReturnToPlayer,
-                        onEnterPictureInPicture = {
-                            mainActivity?.enterPlayerPictureInPictureModeFromPlayer()
-                            Unit
-                        }
-                    )
-                }
+                SettingsContentPane(
+                    uiState = uiState,
+                    viewModel = viewModel,
+                    context = context,
+                    screenLabels = screenLabels,
+                    dialogState = dialogState,
+                    providerState = providerState,
+                    onAddProvider = onAddProvider,
+                    onEditProvider = onEditProvider,
+                    onNavigateToParentalControl = onNavigateToParentalControl,
+                    onChooseRecordingFolder = { recordingFolderLauncher.launch(null) },
+                    onChooseLocalMediaLibrary = { localMediaFolderLauncher.launch(null) },
+                    onCreateBackup = ::exportBackupToDownloads,
+                    onShareBackup = ::shareBackup,
+                    onViewCrashReport = viewModel::viewCrashReport,
+                    onShareCrashReport = ::shareCrashReport,
+                    onDeleteCrashReport = viewModel::deleteCrashReport,
+                    onRestoreBackup = {
+                        openDocumentLauncher.launch(
+                            arrayOf("application/json", "text/json", "application/x-json", "application/octet-stream", "*/*")
+                        )
+                    },
+                    onOpenUri = uriHandler::openUri,
+                    modifier = Modifier.weight(1f)
+                )
+                SettingsNowPlayingSidecar(
+                    onReturnToPlayer = onReturnToPlayer,
+                    onEnterPictureInPicture = {
+                        mainActivity?.enterPlayerPictureInPictureModeFromPlayer()
+                        Unit
+                    }
+                )
             }
         }
 

@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">最近のチャンネル</string>
     <string name="dashboard_recent_movies">最近追加された映画</string>
     <string name="dashboard_recent_series">最近更新されたシリーズ</string>
-    <string name="dashboard_search_library">ライブラリを検索</string>
     <string name="dashboard_live_shortcuts">ライブショートカット</string>
     <string name="dashboard_live_shortcuts_subtitle">お気に入り、最近のチャンネル、最後のグループ。</string>
     <string name="dashboard_provider_health_title">プロバイダーの状態</string>

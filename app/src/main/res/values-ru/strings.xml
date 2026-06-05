@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Недавние каналы</string>
     <string name="dashboard_recent_movies">Недавно добавленные фильмы</string>
     <string name="dashboard_recent_series">Недавно обновленные сериалы</string>
-    <string name="dashboard_search_library">Поиск по библиотеке</string>
     <string name="dashboard_live_shortcuts">Быстрый доступ к Live</string>
     <string name="dashboard_live_shortcuts_subtitle">Избранное, недавние каналы и последняя группа.</string>
     <string name="dashboard_provider_health_title">Состояние провайдера</string>

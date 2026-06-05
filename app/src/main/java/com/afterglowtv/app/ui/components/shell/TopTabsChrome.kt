@@ -11,10 +11,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.afterglowtv.app.R
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.design.AppColors
@@ -27,6 +30,10 @@ import com.afterglowtv.app.ui.design.afterglowFocus
  * meant for the main landing screens. The player route ignores this and renders full-bleed.
  */
 data class TopTab(val id: String, val label: String)
+
+private val TopTabFontFamily = FontFamily(
+    Font(R.font.vox_round, FontWeight.Normal)
+)
 
 fun defaultTopTabs(
     developerModeEnabled: Boolean = false,
@@ -47,7 +54,7 @@ fun defaultTopTabs(
     if (policy.showAdultSurfaces && developerModeEnabled && showAdultTab) {
         add(TopTab("adult", "Adult"))
     }
-    add(TopTab("local_media", "Personal Library"))
+    add(TopTab("local_media", "Library"))
     add(TopTab("favorites", "Favorites"))
     add(TopTab("search", "Search"))
     add(TopTab("settings", "Settings"))
@@ -87,6 +94,7 @@ fun TopTabsChrome(
                 Text(
                     text = tab.label,
                     style = MaterialTheme.typography.titleSmall.copy(
+                        fontFamily = TopTabFontFamily,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                     ),
                     color = if (selected) AppColors.TiviAccentLight else AppColors.TextSecondary,

@@ -52,7 +52,6 @@ import androidx.tv.material3.Text
 import com.afterglowtv.app.R
 import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.store.StorePolicy
-import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.components.shell.AppMessageState
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
 import com.afterglowtv.app.ui.components.shell.AppScreenScaffold
@@ -257,12 +256,6 @@ fun LocalMediaScreen(
         compactHeader = true,
         showScreenHeader = false
     ) {
-        AfterglowBrandStrip(
-            wordmark = stringResource(R.string.nav_personal_guide),
-            tagline = stringResource(R.string.local_media_subtitle),
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp)
-        )
-
         when {
             uiState.isLoading -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

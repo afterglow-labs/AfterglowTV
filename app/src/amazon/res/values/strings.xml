@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="nav_iptv_guide">TV Guide</string>
-    <string name="nav_vod_container">Video</string>
     <string name="nav_adult">Adult</string>
     <string name="welcome_tagline">Live and on-demand video for the living room</string>
 

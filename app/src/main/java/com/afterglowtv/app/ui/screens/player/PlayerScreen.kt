@@ -1092,7 +1092,7 @@ fun PlayerScreen(
             playButtonFocusRequester = playButtonFocusRequester,
             quickActionsFocusRequester = quickActionsFocusRequester,
             modifier = Modifier.fillMaxSize(),
-            onClose = viewModel::toggleControls,
+            onClose = { mainActivity?.finishAndRemoveTask() ?: onBack() },
             onTogglePlayPause = { if (isPlaying) viewModel.pause() else viewModel.play() },
             onSeekBackward = viewModel::seekBackward,
             onSeekForward = viewModel::seekForward,

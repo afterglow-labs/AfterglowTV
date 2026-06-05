@@ -8,7 +8,7 @@
     <string name="nav_movies">Movies</string>
     <string name="nav_series">Series</string>
     <string name="nav_local_media">Local Media</string>
-    <string name="nav_personal_guide">Personal Library</string>
+    <string name="nav_personal_guide">Library</string>
     <string name="nav_epg">Guide</string>
     <string name="nav_iptv_guide">IPTV Guide</string>
     <string name="nav_vod_container">VOD</string>
@@ -105,7 +105,6 @@
     <string name="dashboard_recent_channels">Recent Channels</string>
     <string name="dashboard_recent_movies">Recently Added Movies</string>
     <string name="dashboard_recent_series">Recently Updated Series</string>
-    <string name="dashboard_search_library">Search Library</string>
     <string name="dashboard_live_shortcuts">Live Shortcuts</string>
     <string name="dashboard_live_shortcuts_subtitle">Favorites, recent channels, and last group.</string>
     <string name="dashboard_provider_health_title">Provider Health</string>
@@ -133,7 +132,7 @@
     <string name="dashboard_stat_movies">%1$d movies</string>
     <string name="dashboard_stat_series">%1$d series</string>
     <string name="dashboard_empty_title">Welcome to AfterglowTV</string>
-    <string name="dashboard_empty_body">Browse your Personal Library and network shares any time. Want live channels and on-demand rows on Home too? Add a playlist or Xtream provider whenever you like.</string>
+    <string name="dashboard_empty_body">Browse your Library and network shares any time. Want live channels and on-demand rows on Home too? Add a playlist or Xtream provider whenever you like.</string>
 
     
     <string name="pin_dialog_title">Enter PIN</string>
@@ -889,27 +888,29 @@
     
     <string name="search_title">Search</string>
     <string name="parental_group_shell_subtitle">Review protected live, movie, and series groups without leaving the premium settings shell.</string>
-    <string name="search_screen_subtitle">Find channels, movies, and series without leaving the TV flow.</string>
+    <string name="search_screen_subtitle">Find live channels and VOD without leaving the TV flow.</string>
+    <string name="search_catalog_title">Provider Catalog</string>
     <string name="search_command_title">Command Search</string>
-    <string name="search_command_subtitle">Start with a title, keyword, channel name, or series. Results stay grouped for fast remote navigation.</string>
+    <string name="search_command_subtitle">Live TV and VOD results from the active provider.</string>
     <string name="search_incorrect_pin">Incorrect PIN</string>
-    <string name="search_type_to_search">Type at least 2 characters to search</string>
+    <string name="search_type_to_search">Enter at least 2 characters.</string>
     <string name="search_no_results">No results found for \'%1$s\'</string>
     <string name="search_no_results_title">No matches</string>
-    <string name="search_loading_title">Searching library...</string>
-    <string name="search_loading_subtitle">Checking indexed live TV, movies, and series.</string>
+    <string name="search_loading_title">Searching provider catalog...</string>
+    <string name="search_loading_subtitle">Checking indexed Live TV and VOD.</string>
     <string name="search_error_title">Search unavailable</string>
     <string name="search_error_subtitle">Some results could not be loaded. Try again.</string>
-    <string name="search_ready_title">Search the library</string>
+    <string name="search_ready_title">Ready</string>
     <string name="search_no_provider_title">No active provider</string>
-    <string name="search_no_provider_subtitle">Add or activate a provider before searching the library.</string>
+    <string name="search_no_provider_subtitle">Add or activate a provider before searching.</string>
     <string name="search_results_title">%1$d results</string>
     <string name="search_results_count">%1$s %2$d</string>
     <string name="search_live_tv">Live TV</string>
     <string name="search_all">All</string>
-    <string name="search_movies">Movies</string>
-    <string name="search_series">Series</string>
-    <string name="search_hint">Search...</string>
+    <string name="search_vod">VOD</string>
+    <string name="search_movies">Movie VOD</string>
+    <string name="search_series">TV VOD</string>
+    <string name="search_hint">Title, keyword, or channel</string>
     <string name="search_recent_title">Recent Searches</string>
     <string name="search_clear_history">Clear</string>
     <string name="search_actions_title">%1$s</string>

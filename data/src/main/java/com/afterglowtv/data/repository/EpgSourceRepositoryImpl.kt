@@ -223,9 +223,12 @@ class EpgSourceRepositoryImpl @Inject constructor(
 
             val now = System.currentTimeMillis()
 
-            // Rate-limit: skip if last successful refresh was less than 5 minutes ago
-            if (source.lastRefreshAt > 0 && now - source.lastRefreshAt < MIN_REFRESH_INTERVAL_MS) {
-                Log.d(TAG, "Skipping refresh for source $sourceId: last refresh was ${(now - source.lastRefreshAt) / 1000}s ago")
+            // Rate-limit: skip if last successful refresh was less than 5 minutes ago.
+            // A future timestamp means the device clock moved or old debug data was installed;
+            // refresh instead of pinning the guide to stale programme rows.
+            val elapsedSinceRefresh = now - source.lastRefreshAt
+            if (source.lastRefreshAt > 0 && elapsedSinceRefresh >= 0 && elapsedSinceRefresh < MIN_REFRESH_INTERVAL_MS) {
+                Log.d(TAG, "Skipping refresh for source $sourceId: last refresh was ${elapsedSinceRefresh / 1000}s ago")
                 return@withLock Result.success(Unit)
             }
 

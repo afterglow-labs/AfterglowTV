@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Нещодавні канали</string>
     <string name="dashboard_recent_movies">Нещодавно додані фільми</string>
     <string name="dashboard_recent_series">Нещодавно оновлені серіали</string>
-    <string name="dashboard_search_library">Пошук у бібліотеці</string>
     <string name="dashboard_live_shortcuts">Live-ярлики</string>
     <string name="dashboard_live_shortcuts_subtitle">Обране, нещодавні канали та остання група.</string>
     <string name="dashboard_provider_health_title">Стан провайдера</string>

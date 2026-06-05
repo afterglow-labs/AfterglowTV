@@ -76,7 +76,7 @@ internal fun SettingsNowPlayingSidecar(
     Surface(
         modifier = modifier
             .width(370.dp)
-            .padding(start = 18.dp, top = 76.dp, end = 20.dp, bottom = 32.dp),
+            .padding(start = 18.dp, top = 16.dp, end = 20.dp, bottom = 32.dp),
         colors = SurfaceDefaults.colors(containerColor = SurfaceElevated.copy(alpha = 0.92f)),
         shape = RoundedCornerShape(14.dp),
         border = Border(

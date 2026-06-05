@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Canale recente</string>
     <string name="dashboard_recent_movies">Filme adăugate recent</string>
     <string name="dashboard_recent_series">Seria actualizată recent</string>
-    <string name="dashboard_search_library">Căutați în bibliotecă</string>
     <string name="dashboard_live_shortcuts">Comenzi rapide live</string>
     <string name="dashboard_live_shortcuts_subtitle">Favorite, canale recente și ultimul grup.</string>
     <string name="dashboard_provider_health_title">Sanatatea furnizorului</string>

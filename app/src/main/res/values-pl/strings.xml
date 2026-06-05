@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Najnowsze kanały</string>
     <string name="dashboard_recent_movies">Ostatnio dodane filmy</string>
     <string name="dashboard_recent_series">Niedawno zaktualizowana seria</string>
-    <string name="dashboard_search_library">Przeszukaj bibliotekę</string>
     <string name="dashboard_live_shortcuts">Skróty na żywo</string>
     <string name="dashboard_live_shortcuts_subtitle">Ulubione, ostatnie kanały i ostatnia grupa.</string>
     <string name="dashboard_provider_health_title">Zdrowie dostawcy</string>

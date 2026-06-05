@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Kênh gần đây</string>
     <string name="dashboard_recent_movies">Phim mới thêm gần đây</string>
     <string name="dashboard_recent_series">Series cập nhật gần đây</string>
-    <string name="dashboard_search_library">Tìm trong thư viện</string>
     <string name="dashboard_live_shortcuts">Lối tắt Trực tiếp</string>
     <string name="dashboard_live_shortcuts_subtitle">Mục yêu thích, kênh gần đây và nhóm cuối cùng.</string>
     <string name="dashboard_provider_health_title">Tình trạng nhà cung cấp</string>

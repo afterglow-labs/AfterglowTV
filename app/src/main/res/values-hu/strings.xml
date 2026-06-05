@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Legutóbbi csatornák</string>
     <string name="dashboard_recent_movies">Nemrég hozzáadott filmek</string>
     <string name="dashboard_recent_series">Nemrég frissített sorozat</string>
-    <string name="dashboard_search_library">Könyvtár keresése</string>
     <string name="dashboard_live_shortcuts">Élő parancsikonok</string>
     <string name="dashboard_live_shortcuts_subtitle">Kedvencek, legutóbbi csatornák és utolsó csoport.</string>
     <string name="dashboard_provider_health_title">Szolgáltató állapota</string>

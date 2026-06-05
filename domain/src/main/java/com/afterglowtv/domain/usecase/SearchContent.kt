@@ -22,8 +22,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 enum class SearchContentScope {
     ALL,
     LIVE,
-    MOVIES,
-    SERIES
+    VOD
 }
 
 data class SearchContentResult(
@@ -85,8 +84,8 @@ class SearchContent @Inject constructor(
                     providerId = providerId,
                     query = query,
                     includeLive = scope == SearchContentScope.ALL || scope == SearchContentScope.LIVE,
-                    includeMovies = scope == SearchContentScope.ALL || scope == SearchContentScope.MOVIES,
-                    includeSeries = scope == SearchContentScope.ALL || scope == SearchContentScope.SERIES,
+                    includeMovies = scope == SearchContentScope.ALL || scope == SearchContentScope.VOD,
+                    includeSeries = scope == SearchContentScope.ALL || scope == SearchContentScope.VOD,
                     maxResultsPerSection = maxResultsPerSection
                 ).first()
             }

@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Afterglow Home Font Lab</title>
+  <style>
+    @font-face {
+      font-family: "Inter";
+      src: url("../app/src/main/res/font/inter_regular.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Inter";
+      src: url("../app/src/main/res/font/inter_medium.ttf") format("truetype");
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Inter";
+      src: url("../app/src/main/res/font/inter_semibold.ttf") format("truetype");
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Inter";
+      src: url("../app/src/main/res/font/inter_bold.ttf") format("truetype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Biome W01 Regular";
+      src: url("fonts/Biome W01 Regular.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --brand-font: "VoxRoundWide-Semibold";
+      --nav-font: "VoxRound";
+      --window-title-font: "Inter";
+      --window-subtitle-font: "Inter";
+      --large-card-font: "Inter";
+      --small-card-font: "Inter";
+      --body-font: "Inter";
+      --control-font: "Inter";
+      --status-font: "Inter";
+      --brand-size: 44px;
+      --nav-size: 26px;
+      --panel-title-size: 34px;
+      --card-title-size: 34px;
+      --small-card-title-size: 25px;
+      --body-size: 26px;
+      --control-size: 22px;
+      --cream: #fff7dc;
+      --muted: #c3946c;
+      --orange: #ff7a1f;
+      --pink: #f34593;
+      --blue: #243b64;
+      --canvas: #081020;
+      --panel: rgba(25, 39, 65, 0.88);
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--cream);
+      background:
+        radial-gradient(circle at 88% 3%, rgba(255, 122, 31, 0.11), transparent 30%),
+        linear-gradient(135deg, #060b17 0%, #0a1224 52%, #0f1a2d 100%);
+      font-family: var(--body-font), sans-serif;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+    }
+
+    aside {
+      height: 100vh;
+      overflow: auto;
+      padding: 24px 20px 32px;
+      background: rgba(4, 8, 16, 0.82);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    main {
+      min-width: 0;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-family: var(--window-title-font), sans-serif;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .hint {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font: 400 15px/1.42 var(--body-font), sans-serif;
+    }
+
+    .control {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 13px;
+    }
+
+    .control label {
+      font: 600 13px/1 var(--control-font), sans-serif;
+      color: var(--cream);
+    }
+
+    select,
+    input[type="range"],
+    textarea {
+      width: 100%;
+    }
+
+    select,
+    textarea {
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--cream);
+      font: 400 14px/1.2 var(--control-font), sans-serif;
+      outline: none;
+    }
+
+    select {
+      min-height: 38px;
+      padding: 8px 10px;
+    }
+
+    textarea {
+      min-height: 118px;
+      padding: 10px;
+      resize: vertical;
+    }
+
+    input[type="range"] {
+      accent-color: var(--orange);
+    }
+
+    .row-control {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 46px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .value {
+      color: var(--muted);
+      font: 500 12px/1 var(--control-font), sans-serif;
+      text-align: right;
+    }
+
+    .section-label {
+      margin: 22px 0 10px;
+      color: #ffb36e;
+      font: 600 14px/1 var(--control-font), sans-serif;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    button {
+      border: 1px solid rgba(255, 122, 31, 0.45);
+      border-radius: 999px;
+      padding: 10px 12px;
+      background: rgba(255, 122, 31, 0.12);
+      color: var(--cream);
+      font: 600 13px/1 var(--control-font), sans-serif;
+      cursor: pointer;
+    }
+
+    .stage {
+      width: min(100%, 1920px);
+      aspect-ratio: 16 / 9;
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(255, 45, 141, 0.13), transparent 26%),
+        linear-gradient(135deg, #070d1b 0%, #0b1427 52%, #101a2c 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+    }
+
+    .topbar {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      top: 22px;
+      height: 176px;
+      border-radius: 28px;
+      background: rgba(17, 27, 46, 0.94);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      padding: 20px 46px;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 28px;
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow:
+        0 0 24px rgba(255, 106, 0, 0.35),
+        0 0 52px rgba(243, 69, 147, 0.22);
+    }
+
+    .wordmark {
+      font-family: var(--brand-font), sans-serif;
+      font-size: var(--brand-size);
+      font-weight: 600;
+      line-height: 0.95;
+      white-space: nowrap;
+      background-image: linear-gradient(90deg, var(--pink) 0%, #ff5a31 58%, var(--orange) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 8px rgba(255, 106, 0, 0.22);
+    }
+
+    .nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+      white-space: nowrap;
+      color: #eab27c;
+      font-family: var(--nav-font), sans-serif;
+      font-size: var(--nav-size);
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    .nav-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 60px;
+      border-radius: 999px;
+      color: #e2a970;
+    }
+
+    .nav-item.active {
+      padding: 0 28px;
+      border: 8px solid #ffae55;
+      color: var(--cream);
+      background: rgba(255, 122, 31, 0.12);
+    }
+
+    .grid {
+      position: absolute;
+      left: 74px;
+      right: 74px;
+      top: 244px;
+      bottom: 54px;
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .window {
+      min-width: 0;
+      min-height: 0;
+      border-radius: 28px;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), rgba(25, 39, 65, 0.14), transparent),
+        var(--panel);
+      border: 2px solid color-mix(in srgb, var(--accent) 34%, transparent);
+      padding: 32px;
+      overflow: hidden;
+    }
+
+    .window-header {
+      margin-bottom: 22px;
+    }
+
+    .window-title {
+      margin: 0 0 8px;
+      color: var(--cream);
+      font-family: var(--window-title-font), sans-serif;
+      font-size: var(--panel-title-size);
+      font-weight: 600;
+      line-height: 1.06;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .window-subtitle,
+    .body-text {
+      color: var(--muted);
+      font-family: var(--window-subtitle-font), sans-serif;
+      font-size: var(--body-size);
+      font-weight: 400;
+      line-height: 1.22;
+    }
+
+    .actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      height: 54%;
+    }
+
+    .card {
+      min-width: 0;
+      border-radius: 24px;
+      background: color-mix(in srgb, var(--card-accent) 17%, transparent);
+      border: 2px solid color-mix(in srgb, var(--card-accent) 45%, transparent);
+      padding: 30px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .icon-badge {
+      width: 66px;
+      height: 66px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: color-mix(in srgb, var(--card-accent) 22%, transparent);
+      color: var(--card-accent);
+      font: 700 34px/1 sans-serif;
+    }
+
+    .card-title {
+      color: var(--cream);
+      font-family: var(--large-card-font), sans-serif;
+      font-size: var(--card-title-size);
+      font-weight: 600;
+      line-height: 1.08;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-subtitle,
+    .small-card-subtitle {
+      color: var(--muted);
+      font-family: var(--body-font), sans-serif;
+      font-size: var(--body-size);
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .small-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      height: 104px;
+    }
+
+    .small-card {
+      min-width: 0;
+      border-radius: 22px;
+      background: rgba(9, 17, 32, 0.48);
+      border: 2px solid color-mix(in srgb, var(--card-accent) 32%, transparent);
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      padding: 22px 26px;
+    }
+
+    .small-card .icon-badge {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      font-size: 28px;
+      flex: 0 0 auto;
+    }
+
+    .small-card-title {
+      color: var(--cream);
+      font-family: var(--small-card-font), sans-serif;
+      font-size: var(--small-card-title-size);
+      font-weight: 600;
+      line-height: 1.05;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .source-status {
+      margin-top: 22px;
+      color: var(--cream);
+      font-family: var(--status-font), sans-serif;
+      font-size: 26px;
+      line-height: 1.1;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .appearance-body {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 18px;
+      height: calc(100% - 92px);
+    }
+
+    .theme-card {
+      min-width: 0;
+      border-radius: 24px;
+      background: rgba(121, 65, 145, 0.35);
+      border: 2px solid rgba(255, 119, 255, 0.42);
+      padding: 28px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .swatches {
+      display: flex;
+      gap: 16px;
+    }
+
+    .swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+    }
+
+    .stacked {
+      display: grid;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .quick-header {
+      display: flex;
+      align-items: baseline;
+      gap: 22px;
+      margin-bottom: 18px;
+    }
+
+    .quick-header .window-title {
+      margin: 0;
+    }
+
+    .quick-layout {
+      display: grid;
+      grid-template-columns: 0.84fr 1.16fr;
+      gap: 24px;
+    }
+
+    .control-label {
+      color: var(--muted);
+      font-family: var(--control-font), sans-serif;
+      font-size: var(--control-size);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .chip,
+    .toggle {
+      height: 52px;
+      border-radius: 18px;
+      border: 2px solid rgba(125, 211, 252, 0.28);
+      background: rgba(125, 211, 252, 0.08);
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--control-font), sans-serif;
+      font-size: var(--control-size);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .chip.active {
+      border-color: rgba(255, 122, 31, 0.72);
+      background: rgba(255, 122, 31, 0.20);
+    }
+
+    .toggle {
+      justify-content: flex-start;
+      gap: 14px;
+      padding: 0 18px;
+    }
+
+    .toggle-value {
+      margin-left: auto;
+      color: #ffc17a;
+    }
+
+    .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--orange);
+    }
+
+    .dot.blue {
+      background: #7dd3fc;
+    }
+
+    .selected-summary {
+      margin-top: 18px;
+      color: var(--muted);
+      font: 400 13px/1.35 var(--body-font), sans-serif;
+    }
+
+    @media (max-width: 1100px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        height: auto;
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <h1>Home Font Lab</h1>
+      <p class="hint">Assign fonts to each kind of text on the Home screen. This is for choosing the app typography, not changing behavior.</p>
+
+      <div class="button-row">
+        <button type="button" data-preset="brandNav">Brand/Nav Only</button>
+        <button type="button" data-preset="vox">Vox UI</button>
+        <button type="button" data-preset="aptos">Aptos</button>
+        <button type="button" data-preset="museo">Museo/Myriad</button>
+      </div>
+
+      <div class="section-label">Font Assignments</div>
+      <div id="fontControls"></div>
+
+      <div class="section-label">Size Tweaks</div>
+      <div class="control">
+        <label for="brandSize">Brand size</label>
+        <div class="row-control">
+          <input id="brandSize" data-size-var="--brand-size" type="range" min="30" max="62" value="44">
+          <span class="value" data-value-for="brandSize">44</span>
+        </div>
+      </div>
+      <div class="control">
+        <label for="navSize">Nav size</label>
+        <div class="row-control">
+          <input id="navSize" data-size-var="--nav-size" type="range" min="16" max="34" value="26">
+          <span class="value" data-value-for="navSize">26</span>
+        </div>
+      </div>
+      <div class="control">
+        <label for="panelTitleSize">Panel title size</label>
+        <div class="row-control">
+          <input id="panelTitleSize" data-size-var="--panel-title-size" type="range" min="22" max="42" value="34">
+          <span class="value" data-value-for="panelTitleSize">34</span>
+        </div>
+      </div>
+      <div class="control">
+        <label for="cardTitleSize">Large card title size</label>
+        <div class="row-control">
+          <input id="cardTitleSize" data-size-var="--card-title-size" type="range" min="22" max="42" value="34">
+          <span class="value" data-value-for="cardTitleSize">34</span>
+        </div>
+      </div>
+      <div class="control">
+        <label for="smallCardTitleSize">Small card title size</label>
+        <div class="row-control">
+          <input id="smallCardTitleSize" data-size-var="--small-card-title-size" type="range" min="16" max="32" value="25">
+          <span class="value" data-value-for="smallCardTitleSize">25</span>
+        </div>
+      </div>
+      <div class="control">
+        <label for="bodySize">Body text size</label>
+        <div class="row-control">
+          <input id="bodySize" data-size-var="--body-size" type="range" min="16" max="30" value="26">
+          <span class="value" data-value-for="bodySize">26</span>
+        </div>
+      </div>
+      <div class="control">
+        <label for="controlSize">Control text size</label>
+        <div class="row-control">
+          <input id="controlSize" data-size-var="--control-size" type="range" min="14" max="26" value="22">
+          <span class="value" data-value-for="controlSize">22</span>
+        </div>
+      </div>
+
+      <div class="section-label">Current Settings</div>
+      <textarea id="summary" readonly></textarea>
+      <button type="button" id="copySummary">Copy Settings</button>
+      <p class="selected-summary">The textarea updates live. Once you like a combo, this gives us the exact font map to port into Compose.</p>
+    </aside>
+
+    <main>
+      <section class="stage">
+        <div class="topbar">
+          <div class="brand">
+            <img class="logo" src="../app/src/main/res/drawable-nodpi/afterglow_logo.png" alt="">
+            <div class="wordmark">Afterglow TV</div>
+          </div>
+          <nav class="nav">
+            <span class="nav-item active"><span>⌂</span> Home</span>
+            <span class="nav-item"><span>▶</span> Live TV</span>
+            <span class="nav-item"><span>●</span> TV Guide</span>
+            <span class="nav-item"><span>⚙</span> Settings</span>
+          </nav>
+        </div>
+
+        <div class="grid">
+          <section class="window" style="--accent: #60a5fa;">
+            <div class="window-header">
+              <h2 class="window-title">Jump back in</h2>
+              <div class="window-subtitle">Fast routes into playback.</div>
+            </div>
+            <div class="actions-row">
+              <div class="card" style="--card-accent: #60a5fa;">
+                <div class="icon-badge">▶</div>
+                <div>
+                  <div class="card-title">Live TV</div>
+                  <div class="card-subtitle">Channels</div>
+                </div>
+              </div>
+              <div class="card" style="--card-accent: #5eead4;">
+                <div class="icon-badge">i</div>
+                <div>
+                  <div class="card-title">TV Guide</div>
+                  <div class="card-subtitle">EPG grid</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="window" style="--accent: #ffd166;">
+            <div class="window-header">
+              <h2 class="window-title">Sources</h2>
+              <div class="window-subtitle">Free, Authorized Public M3U Playlist</div>
+            </div>
+            <div class="small-actions">
+              <div class="small-card" style="--card-accent: #ffd166;">
+                <div class="icon-badge">⚙</div>
+                <div>
+                  <div class="small-card-title">Sources</div>
+                  <div class="small-card-subtitle">Manage playlists</div>
+                </div>
+              </div>
+              <div class="small-card" style="--card-accent: #b4f06b;">
+                <div class="icon-badge">≡</div>
+                <div>
+                  <div class="small-card-title">Settings</div>
+                  <div class="small-card-subtitle">Providers</div>
+                </div>
+              </div>
+            </div>
+            <div class="source-status">Free, Authorized Public M3U Playlist</div>
+          </section>
+
+          <section class="window" style="--accent: #ff77ff;">
+            <div class="window-header">
+              <h2 class="window-title">Appearance</h2>
+              <div class="window-subtitle">Visual shortcuts.</div>
+            </div>
+            <div class="appearance-body">
+              <div class="theme-card">
+                <div class="swatches">
+                  <span class="swatch" style="background: #ff7a1f;"></span>
+                  <span class="swatch" style="background: #5eead4;"></span>
+                  <span class="swatch" style="background: #f46af7;"></span>
+                  <span class="swatch" style="background: #ffd166;"></span>
+                </div>
+                <div>
+                  <div class="card-title">Themes</div>
+                  <div class="card-subtitle">Colors</div>
+                </div>
+              </div>
+              <div class="stacked">
+                <div class="small-card" style="--card-accent: #5eead4;">
+                  <div class="icon-badge">i</div>
+                  <div>
+                    <div class="small-card-title">Glow</div>
+                    <div class="small-card-subtitle">Focus light</div>
+                  </div>
+                </div>
+                <div class="small-card" style="--card-accent: #ff7a38;">
+                  <div class="icon-badge">⚙</div>
+                  <div>
+                    <div class="small-card-title">Customize</div>
+                    <div class="small-card-subtitle">Shapes</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="window" style="--accent: #ff7a38;">
+            <div class="quick-header">
+              <h2 class="window-title">Quick Settings</h2>
+              <div class="window-subtitle">Startup and remote behavior</div>
+            </div>
+            <div class="quick-layout">
+              <div>
+                <div class="control-label">Start on</div>
+                <div class="chip active">Home</div>
+                <div class="chip">Live</div>
+                <div class="chip">Guide</div>
+              </div>
+              <div>
+                <div class="control-label">Remote</div>
+                <div class="toggle"><span class="dot"></span><span>D-pad channel +/-</span><span class="toggle-value">On</span></div>
+                <div class="toggle"><span class="dot blue"></span><span>Reverse channel order</span><span class="toggle-value">Off</span></div>
+                <div class="toggle"><span class="dot blue"></span><span>Show info while changing</span><span class="toggle-value">Off</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const fonts = [
+      "Inter",
+      "Apercu Mono",
+      "Aptos",
+      "Aptos Black",
+      "Aptos Display",
+      "Aptos ExtraBold",
+      "Aptos Light",
+      "Aptos Mono",
+      "Aptos Narrow",
+      "Aptos SemiBold",
+      "Aptos Serif",
+      "Arial Mono MT Pro",
+      "Arial Unicode MS",
+      "Biome W01 Regular",
+      "Calibri",
+      "Cambria",
+      "Candara",
+      "Code Saver",
+      "Connections",
+      "ConnectionsIta",
+      "Consolas",
+      "Constantia",
+      "Corbel",
+      "DomotikaProTrial",
+      "DomotikaProTrial Black",
+      "DomotikaProTrial Extralight",
+      "DomotikaProTrial Heavy",
+      "DomotikaProTrial Light",
+      "DomotikaProTrial Medium",
+      "DomotikaProTrial Thin",
+      "Franklin Gothic Book",
+      "LG Display11_Light",
+      "LG Smart UI",
+      "LG Smart UI Bold",
+      "LG Smart UI Light",
+      "LG Smart UI Regular",
+      "LG Smart UI SemiBold",
+      "LG Smart_0521_HS98",
+      "LG Smart_0521_HS98 Bold",
+      "LG Smart_0521_HS98 Regular",
+      "LG Smart_H",
+      "LG Smart_H Light",
+      "LG Smart_H Regular",
+      "LG Smart_H SemiBold",
+      "LG스마트체",
+      "LG스마트체 Light",
+      "LG스마트체 Regular",
+      "LG스마트체 SemiBold",
+      "LG스마트체_0521_HS98",
+      "LG스마트체_0521_HS98 Bold",
+      "LG스마트체_0521_HS98 Regular",
+      "MICRCheckPrixa",
+      "MICRCheckPrixa_X9",
+      "Minion Pro",
+      "Minion Pro Med",
+      "Minion Pro SmBd",
+      "Museo Sans",
+      "Museo Sans 500",
+      "Museo Sans 700",
+      "Myriad Pro",
+      "Myriad Pro Cond",
+      "Myriad Pro Light",
+      "TeX Gyre Pagella",
+      "Vox",
+      "Vox 6",
+      "Vox 7",
+      "VoxRound",
+      "VoxRound-Bold",
+      "VoxRound-BoldItalic",
+      "VoxRound-Italic",
+      "VoxRound-Light",
+      "VoxRound-LightIt",
+      "VoxRound-Medium",
+      "VoxRound-MediumIt",
+      "VoxRound-Semibold",
+      "VoxRound-SemiboldIt",
+      "VoxRoundWide",
+      "VoxRoundWide-Bold",
+      "VoxRoundWide-BoldItalic",
+      "VoxRoundWide-Italic",
+      "VoxRoundWide-Light",
+      "VoxRoundWide-LightIt",
+      "VoxRoundWide-MedIt",
+      "VoxRoundWide-Medium",
+      "VoxRoundWide-SemibdIt",
+      "VoxRoundWide-Semibold"
+    ];
+
+    const assignments = [
+      ["brand-font", "Brand wordmark", "VoxRoundWide-Semibold"],
+      ["nav-font", "Nav text", "VoxRound"],
+      ["window-title-font", "Window titles", "Inter"],
+      ["window-subtitle-font", "Window subtitles", "Inter"],
+      ["large-card-font", "Large card titles", "Inter"],
+      ["small-card-font", "Small card titles", "Inter"],
+      ["body-font", "Body / descriptions", "Inter"],
+      ["control-font", "Controls / chips", "Inter"],
+      ["status-font", "Source status", "Inter"]
+    ];
+
+    const presets = {
+      brandNav: {
+        "brand-font": "VoxRoundWide-Semibold",
+        "nav-font": "VoxRound",
+        "window-title-font": "Inter",
+        "window-subtitle-font": "Inter",
+        "large-card-font": "Inter",
+        "small-card-font": "Inter",
+        "body-font": "Inter",
+        "control-font": "Inter",
+        "status-font": "Inter"
+      },
+      vox: {
+        "brand-font": "VoxRoundWide-Semibold",
+        "nav-font": "VoxRound",
+        "window-title-font": "VoxRound-Semibold",
+        "window-subtitle-font": "VoxRound",
+        "large-card-font": "VoxRound-Semibold",
+        "small-card-font": "VoxRound-Semibold",
+        "body-font": "VoxRound",
+        "control-font": "VoxRound-Medium",
+        "status-font": "VoxRound-Semibold"
+      },
+      aptos: {
+        "brand-font": "Aptos Display",
+        "nav-font": "Aptos",
+        "window-title-font": "Aptos SemiBold",
+        "window-subtitle-font": "Aptos",
+        "large-card-font": "Aptos SemiBold",
+        "small-card-font": "Aptos SemiBold",
+        "body-font": "Aptos",
+        "control-font": "Aptos",
+        "status-font": "Aptos SemiBold"
+      },
+      museo: {
+        "brand-font": "Museo Sans 700",
+        "nav-font": "Museo Sans 500",
+        "window-title-font": "Museo Sans 700",
+        "window-subtitle-font": "Myriad Pro",
+        "large-card-font": "Museo Sans 700",
+        "small-card-font": "Museo Sans 700",
+        "body-font": "Myriad Pro",
+        "control-font": "Museo Sans 500",
+        "status-font": "Museo Sans 700"
+      },
+      domotika: {
+        "brand-font": "DomotikaProTrial Heavy",
+        "nav-font": "DomotikaProTrial Medium",
+        "window-title-font": "DomotikaProTrial Heavy",
+        "window-subtitle-font": "DomotikaProTrial",
+        "large-card-font": "DomotikaProTrial Heavy",
+        "small-card-font": "DomotikaProTrial Medium",
+        "body-font": "DomotikaProTrial",
+        "control-font": "DomotikaProTrial Medium",
+        "status-font": "DomotikaProTrial Medium"
+      }
+    };
+
+    const fontControls = document.getElementById("fontControls");
+    const summary = document.getElementById("summary");
+
+    function cssFontValue(fontName) {
+      return JSON.stringify(fontName);
+    }
+
+    function setFont(id, value) {
+      root.style.setProperty(`--${id}`, cssFontValue(value));
+      const select = document.getElementById(id);
+      if (select && select.value !== value) select.value = value;
+      updateSummary();
+    }
+
+    assignments.forEach(([id, label, defaultValue]) => {
+      const control = document.createElement("div");
+      control.className = "control";
+      const labelNode = document.createElement("label");
+      labelNode.htmlFor = id;
+      labelNode.textContent = label;
+      const select = document.createElement("select");
+      select.id = id;
+      fonts.forEach((font) => {
+        const option = document.createElement("option");
+        option.value = font;
+        option.textContent = font;
+        option.selected = font === defaultValue;
+        select.append(option);
+      });
+      select.addEventListener("change", () => setFont(id, select.value));
+      control.append(labelNode, select);
+      fontControls.append(control);
+      setFont(id, defaultValue);
+    });
+
+    document.querySelectorAll("[data-size-var]").forEach((input) => {
+      const output = document.querySelector(`[data-value-for="${input.id}"]`);
+      const update = () => {
+        root.style.setProperty(input.dataset.sizeVar, `${input.value}px`);
+        output.textContent = input.value;
+        updateSummary();
+      };
+      input.addEventListener("input", update);
+      update();
+    });
+
+    document.querySelectorAll("[data-preset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const preset = presets[button.dataset.preset];
+        Object.entries(preset).forEach(([id, value]) => setFont(id, value));
+      });
+    });
+
+    document.getElementById("copySummary").addEventListener("click", async () => {
+      summary.select();
+      try {
+        await navigator.clipboard.writeText(summary.value);
+      } catch {
+        document.execCommand("copy");
+      }
+    });
+
+    function updateSummary() {
+      const fontMap = Object.fromEntries(
+        assignments.map(([id, label]) => [label, document.getElementById(id)?.value || ""])
+      );
+      const sizeMap = Object.fromEntries(
+        [...document.querySelectorAll("[data-size-var]")].map((input) => [
+          document.querySelector(`label[for="${input.id}"]`)?.textContent || input.id,
+          `${input.value}px`
+        ])
+      );
+      summary.value = [
+        "Home typography settings",
+        "",
+        ...Object.entries(fontMap).map(([label, value]) => `${label}: ${value}`),
+        "",
+        ...Object.entries(sizeMap).map(([label, value]) => `${label}: ${value}`)
+      ].join("\n");
+    }
+  </script>
+</body>
+</html>

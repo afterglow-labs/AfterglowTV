@@ -309,7 +309,7 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `amazon bundled public source uses included playlist and generated guide`() {
+    fun `amazon public source uses hosted playlist and guide with included fallbacks`() {
         val policy = StorePolicySnapshot.amazon
 
         assertThat(policy.bundledPublicSources.map { it.playlistAssetPath }).containsExactly(
@@ -329,6 +329,12 @@ class StorePolicyTest {
         )
         assertThat(policy.bundledPublicSources.map { it.guideFileName }).containsExactly(
             "afterglow_public_live.xml"
+        )
+        assertThat(policy.bundledPublicSources.map { it.playlistUrl }).containsExactly(
+            "https://afterglow-labs.com/tv/afterglow_public_live.m3u8"
+        )
+        assertThat(policy.bundledPublicSources.map { it.guideUrl }).containsExactly(
+            "https://afterglow-labs.com/tv/afterglow_public_live.xml"
         )
     }
 

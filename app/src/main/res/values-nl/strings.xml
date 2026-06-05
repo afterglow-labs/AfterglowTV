@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Recente kanalen</string>
     <string name="dashboard_recent_movies">Recent toegevoegde films</string>
     <string name="dashboard_recent_series">Onlangs bijgewerkte serie</string>
-    <string name="dashboard_search_library">Zoek bibliotheek</string>
     <string name="dashboard_live_shortcuts">Live snelkoppelingen</string>
     <string name="dashboard_live_shortcuts_subtitle">Favorieten, recente kanalen en laatste groep.</string>
     <string name="dashboard_provider_health_title">Gezondheid van de aanbieder</string>

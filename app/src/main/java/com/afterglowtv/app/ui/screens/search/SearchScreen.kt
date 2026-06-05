@@ -315,22 +315,19 @@ private data class SearchFilterParams(
 enum class SearchTab(@get:StringRes val titleRes: Int) {
     ALL(R.string.search_all),
     LIVE(R.string.search_live_tv),
-    MOVIES(R.string.search_movies),
-    SERIES(R.string.search_series)
+    VOD(R.string.search_vod)
 }
 
 private fun SearchTab.toSearchScope(): SearchContentScope = when (this) {
     SearchTab.ALL -> SearchContentScope.ALL
     SearchTab.LIVE -> SearchContentScope.LIVE
-    SearchTab.MOVIES -> SearchContentScope.MOVIES
-    SearchTab.SERIES -> SearchContentScope.SERIES
+    SearchTab.VOD -> SearchContentScope.VOD
 }
 
 private fun SearchTab.toSearchHistoryScope(): SearchHistoryScope = when (this) {
     SearchTab.ALL -> SearchHistoryScope.ALL
     SearchTab.LIVE -> SearchHistoryScope.LIVE
-    SearchTab.MOVIES -> SearchHistoryScope.MOVIE
-    SearchTab.SERIES -> SearchHistoryScope.SERIES
+    SearchTab.VOD -> SearchHistoryScope.VOD
 }
 
 data class SearchUiState(
@@ -707,8 +704,7 @@ fun SearchScreen(
                                 title = when (selectedTab) {
                                     SearchTab.ALL -> stringResource(R.string.search_all)
                                     SearchTab.LIVE -> stringResource(R.string.search_live_tv)
-                                    SearchTab.MOVIES -> stringResource(R.string.search_movies)
-                                    SearchTab.SERIES -> stringResource(R.string.search_series)
+                                    SearchTab.VOD -> stringResource(R.string.search_vod)
                                 }
                             )
                         }
@@ -741,52 +737,63 @@ fun SearchScreen(
                                 )
                             }
 
-                            SearchTab.MOVIES -> items(movieRows, key = { row ->
-                                row.joinToString("-") { it.id.toString() }
-                            }) { row ->
-                                SearchMovieGridRow(
-                                    movies = row,
-                                    isLocked = { movie ->
-                                        isLocked(
-                                            categoryId = movie.categoryId,
-                                            isAdult = movie.isAdult,
-                                            isUserProtected = movie.isUserProtected
+                            SearchTab.VOD -> {
+                                if (movieRows.isNotEmpty()) {
+                                    item {
+                                        SectionHeader(title = stringResource(R.string.search_movies))
+                                    }
+                                    items(movieRows, key = { row ->
+                                        row.joinToString("-") { it.id.toString() }
+                                    }) { row ->
+                                        SearchMovieGridRow(
+                                            movies = row,
+                                            isLocked = { movie ->
+                                                isLocked(
+                                                    categoryId = movie.categoryId,
+                                                    isAdult = movie.isAdult,
+                                                    isUserProtected = movie.isUserProtected
+                                                )
+                                            },
+                                            onMovieClick = { movie, locked ->
+                                                if (locked) {
+                                                    pendingMovie = movie
+                                                    showPinDialog = true
+                                                } else {
+                                                    onMovieClick(movie)
+                                                }
+                                            },
+                                            onMovieLongClick = { movie -> showMovieActions(movie) }
                                         )
-                                    },
-                                    onMovieClick = { movie, locked ->
-                                        if (locked) {
-                                            pendingMovie = movie
-                                            showPinDialog = true
-                                        } else {
-                                            onMovieClick(movie)
-                                        }
-                                    },
-                                    onMovieLongClick = { movie -> showMovieActions(movie) }
-                                )
-                            }
-
-                            SearchTab.SERIES -> items(seriesRows, key = { row ->
-                                row.joinToString("-") { it.id.toString() }
-                            }) { row ->
-                                SearchSeriesGridRow(
-                                    seriesItems = row,
-                                    isLocked = { seriesItem ->
-                                        isLocked(
-                                            categoryId = seriesItem.categoryId,
-                                            isAdult = seriesItem.isAdult,
-                                            isUserProtected = seriesItem.isUserProtected
+                                    }
+                                }
+                                if (seriesRows.isNotEmpty()) {
+                                    item {
+                                        SectionHeader(title = stringResource(R.string.search_series))
+                                    }
+                                    items(seriesRows, key = { row ->
+                                        row.joinToString("-") { it.id.toString() }
+                                    }) { row ->
+                                        SearchSeriesGridRow(
+                                            seriesItems = row,
+                                            isLocked = { seriesItem ->
+                                                isLocked(
+                                                    categoryId = seriesItem.categoryId,
+                                                    isAdult = seriesItem.isAdult,
+                                                    isUserProtected = seriesItem.isUserProtected
+                                                )
+                                            },
+                                            onSeriesClick = { seriesItem, locked ->
+                                                if (locked) {
+                                                    pendingSeries = seriesItem
+                                                    showPinDialog = true
+                                                } else {
+                                                    onSeriesClick(seriesItem)
+                                                }
+                                            },
+                                            onSeriesLongClick = { seriesItem -> showSeriesActions(seriesItem) }
                                         )
-                                    },
-                                    onSeriesClick = { seriesItem, locked ->
-                                        if (locked) {
-                                            pendingSeries = seriesItem
-                                            showPinDialog = true
-                                        } else {
-                                            onSeriesClick(seriesItem)
-                                        }
-                                    },
-                                    onSeriesLongClick = { seriesItem -> showSeriesActions(seriesItem) }
-                                )
+                                    }
+                                }
                             }
                         }
                     }
@@ -831,7 +838,7 @@ private fun SearchHeroPanel(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.search_title),
+                        text = stringResource(R.string.search_catalog_title),
                         style = MaterialTheme.typography.headlineMedium,
                         color = TextPrimary,
                         modifier = Modifier.semantics { heading() }

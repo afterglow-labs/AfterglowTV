@@ -3,18 +3,14 @@ package com.afterglowtv.app.ui.screens.dashboard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
@@ -24,9 +20,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -40,8 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,60 +40,34 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.Border
-import androidx.tv.material3.Button
-import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
-import coil3.compose.AsyncImage
 import com.afterglowtv.app.R
-import com.afterglowtv.app.device.rememberIsTelevisionDevice
-import com.afterglowtv.app.ui.components.ChannelLogoBadge
 import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.store.StorePolicySnapshot
-import com.afterglowtv.app.ui.components.CategoryRow
-import com.afterglowtv.app.ui.components.ChannelCard
-import com.afterglowtv.app.ui.components.ContinueWatchingRow
-import com.afterglowtv.app.ui.components.rememberCrossfadeImageModel
-import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
-import com.afterglowtv.app.ui.components.shell.AppHeroHeader
 import com.afterglowtv.app.ui.components.shell.AppScreenScaffold
-import com.afterglowtv.app.ui.components.shell.StatusPill
 import com.afterglowtv.app.ui.design.AppColors
-import com.afterglowtv.app.ui.time.LocalAppTimeFormat
-import com.afterglowtv.app.ui.time.createDateTimeFormat
 import com.afterglowtv.app.ui.design.AppColors.Brand as Primary
 import com.afterglowtv.app.ui.design.AppColors.Focus as FocusBorder
 import com.afterglowtv.app.ui.design.AppColors.SurfaceElevated as SurfaceElevated
 import com.afterglowtv.app.ui.design.AppColors.SurfaceEmphasis as SurfaceHighlight
-import com.afterglowtv.app.ui.design.AppColors.TextPrimary as OnBackground
 import com.afterglowtv.app.ui.design.AppColors.TextPrimary as TextPrimary
-import com.afterglowtv.app.ui.design.AppColors.TextTertiary as OnSurfaceDim
-import com.afterglowtv.app.ui.design.AppColors.TextTertiary as TextTertiary
-import com.afterglowtv.domain.model.Channel
-import com.afterglowtv.domain.model.PlaybackHistory
+import com.afterglowtv.app.ui.design.AppColors.TextSecondary as OnSurfaceDim
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.BorderStroke
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
-import com.afterglowtv.app.ui.interaction.TvButton
-import com.afterglowtv.app.ui.interaction.TvIconButton
 
 @Composable
 fun DashboardScreen(
     onNavigate: (String) -> Unit,
     onAddProvider: () -> Unit,
-    onRecentChannelClick: (Channel, Long?) -> Unit,
-    onFavoriteChannelClick: (Channel, Long?) -> Unit,
-    onPlaybackHistoryClick: (PlaybackHistory) -> Unit,
     currentRoute: String,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -145,7 +110,6 @@ fun DashboardScreen(
 
             Box(modifier = Modifier.fillMaxSize()) {
                 HomeCommandHub(
-                    providerName = provider?.name?.takeIf { uiState.showProviderChrome },
                     policy = policy,
                     developerModeEnabled = developerModeEnabled,
                     startupDestination = startupDestination,
@@ -177,7 +141,6 @@ internal fun shouldShowDashboardLoadingState(uiState: DashboardUiState): Boolean
 
 @Composable
 private fun HomeCommandHub(
-    providerName: String?,
     policy: StorePolicySnapshot,
     developerModeEnabled: Boolean,
     startupDestination: StartupDestination,
@@ -198,7 +161,7 @@ private fun HomeCommandHub(
         if (!policy.guideOnlyReviewSurface) {
             add(HomeHubCardModel("VOD", "On demand", Routes.VOD_CONTAINER, Icons.Default.Star, Color(0xFFFFA64D)))
             add(HomeHubCardModel("Library", "Personal media", Routes.LOCAL_MEDIA, Icons.Default.Menu, Color(0xFFB4F06B)))
-            add(HomeHubCardModel("Search", "Find anything", Routes.SEARCH, Icons.Default.Search, Color(0xFFFF77FF)))
+            add(HomeHubCardModel("Search", "Provider catalog", Routes.SEARCH, Icons.Default.Search, Color(0xFFFF77FF)))
         }
     }
     val appearanceCards = listOf(
@@ -216,13 +179,6 @@ private fun HomeCommandHub(
             .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        AfterglowBrandStrip(
-            wordmark = "AfterglowTV",
-            tagline = "Home Screen",
-            modifier = Modifier.fillMaxWidth(),
-            logoSize = 40.dp,
-            showBrandName = false
-        )
         Row(
             modifier = Modifier.weight(1f),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -230,13 +186,12 @@ private fun HomeCommandHub(
             HomeWatchWindow(
                 cards = watchCards,
                 onNavigate = onNavigate,
-                modifier = Modifier.weight(1.18f)
+                modifier = Modifier.weight(1f)
             )
-            HomeSourcesWindow(
-                providerName = providerName,
+            HomeSourcesShortcutWindow(
                 onAddProvider = onAddProvider,
                 onOpenSettings = { onNavigate(Routes.SETTINGS) },
-                modifier = Modifier.weight(0.82f)
+                modifier = Modifier.weight(1f)
             )
         }
         Row(
@@ -329,29 +284,38 @@ private fun HomeWatchWindow(
     modifier: Modifier = Modifier
 ) {
     HomeWindow(
-        title = "Jump back in",
+        title = "Watch",
         subtitle = "Fast routes into playback.",
         accent = Color(0xFF60A5FA),
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             cards.take(2).forEach { card ->
-                HomeLargeAction(
+                HomeWatchAction(
                     model = card,
                     modifier = Modifier.weight(1f),
+                    prominent = true,
                     onClick = { card.route?.let(onNavigate) }
                 )
             }
         }
         if (cards.size > 2) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 cards.drop(2).take(3).forEach { card ->
-                    HomeStripAction(
+                    HomeWatchAction(
                         model = card,
                         modifier = Modifier.weight(1f),
+                        prominent = false,
                         onClick = { card.route?.let(onNavigate) }
                     )
                 }
@@ -361,30 +325,29 @@ private fun HomeWatchWindow(
 }
 
 @Composable
-private fun HomeSourcesWindow(
-    providerName: String?,
+private fun HomeSourcesShortcutWindow(
     onAddProvider: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     HomeWindow(
         title = "Sources",
-        subtitle = providerName ?: "Playlists and setup.",
+        subtitle = "Playlists and setup.",
         accent = Color(0xFFFFD166),
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier.height(72.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             HomeSmallTextAction(
-                title = if (providerName == null) "Add Playlist" else "Sources",
-                subtitle = if (providerName == null) "URL or file" else "Manage playlists",
+                title = "Add Playlist",
+                subtitle = "URL or file",
                 icon = Icons.Default.Settings,
                 accent = Color(0xFFFFD166),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
+                modifier = Modifier.weight(1f),
                 onClick = onAddProvider
             )
             HomeSmallTextAction(
@@ -392,46 +355,10 @@ private fun HomeSourcesWindow(
                 subtitle = "Providers",
                 icon = Icons.Default.Menu,
                 accent = Color(0xFFB4F06B),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
+                modifier = Modifier.weight(1f),
                 onClick = onOpenSettings
             )
         }
-        HomeSourceStatusText(
-            title = providerName ?: "No playlist selected",
-            subtitle = if (providerName == null) "Add a public or personal playlist to fill the guide." else "Ready for guide and playback.",
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun HomeSourceStatusText(
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = TextPrimary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.labelSmall,
-            color = OnSurfaceDim,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }
 
@@ -458,7 +385,7 @@ private fun HomeAppearanceWindow(
             )
             Column(
                 modifier = Modifier.weight(0.92f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 cards.drop(1).forEach { card ->
                     HomeSmallTextAction(
@@ -467,6 +394,7 @@ private fun HomeAppearanceWindow(
                         icon = card.icon,
                         accent = card.accent,
                         modifier = Modifier.weight(1f),
+                        compact = true,
                         onClick = { card.route?.let(onNavigate) }
                     )
                 }
@@ -520,13 +448,6 @@ private fun HomeQuickWindow(
                     color = TextPrimary,
                     maxLines = 1
                 )
-                Text(
-                    text = "Startup and remote behavior",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = OnSurfaceDim,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
             }
             Row(
                 modifier = Modifier.weight(1f),
@@ -534,13 +455,16 @@ private fun HomeQuickWindow(
             ) {
                 Column(
                     modifier = Modifier.weight(0.84f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Start on",
+                        text = "App start page",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = OnSurfaceDim,
-                        maxLines = 1
+                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     startupOptions.forEach { destination ->
                         HomeStartupChip(
@@ -553,13 +477,16 @@ private fun HomeQuickWindow(
                 }
                 Column(
                     modifier = Modifier.weight(1.16f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Remote",
+                        text = "Remote control",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = OnSurfaceDim,
-                        maxLines = 1
+                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     HomeMiniToggle(
                         title = "D-pad channel +/-",
@@ -581,74 +508,6 @@ private fun HomeQuickWindow(
             }
         }
     }
-}
-
-@Composable
-private fun HomeLargeAction(
-    model: HomeHubCardModel,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    TvClickableSurface(
-        onClick = onClick,
-        modifier = modifier.fillMaxSize(),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(16.dp)),
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = model.accent.copy(alpha = 0.14f),
-            focusedContainerColor = SurfaceHighlight
-        ),
-        border = ClickableSurfaceDefaults.border(
-            border = Border(
-                border = BorderStroke(1.dp, model.accent.copy(alpha = 0.36f)),
-                shape = RoundedCornerShape(16.dp)
-            ),
-            focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
-                shape = RoundedCornerShape(16.dp)
-            )
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconBadge(icon = model.icon, accent = model.accent, size = 34.dp)
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = model.title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = model.subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceDim,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeStripAction(
-    model: HomeHubCardModel,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    HomeSmallTextAction(
-        title = model.title,
-        subtitle = model.subtitle,
-        icon = model.icon,
-        accent = model.accent,
-        modifier = modifier.height(52.dp),
-        onClick = onClick
-    )
 }
 
 @Composable
@@ -713,14 +572,101 @@ private fun HomeThemeFeatureAction(
 }
 
 @Composable
+private fun HomeWatchAction(
+    model: HomeHubCardModel,
+    modifier: Modifier = Modifier,
+    prominent: Boolean,
+    onClick: () -> Unit
+) {
+    TvClickableSurface(
+        onClick = onClick,
+        modifier = modifier.fillMaxSize(),
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(14.dp)),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = model.accent.copy(alpha = 0.14f),
+            focusedContainerColor = SurfaceHighlight
+        ),
+        border = ClickableSurfaceDefaults.border(
+            border = Border(
+                border = BorderStroke(1.dp, model.accent.copy(alpha = 0.28f)),
+                shape = RoundedCornerShape(14.dp)
+            ),
+            focusedBorder = Border(
+                border = BorderStroke(2.dp, FocusBorder),
+                shape = RoundedCornerShape(14.dp)
+            )
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = if (prominent) 14.dp else 12.dp, vertical = if (prominent) 10.dp else 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(if (prominent) 12.dp else 9.dp)
+        ) {
+            IconBadge(
+                icon = model.icon,
+                accent = model.accent,
+                size = if (prominent) 34.dp else 28.dp
+            )
+            Text(
+                text = model.title,
+                style = if (prominent) {
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        lineHeight = 28.sp
+                    )
+                } else {
+                    MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        lineHeight = 22.sp
+                    )
+                },
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
 private fun HomeSmallTextAction(
     title: String,
     subtitle: String,
     icon: ImageVector,
     accent: Color,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
     onClick: () -> Unit
 ) {
+    val iconSize = if (compact) 20.dp else 30.dp
+    val verticalPadding = if (compact) 4.dp else 10.dp
+    val horizontalPadding = if (compact) 9.dp else 12.dp
+    val horizontalGap = if (compact) 7.dp else 10.dp
+    val titleStyle = if (compact) {
+        MaterialTheme.typography.labelLarge.copy(
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp,
+            lineHeight = 15.sp
+        )
+    } else {
+        MaterialTheme.typography.titleSmall.copy(
+            fontWeight = FontWeight.SemiBold,
+            lineHeight = 22.sp
+        )
+    }
+    val subtitleStyle = if (compact) {
+        MaterialTheme.typography.labelSmall.copy(
+            fontSize = 9.sp,
+            lineHeight = 10.sp
+        )
+    } else {
+        MaterialTheme.typography.labelSmall.copy(
+            fontSize = 11.sp,
+            lineHeight = 15.sp
+        )
+    }
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -743,28 +689,28 @@ private fun HomeSmallTextAction(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = horizontalPadding, vertical = verticalPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(horizontalGap)
         ) {
-            IconBadge(icon = icon, accent = accent, size = 30.dp)
-            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            IconBadge(icon = icon, accent = accent, size = iconSize)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(1.dp)
+            ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                    style = titleStyle,
                     color = TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 11.sp,
-                        lineHeight = 15.sp
-                    ),
+                    style = subtitleStyle,
                     color = OnSurfaceDim,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = if (compact) 2 else 1,
+                    overflow = if (compact) TextOverflow.Clip else TextOverflow.Ellipsis
                 )
             }
         }
@@ -780,8 +726,8 @@ private fun HomeStartupChip(
 ) {
     val title = when (destination) {
         StartupDestination.HOME -> "Home"
-        StartupDestination.LIVE_TV -> "Live"
-        StartupDestination.IPTV_GUIDE -> "Guide"
+        StartupDestination.LIVE_TV -> "Live TV"
+        StartupDestination.IPTV_GUIDE -> "TV Guide"
         else -> stringResource(destination.labelResId)
     }
     val accent = if (selected) Primary else Color(0xFF7DD3FC)
@@ -897,679 +843,5 @@ private fun IconBadge(
             tint = accent,
             modifier = Modifier.size((size.value * 0.56f).dp)
         )
-    }
-}
-
-@Composable
-private fun DashboardHero(
-    providerName: String,
-    feature: DashboardFeature,
-    stats: DashboardStats,
-    onOpenLiveTv: () -> Unit,
-    onOpenGuide: () -> Unit,
-    onOpenSearch: () -> Unit,
-    onOpenSavedLibrary: () -> Unit,
-    onFeatureAction: () -> Unit
-) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val isTelevisionDevice = rememberIsTelevisionDevice()
-    val heroHeight = when {
-        screenWidth < 700.dp -> 176.dp
-        !isTelevisionDevice && screenWidth < 1280.dp -> 196.dp
-        else -> 220.dp
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp)
-    ) {
-        if (!feature.artworkUrl.isNullOrBlank()) {
-            AsyncImage(
-                model = rememberCrossfadeImageModel(feature.artworkUrl),
-                contentDescription = feature.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(heroHeight)
-                    .clip(RoundedCornerShape(28.dp))
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(heroHeight)
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.88f),
-                                Color.Black.copy(alpha = 0.72f),
-                                Color.Black.copy(alpha = 0.34f)
-                            )
-                        )
-                    )
-            )
-        }
-
-        AppHeroHeader(
-            eyebrow = providerName,
-            title = feature.title.ifBlank { stringResource(R.string.dashboard_title) },
-            subtitle = feature.summary.ifBlank { stringResource(R.string.dashboard_subtitle, providerName) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(heroHeight),
-            footer = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatusPill(label = stringResource(R.string.nav_live_tv), containerColor = AppColors.BrandMuted)
-                        StatusPill(label = stringResource(R.string.nav_epg), containerColor = AppColors.SurfaceEmphasis)
-                        StatusPill(label = stringResource(R.string.favorites_title), containerColor = AppColors.Warning, contentColor = Color.Black)
-                    }
-                    DashboardStatRow(stats = stats)
-                }
-            },
-            actions = {
-                DashboardActionButton(label = stringResource(R.string.nav_live_tv), onClick = onOpenLiveTv)
-                DashboardActionButton(label = stringResource(R.string.nav_epg), onClick = onOpenGuide)
-                DashboardActionButton(label = stringResource(R.string.dashboard_search_library), onClick = onOpenSearch)
-                DashboardActionButton(label = stringResource(R.string.favorites_title), onClick = onOpenSavedLibrary)
-                if (feature.actionLabel.isNotBlank()) {
-                    DashboardActionButton(
-                        label = feature.actionLabel,
-                        onClick = onFeatureAction
-                    )
-                }
-            }
-        )
-    }
-}
-
-@Composable
-private fun DashboardStatRow(
-    stats: DashboardStats
-) {
-    val statItems = listOf(
-        stringResource(R.string.dashboard_stat_live, stats.liveChannelCount),
-        stringResource(R.string.dashboard_stat_favorites, stats.favoriteChannelCount),
-        stringResource(R.string.dashboard_stat_recent, stats.recentChannelCount),
-        stringResource(R.string.dashboard_stat_resume, stats.continueWatchingCount)
-    )
-
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        items(statItems, key = { it }) { statLabel ->
-            Surface(
-                shape = RoundedCornerShape(999.dp),
-                colors = SurfaceDefaults.colors(
-                    containerColor = AppColors.Surface.copy(alpha = 0.64f)
-                )
-            ) {
-                Text(
-                    text = statLabel,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = TextPrimary,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DashboardShortcutRow(
-    title: String,
-    subtitle: String,
-    shortcuts: List<DashboardLiveShortcut>,
-    onShortcutClick: (DashboardLiveShortcut) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                color = TextPrimary
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceDim
-            )
-        }
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(shortcuts, key = { "${it.type}:${it.categoryId}:${it.label}" }) { shortcut ->
-                DashboardShortcutCard(
-                    shortcut = shortcut,
-                    onClick = { onShortcutClick(shortcut) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DashboardShortcutCard(
-    shortcut: DashboardLiveShortcut,
-    onClick: () -> Unit
-) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val isTelevisionDevice = rememberIsTelevisionDevice()
-    val cardWidth = when {
-        screenWidth < 700.dp -> 148.dp
-        !isTelevisionDevice && screenWidth < 1280.dp -> 160.dp
-        else -> 170.dp
-    }
-    val accentColor = when (shortcut.type) {
-        DashboardShortcutType.FAVORITES -> Color(0xFFFFC857)
-        DashboardShortcutType.RECENT -> Color(0xFF4FD1C5)
-        DashboardShortcutType.LAST_GROUP -> Color(0xFF60A5FA)
-        DashboardShortcutType.CUSTOM_GROUP -> Primary
-    }
-
-    TvClickableSurface(
-        onClick = onClick,
-        modifier = Modifier
-            .width(cardWidth)
-            .height(76.dp),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(16.dp)),
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = SurfaceElevated,
-            focusedContainerColor = SurfaceHighlight
-        ),
-        border = ClickableSurfaceDefaults.border(
-            border = Border(
-                border = BorderStroke(1.dp, accentColor.copy(alpha = 0.28f)),
-                shape = RoundedCornerShape(16.dp)
-            ),
-            focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
-                shape = RoundedCornerShape(16.dp)
-            )
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(accentColor)
-                )
-                Text(
-                    text = shortcut.label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Text(
-                text = shortcut.detail,
-                style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceDim,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-private fun DashboardActionButton(
-    label: String,
-    onClick: () -> Unit
-) {
-    TvButton(
-        onClick = onClick,
-        colors = ButtonDefaults.colors(
-            containerColor = Primary.copy(alpha = 0.18f),
-            focusedContainerColor = Primary.copy(alpha = 0.32f),
-            contentColor = TextPrimary
-        )
-    ) {
-        Text(text = label)
-    }
-}
-
-@Composable
-private fun DashboardProviderHealthCard(
-    providerName: String,
-    health: DashboardProviderHealth,
-    onOpenDiagnostics: () -> Unit
-) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val appTimeFormat = LocalAppTimeFormat.current
-    val dateTimeFormat = remember(appTimeFormat) { appTimeFormat.createDateTimeFormat() }
-    val syncLabel = remember(health.lastSyncedAt, dateTimeFormat) {
-        if (health.lastSyncedAt <= 0L) {
-            context.getString(R.string.dashboard_provider_no_sync)
-        } else {
-            context.getString(R.string.dashboard_provider_synced_at, dateTimeFormat.format(Date(health.lastSyncedAt)))
-        }
-    }
-    val expiryLabel = remember(health.expirationDate) {
-        health.expirationDate?.let {
-            val format = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-            context.getString(R.string.dashboard_provider_expires_at, format.format(Date(it)))
-        } ?: context.getString(R.string.dashboard_provider_no_expiry)
-    }
-    val statusLabel = when (health.status) {
-        com.afterglowtv.domain.model.ProviderStatus.ACTIVE -> stringResource(R.string.settings_status_active)
-        com.afterglowtv.domain.model.ProviderStatus.PARTIAL -> stringResource(R.string.settings_status_partial)
-        com.afterglowtv.domain.model.ProviderStatus.ERROR -> stringResource(R.string.settings_status_error)
-        com.afterglowtv.domain.model.ProviderStatus.EXPIRED -> stringResource(R.string.settings_status_expired)
-        com.afterglowtv.domain.model.ProviderStatus.DISABLED -> stringResource(R.string.settings_status_disabled)
-        com.afterglowtv.domain.model.ProviderStatus.UNKNOWN -> stringResource(R.string.settings_status_unknown)
-    }
-    val sourceLabel = when (health.type) {
-        com.afterglowtv.domain.model.ProviderType.XTREAM_CODES -> stringResource(R.string.dashboard_provider_xtream)
-        com.afterglowtv.domain.model.ProviderType.M3U -> stringResource(R.string.dashboard_provider_m3u)
-        com.afterglowtv.domain.model.ProviderType.STALKER_PORTAL -> "Portal/MAG Login"
-    }
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 48.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(22.dp),
-        colors = SurfaceDefaults.colors(containerColor = SurfaceHighlight)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 18.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.dashboard_provider_health_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary
-                )
-                Text(
-                    text = providerName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = OnSurfaceDim
-                )
-                Text(
-                    text = "$syncLabel | $expiryLabel",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceDim
-                )
-            }
-
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                item {
-                    DashboardHealthPill(
-                        label = statusLabel,
-                        value = stringResource(R.string.dashboard_provider_status)
-                    )
-                }
-                item {
-                    DashboardHealthPill(
-                        label = sourceLabel,
-                        value = stringResource(R.string.dashboard_provider_source)
-                    )
-                }
-                item {
-                    DashboardHealthPill(
-                        label = health.maxConnections.toString(),
-                        value = stringResource(R.string.dashboard_provider_connections)
-                    )
-                }
-            }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 0.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            DashboardActionButton(
-                label = stringResource(R.string.dashboard_warning_review),
-                onClick = onOpenDiagnostics
-            )
-        }
-    }
-}
-
-@Composable
-private fun DashboardHealthPill(
-    label: String,
-    value: String
-) {
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        colors = SurfaceDefaults.colors(containerColor = Color.White.copy(alpha = 0.08f))
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.labelSmall,
-                color = OnSurfaceDim
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = TextPrimary
-            )
-        }
-    }
-}
-
-@Composable
-private fun DashboardProviderWarningCard(
-    warnings: List<String>,
-    onOpenSettings: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 48.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = SurfaceDefaults.colors(containerColor = SurfaceElevated)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 22.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.dashboard_warning_title),
-                style = MaterialTheme.typography.titleMedium,
-                color = Primary
-            )
-            Text(
-                text = warnings.take(3).joinToString(" | "),
-                style = MaterialTheme.typography.bodyMedium,
-                color = OnSurfaceDim
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                DashboardActionButton(
-                    label = stringResource(R.string.dashboard_warning_review),
-                    onClick = onOpenSettings
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DashboardUpdateCard(
-    notice: DashboardUpdateNotice,
-    onOpenSettings: () -> Unit,
-    onInstallUpdate: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 48.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = SurfaceDefaults.colors(containerColor = Primary.copy(alpha = 0.16f)),
-        border = Border(BorderStroke(1.dp, Primary.copy(alpha = 0.45f)))
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 22.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.dashboard_update_title, notice.latestVersionName),
-                style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary
-            )
-            Text(
-                text = stringResource(
-                    if (notice.installReady) {
-                        R.string.dashboard_update_install_ready
-                    } else {
-                        R.string.dashboard_update_available
-                    }
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = OnSurfaceDim
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                DashboardActionButton(
-                    label = stringResource(
-                        if (notice.installReady) {
-                            R.string.dashboard_update_open_installer
-                        } else {
-                            R.string.dashboard_update_open_settings
-                        }
-                    ),
-                    onClick = {
-                        if (notice.installReady) {
-                            onInstallUpdate()
-                        } else {
-                            onOpenSettings()
-                        }
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyDashboard(
-    onAddProvider: () -> Unit,
-    onOpenSettings: () -> Unit
-) {
-    BoxWithConstraints(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        val isTelevisionDevice = rememberIsTelevisionDevice()
-        val contentModifier = if (maxWidth < 900.dp) {
-            Modifier.fillMaxWidth(0.9f)
-        } else if (!isTelevisionDevice && maxWidth < 1280.dp) {
-            Modifier.fillMaxWidth(0.76f)
-        } else {
-            Modifier.width(720.dp)
-        }
-
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            colors = SurfaceDefaults.colors(
-                containerColor = SurfaceHighlight
-            )
-        ) {
-            Column(
-                modifier = contentModifier
-                    .padding(horizontal = 32.dp, vertical = 28.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text(
-                    text = stringResource(R.string.dashboard_empty_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = OnBackground
-                )
-                Text(
-                    text = stringResource(R.string.dashboard_empty_body),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = OnSurfaceDim
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    TvButton(onClick = onAddProvider) {
-                        Text(stringResource(R.string.settings_add_provider))
-                    }
-                    TvButton(
-                        onClick = onOpenSettings,
-                        colors = ButtonDefaults.colors(
-                            containerColor = SurfaceElevated,
-                            focusedContainerColor = Primary.copy(alpha = 0.24f),
-                            contentColor = TextPrimary
-                        )
-                    ) {
-                        Text(stringResource(R.string.nav_settings))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun rememberDashboardSections(
-    uiState: DashboardUiState
-): List<DashboardHomeSection> {
-    return remember(
-        uiState.feature.actionType,
-        uiState.liveShortcuts,
-        uiState.favoriteChannels,
-        uiState.recentChannels,
-        uiState.continueWatching
-    ) {
-        val preferred = listOf(
-            DashboardHomeSection.FAVORITE_CHANNELS,
-            DashboardHomeSection.RECENT_CHANNELS,
-            DashboardHomeSection.LIVE_SHORTCUTS,
-            DashboardHomeSection.CONTINUE_WATCHING
-        )
-
-        preferred.filter { section ->
-            when (section) {
-                DashboardHomeSection.LIVE_SHORTCUTS -> uiState.liveShortcuts.isNotEmpty()
-                DashboardHomeSection.FAVORITE_CHANNELS -> uiState.favoriteChannels.isNotEmpty()
-                DashboardHomeSection.RECENT_CHANNELS -> uiState.recentChannels.isNotEmpty()
-                DashboardHomeSection.CONTINUE_WATCHING -> uiState.continueWatching.isNotEmpty()
-            }
-        }
-    }
-}
-
-private enum class DashboardHomeSection {
-    LIVE_SHORTCUTS,
-    FAVORITE_CHANNELS,
-    RECENT_CHANNELS,
-    CONTINUE_WATCHING
-}
-
-@Composable
-private fun FavoriteChannelsRow(
-    title: String,
-    channels: List<Channel>,
-    onSeeAll: () -> Unit,
-    onChannelClick: (Channel) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary
-            )
-            TvClickableSurface(
-                onClick = onSeeAll,
-                shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
-                colors = ClickableSurfaceDefaults.colors(
-                    containerColor = Primary.copy(alpha = 0.12f),
-                    focusedContainerColor = Primary.copy(alpha = 0.22f),
-                    contentColor = TextTertiary
-                )
-            ) {
-                Text(
-                    text = stringResource(R.string.category_see_all),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                )
-            }
-        }
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(channels, key = { it.id }) { channel ->
-                FavoriteChannelLogoCard(
-                    channel = channel,
-                    onClick = { onChannelClick(channel) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun FavoriteChannelLogoCard(
-    channel: Channel,
-    onClick: () -> Unit
-) {
-    TvClickableSurface(
-        onClick = onClick,
-        modifier = Modifier.width(86.dp),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(18.dp)),
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = SurfaceElevated,
-            focusedContainerColor = SurfaceHighlight
-        ),
-        border = ClickableSurfaceDefaults.border(
-            focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
-                shape = RoundedCornerShape(18.dp)
-            )
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(54.dp)
-                    .clip(RoundedCornerShape(999.dp))
-            ) {
-                ChannelLogoBadge(
-                    channelName = channel.name,
-                    logoUrl = channel.logoUrl,
-                    shape = RoundedCornerShape(999.dp),
-                    backgroundColor = AppColors.SurfaceEmphasis,
-                    contentPadding = PaddingValues(8.dp),
-                    textStyle = MaterialTheme.typography.labelLarge,
-                    textColor = TextPrimary,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Text(
-                text = channel.name,
-                style = MaterialTheme.typography.bodySmall,
-                color = TextPrimary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
     }
 }

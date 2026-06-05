@@ -1,5 +1,8 @@
 package com.afterglowtv.app.ui.components.shell
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
@@ -47,16 +50,22 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
@@ -82,6 +91,10 @@ enum class AppNavigationChrome {
     Rail,
     TopBar
 }
+
+private val TopNavFontFamily = FontFamily(
+    Font(R.font.vox_round, FontWeight.Normal)
+)
 
 @Composable
 fun AppScreenScaffold(
@@ -265,8 +278,21 @@ private fun TopNavigationBar(
     val policy = StorePolicy.currentFor(developerModeEnabled)
     val items = remember(showAdultTab, policy) { buildDestinationItems(showAdultTab, policy) }
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
+    var showExitConfirmation by remember { mutableStateOf(false) }
 
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
+
+    if (showExitConfirmation) {
+        ConfirmCloseAppDialog(
+            onDismiss = { showExitConfirmation = false },
+            onConfirm = {
+                showExitConfirmation = false
+                activity?.finishAndRemoveTask()
+            }
+        )
+    }
     
     Surface(
         modifier = modifier.focusProperties {
@@ -275,22 +301,38 @@ private fun TopNavigationBar(
                 focusRequesters[activeItem?.route] ?: FocusRequester.Default
             }
         },
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = SurfaceDefaults.colors(containerColor = AppColors.Surface.copy(alpha = 0.9f))
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-                .padding(horizontal = 10.dp),
-            contentAlignment = Alignment.Center
+                .height(118.dp)
+                .padding(horizontal = 22.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AfterglowBrandStrip(
+                    wordmark = "Afterglow TV",
+                    tagline = "",
+                    modifier = Modifier.weight(1f),
+                    logoSize = 46.dp,
+                    showBrandName = false
+                )
+                TopAppCloseButton(
+                    onClick = { showExitConfirmation = true }
+                )
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(scrollState)
                     .padding(horizontal = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 items.forEach { item ->
@@ -309,6 +351,87 @@ private fun TopNavigationBar(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ConfirmCloseAppDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Close Afterglow TV?",
+                style = MaterialTheme.typography.titleMedium,
+                color = AppColors.TextPrimary
+            )
+        },
+        text = {
+            Text(
+                text = "Playback and browsing will stop.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = AppColors.TextSecondary
+            )
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = onConfirm) {
+                Text("Close")
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        containerColor = AppColors.SurfaceElevated,
+        titleContentColor = AppColors.TextPrimary,
+        textContentColor = AppColors.TextSecondary
+    )
+}
+
+@Composable
+private fun TopAppCloseButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val focusRequester = remember { FocusRequester() }
+    val sounds = rememberTvInteractionSounds()
+    Surface(
+        onClick = {
+            sounds.playSelect()
+            onClick()
+        },
+        modifier = modifier
+            .focusRequester(focusRequester)
+            .mouseClickable(
+                focusRequester = focusRequester,
+                onClick = {
+                    sounds.playSelect()
+                    onClick()
+                }
+            ),
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = AppColors.SurfaceEmphasis.copy(alpha = 0.82f),
+            focusedContainerColor = AppColors.BrandMuted
+        ),
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                shape = RoundedCornerShape(999.dp)
+            )
+        )
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_afterglow_exit_power),
+            contentDescription = "Close app",
+            tint = Color.Unspecified,
+            modifier = Modifier
+                .padding(10.dp)
+                .size(20.dp)
+        )
     }
 }
 
@@ -362,25 +485,30 @@ private fun TopNavigationButton(
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
                 border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(999.dp)
             )
         )
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
                 tint = if (selected) AppColors.Brand else AppColors.TextSecondary,
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(16.dp)
             )
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (selected) AppColors.TextPrimary else AppColors.TextSecondary
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontFamily = TopNavFontFamily,
+                    fontWeight = FontWeight.Normal
+                ),
+                color = if (selected) AppColors.TextPrimary else AppColors.TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -832,4 +960,10 @@ private fun buildDestinationItems(
     add(DestinationItem(Routes.LOCAL_MEDIA, R.string.nav_personal_guide, Icons.Default.Menu))
     add(DestinationItem(Routes.SEARCH, R.string.search_title, Icons.Default.Search))
     add(DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings))
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

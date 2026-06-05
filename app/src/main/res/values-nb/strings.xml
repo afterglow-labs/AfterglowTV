@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Nylige kanaler</string>
     <string name="dashboard_recent_movies">Nylig lagt til filmer</string>
     <string name="dashboard_recent_series">Nylig oppdatert serie</string>
-    <string name="dashboard_search_library">Søk i biblioteket</string>
     <string name="dashboard_live_shortcuts">Live snarveier</string>
     <string name="dashboard_live_shortcuts_subtitle">Favoritter, nylige kanaler og siste gruppe.</string>
     <string name="dashboard_provider_health_title">Leverandørstatus</string>

@@ -10,7 +10,9 @@ data class BundledPublicSourceSpec(
     val providerName: String,
     val sourceSlot: ProviderSourceSlot,
     val m3uVodClassificationEnabled: Boolean,
-    val guideFileName: String
+    val guideFileName: String,
+    val playlistUrl: String = "",
+    val guideUrl: String = ""
 )
 
 data class StorePolicySnapshot(
@@ -158,7 +160,9 @@ data class StorePolicySnapshot(
                     providerName = "Free, Authorized Public M3U Playlist",
                     sourceSlot = ProviderSourceSlot.LIVE,
                     m3uVodClassificationEnabled = false,
-                    guideFileName = "afterglow_public_live.xml"
+                    guideFileName = "afterglow_public_live.xml",
+                    playlistUrl = "https://afterglow-labs.com/tv/afterglow_public_live.m3u8",
+                    guideUrl = "https://afterglow-labs.com/tv/afterglow_public_live.xml"
                 )
             ),
             allowXtreamPlaylistAutoDetection = false,
@@ -205,7 +209,7 @@ data class StorePolicySnapshot(
             rawSpecs.split('|')
                 .mapNotNull { rawSpec ->
                     val parts = rawSpec.split("::")
-                    if (parts.size !in 5..6) return@mapNotNull null
+                    if (parts.size !in 5..8) return@mapNotNull null
                     val slot = runCatching { ProviderSourceSlot.valueOf(parts[3]) }.getOrNull()
                         ?: return@mapNotNull null
                     BundledPublicSourceSpec(
@@ -215,7 +219,9 @@ data class StorePolicySnapshot(
                         sourceSlot = slot,
                         m3uVodClassificationEnabled = parts[4].trim().toBoolean(),
                         guideFileName = parts.getOrNull(5)?.trim().orEmpty()
-                            .ifBlank { parts[1].trim().substringBeforeLast('.') + ".xml" }
+                            .ifBlank { parts[1].trim().substringBeforeLast('.') + ".xml" },
+                        playlistUrl = parts.getOrNull(6)?.trim().orEmpty(),
+                        guideUrl = parts.getOrNull(7)?.trim().orEmpty()
                     ).takeIf { it.playlistAssetPath.isNotBlank() && it.playlistFileName.isNotBlank() }
                 }
     }

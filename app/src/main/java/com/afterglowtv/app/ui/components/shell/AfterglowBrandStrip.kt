@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -37,6 +39,10 @@ import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.GlowSpec
 import com.afterglowtv.app.ui.design.afterglow
+
+private val VoxRoundWideFontFamily = FontFamily(
+    Font(R.font.vox_round_wide_semibold, FontWeight.SemiBold)
+)
 
 /**
  * Shared layered backdrop used by every Afterglow-branded screen:
@@ -100,16 +106,16 @@ fun AfterglowBackdrop(modifier: Modifier = Modifier) {
 }
 
 /**
- * Compact horizontal brand strip — logo + "AfterglowTV / [wordmark]" + tagline.
+ * Compact horizontal brand strip — logo + "Afterglow TV / [wordmark]" + tagline.
  *
- * Use at the top of a screen's content area to anchor the AfterglowTV identity
+ * Use at the top of a screen's content area to anchor the Afterglow TV identity
  * without consuming much vertical space. ~88dp tall.
  *
  * For full-screen splash/settings hero, use [AfterglowHero] instead.
  *
  * @param wordmark The accent half of the title (e.g. "Themes", "VOD",
  *     "Series", "Live TV", "Guide", "Settings"). Rendered in accent color
- *     beside "AfterglowTV".
+ *     beside "Afterglow TV".
  * @param tagline One-line subtitle in Afterglow voice.
  * @param logoSize 40-64dp. Defaults to 48dp for compact use.
  */
@@ -128,7 +134,7 @@ fun AfterglowBrandStrip(
     ) {
         Image(
             painter = painterResource(id = R.drawable.afterglow_logo),
-            contentDescription = "AfterglowTV",
+            contentDescription = "Afterglow TV",
             modifier = Modifier
                 .size(logoSize)
                 .afterglow(
@@ -144,7 +150,7 @@ fun AfterglowBrandStrip(
             Row(verticalAlignment = Alignment.Bottom) {
                 if (showBrandName) {
                     AfterglowWordmarkText(
-                        text = "AfterglowTV",
+                        text = "Afterglow TV",
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = TextUnit(28f, TextUnitType.Sp),
@@ -163,7 +169,7 @@ fun AfterglowBrandStrip(
                     )
                 if (wordmark.isAfterglowWordmark()) {
                     AfterglowWordmarkText(
-                        text = "AfterglowTV",
+                        text = "Afterglow TV",
                         style = wordmarkStyle.copy(
                             fontWeight = FontWeight.Bold,
                         )
@@ -190,7 +196,7 @@ fun AfterglowBrandStrip(
 
 /**
  * Full-screen hero block — [AfterglowBackdrop] + centered logo + large
- * "AfterglowTV / [wordmark]" + tagline. For Welcome and major settings screens
+ * "Afterglow TV / [wordmark]" + tagline. For Welcome and major settings screens
  * that should feel premium and identity-forward.
  *
  * Pass [content] to render slot children below the hero header (e.g. a
@@ -213,7 +219,7 @@ fun AfterglowHero(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.afterglow_logo),
-                contentDescription = "AfterglowTV",
+                contentDescription = "Afterglow TV",
                 modifier = Modifier
                     .size(logoSize)
                     .afterglow(
@@ -228,7 +234,7 @@ fun AfterglowHero(
             Spacer(Modifier.size(20.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 AfterglowWordmarkText(
-                    text = "AfterglowTV",
+                    text = "Afterglow TV",
                     style = MaterialTheme.typography.displayMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = TextUnit(52f, TextUnitType.Sp),
@@ -286,6 +292,7 @@ private fun AfterglowWordmarkText(
     val neonPink = Color(0xFFFF2D8D)
     val tvEnd = if (tvStart >= glowEnd) tvStart + "TV".length else -1
     val wordEnd = if (tvEnd > 0) tvEnd else glowEnd
+    val wordmarkStyle = style.copy(fontFamily = VoxRoundWideFontFamily)
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.Bottom
@@ -306,7 +313,7 @@ private fun AfterglowWordmarkText(
                     append(text.substring(0, wordEnd))
                 }
             },
-            style = style.copy(
+            style = wordmarkStyle.copy(
                 shadow = Shadow(
                     color = neonOrange.copy(alpha = 0.24f),
                     offset = Offset.Zero,
@@ -318,7 +325,7 @@ private fun AfterglowWordmarkText(
         if (wordEnd < text.length) {
             Text(
                 text = text.substring(wordEnd),
-                style = style,
+                style = wordmarkStyle,
                 color = color,
             )
         }

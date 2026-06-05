@@ -45,7 +45,9 @@ class BundledPublicSourceSeeder @Inject constructor(
         var liveProviderIdToActivate: Long? = null
         policy.bundledPublicSources.forEach { spec ->
             val preparedPlaylist = prepareBundledPlaylistFile(spec) ?: return@forEach
-            val guideUrl = prepareBundledGuideFile(spec, preparedPlaylist)
+            val bundledGuideUrl = prepareBundledGuideFile(spec, preparedPlaylist)
+            val playlistUrl = spec.playlistUrl.ifBlank { preparedPlaylist.file.toURI().toString() }
+            val guideUrl = spec.guideUrl.ifBlank { bundledGuideUrl.orEmpty() }.ifBlank { null }
             providers = providerRepository.getProviders().first()
             val existingProvider = providers.firstOrNull(policy::isBundledPublicSourceProvider)
 
@@ -53,7 +55,7 @@ class BundledPublicSourceSeeder @Inject constructor(
                 when (
                     val result = validateAndAddProvider.addM3u(
                         M3uProviderSetupCommand(
-                            url = preparedPlaylist.file.toURI().toString(),
+                            url = playlistUrl,
                             name = spec.providerName,
                             epgSyncMode = ProviderEpgSyncMode.SKIP,
                             m3uVodClassificationEnabled = spec.m3uVodClassificationEnabled,
@@ -72,10 +74,8 @@ class BundledPublicSourceSeeder @Inject constructor(
             }
 
             if (providerId != null) {
-                existingProvider?.let { provider ->
-                    updateExistingBundledProvider(provider, spec, preparedPlaylist.file)
-                }
-                attachGuideSource(providerId, spec, guideUrl)
+                updateBundledProviderMetadata(providerId, spec, playlistUrl, guideUrl)
+                attachGuideSource(providerId, spec, guideUrl, bundledGuideUrl)
                 preferencesRepository.setBundledPublicSourceSeeded(true)
 
                 providers = providerRepository.getProviders().first()
@@ -98,17 +98,19 @@ class BundledPublicSourceSeeder @Inject constructor(
         }
     }
 
-    private suspend fun updateExistingBundledProvider(
-        provider: Provider,
+    private suspend fun updateBundledProviderMetadata(
+        providerId: Long,
         spec: BundledPublicSourceSpec,
-        playlistFile: File
+        playlistUrl: String,
+        guideUrl: String?
     ) {
+        val provider = providerRepository.getProvider(providerId) ?: return
         providerRepository.updateProvider(
             provider.copy(
                 name = spec.providerName,
-                serverUrl = playlistFile.toURI().toString(),
-                m3uUrl = playlistFile.toURI().toString(),
-                epgUrl = "",
+                serverUrl = playlistUrl,
+                m3uUrl = playlistUrl,
+                epgUrl = guideUrl.orEmpty(),
                 epgSyncMode = ProviderEpgSyncMode.SKIP,
                 m3uVodClassificationEnabled = spec.m3uVodClassificationEnabled
             )
@@ -118,12 +120,17 @@ class BundledPublicSourceSeeder @Inject constructor(
     private suspend fun attachGuideSource(
         providerId: Long,
         spec: BundledPublicSourceSpec,
-        guideUrl: String?
+        guideUrl: String?,
+        bundledGuideUrl: String?
     ) {
         if (guideUrl.isNullOrBlank()) return
-        val source = existingGuideSource(guideUrl) ?: when (
+        val sourceName = "${spec.providerName} Guide"
+        val legacySource = existingGuideSourceOrNull(bundledGuideUrl)
+            ?.takeIf { it.url != guideUrl }
+        val source = existingGuideSource(guideUrl)
+            ?: when (
             val result = epgSourceRepository.addSource(
-                name = "${spec.providerName} Guide",
+                name = sourceName,
                 url = guideUrl
             )
         ) {
@@ -140,10 +147,17 @@ class BundledPublicSourceSeeder @Inject constructor(
             .onFailure { error -> Log.w(TAG, "Unable to refresh bundled public guide", error) }
         runCatching { epgSourceRepository.resolveForProvider(providerId) }
             .onFailure { error -> Log.w(TAG, "Unable to resolve bundled public guide", error) }
+        legacySource?.let { sourceToDelete ->
+            runCatching { epgSourceRepository.deleteSource(sourceToDelete.id) }
+                .onFailure { error -> Log.w(TAG, "Unable to remove legacy bundled public guide", error) }
+        }
     }
 
     private suspend fun existingGuideSource(guideUrl: String): EpgSource? =
         epgSourceRepository.getAllSources().first().firstOrNull { it.url == guideUrl }
+
+    private suspend fun existingGuideSourceOrNull(guideUrl: String?): EpgSource? =
+        guideUrl?.takeIf { it.isNotBlank() }?.let { existingGuideSource(it) }
 
     private fun prepareBundledPlaylistFile(spec: BundledPublicSourceSpec): PreparedBundledPlaylist? {
         val outputDirectory = File(context.filesDir, StorePolicySnapshot.BUNDLED_PUBLIC_SOURCE_DIRECTORY)

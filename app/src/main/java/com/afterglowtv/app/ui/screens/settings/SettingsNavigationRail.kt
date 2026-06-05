@@ -145,7 +145,7 @@ internal fun SettingsNavigationRail(
             .width(236.dp)
             .fillMaxHeight()
             .background(Color.Black.copy(alpha = 0.25f)),
-        contentPadding = PaddingValues(top = 76.dp, bottom = 16.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         if (SETTINGS_CATEGORY_PROVIDERS in visibleCategoryIds) {

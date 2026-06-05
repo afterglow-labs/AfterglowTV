@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">最近频道</string>
     <string name="dashboard_recent_movies">最近添加的电影</string>
     <string name="dashboard_recent_series">最近更新的剧集</string>
-    <string name="dashboard_search_library">搜索媒体库</string>
     <string name="dashboard_live_shortcuts">直播快捷方式</string>
     <string name="dashboard_live_shortcuts_subtitle">收藏、最近频道和上次分组。</string>
     <string name="dashboard_provider_health_title">服务状态</string>

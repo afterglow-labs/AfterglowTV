@@ -39,6 +39,15 @@ fun computeOfficialSigningCertSha256(): String {
 }
 
 val officialSigningCertSha256 = computeOfficialSigningCertSha256()
+val bundledPublicSourceSpec =
+    "public_sources/playlist_usa.m3u8" +
+        "::afterglow_public_live.m3u8" +
+        "::Free, Authorized Public M3U Playlist" +
+        "::LIVE" +
+        "::false" +
+        "::afterglow_public_live.xml" +
+        "::https://afterglow-labs.com/tv/afterglow_public_live.m3u8" +
+        "::https://afterglow-labs.com/tv/afterglow_public_live.xml"
 
 android {
     namespace = "com.afterglowtv.app"
@@ -95,7 +104,7 @@ android {
             buildConfigField(
                 "String",
                 "BUNDLED_PUBLIC_SOURCE_SPECS",
-                "\"public_sources/playlist_usa.m3u8::afterglow_public_live.m3u8::Free, Authorized Public M3U Playlist::LIVE::false::afterglow_public_live.xml\""
+                "\"$bundledPublicSourceSpec\""
             )
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
@@ -121,7 +130,7 @@ android {
             buildConfigField(
                 "String",
                 "BUNDLED_PUBLIC_SOURCE_SPECS",
-                "\"public_sources/playlist_usa.m3u8::afterglow_public_live.m3u8::Free, Authorized Public M3U Playlist::LIVE::false::afterglow_public_live.xml\""
+                "\"$bundledPublicSourceSpec\""
             )
             buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
             buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")

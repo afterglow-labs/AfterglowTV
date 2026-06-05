@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">최근 채널</string>
     <string name="dashboard_recent_movies">최근 추가된 영화</string>
     <string name="dashboard_recent_series">최근 업데이트된 시리즈</string>
-    <string name="dashboard_search_library">라이브러리 검색</string>
     <string name="dashboard_live_shortcuts">라이브 바로가기</string>
     <string name="dashboard_live_shortcuts_subtitle">즐겨찾기, 최근 채널, 마지막 그룹.</string>
     <string name="dashboard_provider_health_title">공급자 상태</string>

@@ -363,7 +363,7 @@ fun PlayerAspectRatioToast(
     }
 
     AnimatedVisibility(
-        visible = show && !controlsVisible,
+        visible = show,
         enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
         exit = fadeOut() + slideOutVertically(targetOffsetY = { -it }),
         modifier = modifier

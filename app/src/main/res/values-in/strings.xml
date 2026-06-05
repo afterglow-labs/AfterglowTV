@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Saluran Terbaru</string>
     <string name="dashboard_recent_movies">Film yang Baru Ditambahkan</string>
     <string name="dashboard_recent_series">Seri yang Baru Diperbarui</string>
-    <string name="dashboard_search_library">Perpustakaan Pencarian</string>
     <string name="dashboard_live_shortcuts">Pintasan Langsung</string>
     <string name="dashboard_live_shortcuts_subtitle">Favorit, saluran terkini, dan grup terakhir.</string>
     <string name="dashboard_provider_health_title">Kesehatan Penyedia</string>

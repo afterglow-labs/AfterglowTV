@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Nejnovější kanály</string>
     <string name="dashboard_recent_movies">Nedávno přidané filmy</string>
     <string name="dashboard_recent_series">Nedávno aktualizovaná řada</string>
-    <string name="dashboard_search_library">Prohledat knihovnu</string>
     <string name="dashboard_live_shortcuts">Zkratky pro živé vysílání</string>
     <string name="dashboard_live_shortcuts_subtitle">Oblíbené, poslední kanály a poslední skupina.</string>
     <string name="dashboard_provider_health_title">Zdraví poskytovatele</string>

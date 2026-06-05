@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Πρόσφατα κανάλια</string>
     <string name="dashboard_recent_movies">Ταινίες που προστέθηκαν πρόσφατα</string>
     <string name="dashboard_recent_series">Σειρές που ενημερώθηκαν πρόσφατα</string>
-    <string name="dashboard_search_library">Αναζήτηση στη βιβλιοθήκη</string>
     <string name="dashboard_live_shortcuts">Συντομεύσεις Live</string>
     <string name="dashboard_live_shortcuts_subtitle">Αγαπημένα, πρόσφατα κανάλια και τελευταία ομάδα.</string>
     <string name="dashboard_provider_health_title">Κατάσταση παρόχου</string>

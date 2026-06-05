@@ -549,81 +549,8 @@ fun AppNavigation(mainActivity: MainActivity) {
         composable(Routes.HOME) {
             DashboardScreen(
                 onNavigate = { route -> tabNavigate(route) },
-                onAddProvider = dropUnlessResumed {
-                    navController.navigate(Routes.providerSetup(null))
-                },
-                onRecentChannelClick = { channel, combinedProfileId ->
-                    navController.navigateToPlayer(
-                        Routes.livePlayer(
-                            channel = channel,
-                            categoryId = com.afterglowtv.domain.model.VirtualCategoryIds.RECENT,
-                            providerId = channel.providerId,
-                            isVirtual = true,
-                            combinedProfileId = combinedProfileId,
-                            returnRoute = Routes.HOME
-                        )
-                    )
-                },
-                onFavoriteChannelClick = { channel, combinedProfileId ->
-                    navController.navigateToPlayer(
-                        Routes.livePlayer(
-                            channel = channel,
-                            categoryId = com.afterglowtv.domain.model.VirtualCategoryIds.FAVORITES,
-                            providerId = channel.providerId,
-                            isVirtual = true,
-                            combinedProfileId = combinedProfileId,
-                            returnRoute = Routes.HOME
-                        )
-                    )
-                },
-                onPlaybackHistoryClick = { history ->
-                    val route = when (history.contentType) {
-                        com.afterglowtv.domain.model.ContentType.LIVE -> {
-                            Routes.player(
-                                streamUrl = history.streamUrl,
-                                title = history.title,
-                                internalId = history.contentId,
-                                providerId = history.providerId,
-                                contentType = history.contentType.name,
-                                returnRoute = Routes.HOME
-                            )
-                        }
-                        com.afterglowtv.domain.model.ContentType.MOVIE -> {
-                            Routes.player(
-                                streamUrl = history.streamUrl,
-                                title = history.title,
-                                internalId = history.contentId,
-                                providerId = history.providerId,
-                                contentType = history.contentType.name,
-                                returnRoute = Routes.HOME
-                            )
-                        }
-                        com.afterglowtv.domain.model.ContentType.SERIES -> {
-                            Routes.player(
-                                streamUrl = history.streamUrl,
-                                title = history.title,
-                                internalId = history.contentId,
-                                providerId = history.providerId,
-                                contentType = history.contentType.name,
-                                returnRoute = Routes.HOME,
-                                seriesId = history.seriesId
-                            )
-                        }
-                        com.afterglowtv.domain.model.ContentType.SERIES_EPISODE -> {
-                            Routes.player(
-                                streamUrl = history.streamUrl,
-                                title = history.title,
-                                internalId = history.contentId,
-                                providerId = history.providerId,
-                                contentType = history.contentType.name,
-                                returnRoute = Routes.HOME,
-                                seriesId = history.seriesId,
-                                seasonNumber = history.seasonNumber,
-                                episodeNumber = history.episodeNumber
-                            )
-                        }
-                    }
-                    navController.navigateToPlayer(route)
+                onAddProvider = {
+                    navController.navigateIfResumed(Routes.providerSetup())
                 },
                 currentRoute = Routes.HOME
             )

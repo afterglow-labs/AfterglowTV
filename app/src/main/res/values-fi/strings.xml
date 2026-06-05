@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">Viimeaikaiset kanavat</string>
     <string name="dashboard_recent_movies">Äskettäin lisätyt elokuvat</string>
     <string name="dashboard_recent_series">Äskettäin päivitetty sarja</string>
-    <string name="dashboard_search_library">Hae kirjastosta</string>
     <string name="dashboard_live_shortcuts">Live-pikakuvakkeet</string>
     <string name="dashboard_live_shortcuts_subtitle">Suosikit, viimeisimmät kanavat ja viimeinen ryhmä.</string>
     <string name="dashboard_provider_health_title">Palveluntarjoajan terveys</string>

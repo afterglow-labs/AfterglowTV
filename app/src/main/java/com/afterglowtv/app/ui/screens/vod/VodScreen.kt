@@ -46,7 +46,6 @@ import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.components.PlayerRenderView
 import com.afterglowtv.app.ui.components.SearchInput
 import com.afterglowtv.app.ui.components.rememberCrossfadeImageModel
-import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
 import com.afterglowtv.app.ui.components.shell.AppScreenScaffold
 import com.afterglowtv.app.ui.design.AppColors
@@ -140,11 +139,21 @@ private fun VodHeaderRow(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AfterglowBrandStrip(
-            wordmark = "VOD",
-            tagline = uiState.provider?.name ?: "On-demand library",
-            modifier = Modifier.weight(1f)
-        )
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            val providerName = uiState.provider?.name?.takeIf { it.isNotBlank() }
+            if (providerName != null) {
+                Text(
+                    text = providerName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = AppColors.TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
         VodPreviewPane(
             movie = uiState.previewMovie,
             playerEngine = uiState.previewPlayerEngine,

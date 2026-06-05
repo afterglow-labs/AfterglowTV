@@ -87,7 +87,6 @@
     <string name="dashboard_recent_channels">القنوات الأخيرة</string>
     <string name="dashboard_recent_movies">الأفلام المضافة مؤخرا</string>
     <string name="dashboard_recent_series">سلسلة تم تحديثها مؤخرًا</string>
-    <string name="dashboard_search_library">مكتبة البحث</string>
     <string name="dashboard_live_shortcuts">اختصارات حية</string>
     <string name="dashboard_live_shortcuts_subtitle">المفضلة والقنوات الأخيرة والمجموعة الأخيرة.</string>
     <string name="dashboard_provider_health_title">صحة المزود</string>
