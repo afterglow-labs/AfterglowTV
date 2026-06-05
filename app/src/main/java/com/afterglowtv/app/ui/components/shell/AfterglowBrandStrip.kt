@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -165,8 +166,7 @@ fun AfterglowBrandStrip(
                         text = "AfterglowTV",
                         style = wordmarkStyle.copy(
                             fontWeight = FontWeight.Bold,
-                        ),
-                        modifier = wordmarkModifier,
+                        )
                     )
                 } else {
                     Text(
@@ -283,44 +283,52 @@ private fun AfterglowWordmarkText(
 
     val glowEnd = glowStart + "glow".length
     val neonOrange = Color(0xFFFF6A00)
+    val neonPink = Color(0xFFFF2D8D)
+    val wordEnd = if (tvStart >= glowEnd) tvStart else glowEnd
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.Bottom
     ) {
         Text(
-            text = text.substring(0, glowStart),
-            style = style,
-            color = color,
-        )
-        Text(
             text = buildAnnotatedString {
                 withStyle(
                     SpanStyle(
                         brush = Brush.linearGradient(
-                            0.00f to Color(0xFFFF2D8D),
-                            0.45f to Color(0xFFFF5A3D),
+                            0.00f to neonPink,
+                            0.58f to Color(0xFFFF5A2A),
                             1.00f to neonOrange,
                             start = Offset.Zero,
-                            end = Offset(110f, 0f),
+                            end = Offset(520f, 0f),
                         )
                     )
                 ) {
-                    append(text.substring(glowStart, glowEnd))
+                    append(text.substring(0, wordEnd))
                 }
             },
-            style = style,
+            style = style.copy(
+                shadow = Shadow(
+                    color = neonOrange.copy(alpha = 0.24f),
+                    offset = Offset.Zero,
+                    blurRadius = 8f,
+                )
+            ),
             color = color,
         )
-        if (tvStart >= glowEnd) {
-            Text(
-                text = text.substring(glowEnd, tvStart),
-                style = style,
-                color = color,
-            )
+        if (tvStart >= wordEnd) {
+            val separator = text.substring(wordEnd, tvStart)
+            if (separator.isBlank()) {
+                Spacer(Modifier.size(8.dp))
+            } else {
+                Text(
+                    text = separator,
+                    style = style,
+                    color = color,
+                )
+            }
             Text(
                 text = text.substring(tvStart, tvStart + "TV".length),
                 style = style,
-                color = neonOrange,
+                color = color,
             )
             Text(
                 text = text.substring(tvStart + "TV".length),
@@ -329,7 +337,7 @@ private fun AfterglowWordmarkText(
             )
         } else {
             Text(
-                text = text.substring(glowEnd),
+                text = text.substring(wordEnd),
                 style = style,
                 color = color,
             )
