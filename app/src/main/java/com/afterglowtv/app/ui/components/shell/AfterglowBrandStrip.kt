@@ -284,6 +284,7 @@ private fun AfterglowWordmarkText(
     val glowEnd = glowStart + "glow".length
     val neonOrange = Color(0xFFFF6A00)
     val neonPink = Color(0xFFFF2D8D)
+    val neonPurple = Color(0xFFB05CFF)
     val wordEnd = if (tvStart >= glowEnd) tvStart else glowEnd
     Row(
         modifier = modifier,
@@ -315,10 +316,7 @@ private fun AfterglowWordmarkText(
             color = color,
         )
         if (tvStart >= wordEnd) {
-            val separator = text.substring(wordEnd, tvStart)
-            if (separator.isBlank()) {
-                Spacer(Modifier.size(8.dp))
-            } else {
+            text.substring(wordEnd, tvStart).takeIf { it.isNotBlank() }?.let { separator ->
                 Text(
                     text = separator,
                     style = style,
@@ -326,8 +324,27 @@ private fun AfterglowWordmarkText(
                 )
             }
             Text(
-                text = text.substring(tvStart, tvStart + "TV".length),
-                style = style,
+                text = buildAnnotatedString {
+                    withStyle(
+                        SpanStyle(
+                            brush = Brush.linearGradient(
+                                0.00f to neonPurple,
+                                1.00f to neonOrange,
+                                start = Offset.Zero,
+                                end = Offset(80f, 0f),
+                            )
+                        )
+                    ) {
+                        append(text.substring(tvStart, tvStart + "TV".length))
+                    }
+                },
+                style = style.copy(
+                    shadow = Shadow(
+                        color = neonPurple.copy(alpha = 0.20f),
+                        offset = Offset.Zero,
+                        blurRadius = 7f,
+                    )
+                ),
                 color = color,
             )
             Text(
