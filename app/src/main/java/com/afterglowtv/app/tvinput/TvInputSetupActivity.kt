@@ -69,12 +69,12 @@ class TvInputSetupActivity : ComponentActivity() {
         setContent {
             AfterglowTVTheme {
                 TvInputSetupRoute(
-                    onOpenProviderSetup = {
+                    onOpenApp = {
                         startActivity(
                             Intent(this, MainActivity::class.java)
                                 .putExtra(
                                     MainActivity.EXTRA_EXTERNAL_DESTINATION,
-                                    ExternalDestination.ProviderSetup()
+                                    ExternalDestination.Home
                                 )
                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         )
@@ -104,7 +104,7 @@ class TvInputSetupActivity : ComponentActivity() {
 
 @Composable
 private fun TvInputSetupRoute(
-    onOpenProviderSetup: () -> Unit,
+    onOpenApp: () -> Unit,
     onRetry: () -> Unit,
     onFinishSuccess: (String) -> Unit,
     onFinishCanceled: () -> Unit,
@@ -122,7 +122,7 @@ private fun TvInputSetupRoute(
 
     TvInputSetupScreen(
         uiState = uiState,
-        onOpenProviderSetup = onOpenProviderSetup,
+        onOpenApp = onOpenApp,
         onRetry = onRetry,
         onCancel = onFinishCanceled
     )
@@ -131,7 +131,7 @@ private fun TvInputSetupRoute(
 @Composable
 private fun TvInputSetupScreen(
     uiState: TvInputSetupUiState,
-    onOpenProviderSetup: () -> Unit,
+    onOpenApp: () -> Unit,
     onRetry: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -199,7 +199,7 @@ private fun TvInputSetupScreen(
 
                 when (uiState.status) {
                     TvInputSetupStatus.NO_PROVIDER -> {
-                        Button(onClick = onOpenProviderSetup) {
+                        Button(onClick = onOpenApp) {
                             Text(androidx.compose.ui.res.stringResource(R.string.tv_input_setup_open_setup))
                         }
                         Button(onClick = onRetry) {

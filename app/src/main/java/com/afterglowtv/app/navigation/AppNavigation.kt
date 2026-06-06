@@ -2,9 +2,7 @@ package com.afterglowtv.app.navigation
 
 import android.net.Uri
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
@@ -22,7 +20,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewModelScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
@@ -56,7 +53,6 @@ import com.afterglowtv.app.ui.screens.multiview.MultiViewScreen
 import com.afterglowtv.app.ui.screens.home.HomeScreen
 import com.afterglowtv.app.ui.screens.local.LocalMediaScreen
 import com.afterglowtv.app.ui.screens.player.PlayerScreen
-import com.afterglowtv.app.ui.screens.provider.ProviderSetupScreen
 import com.afterglowtv.app.ui.screens.settings.SettingsScreen
 import com.afterglowtv.app.ui.screens.vod.VodScreen
 import com.afterglowtv.app.ui.screens.welcome.WelcomeScreen
@@ -75,6 +71,12 @@ import kotlinx.coroutines.launch
 
 
 private const val PLAYER_REQUEST_KEY = "player_request"
+
+private val NoticeFontFamily = FontFamily(
+    Font(R.font.inter_regular, FontWeight.Normal),
+    Font(R.font.inter_medium, FontWeight.Medium),
+    Font(R.font.inter_bold, FontWeight.Bold)
+)
 
 data class PlayerNavigationRequest(
     val streamUrl: String,
@@ -100,7 +102,6 @@ data class PlayerNavigationRequest(
 ) : Serializable
 
 object Routes {
-    const val PROVIDER_SETUP = "provider_setup?providerId={providerId}&importUri={importUri}&m3uKind={m3uKind}"
     const val HOME = "home"
     const val LIVE_TV = "live_tv"
     const val LIVE_TV_DESTINATION = "live_tv?categoryId={categoryId}"
@@ -113,7 +114,7 @@ object Routes {
     const val THEMES = "themes"
     const val GLOW_SETTINGS = "glow_settings"
     const val STYLE_CUSTOMIZER = "style_customizer"
-    const val SETTINGS_DESTINATION = "settings?backupUri={backupUri}"
+    const val SETTINGS_DESTINATION = "settings?backupUri={backupUri}&addProviderKind={addProviderKind}&playlistUri={playlistUri}"
     const val PLAYER = "player"
     const val SEARCH = "search"
     const val SEARCH_DESTINATION = "search?query={query}"
@@ -121,15 +122,6 @@ object Routes {
     const val PARENTAL_CONTROL_GROUPS = "parental_control_groups/{providerId}"
     const val MULTI_VIEW = "multi_view"
 
-
-    fun providerSetup(
-        providerId: Long? = null,
-        importUri: String? = null,
-        m3uKind: ProviderM3uPlaylistKind? = null
-    ): String {
-        val encodedImportUri = Uri.encode(importUri ?: "")
-        return "provider_setup?providerId=${providerId ?: -1L}&importUri=$encodedImportUri&m3uKind=${m3uKind?.name.orEmpty()}"
-    }
     fun liveTv(categoryId: Long? = null) = if (categoryId == null) LIVE_TV else "$LIVE_TV?categoryId=$categoryId"
     fun epg(categoryId: Long? = null, anchorTime: Long? = null, favoritesOnly: Boolean? = null): String {
         val resolvedCategoryId = categoryId ?: -1L
@@ -210,8 +202,18 @@ object Routes {
     fun search(query: String? = null): String =
         if (query.isNullOrBlank()) SEARCH else "$SEARCH?query=${Uri.encode(query)}"
 
-    fun settings(backupUri: String? = null): String =
-        if (backupUri.isNullOrBlank()) SETTINGS else "$SETTINGS?backupUri=${Uri.encode(backupUri)}"
+    fun settings(
+        backupUri: String? = null,
+        addProviderKind: ProviderM3uPlaylistKind? = null,
+        playlistUri: String? = null
+    ): String =
+        if (backupUri.isNullOrBlank() && addProviderKind == null && playlistUri.isNullOrBlank()) {
+            SETTINGS
+        } else {
+            "$SETTINGS?backupUri=${Uri.encode(backupUri.orEmpty())}" +
+                "&addProviderKind=${addProviderKind?.name.orEmpty()}" +
+                "&playlistUri=${Uri.encode(playlistUri.orEmpty())}"
+        }
 
     fun player(
         streamUrl: String,
@@ -380,7 +382,6 @@ private fun isGuideOnlyAllowedRoute(route: String): Boolean {
         Routes.LIVE_TV,
         Routes.EPG,
         Routes.PLAYER,
-        Routes.PROVIDER_SETUP.substringBefore('?'),
         Routes.SETTINGS,
         Routes.THEMES,
         Routes.GLOW_SETTINGS,
@@ -453,7 +454,10 @@ fun AppNavigation(mainActivity: MainActivity) {
             }
 
             is ExternalNavigationRequest.ImportM3u -> {
-                val route = Routes.providerSetup(importUri = request.uri)
+                val route = Routes.settings(
+                    addProviderKind = ProviderM3uPlaylistKind.LIVE,
+                    playlistUri = request.uri
+                )
                 if (isStoreLockedRoute(route, developerModeEnabled, policy)) {
                     mainActivity.clearExternalNavigationRequest()
                 } else if (navController.navigateIfResumed(route) { launchSingleTop = true }) {
@@ -514,59 +518,17 @@ fun AppNavigation(mainActivity: MainActivity) {
                     navController.navigate(startupRoute) {
                         popUpTo(Routes.WELCOME) { inclusive = true }
                     }
-                },
-                onNavigateToSetup = dropUnlessResumed {
-                    navController.navigate(Routes.providerSetup()) {
-                        popUpTo(Routes.WELCOME) { inclusive = true }
-                    }
                 }
             )
         }
-
-        composable(
-            route = Routes.PROVIDER_SETUP,
-            arguments = listOf(
-                navArgument("providerId") { type = NavType.LongType; defaultValue = -1L },
-                navArgument("importUri") { type = NavType.StringType; defaultValue = "" },
-                navArgument("m3uKind") { type = NavType.StringType; defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val providerId = backStackEntry.arguments?.getLong("providerId")?.takeIf { it != -1L }
-            val importUri = backStackEntry.arguments?.getString("importUri")?.takeIf { it.isNotBlank() }
-            val m3uKind = backStackEntry.arguments
-                ?.getString("m3uKind")
-                ?.takeIf { it.isNotBlank() }
-                ?.let { value -> runCatching { ProviderM3uPlaylistKind.valueOf(value) }.getOrNull() }
-            
-            ProviderSetupScreen(
-                editProviderId = providerId,
-                initialImportUri = importUri,
-                initialM3uPlaylistKind = m3uKind,
-                onBack = { navController.popBackStack() },
-                onProviderAdded = dropUnlessResumed {
-                    val previousRoute = navController.previousBackStackEntry?.destination?.route
-                    if (
-                        previousRoute != null &&
-                        previousRoute != Routes.HOME &&
-                        previousRoute != Routes.WELCOME
-                    ) {
-                        navController.popBackStack()
-                    } else {
-                        navController.navigate(Routes.SETTINGS) {
-                            popUpTo(Routes.PROVIDER_SETUP) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
-                }
-            )
-        }
-// ...
 
         composable(Routes.HOME) {
             DashboardScreen(
                 onNavigate = { route -> tabNavigate(route) },
                 onAddProvider = {
-                    navController.navigateIfResumed(Routes.providerSetup())
+                    navController.navigateIfResumed(
+                        Routes.settings(addProviderKind = ProviderM3uPlaylistKind.LIVE)
+                    )
                 },
                 currentRoute = Routes.HOME
             )
@@ -709,18 +671,19 @@ fun AppNavigation(mainActivity: MainActivity) {
         composable(
             route = Routes.SETTINGS_DESTINATION,
             arguments = listOf(
-                navArgument("backupUri") { type = NavType.StringType; defaultValue = "" }
+                navArgument("backupUri") { type = NavType.StringType; defaultValue = "" },
+                navArgument("addProviderKind") { type = NavType.StringType; defaultValue = "" },
+                navArgument("playlistUri") { type = NavType.StringType; defaultValue = "" }
             )
         ) { backStackEntry ->
             val backupUri = backStackEntry.arguments?.getString("backupUri")?.takeIf { it.isNotBlank() }
+            val addProviderKind = backStackEntry.arguments
+                ?.getString("addProviderKind")
+                ?.takeIf { it.isNotBlank() }
+                ?.let { value -> runCatching { ProviderM3uPlaylistKind.valueOf(value) }.getOrNull() }
+            val playlistUri = backStackEntry.arguments?.getString("playlistUri")?.takeIf { it.isNotBlank() }
             SettingsScreen(
                 onNavigate = { route -> tabNavigate(route) },
-                onAddProvider = { m3uKind ->
-                    navController.navigateIfResumed(Routes.providerSetup(m3uKind = m3uKind))
-                },
-                onEditProvider = { provider ->
-                    navController.navigateIfResumed(Routes.providerSetup(provider.id))
-                },
                 onNavigateToParentalControl = { providerId ->
                     navController.navigateIfResumed(Routes.parentalControlGroups(providerId))
                 },
@@ -728,7 +691,9 @@ fun AppNavigation(mainActivity: MainActivity) {
                     navController.popBackStack(Routes.PLAYER, false)
                 },
                 currentRoute = Routes.SETTINGS,
-                initialBackupImportUri = backupUri
+                initialBackupImportUri = backupUri,
+                initialAddProviderKind = addProviderKind,
+                initialProviderPlaylistUri = playlistUri
             )
         }
 
@@ -878,35 +843,26 @@ private fun ContentResponsibilityNoticeDialog(
         title = {
             androidx.compose.material3.Text(
                 text = androidx.compose.ui.res.stringResource(R.string.content_responsibility_title),
+                color = androidx.compose.ui.graphics.Color(0xFF1D1823),
+                fontFamily = NoticeFontFamily,
+                fontWeight = FontWeight.Bold,
                 fontSize = 22.sp,
                 lineHeight = 28.sp
             )
         },
         text = {
-            Column(
+            val noticeBody = androidx.compose.ui.res.stringResource(R.string.content_responsibility_body)
+            androidx.compose.material3.Text(
+                text = noticeBody.withBoldLegalReferences(),
                 modifier = Modifier
                     .heightIn(max = 360.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                ContentResponsibilityNoticeSection(
-                    heading = androidx.compose.ui.res.stringResource(R.string.content_responsibility_player_heading),
-                    body = AnnotatedString(androidx.compose.ui.res.stringResource(R.string.content_responsibility_player_body))
-                )
-                ContentResponsibilityNoticeSection(
-                    heading = androidx.compose.ui.res.stringResource(R.string.content_responsibility_demo_heading),
-                    body = AnnotatedString(androidx.compose.ui.res.stringResource(R.string.content_responsibility_demo_body))
-                )
-                ContentResponsibilityNoticeSection(
-                    heading = androidx.compose.ui.res.stringResource(R.string.content_responsibility_user_heading),
-                    body = AnnotatedString(androidx.compose.ui.res.stringResource(R.string.content_responsibility_user_body))
-                )
-                ContentResponsibilityNoticeSection(
-                    heading = androidx.compose.ui.res.stringResource(R.string.content_responsibility_law_heading),
-                    body = androidx.compose.ui.res.stringResource(R.string.content_responsibility_law_body)
-                        .withBoldLegalReferences()
-                )
-            }
+                color = androidx.compose.ui.graphics.Color(0xFF28232D),
+                fontFamily = NoticeFontFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                lineHeight = 17.sp
+            )
         },
         confirmButton = {
             androidx.compose.material3.Button(
@@ -925,40 +881,21 @@ private fun ContentResponsibilityNoticeDialog(
     )
 }
 
-@Composable
-private fun ContentResponsibilityNoticeSection(
-    heading: String,
-    body: AnnotatedString
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        androidx.compose.material3.Text(
-            text = heading,
-            fontFamily = FontFamily(Font(R.font.inter_semibold)),
-            fontSize = 12.sp,
-            lineHeight = 15.sp
-        )
-        androidx.compose.material3.Text(
-            text = body,
-            fontFamily = FontFamily(Font(R.font.inter_regular)),
-            fontSize = 10.sp,
-            lineHeight = 14.sp
-        )
-    }
-}
-
 private fun String.withBoldLegalReferences() = buildAnnotatedString {
     append(this@withBoldLegalReferences)
     listOf(
+        "Afterglow TV",
         "United States Copyright Act (17 U.S.C. \u00A7\u00A7 101 et seq.)",
-        "Digital Millennium Copyright Act (DMCA) (17 U.S.C. \u00A7 1201 et seq.)"
+        "Digital Millennium Copyright Act (17 U.S.C. \u00A7 1201 et seq.)"
     ).forEach { reference ->
-        val start = this@withBoldLegalReferences.indexOf(reference)
-        if (start >= 0) {
+        var start = this@withBoldLegalReferences.indexOf(reference)
+        while (start >= 0) {
             addStyle(
                 style = SpanStyle(fontWeight = FontWeight.Bold),
                 start = start,
                 end = start + reference.length
             )
+            start = this@withBoldLegalReferences.indexOf(reference, start + reference.length)
         }
     }
 }

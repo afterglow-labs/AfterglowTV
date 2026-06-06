@@ -184,7 +184,7 @@ internal fun ProviderActionButtons(
     liveOnboardingIncomplete: Boolean,
     onConnect: () -> Unit,
     onRefresh: () -> Unit,
-    onEdit: () -> Unit,
+    onEdit: (() -> Unit)?,
     onDelete: () -> Unit,
     onParentalControl: () -> Unit
 ) {
@@ -209,11 +209,13 @@ internal fun ProviderActionButtons(
             )
         }
 
-        ProviderActionButton(
-            label = stringResource(R.string.settings_edit),
-            accent = Secondary,
-            onClick = onEdit
-        )
+        if (onEdit != null) {
+            ProviderActionButton(
+                label = stringResource(R.string.settings_edit),
+                accent = Secondary,
+                onClick = onEdit
+            )
+        }
 
         ProviderActionButton(
             label = stringResource(R.string.settings_delete),

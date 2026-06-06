@@ -10,6 +10,7 @@ import com.afterglowtv.app.tv.LauncherRecommendationsManager
 import com.afterglowtv.app.tv.WatchNextManager
 import com.afterglowtv.app.tvinput.TvInputChannelSyncManager
 import com.afterglowtv.app.navigation.StartupDestination
+import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.ui.model.LiveTvChannelMode
 import com.afterglowtv.app.ui.model.LiveTvQuickFilterVisibilityMode
 import com.afterglowtv.app.ui.model.VodViewMode
@@ -42,6 +43,10 @@ import com.afterglowtv.domain.model.CombinedM3uProfile
 import com.afterglowtv.domain.model.GroupedChannelLabelMode
 import com.afterglowtv.domain.model.LiveChannelGroupingMode
 import com.afterglowtv.domain.model.LiveVariantPreferenceMode
+import com.afterglowtv.domain.model.ProviderEpgSyncMode
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
+import com.afterglowtv.domain.model.ProviderSourceSlot
+import com.afterglowtv.domain.model.ProviderXtreamLiveSyncMode
 import com.afterglowtv.domain.model.ProviderStatus
 import com.afterglowtv.domain.model.RecordingItem
 import com.afterglowtv.domain.model.RecordingStorageConfig
@@ -67,9 +72,14 @@ import com.afterglowtv.domain.model.SmbShareConfig
 import com.afterglowtv.domain.repository.SeriesRepository
 import com.afterglowtv.domain.repository.SyncMetadataRepository
 import com.afterglowtv.domain.usecase.GetCustomCategories
+import com.afterglowtv.domain.usecase.M3uProviderSetupCommand
+import com.afterglowtv.domain.usecase.StalkerProviderSetupCommand
 import com.afterglowtv.domain.usecase.SyncProvider
 import com.afterglowtv.domain.usecase.SyncProviderCommand
 import com.afterglowtv.domain.usecase.SyncProviderResult
+import com.afterglowtv.domain.usecase.ValidateAndAddProvider
+import com.afterglowtv.domain.usecase.ValidateAndAddProviderResult
+import com.afterglowtv.domain.usecase.XtreamProviderSetupCommand
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -109,7 +119,8 @@ class SettingsViewModel @Inject constructor(
     private val epgSourceRepository: com.afterglowtv.domain.repository.EpgSourceRepository,
     private val gitHubReleaseChecker: GitHubReleaseChecker,
     private val appUpdateInstaller: AppUpdateInstaller,
-    private val getCustomCategories: GetCustomCategories
+    private val getCustomCategories: GetCustomCategories,
+    private val validateAndAddProvider: ValidateAndAddProvider
 ) : ViewModel() {
     private val appContext = application
     private val exportBackup = ExportBackup(backupManager)
@@ -404,6 +415,209 @@ class SettingsViewModel @Inject constructor(
 
     fun refreshProviderClassification(providerId: Long) {
         refreshProvider(providerId)
+    }
+
+    fun addM3uProviderSource(
+        kind: ProviderM3uPlaylistKind,
+        name: String,
+        playlistUrl: String,
+        epgUrl: String,
+        httpUserAgent: String,
+        httpHeaders: String,
+        onSuccess: () -> Unit = {}
+    ) {
+        val trimmedUrl = playlistUrl.trim()
+        if (trimmedUrl.isBlank()) {
+            _uiState.update { it.copy(addProviderSourceError = "Enter a playlist URL or choose a file") }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isAddingProviderSource = true,
+                    addProviderSourceProgress = "Validating playlist...",
+                    addProviderSourceError = null
+                )
+            }
+            val command = M3uProviderSetupCommand(
+                url = trimmedUrl,
+                name = name.trim(),
+                httpUserAgent = httpUserAgent.trim(),
+                httpHeaders = httpHeaders.trim(),
+                epgSyncMode = ProviderEpgSyncMode.BACKGROUND,
+                m3uVodClassificationEnabled = kind == ProviderM3uPlaylistKind.VOD,
+                m3uPlaylistKind = kind,
+                epgUrl = epgUrl.trim().takeIf { it.isNotBlank() },
+                allowXtreamPlaylistAutoDetection = StorePolicy.currentFor(
+                    _uiState.value.developerModeEnabled
+                ).allowXtreamPlaylistAutoDetection
+            )
+            handleProviderAddResult(
+                result = validateAndAddProvider.addM3u(
+                    command,
+                    onProgress = { message ->
+                        _uiState.update { it.copy(addProviderSourceProgress = message) }
+                    }
+                ),
+                activateVod = kind == ProviderM3uPlaylistKind.VOD,
+                onSuccess = onSuccess
+            )
+        }
+    }
+
+    fun addXtreamProviderSource(
+        name: String,
+        serverUrl: String,
+        username: String,
+        password: String,
+        httpUserAgent: String,
+        httpHeaders: String,
+        onSuccess: () -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isAddingProviderSource = true,
+                    addProviderSourceProgress = "Connecting...",
+                    addProviderSourceError = null
+                )
+            }
+            val command = XtreamProviderSetupCommand(
+                serverUrl = serverUrl.trim(),
+                username = username.trim(),
+                password = password,
+                name = name.trim(),
+                httpUserAgent = httpUserAgent.trim(),
+                httpHeaders = httpHeaders.trim(),
+                xtreamFastSyncEnabled = true,
+                epgSyncMode = ProviderEpgSyncMode.BACKGROUND,
+                xtreamLiveSyncMode = ProviderXtreamLiveSyncMode.AUTO
+            )
+            handleProviderAddResult(
+                result = validateAndAddProvider.loginXtream(
+                    command,
+                    onProgress = { message ->
+                        _uiState.update { it.copy(addProviderSourceProgress = message) }
+                    }
+                ),
+                activateVod = false,
+                onSuccess = onSuccess
+            )
+        }
+    }
+
+    fun addPortalProviderSource(
+        name: String,
+        portalUrl: String,
+        macAddress: String,
+        deviceProfile: String,
+        timezone: String,
+        locale: String,
+        onSuccess: () -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isAddingProviderSource = true,
+                    addProviderSourceProgress = "Connecting...",
+                    addProviderSourceError = null
+                )
+            }
+            val command = StalkerProviderSetupCommand(
+                portalUrl = portalUrl.trim(),
+                macAddress = macAddress.trim(),
+                name = name.trim(),
+                deviceProfile = deviceProfile.trim(),
+                timezone = timezone.trim(),
+                locale = locale.trim(),
+                epgSyncMode = ProviderEpgSyncMode.BACKGROUND
+            )
+            handleProviderAddResult(
+                result = validateAndAddProvider.loginStalker(
+                    command,
+                    onProgress = { message ->
+                        _uiState.update { it.copy(addProviderSourceProgress = message) }
+                    }
+                ),
+                activateVod = false,
+                onSuccess = onSuccess
+            )
+        }
+    }
+
+    fun clearAddProviderSourceState() {
+        _uiState.update {
+            it.copy(
+                isAddingProviderSource = false,
+                addProviderSourceProgress = null,
+                addProviderSourceError = null
+            )
+        }
+    }
+
+    private suspend fun handleProviderAddResult(
+        result: ValidateAndAddProviderResult,
+        activateVod: Boolean,
+        onSuccess: () -> Unit
+    ) {
+        when (result) {
+            is ValidateAndAddProviderResult.Success -> {
+                activateProviderAfterAdd(result.provider.id, activateVod)
+                _uiState.update {
+                    it.copy(
+                        isAddingProviderSource = false,
+                        addProviderSourceProgress = null,
+                        addProviderSourceError = null,
+                        userMessage = "${result.provider.name} added"
+                    )
+                }
+                onSuccess()
+            }
+            is ValidateAndAddProviderResult.SavedWithWarning -> {
+                activateProviderAfterAdd(result.provider.id, activateVod)
+                _uiState.update {
+                    it.copy(
+                        isAddingProviderSource = false,
+                        addProviderSourceProgress = null,
+                        addProviderSourceError = null,
+                        userMessage = result.warning.ifBlank { "${result.provider.name} added" }
+                    )
+                }
+                onSuccess()
+            }
+            is ValidateAndAddProviderResult.ValidationError -> {
+                _uiState.update {
+                    it.copy(
+                        isAddingProviderSource = false,
+                        addProviderSourceProgress = null,
+                        addProviderSourceError = result.message
+                    )
+                }
+            }
+            is ValidateAndAddProviderResult.Error -> {
+                _uiState.update {
+                    it.copy(
+                        isAddingProviderSource = false,
+                        addProviderSourceProgress = null,
+                        addProviderSourceError = result.message
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun activateProviderAfterAdd(providerId: Long, activateVod: Boolean) {
+        if (activateVod) {
+            preferencesRepository.setActiveSource(
+                ProviderSourceSlot.VOD,
+                ActiveLiveSource.ProviderSource(providerId)
+            )
+        } else {
+            providerRepository.setActiveProvider(providerId)
+            preferencesRepository.setLastActiveProviderId(providerId)
+            combinedM3uRepository.setActiveLiveSource(ActiveLiveSource.ProviderSource(providerId))
+        }
     }
 
     fun setParentalControlLevel(level: Int) {

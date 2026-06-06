@@ -1,22 +1,12 @@
 package com.afterglowtv.app.navigation
 
-import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import java.io.Serializable
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 
 sealed class ExternalDestination : Serializable {
     data object Home : ExternalDestination()
 
-    data class ProviderSetup(
-        val providerId: Long? = null,
-        val importUri: String? = null,
-        val m3uKind: ProviderM3uPlaylistKind? = null
-    ) : ExternalDestination()
-
     fun toRoute(): String = when (this) {
         Home -> Routes.HOME
-        is ProviderSetup -> Routes.providerSetup(providerId = providerId, importUri = importUri, m3uKind = m3uKind)
     }
 
     companion object {
@@ -26,36 +16,10 @@ sealed class ExternalDestination : Serializable {
 
             return when {
                 normalizedRoute == Routes.HOME -> Home
-                normalizedRoute.startsWith(Routes.PROVIDER_SETUP.substringBefore('?')) -> {
-                    val queryParameters = normalizedRoute.queryParameters()
-                    val providerId = queryParameters["providerId"]
-                        ?.toLongOrNull()
-                        ?.takeIf { it >= 0L }
-                    val importUri = queryParameters["importUri"]
-                        ?.takeIf { it.isNotBlank() }
-                    val m3uKind = queryParameters["m3uKind"]
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let { value -> runCatching { ProviderM3uPlaylistKind.valueOf(value) }.getOrNull() }
-                    ProviderSetup(providerId = providerId, importUri = importUri, m3uKind = m3uKind)
-                }
-
                 else -> null
             }
         }
     }
-}
-
-private fun String.queryParameters(): Map<String, String> {
-    val query = substringAfter('?', missingDelimiterValue = "")
-    if (query.isBlank()) return emptyMap()
-    return query.split('&')
-        .mapNotNull { entry ->
-            val key = entry.substringBefore('=', missingDelimiterValue = "").takeIf { it.isNotBlank() }
-                ?: return@mapNotNull null
-            val rawValue = entry.substringAfter('=', missingDelimiterValue = "")
-            key to URLDecoder.decode(rawValue, StandardCharsets.UTF_8)
-        }
-        .toMap()
 }
 
 sealed interface ExternalNavigationRequest {

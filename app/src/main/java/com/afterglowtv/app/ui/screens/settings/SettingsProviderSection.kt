@@ -42,12 +42,15 @@ internal enum class ProviderSettingsCategory {
 internal fun LazyListScope.providerSection(
     uiState: SettingsUiState,
     providerCategory: ProviderSettingsCategory,
-    onAddProvider: (ProviderM3uPlaylistKind?) -> Unit,
-    onEditProvider: (Provider) -> Unit,
     onNavigateToParentalControl: (Long) -> Unit,
     viewModel: SettingsViewModel,
     providerState: SettingsProviderSectionState
 ) {
+    addProviderSourceAction(
+        providerKind = providerCategory.toProviderKind(),
+        providerState = providerState
+    )
+
     if (uiState.providers.isEmpty()) {
         item {
             TvEmptyState(
@@ -71,7 +74,6 @@ internal fun LazyListScope.providerSection(
                         uiState = uiState,
                         providerState = providerState,
                         viewModel = viewModel,
-                        onEditProvider = onEditProvider,
                         onNavigateToParentalControl = onNavigateToParentalControl
                     )
                 } else {
@@ -84,7 +86,6 @@ internal fun LazyListScope.providerSection(
                         uiState = uiState,
                         providerState = providerState,
                         viewModel = viewModel,
-                        onEditProvider = onEditProvider,
                         onNavigateToParentalControl = onNavigateToParentalControl
                     )
                 }
@@ -129,15 +130,19 @@ internal fun LazyListScope.providerSection(
             }
         }
     }
+}
 
-    item {
-        val providerKind = if (providerCategory == ProviderSettingsCategory.VOD) {
-            ProviderM3uPlaylistKind.VOD
-        } else {
-            null
-        }
+private fun LazyListScope.addProviderSourceAction(
+    providerKind: ProviderM3uPlaylistKind,
+    providerState: SettingsProviderSectionState
+) {
+    item(key = "add-provider-source-${providerKind.name}") {
         TvClickableSurface(
-            onClick = { onAddProvider(providerKind) },
+            onClick = {
+                providerState.pendingAddProviderKind = providerKind
+                providerState.pendingProviderPlaylistUri = null
+                providerState.showAddProviderDialog = true
+            },
             shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp)),
             colors = ClickableSurfaceDefaults.colors(
                 containerColor = Primary.copy(alpha = 0.15f),
@@ -163,6 +168,12 @@ internal fun LazyListScope.providerSection(
     }
 }
 
+private fun ProviderSettingsCategory.toProviderKind(): ProviderM3uPlaylistKind =
+    when (this) {
+        ProviderSettingsCategory.LIVE_TV -> ProviderM3uPlaylistKind.LIVE
+        ProviderSettingsCategory.VOD -> ProviderM3uPlaylistKind.VOD
+    }
+
 @Composable
 private fun ProviderSettingsContainer(
     title: String,
@@ -173,7 +184,6 @@ private fun ProviderSettingsContainer(
     uiState: SettingsUiState,
     providerState: SettingsProviderSectionState,
     viewModel: SettingsViewModel,
-    onEditProvider: (Provider) -> Unit,
     onNavigateToParentalControl: (Long) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -237,7 +247,7 @@ private fun ProviderSettingsContainer(
                     providerState.showProviderSyncDialog = true
                 },
                 onDelete = { providerState.pendingDeleteProviderId = selectedProvider.id },
-                onEdit = { onEditProvider(selectedProvider) },
+                onEdit = null,
                 onParentalControl = { onNavigateToParentalControl(selectedProvider.id) },
                 onToggleM3uVodClassification = { enabled ->
                     viewModel.setM3uVodClassificationEnabled(selectedProvider.id, enabled)

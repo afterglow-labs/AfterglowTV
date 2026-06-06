@@ -70,7 +70,7 @@ internal fun ProviderSettingsCard(
     onConnect: () -> Unit,
     onRefresh: () -> Unit,
     onDelete: () -> Unit,
-    onEdit: () -> Unit,
+    onEdit: (() -> Unit)?,
     onParentalControl: () -> Unit,
     onToggleM3uVodClassification: (Boolean) -> Unit,
     onRefreshM3uClassification: () -> Unit
@@ -309,6 +309,5 @@ internal fun sectionCatalogCount(
         ProviderCatalogCountUiModel(count, ProviderCatalogCountStatus.PENDING)
     }
 }
-
 
 

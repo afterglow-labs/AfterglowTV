@@ -65,16 +65,13 @@ class WelcomeViewModel @Inject constructor(
 @Composable
 fun WelcomeScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToSetup: () -> Unit,
     viewModel: WelcomeViewModel = hiltViewModel()
 ) {
     val hasProviders by viewModel.hasProviders.collectAsStateWithLifecycle()
 
     LaunchedEffect(hasProviders) {
-        when (hasProviders) {
-            true -> onNavigateToHome()
-            false -> onNavigateToSetup()
-            null -> Unit
+        if (hasProviders != null) {
+            onNavigateToHome()
         }
     }
 

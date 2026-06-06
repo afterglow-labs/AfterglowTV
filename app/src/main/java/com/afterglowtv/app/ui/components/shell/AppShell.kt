@@ -478,6 +478,19 @@ private fun TopAppCloseButton(
                 right = FocusRequester.Cancel
                 up = FocusRequester.Cancel
             }
+            .onPreviewKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                when (event.key) {
+                    Key.DirectionLeft,
+                    Key.DirectionDown -> {
+                        fallbackFocusRequester.requestFocus()
+                        true
+                    }
+                    Key.DirectionRight,
+                    Key.DirectionUp -> true
+                    else -> false
+                }
+            }
             .onFocusChanged { state ->
                 if (state.isFocused && !isFocusAllowed()) {
                     onRejectedFocus()
@@ -492,15 +505,15 @@ private fun TopAppCloseButton(
                     sounds.playSelect()
                     onClick()
                 }
-            ),
+        ),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = AppColors.SurfaceEmphasis.copy(alpha = 0.82f),
-            focusedContainerColor = AppColors.BrandMuted
+            containerColor = Color(0xFF6F2118),
+            focusedContainerColor = Color(0xFFC74724)
         ),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                border = BorderStroke(FocusSpec.BorderWidth, Color(0xFFFF8A2A)),
                 shape = RoundedCornerShape(999.dp)
             )
         )

@@ -21,18 +21,16 @@ class TopTabsChromeTest {
             "vod_container",
             "adult",
             "local_media",
-            "favorites",
             "search",
             "settings"
         ).inOrder()
         assertThat(tabs.map { it.label }).containsExactly(
             "Home",
             "Live TV",
-            "IPTV Guide",
+            "TV Guide",
             "VOD",
             "Adult",
-            "Personal Library",
-            "Favorites",
+            "Library",
             "Search",
             "Settings"
         ).inOrder()
@@ -52,7 +50,6 @@ class TopTabsChromeTest {
             "epg",
             "vod_container",
             "local_media",
-            "favorites",
             "search",
             "settings"
         ).inOrder()
@@ -72,7 +69,6 @@ class TopTabsChromeTest {
             "epg",
             "vod_container",
             "local_media",
-            "favorites",
             "search",
             "settings"
         ).inOrder()

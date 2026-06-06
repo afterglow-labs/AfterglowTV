@@ -36,12 +36,12 @@ import kotlinx.coroutines.delay
 @Composable
 fun SettingsScreen(
     onNavigate: (String) -> Unit,
-    onAddProvider: (ProviderM3uPlaylistKind?) -> Unit = {},
-    onEditProvider: (Provider) -> Unit = {},
     onNavigateToParentalControl: (Long) -> Unit = {},
     onReturnToPlayer: () -> Unit = {},
     currentRoute: String,
     initialBackupImportUri: String? = null,
+    initialAddProviderKind: ProviderM3uPlaylistKind? = null,
+    initialProviderPlaylistUri: String? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -58,6 +58,7 @@ fun SettingsScreen(
     val dialogState = rememberSettingsScreenDialogState()
     val providerState = rememberSettingsProviderSectionState(dialogState)
     var handledInitialBackupImportUri by remember { mutableStateOf<String?>(null) }
+    var handledInitialProviderUri by remember { mutableStateOf<String?>(null) }
 
     val openDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -162,6 +163,21 @@ fun SettingsScreen(
         viewModel.inspectBackup(uri)
     }
 
+    LaunchedEffect(initialAddProviderKind, initialProviderPlaylistUri) {
+        val kind = initialAddProviderKind ?: return@LaunchedEffect
+        val uriKey = "${kind.name}:${initialProviderPlaylistUri.orEmpty()}"
+        if (handledInitialProviderUri == uriKey) return@LaunchedEffect
+        handledInitialProviderUri = uriKey
+        dialogState.selectedCategory = if (kind == ProviderM3uPlaylistKind.VOD) {
+            SETTINGS_CATEGORY_PROVIDERS_VOD
+        } else {
+            SETTINGS_CATEGORY_PROVIDERS
+        }
+        providerState.pendingAddProviderKind = kind
+        providerState.pendingProviderPlaylistUri = initialProviderPlaylistUri
+        providerState.showAddProviderDialog = true
+    }
+
     LaunchedEffect(uiState.developerModeEnabled, dialogState.selectedCategory) {
         val policy = StorePolicy.currentFor(uiState.developerModeEnabled)
         val effectiveDeveloperModeEnabled = StorePolicy.effectiveDeveloperModeEnabled(uiState.developerModeEnabled)
@@ -213,8 +229,6 @@ fun SettingsScreen(
                     screenLabels = screenLabels,
                     dialogState = dialogState,
                     providerState = providerState,
-                    onAddProvider = onAddProvider,
-                    onEditProvider = onEditProvider,
                     onNavigateToParentalControl = onNavigateToParentalControl,
                     onChooseRecordingFolder = { recordingFolderLauncher.launch(null) },
                     onChooseLocalMediaLibrary = { localMediaFolderLauncher.launch(null) },

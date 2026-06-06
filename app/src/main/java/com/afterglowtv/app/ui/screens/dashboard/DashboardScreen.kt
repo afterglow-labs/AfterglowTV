@@ -332,7 +332,7 @@ private fun HomeSourcesShortcutWindow(
 ) {
     HomeWindow(
         title = "Sources",
-        subtitle = "Playlists and setup.",
+        subtitle = "Providers and playlists.",
         accent = Color(0xFFFFD166),
         modifier = modifier
     ) {
@@ -343,8 +343,8 @@ private fun HomeSourcesShortcutWindow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             HomeSmallTextAction(
-                title = "Add Playlist",
-                subtitle = "URL or file",
+                title = "Add Source",
+                subtitle = "Playlists",
                 icon = Icons.Default.Settings,
                 accent = Color(0xFFFFD166),
                 modifier = Modifier.weight(1f),

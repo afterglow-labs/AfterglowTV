@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 
 internal class SettingsScreenDialogState(
     private val showPinDialogState: MutableState<Boolean>,
@@ -42,6 +43,9 @@ internal class SettingsScreenDialogState(
     private val showSubtitleTextColorDialogState: MutableState<Boolean>,
     private val showSubtitleBackgroundDialogState: MutableState<Boolean>,
     private val showWifiQualityDialogState: MutableState<Boolean>,
+    private val showAddProviderDialogState: MutableState<Boolean>,
+    private val pendingAddProviderKindState: MutableState<ProviderM3uPlaylistKind?>,
+    private val pendingProviderPlaylistUriState: MutableState<String?>,
     private val showProviderSyncDialogState: MutableState<Boolean>,
     private val showCustomProviderSyncDialogState: MutableState<Boolean>,
     private val showCreateCombinedDialogState: MutableState<Boolean>,
@@ -98,6 +102,9 @@ internal class SettingsScreenDialogState(
     var showSubtitleTextColorDialog by showSubtitleTextColorDialogState
     var showSubtitleBackgroundDialog by showSubtitleBackgroundDialogState
     var showWifiQualityDialog by showWifiQualityDialogState
+    var showAddProviderDialog by showAddProviderDialogState
+    var pendingAddProviderKind by pendingAddProviderKindState
+    var pendingProviderPlaylistUri by pendingProviderPlaylistUriState
     var showProviderSyncDialog by showProviderSyncDialogState
     var showCustomProviderSyncDialog by showCustomProviderSyncDialogState
     var showCreateCombinedDialog by showCreateCombinedDialogState
@@ -125,6 +132,24 @@ internal class SettingsScreenDialogState(
 internal class SettingsProviderSectionState(
     private val dialogState: SettingsScreenDialogState
 ) {
+    var showAddProviderDialog: Boolean
+        get() = dialogState.showAddProviderDialog
+        set(value) {
+            dialogState.showAddProviderDialog = value
+        }
+
+    var pendingAddProviderKind: ProviderM3uPlaylistKind?
+        get() = dialogState.pendingAddProviderKind
+        set(value) {
+            dialogState.pendingAddProviderKind = value
+        }
+
+    var pendingProviderPlaylistUri: String?
+        get() = dialogState.pendingProviderPlaylistUri
+        set(value) {
+            dialogState.pendingProviderPlaylistUri = value
+        }
+
     var showProviderSyncDialog: Boolean
         get() = dialogState.showProviderSyncDialog
         set(value) {
@@ -222,6 +247,9 @@ internal fun rememberSettingsScreenDialogState(): SettingsScreenDialogState {
     val showSubtitleTextColorDialogState = rememberSaveable { mutableStateOf(false) }
     val showSubtitleBackgroundDialogState = rememberSaveable { mutableStateOf(false) }
     val showWifiQualityDialogState = rememberSaveable { mutableStateOf(false) }
+    val showAddProviderDialogState = rememberSaveable { mutableStateOf(false) }
+    val pendingAddProviderKindState = rememberSaveable { mutableStateOf<ProviderM3uPlaylistKind?>(null) }
+    val pendingProviderPlaylistUriState = rememberSaveable { mutableStateOf<String?>(null) }
     val showProviderSyncDialogState = rememberSaveable { mutableStateOf(false) }
     val showCustomProviderSyncDialogState = rememberSaveable { mutableStateOf(false) }
     val showCreateCombinedDialogState = rememberSaveable { mutableStateOf(false) }
@@ -287,6 +315,9 @@ internal fun rememberSettingsScreenDialogState(): SettingsScreenDialogState {
         showSubtitleTextColorDialogState = showSubtitleTextColorDialogState,
         showSubtitleBackgroundDialogState = showSubtitleBackgroundDialogState,
         showWifiQualityDialogState = showWifiQualityDialogState,
+        showAddProviderDialogState = showAddProviderDialogState,
+        pendingAddProviderKindState = pendingAddProviderKindState,
+        pendingProviderPlaylistUriState = pendingProviderPlaylistUriState,
         showProviderSyncDialogState = showProviderSyncDialogState,
         showCustomProviderSyncDialogState = showCustomProviderSyncDialogState,
         showCreateCombinedDialogState = showCreateCombinedDialogState,

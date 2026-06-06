@@ -49,13 +49,12 @@ fun defaultTopTabs(
     }
     add(TopTab("home", "Home"))
     add(TopTab("live_tv", "Live TV"))
-    add(TopTab("epg", if (policy.amazonReviewBuild) "TV Guide" else "IPTV Guide"))
+    add(TopTab("epg", "TV Guide"))
     add(TopTab("vod_container", "VOD"))
     if (policy.showAdultSurfaces && developerModeEnabled && showAdultTab) {
         add(TopTab("adult", "Adult"))
     }
     add(TopTab("local_media", "Library"))
-    add(TopTab("favorites", "Favorites"))
     add(TopTab("search", "Search"))
     add(TopTab("settings", "Settings"))
 }

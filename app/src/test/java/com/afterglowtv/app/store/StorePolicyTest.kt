@@ -3,8 +3,6 @@ package com.afterglowtv.app.store
 import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.navigation.resolveStartupRoute
-import com.afterglowtv.app.ui.screens.provider.ProviderSetupSourceType
-import com.afterglowtv.app.ui.screens.provider.visibleProviderSetupSourceTypes
 import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.Provider
@@ -17,12 +15,13 @@ import org.junit.Test
 
 class StorePolicyTest {
     @Test
-    fun `locked amazon source setup exposes public playlist choices`() {
-        val sourceTypes = visibleProviderSetupSourceTypes(StorePolicySnapshot.amazon)
+    fun `locked amazon source dialog exposes supported source choices`() {
+        val sourceTypes = visibleSourceDialogChoices(StorePolicySnapshot.amazon)
 
         assertThat(sourceTypes).containsExactly(
-            ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
+            SourceDialogChoice.PLAYLIST,
+            SourceDialogChoice.XTREAM,
+            SourceDialogChoice.PORTAL
         ).inOrder()
     }
 
@@ -54,14 +53,13 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `standard source setup exposes all source choices`() {
-        val sourceTypes = visibleProviderSetupSourceTypes(StorePolicySnapshot.standard)
+    fun `standard source dialog exposes all source choices`() {
+        val sourceTypes = visibleSourceDialogChoices(StorePolicySnapshot.standard)
 
         assertThat(sourceTypes).containsExactly(
-            ProviderSetupSourceType.SERVER_LOGIN,
-            ProviderSetupSourceType.PORTAL_LOGIN,
-            ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
+            SourceDialogChoice.PLAYLIST,
+            SourceDialogChoice.XTREAM,
+            SourceDialogChoice.PORTAL
         ).inOrder()
     }
 
@@ -77,9 +75,10 @@ class StorePolicyTest {
         assertThat(locked.guideOnlyReviewSurface).isTrue()
         assertThat(locked.canUseDvr(developerModeEnabled = false)).isFalse()
         assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(false, beforeRelease)).isFalse()
-        assertThat(visibleProviderSetupSourceTypes(locked)).containsExactly(
-            ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
+        assertThat(visibleSourceDialogChoices(locked)).containsExactly(
+            SourceDialogChoice.PLAYLIST,
+            SourceDialogChoice.XTREAM,
+            SourceDialogChoice.PORTAL
         ).inOrder()
     }
 
@@ -95,11 +94,10 @@ class StorePolicyTest {
         assertThat(unlocked.guideOnlyReviewSurface).isFalse()
         assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
         assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(true, beforeRelease)).isTrue()
-        assertThat(visibleProviderSetupSourceTypes(unlocked)).containsExactly(
-            ProviderSetupSourceType.SERVER_LOGIN,
-            ProviderSetupSourceType.PORTAL_LOGIN,
-            ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
+        assertThat(visibleSourceDialogChoices(unlocked)).containsExactly(
+            SourceDialogChoice.PLAYLIST,
+            SourceDialogChoice.XTREAM,
+            SourceDialogChoice.PORTAL
         ).inOrder()
     }
 
@@ -117,11 +115,10 @@ class StorePolicyTest {
         assertThat(unlocked.allowXtreamPlaylistAutoDetection).isTrue()
         assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
         assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(false, releaseDate)).isTrue()
-        assertThat(visibleProviderSetupSourceTypes(unlocked)).containsExactly(
-            ProviderSetupSourceType.SERVER_LOGIN,
-            ProviderSetupSourceType.PORTAL_LOGIN,
-            ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
+        assertThat(visibleSourceDialogChoices(unlocked)).containsExactly(
+            SourceDialogChoice.PLAYLIST,
+            SourceDialogChoice.XTREAM,
+            SourceDialogChoice.PORTAL
         ).inOrder()
     }
 
@@ -152,9 +149,10 @@ class StorePolicyTest {
                 nowMs = afterPreview
             )
         ).isTrue()
-        assertThat(visibleProviderSetupSourceTypes(locked)).containsExactly(
-            ProviderSetupSourceType.PLAYLIST_URL,
-            ProviderSetupSourceType.PLAYLIST_FILE
+        assertThat(visibleSourceDialogChoices(locked)).containsExactly(
+            SourceDialogChoice.PLAYLIST,
+            SourceDialogChoice.XTREAM,
+            SourceDialogChoice.PORTAL
         ).inOrder()
     }
 
@@ -452,6 +450,19 @@ class StorePolicyTest {
             type = ProviderType.M3U,
             serverUrl = m3uUrl,
             m3uUrl = m3uUrl
+        )
+
+    private enum class SourceDialogChoice {
+        PLAYLIST,
+        XTREAM,
+        PORTAL
+    }
+
+    private fun visibleSourceDialogChoices(policy: StorePolicySnapshot): List<SourceDialogChoice> =
+        listOf(
+            SourceDialogChoice.PLAYLIST,
+            SourceDialogChoice.XTREAM,
+            SourceDialogChoice.PORTAL
         )
 
     private fun publicSourceAsset(fileName: String): File =

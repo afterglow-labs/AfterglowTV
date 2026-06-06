@@ -10,8 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.afterglowtv.app.store.StorePolicy
-import com.afterglowtv.domain.model.Provider
-import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 
 @Composable
 internal fun SettingsContentPane(
@@ -21,8 +19,6 @@ internal fun SettingsContentPane(
     screenLabels: SettingsScreenLabels,
     dialogState: SettingsScreenDialogState,
     providerState: SettingsProviderSectionState,
-    onAddProvider: (ProviderM3uPlaylistKind?) -> Unit,
-    onEditProvider: (Provider) -> Unit,
     onNavigateToParentalControl: (Long) -> Unit,
     onChooseRecordingFolder: () -> Unit,
     onChooseLocalMediaLibrary: () -> Unit,
@@ -60,8 +56,6 @@ internal fun SettingsContentPane(
                 } else {
                     ProviderSettingsCategory.LIVE_TV
                 },
-                onAddProvider = onAddProvider,
-                onEditProvider = onEditProvider,
                 onNavigateToParentalControl = onNavigateToParentalControl,
                 viewModel = viewModel,
                 providerState = providerState
