@@ -39,7 +39,7 @@ class SettingsNavigationRailTest {
 
     @Test
     fun `standard settings navigation includes recording`() {
-        assertThat(visibleSettingsCategoryIds(StorePolicySnapshot.standard, developerModeEnabled = false))
+        assertThat(visibleSettingsCategoryIds(StorePolicySnapshot.fullFeature, developerModeEnabled = false))
             .contains(SETTINGS_CATEGORY_RECORDING)
     }
 

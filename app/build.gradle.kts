@@ -30,13 +30,13 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.afterglowtv.app"
+        applicationId = "com.afterglow.tv.fire"
         minSdk = 28
         targetSdk = 36
         versionCode = 29
         versionName = "0.1.28"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
+        buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglow.tv.fire\"")
         buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "false")
         buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "0L")
         buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "0L")
@@ -48,22 +48,6 @@ android {
     flavorDimensions += "store"
 
     productFlavors {
-        create("standard") {
-            dimension = "store"
-            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "false")
-            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
-            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
-            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
-            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
-            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
-            buildConfigField("boolean", "ENABLE_BUNDLED_PUBLIC_SOURCE", "false")
-            buildConfigField("String", "BUNDLED_PUBLIC_SOURCE_SPECS", "\"\"")
-            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
-            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "true")
-            buildConfigField("boolean", "ENABLE_DVR", "true")
-            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "false")
-        }
-
         create("amazon") {
             dimension = "store"
             applicationId = "com.afterglow.tv.fire"
@@ -88,53 +72,6 @@ android {
             buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "true")
             buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"afterglow_premium_monthly\"")
             buildConfigField("String", "AMAZON_PREMIUM_LIFETIME_SKU", "\"afterglow_premium_lifetime\"")
-        }
-
-        create("direct") {
-            dimension = "store"
-            applicationId = "com.afterglow.tv.fire"
-            versionNameSuffix = "-direct"
-            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglow.tv.fire\"")
-            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
-            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
-            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
-            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
-            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
-            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
-            buildConfigField("boolean", "ENABLE_BUNDLED_PUBLIC_SOURCE", "true")
-            buildConfigField(
-                "String",
-                "BUNDLED_PUBLIC_SOURCE_SPECS",
-                "\"$bundledPublicSourceSpec\""
-            )
-            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "false")
-            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
-            buildConfigField("boolean", "ENABLE_DVR", "false")
-            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
-            buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "true")
-            buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "1784073600000L")
-            buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "1790812800000L")
-            buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "true")
-            buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"afterglow_premium_monthly\"")
-            buildConfigField("String", "AMAZON_PREMIUM_LIFETIME_SKU", "\"afterglow_premium_lifetime\"")
-        }
-
-        create("corey") {
-            dimension = "store"
-            applicationIdSuffix = ".corey"
-            versionNameSuffix = "-corey"
-            buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "false")
-            buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"Plex\"")
-            buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\\\\\\\\192.168.1.8\\\\Plex\"")
-            buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "true")
-            buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
-            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "true")
-            buildConfigField("boolean", "ENABLE_BUNDLED_PUBLIC_SOURCE", "false")
-            buildConfigField("String", "BUNDLED_PUBLIC_SOURCE_SPECS", "\"\"")
-            buildConfigField("boolean", "ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION", "true")
-            buildConfigField("boolean", "ENABLE_SIDELOAD_UPDATES", "false")
-            buildConfigField("boolean", "ENABLE_DVR", "true")
-            buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "false")
         }
     }
 
@@ -189,19 +126,10 @@ android {
         animationsDisabled = true
     }
 
-    sourceSets {
-        getByName("direct") {
-            res.directories.add("src/amazon/res")
-            assets.directories.add("src/amazon/assets")
-        }
-    }
 }
 
 androidComponents {
     onVariants(selector().withFlavor("store", "amazon")) { variant ->
-        variant.androidResources.localeFilters.add("en")
-    }
-    onVariants(selector().withFlavor("store", "direct")) { variant ->
         variant.androidResources.localeFilters.add("en")
     }
 }
@@ -216,7 +144,7 @@ kotlin {
 kover {
     currentProject {
         createVariant("ci") {
-            add("standardDebug")
+            add("amazonDebug")
         }
     }
 }

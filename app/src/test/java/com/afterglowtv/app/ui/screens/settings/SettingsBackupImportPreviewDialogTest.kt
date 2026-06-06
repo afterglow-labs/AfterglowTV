@@ -22,7 +22,7 @@ class SettingsBackupImportPreviewDialogTest {
         ).isTrue()
         assertThat(
             shouldShowBackupRecordingSchedules(
-                StorePolicySnapshot.standard,
+                StorePolicySnapshot.fullFeature,
                 developerModeEnabled = false
             )
         ).isTrue()

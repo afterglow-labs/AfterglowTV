@@ -130,11 +130,9 @@ data class StorePolicySnapshot(
 
     companion object {
         const val BUNDLED_PUBLIC_SOURCE_DIRECTORY = "bundled_public_sources"
-        const val DIRECT_PREVIEW_UNLOCK_EPOCH_MS = 1_784_073_600_000L
-        const val DIRECT_PREVIEW_FREE_UNTIL_EPOCH_MS = 1_790_812_800_000L
         val LEGACY_BUNDLED_PUBLIC_PLAYLIST_FILE_NAMES = setOf("afterglow_amazon_live.m3u8")
 
-        val standard = StorePolicySnapshot(
+        val fullFeature = StorePolicySnapshot(
             amazonReviewBuild = false,
             showAdvancedSourceTypes = true,
             showAdultSurfaces = true,
@@ -170,12 +168,6 @@ data class StorePolicySnapshot(
             enableDvr = false,
             allowDvrDeveloperUnlock = true,
             guideOnlyReviewSurface = true
-        )
-
-        val direct = amazon.copy(
-            dateUnlocksHiddenFeatures = true,
-            featureReleaseUnlockEpochMs = DIRECT_PREVIEW_UNLOCK_EPOCH_MS,
-            premiumPreviewFreeUntilEpochMs = DIRECT_PREVIEW_FREE_UNTIL_EPOCH_MS
         )
 
         val current: StorePolicySnapshot

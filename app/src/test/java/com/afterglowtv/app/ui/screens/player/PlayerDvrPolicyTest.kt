@@ -21,7 +21,7 @@ class PlayerDvrPolicyTest {
         ).isTrue()
         assertThat(
             shouldShowPlayerRecordingControls(
-                StorePolicySnapshot.standard,
+                StorePolicySnapshot.fullFeature,
                 developerModeEnabled = false
             )
         ).isTrue()

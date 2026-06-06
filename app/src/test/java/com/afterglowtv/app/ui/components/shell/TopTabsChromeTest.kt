@@ -11,7 +11,7 @@ class TopTabsChromeTest {
         val tabs = defaultTopTabs(
             developerModeEnabled = true,
             showAdultTab = true,
-            policy = StorePolicySnapshot.standard
+            policy = StorePolicySnapshot.fullFeature
         )
 
         assertThat(tabs.map { it.id }).containsExactly(
@@ -41,7 +41,7 @@ class TopTabsChromeTest {
         val tabs = defaultTopTabs(
             developerModeEnabled = false,
             showAdultTab = true,
-            policy = StorePolicySnapshot.standard
+            policy = StorePolicySnapshot.fullFeature
         )
 
         assertThat(tabs.map { it.id }).containsExactly(
@@ -60,7 +60,7 @@ class TopTabsChromeTest {
         val tabs = defaultTopTabs(
             developerModeEnabled = true,
             showAdultTab = false,
-            policy = StorePolicySnapshot.standard
+            policy = StorePolicySnapshot.fullFeature
         )
 
         assertThat(tabs.map { it.id }).containsExactly(

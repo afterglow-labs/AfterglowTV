@@ -21,7 +21,7 @@ class StartupDvrPolicyTest {
         ).isTrue()
         assertThat(
             shouldEnqueueRecordingMaintenance(
-                StorePolicySnapshot.standard,
+                StorePolicySnapshot.fullFeature,
                 developerModeEnabled = false
             )
         ).isTrue()

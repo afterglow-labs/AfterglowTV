@@ -12,6 +12,6 @@ class SettingsPrivacySectionTest {
 
     @Test
     fun `standard build shows advanced text import settings`() {
-        assertThat(showAdvancedTextImportSettings(StorePolicySnapshot.standard)).isTrue()
+        assertThat(showAdvancedTextImportSettings(StorePolicySnapshot.fullFeature)).isTrue()
     }
 }

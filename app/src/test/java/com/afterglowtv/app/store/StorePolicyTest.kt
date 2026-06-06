@@ -53,8 +53,8 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `standard source dialog exposes all source choices`() {
-        val sourceTypes = visibleSourceDialogChoices(StorePolicySnapshot.standard)
+    fun `full feature source dialog exposes all source choices`() {
+        val sourceTypes = visibleSourceDialogChoices(StorePolicySnapshot.fullFeature)
 
         assertThat(sourceTypes).containsExactly(
             SourceDialogChoice.PLAYLIST,
@@ -64,17 +64,17 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `direct preview matches amazon hidden defaults before release date`() {
-        val beforeRelease = utcMs("2026-07-14T23:59:59Z")
-        val locked = StorePolicySnapshot.direct.effectiveFor(
+    fun `amazon review build matches hidden defaults`() {
+        val now = utcMs("2026-07-14T23:59:59Z")
+        val locked = StorePolicySnapshot.amazon.effectiveFor(
             storedDeveloperModeEnabled = false,
-            nowMs = beforeRelease
+            nowMs = now
         )
 
         assertThat(locked.showAdvancedSourceTypes).isFalse()
         assertThat(locked.guideOnlyReviewSurface).isTrue()
         assertThat(locked.canUseDvr(developerModeEnabled = false)).isFalse()
-        assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(false, beforeRelease)).isFalse()
+        assertThat(StorePolicySnapshot.amazon.effectiveDeveloperModeEnabled(false, now)).isFalse()
         assertThat(visibleSourceDialogChoices(locked)).containsExactly(
             SourceDialogChoice.PLAYLIST,
             SourceDialogChoice.XTREAM,
@@ -83,129 +83,22 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `direct preview developer mode unlocks full feature set before release date`() {
-        val beforeRelease = utcMs("2026-07-14T23:59:59Z")
-        val unlocked = StorePolicySnapshot.direct.effectiveFor(
+    fun `amazon developer mode unlocks full feature set`() {
+        val now = utcMs("2026-07-14T23:59:59Z")
+        val unlocked = StorePolicySnapshot.amazon.effectiveFor(
             storedDeveloperModeEnabled = true,
-            nowMs = beforeRelease
+            nowMs = now
         )
 
         assertThat(unlocked.showAdvancedSourceTypes).isTrue()
         assertThat(unlocked.guideOnlyReviewSurface).isFalse()
         assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
-        assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(true, beforeRelease)).isTrue()
+        assertThat(StorePolicySnapshot.amazon.effectiveDeveloperModeEnabled(true, now)).isTrue()
         assertThat(visibleSourceDialogChoices(unlocked)).containsExactly(
             SourceDialogChoice.PLAYLIST,
             SourceDialogChoice.XTREAM,
             SourceDialogChoice.PORTAL
         ).inOrder()
-    }
-
-    @Test
-    fun `direct preview unlocks premium feature set on release date while adult stays hidden`() {
-        val releaseDate = utcMs("2026-07-15T00:00:00Z")
-        val unlocked = StorePolicySnapshot.direct.effectiveFor(
-            storedDeveloperModeEnabled = false,
-            nowMs = releaseDate
-        )
-
-        assertThat(unlocked.showAdvancedSourceTypes).isTrue()
-        assertThat(unlocked.showAdultSurfaces).isFalse()
-        assertThat(unlocked.guideOnlyReviewSurface).isFalse()
-        assertThat(unlocked.allowXtreamPlaylistAutoDetection).isTrue()
-        assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
-        assertThat(StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(false, releaseDate)).isTrue()
-        assertThat(visibleSourceDialogChoices(unlocked)).containsExactly(
-            SourceDialogChoice.PLAYLIST,
-            SourceDialogChoice.XTREAM,
-            SourceDialogChoice.PORTAL
-        ).inOrder()
-    }
-
-    @Test
-    fun `direct preview locks full feature set after free preview without entitlement`() {
-        val afterPreview = utcMs("2026-10-01T00:00:00Z")
-        val locked = StorePolicySnapshot.direct.effectiveFor(
-            storedDeveloperModeEnabled = false,
-            amazonPremiumEntitled = false,
-            nowMs = afterPreview
-        )
-
-        assertThat(locked.showAdvancedSourceTypes).isFalse()
-        assertThat(locked.guideOnlyReviewSurface).isTrue()
-        assertThat(locked.allowXtreamPlaylistAutoDetection).isFalse()
-        assertThat(locked.canUseDvr(developerModeEnabled = false)).isFalse()
-        assertThat(
-            StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(
-                storedDeveloperModeEnabled = false,
-                amazonPremiumEntitled = false,
-                nowMs = afterPreview
-            )
-        ).isFalse()
-        assertThat(
-            StorePolicySnapshot.direct.shouldShowPremiumPurchaseOptions(
-                storedDeveloperModeEnabled = false,
-                amazonPremiumEntitled = false,
-                nowMs = afterPreview
-            )
-        ).isTrue()
-        assertThat(visibleSourceDialogChoices(locked)).containsExactly(
-            SourceDialogChoice.PLAYLIST,
-            SourceDialogChoice.XTREAM,
-            SourceDialogChoice.PORTAL
-        ).inOrder()
-    }
-
-    @Test
-    fun `direct premium entitlement unlocks premium feature set after free preview while adult stays hidden`() {
-        val afterPreview = utcMs("2026-10-01T00:00:00Z")
-        val unlocked = StorePolicySnapshot.direct.effectiveFor(
-            storedDeveloperModeEnabled = false,
-            amazonPremiumEntitled = true,
-            nowMs = afterPreview
-        )
-
-        assertThat(unlocked.showAdvancedSourceTypes).isTrue()
-        assertThat(unlocked.showAdultSurfaces).isFalse()
-        assertThat(unlocked.guideOnlyReviewSurface).isFalse()
-        assertThat(unlocked.allowXtreamPlaylistAutoDetection).isTrue()
-        assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
-        assertThat(
-            StorePolicySnapshot.direct.effectiveDeveloperModeEnabled(
-                storedDeveloperModeEnabled = false,
-                amazonPremiumEntitled = true,
-                nowMs = afterPreview
-            )
-        ).isTrue()
-        assertThat(
-            StorePolicySnapshot.direct.shouldShowPremiumPurchaseOptions(
-                storedDeveloperModeEnabled = false,
-                amazonPremiumEntitled = true,
-                nowMs = afterPreview
-            )
-        ).isFalse()
-    }
-
-    @Test
-    fun `direct developer mode keeps full feature set after free preview`() {
-        val afterPreview = utcMs("2026-10-01T00:00:00Z")
-        val unlocked = StorePolicySnapshot.direct.effectiveFor(
-            storedDeveloperModeEnabled = true,
-            amazonPremiumEntitled = false,
-            nowMs = afterPreview
-        )
-
-        assertThat(unlocked.showAdvancedSourceTypes).isTrue()
-        assertThat(unlocked.showAdultSurfaces).isTrue()
-        assertThat(unlocked.guideOnlyReviewSurface).isFalse()
-        assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
-        assertThat(
-            StorePolicySnapshot.direct.shouldShowPremiumPurchaseOptions(
-                storedDeveloperModeEnabled = true,
-                amazonPremiumEntitled = false,
-                nowMs = afterPreview
-            )
-        ).isFalse()
     }
 
     @Test
@@ -223,16 +116,10 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `direct premium preview free window ends on october first`() {
-        assertThat(StorePolicySnapshot.direct.isPremiumPreviewFree(utcMs("2026-09-30T23:59:59Z"))).isTrue()
-        assertThat(StorePolicySnapshot.direct.isPremiumPreviewFree(utcMs("2026-10-01T00:00:00Z"))).isFalse()
-    }
-
-    @Test
     fun `amazon review build hides dvr unless developer mode unlocks it`() {
         assertThat(StorePolicySnapshot.amazon.canUseDvr(developerModeEnabled = false)).isFalse()
         assertThat(StorePolicySnapshot.amazon.canUseDvr(developerModeEnabled = true)).isTrue()
-        assertThat(StorePolicySnapshot.standard.canUseDvr(developerModeEnabled = false)).isTrue()
+        assertThat(StorePolicySnapshot.fullFeature.canUseDvr(developerModeEnabled = false)).isTrue()
     }
 
     @Test

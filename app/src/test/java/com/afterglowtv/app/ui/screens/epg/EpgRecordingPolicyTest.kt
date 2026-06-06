@@ -23,7 +23,7 @@ class EpgRecordingPolicyTest {
         ).isTrue()
         assertThat(
             shouldShowGuideRecordingActions(
-                StorePolicySnapshot.standard,
+                StorePolicySnapshot.fullFeature,
                 developerModeEnabled = false,
                 canScheduleRecording = true
             )
@@ -35,7 +35,7 @@ class EpgRecordingPolicyTest {
     fun `guide recording actions still require schedulable guide data`() {
         assertThat(
             shouldShowGuideRecordingActions(
-                StorePolicySnapshot.standard,
+                StorePolicySnapshot.fullFeature,
                 developerModeEnabled = false,
                 canScheduleRecording = false
             )
