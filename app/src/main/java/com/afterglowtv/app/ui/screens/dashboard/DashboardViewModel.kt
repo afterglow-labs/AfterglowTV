@@ -235,7 +235,7 @@ class DashboardViewModel @Inject constructor(
                         expirationDate = it.expirationDate,
                         maxConnections = it.maxConnections
                     )
-                } ?: DashboardProviderHealth(),
+                },
                 providerWarnings = when (syncState) {
                     is SyncState.Partial -> syncState.warnings
                     is SyncState.Error -> listOf(syncState.message)

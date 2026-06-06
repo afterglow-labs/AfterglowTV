@@ -1285,7 +1285,7 @@ class SeriesRepositoryImpl @Inject constructor(
                             isComplete = pageComplete,
                             pageSize = result.data.pageSize
                         )
-                        seriesCategoryHydrationDao.upsert(currentHydration!!)
+                        seriesCategoryHydrationDao.upsert(currentHydration)
                         if (pageComplete) break
                         nextPage = result.data.page + 1
                     }

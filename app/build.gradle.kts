@@ -5,7 +5,6 @@ import java.security.MessageDigest
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
@@ -202,6 +201,12 @@ android {
         resources {
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
+        jniLibs {
+            keepDebugSymbols += setOf(
+                "**/libandroidx.graphics.path.so",
+                "**/libdatastore_shared_counter.so"
+            )
+        }
     }
 
     testOptions {
@@ -210,8 +215,8 @@ android {
 
     sourceSets {
         getByName("direct") {
-            res.srcDir("src/amazon/res")
-            assets.srcDir("src/amazon/assets")
+            res.directories.add("src/amazon/res")
+            assets.directories.add("src/amazon/assets")
         }
     }
 }

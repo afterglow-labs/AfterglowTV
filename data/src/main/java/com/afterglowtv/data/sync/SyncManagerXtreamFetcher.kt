@@ -114,7 +114,7 @@ internal class SyncManagerXtreamFetcher(
                     XTREAM_FETCHER_TAG,
                     "Xtream live category '${category.categoryName}' failed after ${elapsedMs}ms: ${sanitizeThrowableMessage(categoryFailure)}"
                 )
-                CategoryFetchOutcome.Failure(category.categoryName, categoryFailure!!)
+                CategoryFetchOutcome.Failure(category.categoryName, categoryFailure)
             }
             rawCount == 0 -> {
                 Log.i(
@@ -169,7 +169,7 @@ internal class SyncManagerXtreamFetcher(
                     XTREAM_FETCHER_TAG,
                     "Xtream movie category '${category.categoryName}' failed after ${elapsedMs}ms: ${sanitizeThrowableMessage(categoryFailure)}"
                 )
-                CategoryFetchOutcome.Failure(category.categoryName, categoryFailure!!)
+                CategoryFetchOutcome.Failure(category.categoryName, categoryFailure)
             }
             rawStreams.isEmpty() -> {
                 Log.i(
@@ -224,7 +224,7 @@ internal class SyncManagerXtreamFetcher(
                     XTREAM_FETCHER_TAG,
                     "Xtream series category '${category.categoryName}' failed after ${elapsedMs}ms: ${sanitizeThrowableMessage(categoryFailure)}"
                 )
-                CategoryFetchOutcome.Failure(category.categoryName, categoryFailure!!)
+                CategoryFetchOutcome.Failure(category.categoryName, categoryFailure)
             }
             rawSeries.isEmpty() -> {
                 Log.i(

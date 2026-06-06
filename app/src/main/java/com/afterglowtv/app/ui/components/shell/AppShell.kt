@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -283,6 +289,17 @@ private fun TopNavigationBar(
     var showExitConfirmation by remember { mutableStateOf(false) }
 
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
+    val closeFocusRequester = remember { FocusRequester() }
+    val settingsFocusRequester = focusRequesters.getOrPut(Routes.SETTINGS) { FocusRequester() }
+    var closeFocusArmed by remember { mutableStateOf(false) }
+    var requestCloseFocus by remember { mutableStateOf(false) }
+
+    LaunchedEffect(requestCloseFocus) {
+        if (requestCloseFocus) {
+            closeFocusRequester.requestFocus()
+            requestCloseFocus = false
+        }
+    }
 
     if (showExitConfirmation) {
         ConfirmCloseAppDialog(
@@ -324,6 +341,11 @@ private fun TopNavigationBar(
                     showBrandName = false
                 )
                 TopAppCloseButton(
+                    focusRequester = closeFocusRequester,
+                    fallbackFocusRequester = settingsFocusRequester,
+                    isFocusAllowed = { closeFocusArmed },
+                    onRejectedFocus = { closeFocusArmed = false },
+                    onFocusExit = { closeFocusArmed = false },
                     onClick = { showExitConfirmation = true }
                 )
             }
@@ -337,11 +359,34 @@ private fun TopNavigationBar(
             ) {
                 items.forEach { item ->
                     val requester = focusRequesters.getOrPut(item.route) { FocusRequester() }
+                    val isSettingsItem = item.route == Routes.SETTINGS
                     TopNavigationButton(
                         label = stringResource(item.labelRes),
                         icon = item.icon,
                         selected = currentRoute.startsWith(item.route),
                         focusRequester = requester,
+                        modifier = Modifier
+                            .focusProperties {
+                                if (isSettingsItem) {
+                                    up = closeFocusRequester
+                                    right = closeFocusRequester
+                                } else {
+                                    up = FocusRequester.Cancel
+                                }
+                            },
+                        onDirectionalKey = if (isSettingsItem) {
+                            { key ->
+                                if (key == Key.DirectionRight || key == Key.DirectionUp) {
+                                    closeFocusArmed = true
+                                    requestCloseFocus = true
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
+                        } else {
+                            null
+                        },
                         onClick = {
                             if (!currentRoute.startsWith(item.route)) {
                                 onNavigate(item.route)
@@ -394,9 +439,13 @@ private fun ConfirmCloseAppDialog(
 @Composable
 private fun TopAppCloseButton(
     onClick: () -> Unit,
+    focusRequester: FocusRequester,
+    fallbackFocusRequester: FocusRequester,
+    isFocusAllowed: () -> Boolean,
+    onRejectedFocus: () -> Unit,
+    onFocusExit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val focusRequester = remember { FocusRequester() }
     val sounds = rememberTvInteractionSounds()
     Surface(
         onClick = {
@@ -405,6 +454,20 @@ private fun TopAppCloseButton(
         },
         modifier = modifier
             .focusRequester(focusRequester)
+            .focusProperties {
+                left = fallbackFocusRequester
+                down = fallbackFocusRequester
+                right = FocusRequester.Cancel
+                up = FocusRequester.Cancel
+            }
+            .onFocusChanged { state ->
+                if (state.isFocused && !isFocusAllowed()) {
+                    onRejectedFocus()
+                    fallbackFocusRequester.requestFocus()
+                } else if (!state.isFocused) {
+                    onFocusExit()
+                }
+            }
             .mouseClickable(
                 focusRequester = focusRequester,
                 onClick = {
@@ -442,6 +505,7 @@ private fun TopNavigationButton(
     selected: Boolean,
     focusRequester: FocusRequester,
     modifier: Modifier = Modifier,
+    onDirectionalKey: ((Key) -> Boolean)? = null,
     onClick: () -> Unit
 ) {
     var isFocused by remember { mutableStateOf(false) }
@@ -459,6 +523,15 @@ private fun TopNavigationButton(
         },
         modifier = modifier
             .focusRequester(focusRequester)
+            .then(
+                if (onDirectionalKey != null) {
+                    Modifier.onPreviewKeyEvent { event ->
+                        event.type == KeyEventType.KeyDown && onDirectionalKey(event.key)
+                    }
+                } else {
+                    Modifier
+                }
+            )
             .mouseClickable(
                 focusRequester = focusRequester,
                 onClick = {

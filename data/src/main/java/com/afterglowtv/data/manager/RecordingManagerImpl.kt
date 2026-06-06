@@ -725,12 +725,13 @@ class RecordingManagerImpl @Inject constructor(
         when (val startResult = startCapture(run)) {
             is Result.Success -> Result.success(Unit)
             is Result.Error -> {
+                val failureMessage = startResult.message
                 markRunFailed(
                     run.id,
-                    startResult.message ?: "Capture failed to start.",
+                    failureMessage,
                     inferFailureCategory(startResult.exception)
                 )
-                Result.error(startResult.message ?: "Capture failed to start.", startResult.exception)
+                Result.error(failureMessage, startResult.exception)
             }
             Result.Loading -> Result.success(Unit)
         }

@@ -1402,7 +1402,6 @@ class SyncManager @Inject constructor(
             val outcome = when (contentType) {
                 ContentType.MOVIE -> fetchMovieCategoryOutcome(provider, api, category.toXtreamCategory())
                 ContentType.SERIES -> fetchSeriesCategoryOutcome(provider, api, category.toXtreamCategory())
-                else -> error("Unsupported section")
             }
             when (val categoryOutcome = outcome.outcome) {
                 is CategoryFetchOutcome.Success -> {
@@ -1417,7 +1416,6 @@ class SyncManager @Inject constructor(
                             series = categoryOutcome.items.filterIsInstance<Series>(),
                             indexedAt = System.currentTimeMillis()
                         )
-                        else -> 0
                     }
                     if (workItem.advancesCursor) {
                         indexedRows += accepted

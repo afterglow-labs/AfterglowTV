@@ -1017,7 +1017,7 @@ class XtreamProvider(
             primaryFailure is XtreamParsingException
         if (!shouldTryLegacyParam) {
             primaryResponse?.let { return it }
-            primaryFailure?.let { throw it }
+            throw primaryFailure
         }
         val legacyAttempt = runCatching { requestSeriesInfo(seriesId, "series") }
         val legacyResponse = legacyAttempt.getOrNull()

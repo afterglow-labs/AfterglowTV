@@ -475,7 +475,7 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
         val entry = navController.currentBackStackEntry ?: return
         if (!entry.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
-        val currentRoute = entry.destination?.route
+        val currentRoute = entry.destination.route
         if (currentRoute == route || currentRoute?.startsWith("$route?") == true) return
 
         navController.navigate(route) {

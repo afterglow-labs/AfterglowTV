@@ -629,9 +629,11 @@ class Media3PlayerEngine @Inject constructor(
             .setLanguage(language)
             .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
             .build()
-        val subtitleSource = androidx.media3.exoplayer.source.SingleSampleMediaSource.Factory(
-            androidx.media3.datasource.DefaultDataSource.Factory(context)
-        ).createMediaSource(subtitleConfig, C.TIME_UNSET)
+        @Suppress("DEPRECATION")
+        val subtitleSource =
+            androidx.media3.exoplayer.source.SingleSampleMediaSource.Factory(
+                androidx.media3.datasource.DefaultDataSource.Factory(context)
+            ).createMediaSource(subtitleConfig, C.TIME_UNSET)
         val merged = androidx.media3.exoplayer.source.MergingMediaSource(mainMediaSource, subtitleSource)
 
         player.setMediaSource(merged, position)
@@ -1083,7 +1085,8 @@ class Media3PlayerEngine @Inject constructor(
                         return
                     }
 
-                    out.add(object : MediaCodecVideoRenderer(
+                    @Suppress("DEPRECATION")
+                    val compatibilityRenderer = object : MediaCodecVideoRenderer(
                         context,
                         mediaCodecSelector,
                         allowedVideoJoiningTimeMs,
@@ -1105,7 +1108,8 @@ class Media3PlayerEngine @Inject constructor(
                                 DecoderReuseEvaluation.DISCARD_REASON_MAX_INPUT_SIZE_EXCEEDED
                             )
                         }
-                    })
+                    }
+                    out.add(compatibilityRenderer)
                 }
             }
         }

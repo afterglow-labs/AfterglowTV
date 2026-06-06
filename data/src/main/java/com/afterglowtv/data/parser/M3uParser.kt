@@ -122,7 +122,7 @@ class M3uParser {
                         pendingExtinf = pendingExtinf?.let { applyPendingDirective(it, line) }
                     }
                     pendingExtinf != null -> {
-                        parseEntry(pendingExtinf!!, line, header.userAgent)?.let { onEntry(it) }
+                        parseEntry(pendingExtinf, line, header.userAgent)?.let { onEntry(it) }
                         pendingExtinf = null
                     }
                     else -> {

@@ -75,11 +75,11 @@ class PlayerTrackController(
 
     fun setPreferredAudioLanguage(player: ExoPlayer?, languageTag: String?) {
         preferredAudioLanguageTag = languageTag?.trim()?.takeIf { it.isNotBlank() }
-        player?.trackSelectionParameters = player?.trackSelectionParameters
-            ?.buildUpon()
-            ?.setPreferredAudioLanguage(preferredAudioLanguageTag)
-            ?.build()
-            ?: return
+        player ?: return
+        player.trackSelectionParameters = player.trackSelectionParameters
+            .buildUpon()
+            .setPreferredAudioLanguage(preferredAudioLanguageTag)
+            .build()
     }
 
     fun setNetworkQualityPreferences(wifiMaxHeight: Int?, ethernetMaxHeight: Int?) {
@@ -291,4 +291,3 @@ internal fun normalizeSelectedVideoTrackId(
     availableTrackIds.size == 1 -> availableTrackIds.first()
     else -> PLAYER_TRACK_AUTO_ID
 }
-

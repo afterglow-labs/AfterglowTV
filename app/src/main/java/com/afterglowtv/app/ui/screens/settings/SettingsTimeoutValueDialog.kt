@@ -75,7 +75,7 @@ internal fun TimeoutValueDialog(
                 )
                 Text(
                     text = if (isValid) {
-                        formatTimeoutSecondsLabel(parsedValue ?: initialValue, LocalContext.current)
+                        formatTimeoutSecondsLabel(parsedValue, LocalContext.current)
                     } else {
                         stringResource(R.string.settings_timeout_validation)
                     },

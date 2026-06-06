@@ -498,7 +498,7 @@ class XmltvParser {
                                 onChannel(
                                     XmltvChannel(
                                         id = channelId,
-                                        displayName = channelDisplayName!!,
+                                        displayName = channelDisplayName,
                                         iconUrl = channelIconUrl
                                     )
                                 )

@@ -28,7 +28,7 @@ class GitHubReleaseChecker @Inject constructor(
     private val okHttpClient: OkHttpClient
 ) {
     private companion object {
-        private const val RELEASES_LATEST_URL = "https://api.github.com/repos/xuninc/AfterglowTV/releases/latest"
+        private const val RELEASES_LATEST_URL = "https://api.github.com/repos/afterglow-labs/AfterglowTV/releases/latest"
         private const val MAX_RESPONSE_BYTES = 512 * 1024L
         private const val TRAFFIC_STATS_TAG_NONE = -1
         private const val UPDATE_CHECK_TRAFFIC_TAG = 0xA17A

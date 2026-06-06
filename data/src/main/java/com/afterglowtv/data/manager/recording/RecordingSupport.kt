@@ -78,7 +78,7 @@ internal fun RecordingStorageConfig.toEntity(existing: RecordingStorageEntity?, 
 internal fun headersToJson(headers: Map<String, String>): String {
     val obj = JSONObject()
     headers.forEach { (k, v) -> obj.put(k, v) }
-    return obj.toString() ?: "{}"
+    return obj.toString()
 }
 
 internal fun headersFromJson(raw: String?): Map<String, String> {

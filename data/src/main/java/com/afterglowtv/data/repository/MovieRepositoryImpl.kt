@@ -1618,7 +1618,7 @@ class MovieRepositoryImpl @Inject constructor(
                                 isComplete = pageComplete,
                                 pageSize = result.data.pageSize
                             )
-                            movieCategoryHydrationDao.upsert(currentHydration!!)
+                            movieCategoryHydrationDao.upsert(currentHydration)
                         }
                         if (pageComplete) break
                         nextPage = result.data.page + 1

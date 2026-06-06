@@ -204,10 +204,7 @@ internal class XtreamAdaptiveSyncPolicy {
             return 0L
         }
         val health = providerHealth[providerId] ?: ProviderHealth()
-        val baseSpacingMs = when (stage) {
-            Stage.CATEGORY -> 250L
-            else -> 0L
-        }
+        val baseSpacingMs = 250L
         val stressSpacingMs = when {
             health.stressLevel >= 4 -> 900L
             health.stressLevel >= 3 -> 650L

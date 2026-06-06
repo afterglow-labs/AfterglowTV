@@ -539,17 +539,20 @@ internal fun EpgOverrideDialog(
 ) {
     val channel = state.channel ?: return
     val unknownValue = stringResource(R.string.epg_program_unknown_value)
-    val currentCandidate = remember(state.currentMapping, state.candidates) {
-        state.candidates.firstOrNull {
-            it.epgSourceId == state.currentMapping?.epgSourceId &&
-                it.xmltvChannelId == state.currentMapping?.xmltvChannelId
+    val currentMapping = state.currentMapping
+    val currentCandidate = remember(currentMapping, state.candidates) {
+        currentMapping?.let { mapping ->
+            state.candidates.firstOrNull {
+                it.epgSourceId == mapping.epgSourceId &&
+                    it.xmltvChannelId == mapping.xmltvChannelId
+            }
         }
     }
     val currentDescriptor = currentCandidate?.let {
         "${it.displayName}  •  ${it.epgSourceName}  •  ${it.xmltvChannelId}"
-    } ?: (state.currentMapping?.xmltvChannelId ?: unknownValue)
+    } ?: (currentMapping?.xmltvChannelId ?: unknownValue)
     val currentSummary = when {
-        state.currentMapping == null || state.currentMapping.sourceType == EpgSourceType.NONE ->
+        currentMapping == null || currentMapping.sourceType == EpgSourceType.NONE ->
             stringResource(R.string.epg_override_current_none)
         state.currentMapping.isManualOverride || state.currentMapping.matchType == EpgMatchType.MANUAL ->
             stringResource(R.string.epg_override_current_manual, currentDescriptor)
@@ -643,8 +646,10 @@ internal fun EpgOverrideDialog(
                             items = state.candidates,
                             key = { candidate -> "${candidate.epgSourceId}:${candidate.xmltvChannelId}" }
                         ) { candidate ->
-                            val isCurrent = state.currentMapping?.epgSourceId == candidate.epgSourceId &&
-                                state.currentMapping?.xmltvChannelId == candidate.xmltvChannelId
+                            val isCurrent = currentMapping?.let { mapping ->
+                                mapping.epgSourceId == candidate.epgSourceId &&
+                                    mapping.xmltvChannelId == candidate.xmltvChannelId
+                            } == true
                             TvClickableSurface(
                                 onClick = {
                                     if (!state.isSaving) {

@@ -747,7 +747,7 @@ class EpgViewModel @Inject constructor(
             val result = recordingManager.forceScheduleRecording(conflict.pendingRequest)
             val message = when (result) {
                 is Result.Success -> "Recording scheduled: ${conflict.programTitle}"
-                is Result.Error -> result.message ?: "Failed to schedule recording"
+                is Result.Error -> result.message
                 else -> return@launch
             }
             _uiState.update { it.copy(recordingMessage = message, pendingRecordingConflict = null) }

@@ -308,7 +308,7 @@ internal class SyncManagerXtreamLiveStrategy(
             return CatalogSyncPayload(
                 catalogResult = CatalogStrategyResult.Failure(
                     strategyName = "full",
-                    error = fullChannelsFailure!!,
+                    error = fullChannelsFailure,
                     warnings = listOf(fullCatalogFallbackWarning("Live TV", fullChannelsFailure))
                 ),
                 categories = null

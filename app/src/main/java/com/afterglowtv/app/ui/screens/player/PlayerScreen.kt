@@ -187,7 +187,7 @@ fun PlayerScreen(
         currentSeries?.seasons.sanitizedForPlayer()
     }
     val canOpenEpisodePicker = contentType == "SERIES_EPISODE" &&
-        currentSeriesSeasons?.any { it.episodes.isNotEmpty() } == true
+        currentSeriesSeasons.any { it.episodes.isNotEmpty() }
     
     val isCatchUpPlayback by viewModel.isCatchUpPlayback.collectAsStateWithLifecycle()
     val isLinearLivePlayback = contentType == "LIVE"

@@ -279,11 +279,10 @@ class TvInputSetupViewModel @Inject constructor(
                 return@launch
             }
 
-            var activeProvider = providerRepository.getActiveProvider().first()
-            if (activeProvider == null) {
+            val activeProvider = providerRepository.getActiveProvider().first() ?: run {
                 val fallbackProvider = providers.first()
                 providerRepository.setActiveProvider(fallbackProvider.id)
-                activeProvider = fallbackProvider
+                fallbackProvider
             }
 
             val syncResult = tvInputChannelSyncManager.refreshTvInputCatalogResult()
@@ -291,14 +290,14 @@ class TvInputSetupViewModel @Inject constructor(
                 _uiState.value = TvInputSetupUiState(
                     inputId = inputId,
                     status = TvInputSetupStatus.SUCCESS,
-                    providerName = activeProvider?.name,
-                    message = "Synced ${providers.size} configured provider(s). Android TV Live TV will use ${activeProvider?.name ?: "your active source"}."
+                    providerName = activeProvider.name,
+                    message = "Synced ${providers.size} configured provider(s). Android TV Live TV will use ${activeProvider.name}."
                 )
             }.onFailure { throwable ->
                 _uiState.value = TvInputSetupUiState(
                     inputId = inputId,
                     status = TvInputSetupStatus.ERROR,
-                    providerName = activeProvider?.name,
+                    providerName = activeProvider.name,
                     message = throwable.message ?: "Unknown TV input sync error"
                 )
             }

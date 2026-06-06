@@ -78,9 +78,9 @@ fun MultiViewPlannerDialog(
 
     val subtitle = when {
         isPickerMode && !channelPlaced ->
-            stringResource(R.string.multiview_planner_pick_slot, pendingChannel!!.name)
+            stringResource(R.string.multiview_planner_pick_slot, pendingChannel.name)
         channelPlaced ->
-            stringResource(R.string.multiview_planner_added, pendingChannel!!.name)
+            stringResource(R.string.multiview_planner_added, pendingChannel.name)
         hasAny ->
             stringResource(R.string.multiview_planner_ready_subtitle)
         else ->
