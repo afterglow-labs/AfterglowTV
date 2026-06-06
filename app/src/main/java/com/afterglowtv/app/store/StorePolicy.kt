@@ -91,7 +91,7 @@ data class StorePolicySnapshot(
         if (amazonReviewBuild && effectiveDeveloperModeEnabled(storedDeveloperModeEnabled, amazonPremiumEntitled, nowMs)) {
             copy(
                 showAdvancedSourceTypes = true,
-                showAdultSurfaces = true,
+                showAdultSurfaces = storedDeveloperModeEnabled,
                 guideOnlyReviewSurface = false,
                 allowXtreamPlaylistAutoDetection = true,
                 enableSideloadUpdates = true,
@@ -130,7 +130,7 @@ data class StorePolicySnapshot(
 
     companion object {
         const val BUNDLED_PUBLIC_SOURCE_DIRECTORY = "bundled_public_sources"
-        const val DIRECT_PREVIEW_UNLOCK_EPOCH_MS = 1_782_864_000_000L
+        const val DIRECT_PREVIEW_UNLOCK_EPOCH_MS = 1_784_073_600_000L
         const val DIRECT_PREVIEW_FREE_UNTIL_EPOCH_MS = 1_790_812_800_000L
         val LEGACY_BUNDLED_PUBLIC_PLAYLIST_FILE_NAMES = setOf("afterglow_amazon_live.m3u8")
 

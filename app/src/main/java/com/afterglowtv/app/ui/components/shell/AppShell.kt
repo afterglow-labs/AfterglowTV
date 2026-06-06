@@ -421,16 +421,34 @@ private fun ConfirmCloseAppDialog(
             )
         },
         confirmButton = {
-            androidx.compose.material3.TextButton(onClick = onConfirm) {
-                Text("Close")
+            androidx.compose.material3.Button(
+                onClick = onConfirm,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFD94A32),
+                    contentColor = Color.White
+                )
+            ) {
+                Text(
+                    text = "Close",
+                    color = Color.White
+                )
             }
         },
         dismissButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text("Cancel")
+            androidx.compose.material3.Button(
+                onClick = onDismiss,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = AppColors.SurfaceEmphasis,
+                    contentColor = AppColors.TextPrimary
+                )
+            ) {
+                Text(
+                    text = "Cancel",
+                    color = AppColors.TextPrimary
+                )
             }
         },
-        containerColor = AppColors.SurfaceElevated,
+        containerColor = AppColors.SurfaceElevated.copy(alpha = 1f),
         titleContentColor = AppColors.TextPrimary,
         textContentColor = AppColors.TextSecondary
     )

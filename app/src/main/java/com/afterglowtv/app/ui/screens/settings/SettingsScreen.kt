@@ -21,7 +21,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 import com.afterglowtv.app.backup.BackupFileBridge
 import com.afterglowtv.app.diagnostics.CrashReportStore
-import com.afterglowtv.app.util.OfficialBuildVerifier
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
 import com.afterglowtv.app.ui.components.shell.AppScreenScaffold
 import com.afterglowtv.app.ui.theme.*
@@ -52,11 +51,9 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
     val mainActivity = context.findMainActivity()
-    val officialBuildVerification = remember(context.packageName) { OfficialBuildVerifier.verify(context) }
     val screenLabels = rememberSettingsScreenLabels(
         uiState = uiState,
-        context = context,
-        officialBuildStatus = officialBuildVerification.status
+        context = context
     )
     val dialogState = rememberSettingsScreenDialogState()
     val providerState = rememberSettingsProviderSectionState(dialogState)

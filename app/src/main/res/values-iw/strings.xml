@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">אף אפליקציה לא יכלה לקבל את קובץ הגיבוי.</string>
     <string name="settings_backup_share_prepare_failed">לא ניתן להכין את קובץ הגיבוי.</string>
     <string name="settings_backup_share_subtitle">שלח קובץ גיבוי למנהל הקבצים של הטלוויזיה או לאפליקציה אחרת.</string>
-    <string name="settings_build_verification">אימות גרסת אפליקציה</string>
-    <string name="settings_build_verification_official">גרסה רשמית</string>
-    <string name="settings_build_verification_unavailable">אימות לא זמין</string>
-    <string name="settings_build_verification_unofficial">גרסה לא רשמית</string>
     <string name="settings_catalog_count_failed">נכשל</string>
     <string name="settings_catalog_count_partial">חלקי</string>
     <string name="settings_catalog_count_pending">ממתין</string>

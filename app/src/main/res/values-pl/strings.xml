@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Żadna aplikacja nie mogła odebrać pliku kopii zapasowej.</string>
     <string name="settings_backup_share_prepare_failed">Nie udało się przygotować pliku kopii zapasowej.</string>
     <string name="settings_backup_share_subtitle">Wyślij plik kopii zapasowej do menedżera plików TV lub innej aplikacji.</string>
-    <string name="settings_build_verification">Weryfikacja kompilacji</string>
-    <string name="settings_build_verification_official">Oficjalna kompilacja</string>
-    <string name="settings_build_verification_unavailable">Weryfikacja niedostępna</string>
-    <string name="settings_build_verification_unofficial">Nieoficjalna kompilacja</string>
     <string name="settings_catalog_count_failed">Nieudane</string>
     <string name="settings_catalog_count_partial">Częściowe</string>
     <string name="settings_catalog_count_pending">Oczekujące</string>

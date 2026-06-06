@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Tidak ada aplikasi yang dapat menerima file cadangan.</string>
     <string name="settings_backup_share_prepare_failed">Tidak dapat menyiapkan file cadangan.</string>
     <string name="settings_backup_share_subtitle">Kirim file cadangan ke manajer file TV atau aplikasi lain.</string>
-    <string name="settings_build_verification">Verifikasi Build</string>
-    <string name="settings_build_verification_official">Build resmi</string>
-    <string name="settings_build_verification_unavailable">Verifikasi tidak tersedia</string>
-    <string name="settings_build_verification_unofficial">Build tidak resmi</string>
     <string name="settings_catalog_count_failed">Gagal</string>
     <string name="settings_catalog_count_partial">Sebagian</string>
     <string name="settings_catalog_count_pending">Menunggu</string>

@@ -67,7 +67,7 @@ class StorePolicyTest {
 
     @Test
     fun `direct preview matches amazon hidden defaults before release date`() {
-        val beforeRelease = utcMs("2026-06-30T23:59:59Z")
+        val beforeRelease = utcMs("2026-07-14T23:59:59Z")
         val locked = StorePolicySnapshot.direct.effectiveFor(
             storedDeveloperModeEnabled = false,
             nowMs = beforeRelease
@@ -85,7 +85,7 @@ class StorePolicyTest {
 
     @Test
     fun `direct preview developer mode unlocks full feature set before release date`() {
-        val beforeRelease = utcMs("2026-06-30T23:59:59Z")
+        val beforeRelease = utcMs("2026-07-14T23:59:59Z")
         val unlocked = StorePolicySnapshot.direct.effectiveFor(
             storedDeveloperModeEnabled = true,
             nowMs = beforeRelease
@@ -104,14 +104,15 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `direct preview unlocks full feature set on release date`() {
-        val releaseDate = utcMs("2026-07-01T00:00:00Z")
+    fun `direct preview unlocks premium feature set on release date while adult stays hidden`() {
+        val releaseDate = utcMs("2026-07-15T00:00:00Z")
         val unlocked = StorePolicySnapshot.direct.effectiveFor(
             storedDeveloperModeEnabled = false,
             nowMs = releaseDate
         )
 
         assertThat(unlocked.showAdvancedSourceTypes).isTrue()
+        assertThat(unlocked.showAdultSurfaces).isFalse()
         assertThat(unlocked.guideOnlyReviewSurface).isFalse()
         assertThat(unlocked.allowXtreamPlaylistAutoDetection).isTrue()
         assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
@@ -158,7 +159,7 @@ class StorePolicyTest {
     }
 
     @Test
-    fun `direct premium entitlement unlocks full feature set after free preview`() {
+    fun `direct premium entitlement unlocks premium feature set after free preview while adult stays hidden`() {
         val afterPreview = utcMs("2026-10-01T00:00:00Z")
         val unlocked = StorePolicySnapshot.direct.effectiveFor(
             storedDeveloperModeEnabled = false,
@@ -167,6 +168,7 @@ class StorePolicyTest {
         )
 
         assertThat(unlocked.showAdvancedSourceTypes).isTrue()
+        assertThat(unlocked.showAdultSurfaces).isFalse()
         assertThat(unlocked.guideOnlyReviewSurface).isFalse()
         assertThat(unlocked.allowXtreamPlaylistAutoDetection).isTrue()
         assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
@@ -196,6 +198,7 @@ class StorePolicyTest {
         )
 
         assertThat(unlocked.showAdvancedSourceTypes).isTrue()
+        assertThat(unlocked.showAdultSurfaces).isTrue()
         assertThat(unlocked.guideOnlyReviewSurface).isFalse()
         assertThat(unlocked.canUseDvr(developerModeEnabled = false)).isTrue()
         assertThat(
@@ -209,7 +212,7 @@ class StorePolicyTest {
 
     @Test
     fun `amazon does not unlock full feature set by date`() {
-        val releaseDate = utcMs("2026-07-01T00:00:00Z")
+        val releaseDate = utcMs("2026-07-15T00:00:00Z")
         val amazon = StorePolicySnapshot.amazon.effectiveFor(
             storedDeveloperModeEnabled = false,
             nowMs = releaseDate

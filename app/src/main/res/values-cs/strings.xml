@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Žádná aplikace nemohla přijmout záložní soubor.</string>
     <string name="settings_backup_share_prepare_failed">Nepodařilo se připravit záložní soubor.</string>
     <string name="settings_backup_share_subtitle">Odeslat záložní soubor do správce souborů TV nebo jiné aplikace.</string>
-    <string name="settings_build_verification">Ověření sestavení</string>
-    <string name="settings_build_verification_official">Oficiální sestavení</string>
-    <string name="settings_build_verification_unavailable">Ověření není k dispozici</string>
-    <string name="settings_build_verification_unofficial">Neoficiální sestavení</string>
     <string name="settings_catalog_count_failed">Selhalo</string>
     <string name="settings_catalog_count_partial">Částečné</string>
     <string name="settings_catalog_count_pending">Čeká</string>

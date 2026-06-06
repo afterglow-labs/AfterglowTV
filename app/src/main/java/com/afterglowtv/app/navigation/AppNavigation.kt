@@ -1,7 +1,13 @@
 package com.afterglowtv.app.navigation
 
 import android.net.Uri
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,6 +21,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewModelScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.NavType
@@ -394,6 +409,7 @@ fun AppNavigation(mainActivity: MainActivity) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val externalNavigationRequest = mainActivity.externalNavigationRequestFlow.collectAsStateWithLifecycle().value
     var premiumPurchaseDialogDismissed by remember { mutableStateOf(false) }
+    var showContentResponsibilityNotice by remember { mutableStateOf(StorePolicy.rawCurrent.amazonReviewBuild) }
     val shouldShowPremiumPurchaseOptions = StorePolicy.rawCurrent.shouldShowPremiumPurchaseOptions(
         storedDeveloperModeEnabled = storedDeveloperModeEnabled,
         amazonPremiumEntitled = amazonPremiumEntitled,
@@ -838,9 +854,110 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
         }
 
-        if (shouldShowPremiumPurchaseOptions && !premiumPurchaseDialogDismissed) {
+        if (showContentResponsibilityNotice) {
+            ContentResponsibilityNoticeDialog(
+                onDismissRequest = { showContentResponsibilityNotice = false }
+            )
+        }
+
+        if (shouldShowPremiumPurchaseOptions && !premiumPurchaseDialogDismissed && !showContentResponsibilityNotice) {
             AmazonPremiumPurchaseDialog(
                 onDismissRequest = { premiumPurchaseDialogDismissed = true }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContentResponsibilityNoticeDialog(
+    onDismissRequest: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.width(820.dp),
+        title = {
+            androidx.compose.material3.Text(
+                text = androidx.compose.ui.res.stringResource(R.string.content_responsibility_title),
+                fontSize = 22.sp,
+                lineHeight = 28.sp
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 360.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                ContentResponsibilityNoticeSection(
+                    heading = androidx.compose.ui.res.stringResource(R.string.content_responsibility_player_heading),
+                    body = AnnotatedString(androidx.compose.ui.res.stringResource(R.string.content_responsibility_player_body))
+                )
+                ContentResponsibilityNoticeSection(
+                    heading = androidx.compose.ui.res.stringResource(R.string.content_responsibility_demo_heading),
+                    body = AnnotatedString(androidx.compose.ui.res.stringResource(R.string.content_responsibility_demo_body))
+                )
+                ContentResponsibilityNoticeSection(
+                    heading = androidx.compose.ui.res.stringResource(R.string.content_responsibility_user_heading),
+                    body = AnnotatedString(androidx.compose.ui.res.stringResource(R.string.content_responsibility_user_body))
+                )
+                ContentResponsibilityNoticeSection(
+                    heading = androidx.compose.ui.res.stringResource(R.string.content_responsibility_law_heading),
+                    body = androidx.compose.ui.res.stringResource(R.string.content_responsibility_law_body)
+                        .withBoldLegalReferences()
+                )
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.Button(
+                onClick = onDismissRequest,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = androidx.compose.ui.graphics.Color(0xFFFF7A1A),
+                    contentColor = androidx.compose.ui.graphics.Color.White
+                )
+            ) {
+                androidx.compose.material3.Text(
+                    text = androidx.compose.ui.res.stringResource(R.string.content_responsibility_confirm),
+                    color = androidx.compose.ui.graphics.Color.White
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun ContentResponsibilityNoticeSection(
+    heading: String,
+    body: AnnotatedString
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        androidx.compose.material3.Text(
+            text = heading,
+            fontFamily = FontFamily(Font(R.font.inter_semibold)),
+            fontSize = 12.sp,
+            lineHeight = 15.sp
+        )
+        androidx.compose.material3.Text(
+            text = body,
+            fontFamily = FontFamily(Font(R.font.inter_regular)),
+            fontSize = 10.sp,
+            lineHeight = 14.sp
+        )
+    }
+}
+
+private fun String.withBoldLegalReferences() = buildAnnotatedString {
+    append(this@withBoldLegalReferences)
+    listOf(
+        "United States Copyright Act (17 U.S.C. \u00A7\u00A7 101 et seq.)",
+        "Digital Millennium Copyright Act (DMCA) (17 U.S.C. \u00A7 1201 et seq.)"
+    ).forEach { reference ->
+        val start = this@withBoldLegalReferences.indexOf(reference)
+        if (start >= 0) {
+            addStyle(
+                style = SpanStyle(fontWeight = FontWeight.Bold),
+                start = start,
+                end = start + reference.length
             )
         }
     }

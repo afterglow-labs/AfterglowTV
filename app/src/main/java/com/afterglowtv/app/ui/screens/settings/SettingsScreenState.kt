@@ -7,11 +7,9 @@ import androidx.compose.runtime.remember
 import com.afterglowtv.app.MainActivity
 import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.time.createDateTimeFormat
-import com.afterglowtv.app.util.OfficialBuildStatus
 import com.afterglowtv.domain.model.AppTimeFormat
 
 internal data class SettingsScreenLabels(
-    val buildVerificationLabel: String,
     val appLanguageLabel: String,
     val timeFormatLabel: String,
     val preferredAudioLanguageLabel: String,
@@ -42,12 +40,8 @@ internal data class SettingsScreenLabels(
 @Composable
 internal fun rememberSettingsScreenLabels(
     uiState: SettingsUiState,
-    context: Context,
-    officialBuildStatus: OfficialBuildStatus
+    context: Context
 ): SettingsScreenLabels {
-    val buildVerificationLabel = remember(officialBuildStatus, context) {
-        formatOfficialBuildStatusLabel(officialBuildStatus, context)
-    }
     val appLanguageLabel = remember(uiState.appLanguage, context) {
         displayLanguageLabel(uiState.appLanguage, context.getString(R.string.settings_system_default))
     }
@@ -144,7 +138,6 @@ internal fun rememberSettingsScreenLabels(
     }
 
     return SettingsScreenLabels(
-        buildVerificationLabel = buildVerificationLabel,
         appLanguageLabel = appLanguageLabel,
         timeFormatLabel = timeFormatLabel,
         preferredAudioLanguageLabel = preferredAudioLanguageLabel,
@@ -180,15 +173,6 @@ internal fun Context.findMainActivity(): MainActivity? {
         current = current.baseContext
     }
     return null
-}
-
-private fun formatOfficialBuildStatusLabel(
-    status: OfficialBuildStatus,
-    context: Context
-): String = when (status) {
-    OfficialBuildStatus.OFFICIAL -> context.getString(R.string.settings_build_verification_official)
-    OfficialBuildStatus.UNOFFICIAL -> context.getString(R.string.settings_build_verification_unofficial)
-    OfficialBuildStatus.VERIFICATION_UNAVAILABLE -> context.getString(R.string.settings_build_verification_unavailable)
 }
 
 private fun formatAppTimeFormatLabel(

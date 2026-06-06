@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Aucune application n\'a pu recevoir le fichier de sauvegarde.</string>
     <string name="settings_backup_share_prepare_failed">Impossible de préparer le fichier de sauvegarde.</string>
     <string name="settings_backup_share_subtitle">Envoyer un fichier de sauvegarde à un gestionnaire de fichiers TV ou une autre application.</string>
-    <string name="settings_build_verification">Vérification du build</string>
-    <string name="settings_build_verification_official">Build officiel</string>
-    <string name="settings_build_verification_unavailable">Vérification indisponible</string>
-    <string name="settings_build_verification_unofficial">Build non officiel</string>
     <string name="settings_catalog_count_failed">Échec</string>
     <string name="settings_catalog_count_partial">Partiel</string>
     <string name="settings_catalog_count_pending">En attente</string>

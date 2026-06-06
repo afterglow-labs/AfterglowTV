@@ -6,11 +6,11 @@ import org.junit.Test
 
 class AmazonResourceOverridesTest {
     @Test
-    fun `amazon build description says FireOS`() {
+    fun `amazon build description says Fire TV`() {
         val amazonStrings = File("src/amazon/res/values/strings.xml").readText()
 
         assertThat(amazonStrings).contains(
-            """<string name="settings_build_desc">AfterglowTV for FireOS</string>"""
+            """<string name="settings_build_desc">Fire TV</string>"""
         )
     }
 

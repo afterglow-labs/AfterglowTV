@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Mikään sovellus ei pysty vastaanottamaan varmuuskopiotiedostoa.</string>
     <string name="settings_backup_share_prepare_failed">Varmuuskopiotiedoston valmistelu epäonnistui.</string>
     <string name="settings_backup_share_subtitle">Lähetä varmuuskopiotiedosto TV-tiedostohallintaan tai toiseen sovellukseen.</string>
-    <string name="settings_build_verification">Koontitarkistus</string>
-    <string name="settings_build_verification_official">Virallinen koonti</string>
-    <string name="settings_build_verification_unavailable">Tarkistus ei saatavilla</string>
-    <string name="settings_build_verification_unofficial">Epävirallinen koonti</string>
     <string name="settings_catalog_count_failed">Epäonnistui</string>
     <string name="settings_catalog_count_partial">Osittainen</string>
     <string name="settings_catalog_count_pending">Odottaa</string>

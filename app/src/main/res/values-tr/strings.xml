@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Yedek dosyasını hiçbir uygulama alamadı.</string>
     <string name="settings_backup_share_prepare_failed">Yedek dosyası hazırlanamadı.</string>
     <string name="settings_backup_share_subtitle">Bir yedek dosyasını TV dosya yöneticisine veya başka bir uygulamaya gönder.</string>
-    <string name="settings_build_verification">Yapı Doğrulama</string>
-    <string name="settings_build_verification_official">Resmi yapı</string>
-    <string name="settings_build_verification_unavailable">Doğrulama kullanılamıyor</string>
-    <string name="settings_build_verification_unofficial">Resmi olmayan yapı</string>
     <string name="settings_catalog_count_failed">Başarısız</string>
     <string name="settings_catalog_count_partial">Kısmi</string>
     <string name="settings_catalog_count_pending">Bekliyor</string>

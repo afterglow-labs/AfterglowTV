@@ -1,7 +1,5 @@
 import java.util.Properties
 import java.io.FileInputStream
-import java.security.KeyStore
-import java.security.MessageDigest
 
 plugins {
     alias(libs.plugins.android.application)
@@ -17,27 +15,6 @@ if (keystorePropertiesFile.exists()) {
     FileInputStream(keystorePropertiesFile).use(keystoreProperties::load)
 }
 
-fun computeOfficialSigningCertSha256(): String {
-    if (!keystorePropertiesFile.exists()) return ""
-
-    val storePath = keystoreProperties.getProperty("storeFile") ?: return ""
-    val storePassword = keystoreProperties.getProperty("storePassword") ?: return ""
-    val keyAlias = keystoreProperties.getProperty("keyAlias") ?: return ""
-    val storeFile = rootProject.file(storePath)
-    if (!storeFile.exists()) return ""
-
-    val keyStore = KeyStore.getInstance("JKS")
-    storeFile.inputStream().use { input ->
-        keyStore.load(input, storePassword.toCharArray())
-    }
-
-    val certificate = keyStore.getCertificate(keyAlias) ?: return ""
-    return MessageDigest.getInstance("SHA-256")
-        .digest(certificate.encoded)
-        .joinToString(":") { byte -> "%02X".format(byte) }
-}
-
-val officialSigningCertSha256 = computeOfficialSigningCertSha256()
 val bundledPublicSourceSpec =
     "public_sources/playlist_usa.m3u8" +
         "::afterglow_public_live.m3u8" +
@@ -60,7 +37,6 @@ android {
         versionName = "0.1.28"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
-        buildConfigField("String", "OFFICIAL_SIGNING_CERT_SHA256", "\"$officialSigningCertSha256\"")
         buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "false")
         buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "0L")
         buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "0L")
@@ -136,7 +112,7 @@ android {
             buildConfigField("boolean", "ENABLE_DVR", "false")
             buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
             buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "true")
-            buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "1782864000000L")
+            buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "1784073600000L")
             buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "1790812800000L")
             buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "true")
             buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"afterglow_premium_monthly\"")
@@ -175,8 +151,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

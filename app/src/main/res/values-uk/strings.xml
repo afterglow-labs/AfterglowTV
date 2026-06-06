@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Жоден додаток не може отримати резервний файл.</string>
     <string name="settings_backup_share_prepare_failed">Не вдалося підготувати резервний файл.</string>
     <string name="settings_backup_share_subtitle">Надіслати резервний файл до менеджера файлів TV або іншого додатка.</string>
-    <string name="settings_build_verification">Перевірка збірки</string>
-    <string name="settings_build_verification_official">Офіційна збірка</string>
-    <string name="settings_build_verification_unavailable">Перевірка недоступна</string>
-    <string name="settings_build_verification_unofficial">Неофіційна збірка</string>
     <string name="settings_catalog_count_failed">Помилка</string>
     <string name="settings_catalog_count_partial">Частковий</string>
     <string name="settings_catalog_count_pending">Очікує</string>

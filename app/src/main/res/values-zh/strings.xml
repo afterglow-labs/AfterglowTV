@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">没有应用能接收备份文件。</string>
     <string name="settings_backup_share_prepare_failed">无法准备备份文件。</string>
     <string name="settings_backup_share_subtitle">将备份文件发送到电视文件管理器或其他应用。</string>
-    <string name="settings_build_verification">版本验证</string>
-    <string name="settings_build_verification_official">官方版本</string>
-    <string name="settings_build_verification_unavailable">无法验证</string>
-    <string name="settings_build_verification_unofficial">非官方版本</string>
     <string name="settings_catalog_count_failed">失败</string>
     <string name="settings_catalog_count_partial">部分完成</string>
     <string name="settings_catalog_count_pending">待处理</string>

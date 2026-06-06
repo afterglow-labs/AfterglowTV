@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">バックアップファイルを受け取れるアプリがありません。</string>
     <string name="settings_backup_share_prepare_failed">バックアップファイルを準備できませんでした。</string>
     <string name="settings_backup_share_subtitle">バックアップファイルをTVファイルマネージャーや別のアプリに送信します。</string>
-    <string name="settings_build_verification">ビルド検証</string>
-    <string name="settings_build_verification_official">公式ビルド</string>
-    <string name="settings_build_verification_unavailable">検証不可</string>
-    <string name="settings_build_verification_unofficial">非公式ビルド</string>
     <string name="settings_catalog_count_failed">失敗</string>
     <string name="settings_catalog_count_partial">部分的</string>
     <string name="settings_catalog_count_pending">保留中</string>

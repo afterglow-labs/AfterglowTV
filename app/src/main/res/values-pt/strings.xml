@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Nenhum app pôde receber o arquivo de backup.</string>
     <string name="settings_backup_share_prepare_failed">Não foi possível preparar o arquivo de backup.</string>
     <string name="settings_backup_share_subtitle">Envie um arquivo de backup para um gerenciador de arquivos da TV ou outro app.</string>
-    <string name="settings_build_verification">Verificação de build</string>
-    <string name="settings_build_verification_official">Build oficial</string>
-    <string name="settings_build_verification_unavailable">Verificação indisponível</string>
-    <string name="settings_build_verification_unofficial">Build não oficial</string>
     <string name="settings_catalog_count_failed">Falhou</string>
     <string name="settings_catalog_count_partial">Parcial</string>
     <string name="settings_catalog_count_pending">Pendente</string>

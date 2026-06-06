@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">لا يوجد تطبيق يمكنه استقبال ملف النسخ الاحتياطي.</string>
     <string name="settings_backup_share_prepare_failed">تعذّر تحضير ملف النسخ الاحتياطي.</string>
     <string name="settings_backup_share_subtitle">إرسال ملف نسخ احتياطي إلى مدير ملفات التلفزيون أو تطبيق آخر.</string>
-    <string name="settings_build_verification">التحقق من الإصدار</string>
-    <string name="settings_build_verification_official">إصدار رسمي</string>
-    <string name="settings_build_verification_unavailable">التحقق غير متاح</string>
-    <string name="settings_build_verification_unofficial">إصدار غير رسمي</string>
     <string name="settings_catalog_count_failed">فشل</string>
     <string name="settings_catalog_count_partial">جزئي</string>
     <string name="settings_catalog_count_pending">معلّق</string>

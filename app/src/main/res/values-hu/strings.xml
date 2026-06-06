@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Egy alkalmazás sem tudta fogadni a biztonsági mentési fájlt.</string>
     <string name="settings_backup_share_prepare_failed">Nem sikerült előkészíteni a biztonsági mentési fájlt.</string>
     <string name="settings_backup_share_subtitle">Biztonsági mentési fájl küldése TV-fájlkezelőbe vagy másik alkalmazásba.</string>
-    <string name="settings_build_verification">Build ellenőrzés</string>
-    <string name="settings_build_verification_official">Hivatalos build</string>
-    <string name="settings_build_verification_unavailable">Ellenőrzés nem elérhető</string>
-    <string name="settings_build_verification_unofficial">Nem hivatalos build</string>
     <string name="settings_catalog_count_failed">Sikertelen</string>
     <string name="settings_catalog_count_partial">Részleges</string>
     <string name="settings_catalog_count_pending">Függőben</string>

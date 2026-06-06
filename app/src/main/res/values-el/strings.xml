@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Καμία εφαρμογή δεν μπόρεσε να λάβει το αρχείο αντιγράφου.</string>
     <string name="settings_backup_share_prepare_failed">Αδύνατη η προετοιμασία του αρχείου αντιγράφου.</string>
     <string name="settings_backup_share_subtitle">Αποστολή αρχείου αντιγράφου σε διαχειριστή αρχείων TV ή άλλη εφαρμογή.</string>
-    <string name="settings_build_verification">Επαλήθευση Έκδοσης</string>
-    <string name="settings_build_verification_official">Επίσημη έκδοση</string>
-    <string name="settings_build_verification_unavailable">Επαλήθευση μη διαθέσιμη</string>
-    <string name="settings_build_verification_unofficial">Ανεπίσημη έκδοση</string>
     <string name="settings_catalog_count_failed">Αποτυχία</string>
     <string name="settings_catalog_count_partial">Μερικό</string>
     <string name="settings_catalog_count_pending">Σε αναμονή</string>

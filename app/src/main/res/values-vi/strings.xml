@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Không có ứng dụng nào có thể nhận tệp sao lưu.</string>
     <string name="settings_backup_share_prepare_failed">Không thể chuẩn bị tệp sao lưu.</string>
     <string name="settings_backup_share_subtitle">Gửi tệp sao lưu đến trình quản lý tệp TV hoặc ứng dụng khác.</string>
-    <string name="settings_build_verification">Xác Minh Bản Dựng</string>
-    <string name="settings_build_verification_official">Bản dựng chính thức</string>
-    <string name="settings_build_verification_unavailable">Không thể xác minh</string>
-    <string name="settings_build_verification_unofficial">Bản dựng không chính thức</string>
     <string name="settings_catalog_count_failed">Thất bại</string>
     <string name="settings_catalog_count_partial">Một phần</string>
     <string name="settings_catalog_count_pending">Đang chờ</string>

@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Ninguna app pudo recibir el archivo de copia de seguridad.</string>
     <string name="settings_backup_share_prepare_failed">No se pudo preparar el archivo de copia de seguridad.</string>
     <string name="settings_backup_share_subtitle">Envía un archivo de copia de seguridad al administrador de archivos del TV u otra app.</string>
-    <string name="settings_build_verification">Verificación de compilación</string>
-    <string name="settings_build_verification_official">Compilación oficial</string>
-    <string name="settings_build_verification_unavailable">Verificación no disponible</string>
-    <string name="settings_build_verification_unofficial">Compilación no oficial</string>
     <string name="settings_catalog_count_failed">Fallido</string>
     <string name="settings_catalog_count_partial">Parcial</string>
     <string name="settings_catalog_count_pending">Pendiente</string>

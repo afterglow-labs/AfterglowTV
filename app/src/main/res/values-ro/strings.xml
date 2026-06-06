@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Nicio aplicație nu a putut primi fișierul backup.</string>
     <string name="settings_backup_share_prepare_failed">Nu s-a putut pregăti fișierul backup.</string>
     <string name="settings_backup_share_subtitle">Trimite un fișier backup la managerul de fișiere TV sau altă aplicație.</string>
-    <string name="settings_build_verification">Verificare Build</string>
-    <string name="settings_build_verification_official">Build oficial</string>
-    <string name="settings_build_verification_unavailable">Verificare indisponibilă</string>
-    <string name="settings_build_verification_unofficial">Build neoficial</string>
     <string name="settings_catalog_count_failed">Eșuat</string>
     <string name="settings_catalog_count_partial">Parțial</string>
     <string name="settings_catalog_count_pending">În așteptare</string>

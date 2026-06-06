@@ -142,7 +142,6 @@ private fun BackupActionCard(
 internal fun LazyListScope.settingsAboutSection(
     uiState: SettingsUiState,
     context: Context,
-    buildVerificationLabel: String,
     onOpenUri: (String) -> Unit,
     onCheckForUpdates: () -> Unit,
     onInstallDownloadedUpdate: () -> Unit,
@@ -381,7 +380,6 @@ internal fun LazyListScope.settingsAboutSection(
 
     item {
         SettingsRow(label = stringResource(R.string.settings_build), value = stringResource(R.string.settings_build_desc))
-        SettingsRow(label = stringResource(R.string.settings_build_verification), value = buildVerificationLabel)
         SettingsRow(label = stringResource(R.string.settings_developed_by), value = stringResource(R.string.settings_developer_name))
         if (uiState.developerModeEnabled) {
             SettingsRow(label = "Developer Mode", value = stringResource(R.string.settings_enabled))

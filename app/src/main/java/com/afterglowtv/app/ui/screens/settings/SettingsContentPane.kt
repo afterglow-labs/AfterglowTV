@@ -174,7 +174,6 @@ internal fun SettingsContentPane(
             settingsAboutSection(
                 uiState = uiState,
                 context = context,
-                buildVerificationLabel = screenLabels.buildVerificationLabel,
                 onOpenUri = onOpenUri,
                 onCheckForUpdates = viewModel::checkForAppUpdates,
                 onInstallDownloadedUpdate = viewModel::installDownloadedUpdate,

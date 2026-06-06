@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">백업 파일을 받을 수 있는 앱이 없습니다.</string>
     <string name="settings_backup_share_prepare_failed">백업 파일을 준비할 수 없습니다.</string>
     <string name="settings_backup_share_subtitle">백업 파일을 TV 파일 관리자 또는 다른 앱으로 보냅니다.</string>
-    <string name="settings_build_verification">빌드 검증</string>
-    <string name="settings_build_verification_official">공식 빌드</string>
-    <string name="settings_build_verification_unavailable">검증 불가</string>
-    <string name="settings_build_verification_unofficial">비공식 빌드</string>
     <string name="settings_catalog_count_failed">실패</string>
     <string name="settings_catalog_count_partial">부분</string>
     <string name="settings_catalog_count_pending">대기 중</string>

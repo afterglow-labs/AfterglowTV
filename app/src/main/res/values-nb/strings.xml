@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Ingen app kunne motta sikkerhetskopifilen.</string>
     <string name="settings_backup_share_prepare_failed">Kunne ikke klargjøre sikkerhetskopifilen.</string>
     <string name="settings_backup_share_subtitle">Send en sikkerhetskopifil til en TV-filbehandler eller en annen app.</string>
-    <string name="settings_build_verification">Byggverifisering</string>
-    <string name="settings_build_verification_official">Offisiell bygg</string>
-    <string name="settings_build_verification_unavailable">Verifisering utilgjengelig</string>
-    <string name="settings_build_verification_unofficial">Uoffisiell bygg</string>
     <string name="settings_catalog_count_failed">Mislyktes</string>
     <string name="settings_catalog_count_partial">Delvis</string>
     <string name="settings_catalog_count_pending">Venter</string>

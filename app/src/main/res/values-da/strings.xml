@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Ingen app kunne modtage backup-filen.</string>
     <string name="settings_backup_share_prepare_failed">Kunne ikke forberede backup-filen.</string>
     <string name="settings_backup_share_subtitle">Send en backup-fil til en TV-filhåndtering eller en anden app.</string>
-    <string name="settings_build_verification">Buildverifikation</string>
-    <string name="settings_build_verification_official">Officielt build</string>
-    <string name="settings_build_verification_unavailable">Verifikation utilgængelig</string>
-    <string name="settings_build_verification_unofficial">Uofficielt build</string>
     <string name="settings_catalog_count_failed">Mislykkedes</string>
     <string name="settings_catalog_count_partial">Delvis</string>
     <string name="settings_catalog_count_pending">Afventer</string>

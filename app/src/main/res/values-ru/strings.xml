@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Ни одно приложение не смогло принять файл резервной копии.</string>
     <string name="settings_backup_share_prepare_failed">Не удалось подготовить файл резервной копии.</string>
     <string name="settings_backup_share_subtitle">Отправить файл резервной копии в файловый менеджер ТВ или другое приложение.</string>
-    <string name="settings_build_verification">Верификация сборки</string>
-    <string name="settings_build_verification_official">Официальная сборка</string>
-    <string name="settings_build_verification_unavailable">Верификация недоступна</string>
-    <string name="settings_build_verification_unofficial">Неофициальная сборка</string>
     <string name="settings_catalog_count_failed">Ошибка</string>
     <string name="settings_catalog_count_partial">Частично</string>
     <string name="settings_catalog_count_pending">Ожидает</string>

@@ -1294,10 +1294,6 @@
     <string name="settings_backup_share_failed">Geen app kon het back-upbestand ontvangen.</string>
     <string name="settings_backup_share_prepare_failed">Back-upbestand kon niet worden voorbereid.</string>
     <string name="settings_backup_share_subtitle">Stuur een back-upbestand naar een tv-bestandsbeheerder of een andere app.</string>
-    <string name="settings_build_verification">Buildverificatie</string>
-    <string name="settings_build_verification_official">Officiële build</string>
-    <string name="settings_build_verification_unavailable">Verificatie niet beschikbaar</string>
-    <string name="settings_build_verification_unofficial">Niet-officiële build</string>
     <string name="settings_catalog_count_failed">Mislukt</string>
     <string name="settings_catalog_count_partial">Gedeeltelijk</string>
     <string name="settings_catalog_count_pending">In behandeling</string>
