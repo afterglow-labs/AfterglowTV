@@ -1,5 +1,6 @@
 package com.afterglowtv.app.ui.screens.epg
 
+import android.view.KeyEvent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,6 +26,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -345,10 +347,23 @@ internal fun GuideToolbarRow(
     onOpenOptions: () -> Unit,
     onManualSort: () -> Unit = {},
     onGuideInteract: () -> Unit,
+    appNavigationVisible: Boolean = false,
+    onRequestAppNavigation: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.onPreviewKeyEvent { event ->
+            val nativeEvent = event.nativeKeyEvent
+            if (!appNavigationVisible &&
+                nativeEvent.action == KeyEvent.ACTION_DOWN &&
+                nativeEvent.keyCode == KeyEvent.KEYCODE_DPAD_UP
+            ) {
+                onRequestAppNavigation()
+                true
+            } else {
+                false
+            }
+        },
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

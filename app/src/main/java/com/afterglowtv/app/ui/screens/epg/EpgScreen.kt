@@ -213,10 +213,12 @@ fun FullEpgScreen(
     // first-resolve effect below, to restore the user's last spot in the
     // guide after they navigate away and come back.
     val savedPosition = remember { viewModel.lastPosition() }
-    // Default to hidden so the guide fills the entire screen. The existing
-    // onShowAppNavigation handler can flip this back to true on demand, and
-    // onGuideInteract surfaces it briefly during interactions.
+    // Default to hidden so the guide fills the entire screen. Long-Up from
+    // the grid or the guide options menu can reveal app navigation on demand.
     var topNavVisible by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(currentRoute) {
+        topNavVisible = false
+    }
     var showCategoryPicker by rememberSaveable { mutableStateOf(false) }
     var showGuideOptions by rememberSaveable { mutableStateOf(false) }
     var showSearchOverlay by rememberSaveable { mutableStateOf(false) }
@@ -411,7 +413,7 @@ fun FullEpgScreen(
         title = stringResource(titleRes),
         subtitle = stringResource(R.string.guide_shell_subtitle),
         navigationChrome = AppNavigationChrome.TopBar,
-        topBarVisible = topNavVisible || policy.guideOnlyReviewSurface || (!isTelevisionDevice && uiState.channels.isEmpty()),
+        topBarVisible = topNavVisible,
         compactHeader = true,
         showScreenHeader = false,
         fullBleed = true,   // EPG wants every pixel for the program grid
@@ -552,7 +554,9 @@ fun FullEpgScreen(
                             showGuideOptions = true
                         },
                         onManualSort = viewModel::categorizeNextAdultChunk,
-                        onGuideInteract = { topNavVisible = true },
+                        onGuideInteract = { topNavVisible = false },
+                        appNavigationVisible = topNavVisible,
+                        onRequestAppNavigation = { topNavVisible = true },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 14.dp)
@@ -674,8 +678,8 @@ fun FullEpgScreen(
                                     onChannelClick = { channel ->
                                         selectChannelForPreviewOrFullscreen(channel)
                                     },
-                                    onChannelFocused = { channel, isFirstRow ->
-                                        topNavVisible = isFirstRow
+                                    onChannelFocused = { channel, _ ->
+                                        topNavVisible = false
                                         focusedChannel = channel
                                         focusedProgram = null
                                         viewModel.rememberPosition(
@@ -714,8 +718,8 @@ fun FullEpgScreen(
                                             selectChannelForPreviewOrFullscreen(channel)
                                         }
                                     },
-                                    onChannelFocused = { channel, currentProgram, isFirstRow ->
-                                        topNavVisible = isFirstRow
+                                    onChannelFocused = { channel, currentProgram, _ ->
+                                        topNavVisible = false
                                         focusedChannel = channel
                                         focusedProgram = currentProgram
                                         // Always save the channel ID on focus, even when
@@ -733,8 +737,8 @@ fun FullEpgScreen(
                                             categoryId = uiState.selectedCategoryId,
                                         )
                                     },
-                                    onProgramFocused = { channel, program, isFirstRow ->
-                                        topNavVisible = isFirstRow
+                                    onProgramFocused = { channel, program, _ ->
+                                        topNavVisible = false
                                         focusedChannel = channel
                                         focusedProgram = program
                                         viewModel.rememberPosition(
