@@ -27,16 +27,8 @@ class StorePolicyTest {
 
     @Test
     fun `amazon build uses AfterglowTV package identity`() {
-        if (BuildConfig.DATE_UNLOCKS_HIDDEN_FEATURES) {
-            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglow.tv.fire")
-            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglow.tv.fire")
-        } else if (BuildConfig.AMAZON_REVIEW_BUILD) {
-            assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglow.tv.fire")
-            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglow.tv.fire")
-        } else {
-            assertThat(BuildConfig.APPLICATION_ID).startsWith("com.afterglowtv.app")
-            assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
-        }
+        assertThat(BuildConfig.APPLICATION_ID).isEqualTo("com.afterglowtv.app")
+        assertThat(BuildConfig.OFFICIAL_APPLICATION_ID).isEqualTo("com.afterglowtv.app")
     }
 
     @Test
@@ -173,7 +165,7 @@ class StorePolicyTest {
     @Test
     fun `amazon bundled public source is visible in user source lists`() {
         val bundled = provider(
-            m3uUrl = "file:///data/user/0/com.afterglow.tv.fire/files/bundled_public_sources/afterglow_public_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/bundled_public_sources/afterglow_public_live.m3u8"
         )
         val userProvider = provider(id = 2L, m3uUrl = "https://example.test/user.m3u8")
 
@@ -186,7 +178,7 @@ class StorePolicyTest {
     @Test
     fun `amazon should seed bundled public source only before first seed and when no source exists`() {
         val bundled = provider(
-            m3uUrl = "file:///data/user/0/com.afterglow.tv.fire/files/bundled_public_sources/afterglow_public_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/bundled_public_sources/afterglow_public_live.m3u8"
         )
         val userProvider = provider(id = 2L, m3uUrl = "https://example.test/user.m3u8")
 
@@ -230,7 +222,7 @@ class StorePolicyTest {
     fun `amazon bundled source repairs stale active source when no user source exists`() {
         val bundled = provider(
             id = 2L,
-            m3uUrl = "file:///data/user/0/com.afterglow.tv.fire/files/bundled_public_sources/afterglow_public_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/bundled_public_sources/afterglow_public_live.m3u8"
         )
 
         assertThat(
@@ -246,7 +238,7 @@ class StorePolicyTest {
     fun `amazon bundled source keeps matching active source when no user source exists`() {
         val bundled = provider(
             id = 2L,
-            m3uUrl = "file:///data/user/0/com.afterglow.tv.fire/files/bundled_public_sources/afterglow_public_live.m3u8"
+            m3uUrl = "file:///data/user/0/com.afterglowtv.app/files/bundled_public_sources/afterglow_public_live.m3u8"
         )
 
         assertThat(

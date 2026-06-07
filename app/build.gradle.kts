@@ -30,13 +30,13 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.afterglow.tv.fire"
-        minSdk = 28
+        applicationId = "com.afterglowtv.app"
+        minSdk = 23
         targetSdk = 36
         versionCode = 29
         versionName = "0.1.28"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglow.tv.fire\"")
+        buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
         buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "false")
         buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "0L")
         buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "0L")
@@ -50,9 +50,9 @@ android {
     productFlavors {
         create("amazon") {
             dimension = "store"
-            applicationId = "com.afterglow.tv.fire"
+            applicationId = "com.afterglowtv.app"
             versionNameSuffix = "-amazon"
-            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglow.tv.fire\"")
+            buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
             buildConfigField("boolean", "AMAZON_REVIEW_BUILD", "true")
             buildConfigField("String", "DEFAULT_NETWORK_SHARE_NAME", "\"\"")
             buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
@@ -88,8 +88,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -122,7 +122,7 @@ android {
         }
     }
 
-    testOptions {
+testOptions {
         animationsDisabled = true
     }
 
@@ -130,7 +130,36 @@ android {
 
 androidComponents {
     onVariants(selector().withFlavor("store", "amazon")) { variant ->
-        variant.androidResources.localeFilters.add("en")
+        variant.androidResources.localeFilters.addAll(
+            listOf(
+                "en",
+                "ar",
+                "cs",
+                "da",
+                "de",
+                "el",
+                "es",
+                "fi",
+                "fr",
+                "hu",
+                "in",
+                "it",
+                "iw",
+                "ja",
+                "ko",
+                "nb",
+                "nl",
+                "pl",
+                "pt",
+                "ro",
+                "ru",
+                "sv",
+                "tr",
+                "uk",
+                "vi",
+                "zh"
+            )
+        )
     }
 }
 

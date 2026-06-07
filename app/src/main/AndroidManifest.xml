@@ -42,9 +42,12 @@
         android:name="android.hardware.gamepad"
         android:required="false" />
 
-    <!-- Echo Show 15 + Fire TV both support D-pad navigation; declaring it
-         here helps both launchers score AfterglowTV as a first-class app. -->
-    <uses-configuration android:reqNavigation="dpad" />
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
 
     <application
         android:name=".AfterglowTVApp"

@@ -61,6 +61,13 @@
     <methods>;
 }
 
+# ── SMBJ optional desktop/JVM integrations ─────────────────
+# SMBJ references optional Kerberos/GSS and expression-language classes that are
+# not available on Android. We use password-based SMB paths, so these optional
+# code paths are not required for Fire TV builds.
+-dontwarn javax.el.**
+-dontwarn org.ietf.jgss.**
+
 # ── Media3 / ExoPlayer ─────────────────────────────────────
 # SEC-H01: Media3 ships its own consumer-proguard-rules.pro inside the AAR — no need
 # for a broad keep here. Only explicitly keep classes loaded via reflection that the
