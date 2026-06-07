@@ -3,6 +3,7 @@ package com.afterglowtv.app.ui.design
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 class AppPaletteTest {
@@ -15,7 +16,7 @@ class AppPaletteTest {
             AppPalette.AfterglowLight3,
             AppPalette.AfterglowLight4,
             AppPalette.AfterglowGrayLight,
-            AppPalette.RachelsSunsetLight
+            AppPalette.RachelsSunrise
         )
 
         lightPalettes.forEach { palette ->
@@ -114,12 +115,23 @@ class AppPaletteTest {
     }
 
     @Test
-    fun `rachels sunset keeps mint teal as the dominant accent`() {
-        listOf(AppPalette.SunsetAurora, AppPalette.RachelsSunsetLight).forEach { palette ->
-            assertThat(palette.accent.green).isGreaterThan(palette.accent.red)
-            assertThat(palette.accent.green).isGreaterThan(palette.accent.blue)
-            assertThat(palette.success).isEqualTo(palette.accent)
-        }
+    fun `rachels themes keep peach pink mint teal violet and soft blue energy`() {
+        val sunset = AppPalette.SunsetAurora
+        assertThat(sunset.accent.red).isGreaterThan(sunset.accent.green)
+        assertThat(sunset.accent.green).isGreaterThan(sunset.accent.blue)
+        assertThat(sunset.nowLine.red).isGreaterThan(sunset.nowLine.green)
+        assertThat(sunset.nowLine.blue).isGreaterThan(sunset.nowLine.green)
+        assertThat(sunset.success.green).isGreaterThan(sunset.success.red)
+        assertThat(sunset.info.blue).isGreaterThan(sunset.info.red)
+        assertThat(sunset.surfaceCool.blue).isGreaterThan(sunset.surfaceCool.red)
+
+        val sunrise = AppPalette.RachelsSunrise
+        assertThat(sunrise.surfaceDeep.green).isGreaterThan(sunrise.surfaceDeep.red)
+        assertThat(sunrise.surfaceBase.blue).isGreaterThan(sunrise.surfaceBase.red)
+        assertThat(sunrise.surfaceCool.blue).isGreaterThan(sunrise.surfaceCool.green)
+        assertThat(sunrise.surfaceAccent.red).isGreaterThan(sunrise.surfaceAccent.green)
+        assertThat(sunrise.accentLight.red).isGreaterThan(sunrise.accentLight.blue)
+        assertThat(sunrise.nowLine.red).isGreaterThan(sunrise.nowLine.green)
     }
 
     @Test
@@ -129,7 +141,7 @@ class AppPaletteTest {
         assertThat(palette.description.lowercase()).doesNotContain("blue")
         assertThat(palette.description.lowercase()).doesNotContain("indigo")
         assertThat(palette.description.lowercase()).doesNotContain("night")
-        assertThat(palette.accent).isEqualTo(Color(0xFF7B2CBF))
+        assertThat(palette.accent).isEqualTo(Color(0xFFA855F0))
         assertThat(palette.live).isEqualTo(Color(0xFF9D4EDD))
         listOf(
             palette.surfaceDeep,
@@ -168,9 +180,11 @@ class AppPaletteTest {
     fun `light mixed palettes use readable active colors`() {
         listOf(
             AppPalette.MineralSlate,
-            AppPalette.RachelsSunsetLight,
+            AppPalette.RachelsSunrise,
         ).forEach { palette ->
-            assertThat(contrastRatio(palette.accent, palette.surfaceAccent)).isAtLeast(4.5f)
+            assertWithMessage(palette.displayName)
+                .that(contrastRatio(palette.accent, palette.surfaceAccent))
+                .isAtLeast(4.5f)
         }
     }
 
