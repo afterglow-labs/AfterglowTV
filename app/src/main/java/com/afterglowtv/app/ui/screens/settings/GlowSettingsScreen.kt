@@ -129,88 +129,97 @@ fun GlowSettingsScreen(
             )
         }
 
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 48.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            // ── Hero brand strip ──────────────────────────────────────────
-            item {
-                Row(
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(
-                            id = com.afterglowtv.app.R.drawable.afterglow_logo
-                        ),
-                        contentDescription = "AfterglowTV",
-                        modifier = Modifier
-                            .size(56.dp)
-                            .afterglow(
-                                specs = listOf(
-                                    GlowSpec(AppColors.TiviAccent, 16.dp, 0.55f),
-                                    GlowSpec(AppColors.EpgNowLine, 28.dp, 0.30f),
-                                ),
-                                shape = RoundedCornerShape(14.dp),
-                            )
-                            .clip(RoundedCornerShape(14.dp)),
+            GlowHeader()
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                item { MasterIntensityCard(onPersist = viewModel::saveIntensity) }
+
+                item {
+                    GlowRoleCard(
+                        label = "Focus halo",
+                        description = "The glow on focused rows, cards, and pills.",
+                        specs = Glows.focus,
+                        onChange = {
+                            Glows.overrideFocus(it)
+                            viewModel.saveFocus(it)
+                        },
                     )
-                    Column {
-                        Text(
-                            text = "Glow",
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = androidx.compose.ui.unit.TextUnit(36f, androidx.compose.ui.unit.TextUnitType.Sp),
-                            ),
-                            color = AppColors.TextPrimary,
-                        )
-                        Text(
-                            text = "Color · radius · opacity · intensity. Per role. Stacked layers.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = AppColors.TiviAccentLight,
-                        )
-                    }
+                }
+                item {
+                    GlowRoleCard(
+                        label = "Live & now-line",
+                        description = "Pulse around the LIVE pill, recording indicator, and EPG now-line.",
+                        specs = Glows.live,
+                        onChange = {
+                            Glows.overrideLive(it)
+                            viewModel.saveLive(it)
+                        },
+                    )
+                }
+                item {
+                    GlowRoleCard(
+                        label = "Ambient",
+                        description = "Subtle halo on cards, posters, and hero blocks.",
+                        specs = Glows.ambient,
+                        onChange = {
+                            Glows.overrideAmbient(it)
+                            viewModel.saveAmbient(it)
+                        },
+                    )
                 }
             }
+        }
+    }
+}
 
-            item { MasterIntensityCard(onPersist = viewModel::saveIntensity) }
-
-            item {
-                GlowRoleCard(
-                    label = "Focus halo",
-                    description = "The glow on focused rows, cards, and pills.",
-                    specs = Glows.focus,
-                    onChange = {
-                        Glows.overrideFocus(it)
-                        viewModel.saveFocus(it)
-                    },
+@Composable
+private fun GlowHeader() {
+    Row(
+        modifier = Modifier.padding(bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(
+                id = com.afterglowtv.app.R.drawable.afterglow_logo
+            ),
+            contentDescription = "AfterglowTV",
+            modifier = Modifier
+                .size(56.dp)
+                .afterglow(
+                    specs = listOf(
+                        GlowSpec(AppColors.TiviAccent, 16.dp, 0.55f),
+                        GlowSpec(AppColors.EpgNowLine, 28.dp, 0.30f),
+                    ),
+                    shape = RoundedCornerShape(14.dp),
                 )
-            }
-            item {
-                GlowRoleCard(
-                    label = "Live & now-line",
-                    description = "Pulse around the LIVE pill, recording indicator, and EPG now-line.",
-                    specs = Glows.live,
-                    onChange = {
-                        Glows.overrideLive(it)
-                        viewModel.saveLive(it)
-                    },
-                )
-            }
-            item {
-                GlowRoleCard(
-                    label = "Ambient",
-                    description = "Subtle halo on cards, posters, and hero blocks.",
-                    specs = Glows.ambient,
-                    onChange = {
-                        Glows.overrideAmbient(it)
-                        viewModel.saveAmbient(it)
-                    },
-                )
-            }
+                .clip(RoundedCornerShape(14.dp)),
+        )
+        Column {
+            Text(
+                text = "Glow",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = androidx.compose.ui.unit.TextUnit(36f, androidx.compose.ui.unit.TextUnitType.Sp),
+                ),
+                color = AppColors.TextPrimary,
+            )
+            Text(
+                text = "Color · radius · opacity · intensity. Per role. Stacked layers.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = AppColors.TiviAccentLight,
+            )
         }
     }
 }
