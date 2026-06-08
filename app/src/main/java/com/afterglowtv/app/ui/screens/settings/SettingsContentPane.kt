@@ -29,6 +29,9 @@ internal fun SettingsContentPane(
     onDeleteCrashReport: () -> Unit,
     onRestoreBackup: () -> Unit,
     onOpenUri: (String) -> Unit,
+    onOpenPremiumPurchase: () -> Unit,
+    onRefreshPremiumEntitlements: () -> Unit,
+    amazonPremiumEntitled: Boolean,
     modifier: Modifier = Modifier
 ) {
     val policy = StorePolicy.currentFor(uiState.developerModeEnabled)
@@ -59,6 +62,12 @@ internal fun SettingsContentPane(
                 onNavigateToParentalControl = onNavigateToParentalControl,
                 viewModel = viewModel,
                 providerState = providerState
+            )
+        } else if (selectedCategory == SETTINGS_CATEGORY_PREMIUM) {
+            settingsPremiumSection(
+                amazonPremiumEntitled = amazonPremiumEntitled,
+                onOpenPremiumPurchase = onOpenPremiumPurchase,
+                onRefreshPremiumEntitlements = onRefreshPremiumEntitlements
             )
         } else if (selectedCategory == SETTINGS_CATEGORY_PLAYBACK) {
             settingsPlaybackSection(

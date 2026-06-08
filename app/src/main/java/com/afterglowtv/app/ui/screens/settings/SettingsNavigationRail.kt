@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.app.R
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.store.StorePolicySnapshot
@@ -39,6 +40,7 @@ internal const val SETTINGS_CATEGORY_BACKUP = 6
 internal const val SETTINGS_CATEGORY_EPG_SOURCES = 7
 internal const val SETTINGS_CATEGORY_ABOUT = 8
 internal const val SETTINGS_CATEGORY_PROVIDERS_VOD = 9
+internal const val SETTINGS_CATEGORY_PREMIUM = 10
 
 internal fun visibleSettingsCategoryIds(
     policy: StorePolicySnapshot = StorePolicy.current,
@@ -46,6 +48,9 @@ internal fun visibleSettingsCategoryIds(
 ): List<Int> = buildList {
     if (policy.guideOnlyReviewSurface && !developerModeEnabled) {
         add(SETTINGS_CATEGORY_PROVIDERS)
+        if (BuildConfig.ENABLE_AMAZON_APPSTORE_SDK) {
+            add(SETTINGS_CATEGORY_PREMIUM)
+        }
         add(SETTINGS_CATEGORY_PLAYBACK)
         add(SETTINGS_CATEGORY_BROWSING)
         add(SETTINGS_CATEGORY_PRIVACY)
@@ -56,6 +61,9 @@ internal fun visibleSettingsCategoryIds(
     }
     add(SETTINGS_CATEGORY_PROVIDERS)
     add(SETTINGS_CATEGORY_PROVIDERS_VOD)
+    if (BuildConfig.ENABLE_AMAZON_APPSTORE_SDK) {
+        add(SETTINGS_CATEGORY_PREMIUM)
+    }
     add(SETTINGS_CATEGORY_PLAYBACK)
     add(SETTINGS_CATEGORY_BROWSING)
     add(SETTINGS_CATEGORY_PRIVACY)
@@ -90,6 +98,12 @@ internal fun SettingsNavigationRail(
         developerModeEnabled = effectiveDeveloperModeEnabled
     )
     val entries = listOf(
+        SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_PREMIUM,
+            label = "Premium",
+            icon = Icons.Default.Star,
+            accent = Color(0xFFFFA64D)
+        ),
         SettingsNavEntry(
             categoryId = SETTINGS_CATEGORY_PLAYBACK,
             label = stringResource(R.string.settings_playback),

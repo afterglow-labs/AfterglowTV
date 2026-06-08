@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -28,6 +29,8 @@ import com.afterglowtv.domain.model.Provider
 import androidx.compose.ui.res.stringResource
 import com.afterglowtv.app.R
 import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.store.amazon.AmazonAppstoreBridge
+import com.afterglowtv.app.ui.components.dialogs.AmazonPremiumPurchaseDialog
 import com.afterglowtv.app.ui.design.requestFocusSafely
 import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
 import kotlinx.coroutines.delay
@@ -45,6 +48,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val amazonPremiumEntitled by AmazonAppstoreBridge.premiumEntitled.collectAsStateWithLifecycle()
     val settingsNavFocusRequester = remember { FocusRequester() }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -59,6 +63,7 @@ fun SettingsScreen(
     val providerState = rememberSettingsProviderSectionState(dialogState)
     var handledInitialBackupImportUri by remember { mutableStateOf<String?>(null) }
     var handledInitialProviderUri by remember { mutableStateOf<String?>(null) }
+    var showPremiumPurchaseDialog by rememberSaveable { mutableStateOf(false) }
 
     val openDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -243,6 +248,9 @@ fun SettingsScreen(
                         )
                     },
                     onOpenUri = uriHandler::openUri,
+                    onOpenPremiumPurchase = { showPremiumPurchaseDialog = true },
+                    onRefreshPremiumEntitlements = AmazonAppstoreBridge::refreshEntitlements,
+                    amazonPremiumEntitled = amazonPremiumEntitled,
                     modifier = Modifier.weight(1f)
                 )
                 SettingsNowPlayingSidecar(
@@ -266,5 +274,14 @@ fun SettingsScreen(
             currentRoute = currentRoute,
             modifier = Modifier
         )
+
+        if (showPremiumPurchaseDialog) {
+            AmazonPremiumPurchaseDialog(
+                onDismissRequest = { showPremiumPurchaseDialog = false },
+                title = "Premium",
+                subtitle = "Choose Premium access through Amazon.",
+                message = "Premium can be purchased before the preview ends. Choose a monthly, quarterly, annual, or lifetime option; Amazon confirms and manages the purchase."
+            )
+        }
     }
 }

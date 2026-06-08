@@ -33,15 +33,18 @@ android {
         applicationId = "com.afterglowtv.app"
         minSdk = 23
         targetSdk = 36
-        versionCode = 29
-        versionName = "0.1.28"
+        versionCode = 30
+        versionName = "0.1.29"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
         buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "false")
         buildConfigField("long", "FEATURE_RELEASE_UNLOCK_EPOCH_MS", "0L")
         buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "0L")
         buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "false")
+        buildConfigField("boolean", "ENABLE_AMAZON_DRM_LICENSING", "false")
         buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"\"")
+        buildConfigField("String", "AMAZON_PREMIUM_QUARTERLY_SKU", "\"\"")
+        buildConfigField("String", "AMAZON_PREMIUM_ANNUALLY_SKU", "\"\"")
         buildConfigField("String", "AMAZON_PREMIUM_LIFETIME_SKU", "\"\"")
     }
 
@@ -70,8 +73,11 @@ android {
             buildConfigField("boolean", "ENABLE_DVR", "false")
             buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
             buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "true")
-            buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"afterglow_premium_monthly\"")
-            buildConfigField("String", "AMAZON_PREMIUM_LIFETIME_SKU", "\"afterglow_premium_lifetime\"")
+            buildConfigField("boolean", "ENABLE_AMAZON_DRM_LICENSING", "true")
+            buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"com.afterglowtv.app.premium.monthly.v1\"")
+            buildConfigField("String", "AMAZON_PREMIUM_QUARTERLY_SKU", "\"com.afterglowtv.app.premium.quarterly.v1\"")
+            buildConfigField("String", "AMAZON_PREMIUM_ANNUALLY_SKU", "\"com.afterglowtv.app.premium.annually.v1\"")
+            buildConfigField("String", "AMAZON_PREMIUM_LIFETIME_SKU", "\"com.afterglowtv.app.premium.lifetime.v1\"")
         }
     }
 
@@ -245,7 +251,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.mediarouter)
     implementation(libs.play.services.cast.framework)
-    implementation(libs.amazon.appstore.sdk)
+    implementation(files("libs/amazon-appstore-sdk-3.0.9-stackmaps.jar"))
 
     // Test
     testImplementation(libs.junit)

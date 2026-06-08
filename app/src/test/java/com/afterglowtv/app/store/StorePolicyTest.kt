@@ -4,6 +4,7 @@ import com.afterglowtv.app.navigation.Routes
 import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.navigation.resolveStartupRoute
 import com.afterglowtv.app.BuildConfig
+import com.afterglowtv.app.store.amazon.AfterglowIapConfig
 import com.afterglowtv.domain.model.ActiveLiveSource
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderSourceSlot
@@ -35,11 +36,27 @@ class StorePolicyTest {
     fun `amazon appstore sdk is enabled only for fire builds`() {
         if (BuildConfig.AMAZON_REVIEW_BUILD) {
             assertThat(BuildConfig.ENABLE_AMAZON_APPSTORE_SDK).isTrue()
-            assertThat(BuildConfig.AMAZON_PREMIUM_MONTHLY_SKU).isEqualTo("afterglow_premium_monthly")
-            assertThat(BuildConfig.AMAZON_PREMIUM_LIFETIME_SKU).isEqualTo("afterglow_premium_lifetime")
+            assertThat(BuildConfig.ENABLE_AMAZON_DRM_LICENSING).isTrue()
+            assertThat(BuildConfig.AMAZON_PREMIUM_MONTHLY_SKU).isEqualTo("com.afterglowtv.app.premium.monthly.v1")
+            assertThat(BuildConfig.AMAZON_PREMIUM_QUARTERLY_SKU).isEqualTo("com.afterglowtv.app.premium.quarterly.v1")
+            assertThat(BuildConfig.AMAZON_PREMIUM_ANNUALLY_SKU).isEqualTo("com.afterglowtv.app.premium.annually.v1")
+            assertThat(BuildConfig.AMAZON_PREMIUM_LIFETIME_SKU).isEqualTo("com.afterglowtv.app.premium.lifetime.v1")
+            assertThat(AfterglowIapConfig.productionSkus).containsExactly(
+                "com.afterglowtv.app.premium.lifetime.v1",
+                "com.afterglowtv.app.premium.monthly.v1",
+                "com.afterglowtv.app.premium.quarterly.v1",
+                "com.afterglowtv.app.premium.annually.v1"
+            )
+            assertThat(AfterglowIapConfig.testSkus).containsExactly(
+                "com.afterglowtv.app.premium.monthly",
+                "com.afterglowtv.app.premium.yearly"
+            )
         } else {
             assertThat(BuildConfig.ENABLE_AMAZON_APPSTORE_SDK).isFalse()
+            assertThat(BuildConfig.ENABLE_AMAZON_DRM_LICENSING).isFalse()
             assertThat(BuildConfig.AMAZON_PREMIUM_MONTHLY_SKU).isEmpty()
+            assertThat(BuildConfig.AMAZON_PREMIUM_QUARTERLY_SKU).isEmpty()
+            assertThat(BuildConfig.AMAZON_PREMIUM_ANNUALLY_SKU).isEmpty()
             assertThat(BuildConfig.AMAZON_PREMIUM_LIFETIME_SKU).isEmpty()
         }
     }

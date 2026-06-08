@@ -63,7 +63,7 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         CrashReportStore.install(this)
-        AmazonAppstoreBridge.initialize(this)
+        AmazonAppstoreBridge.attach(this)
         applySavedVisualPreferencesBeforeUi()
         repairDeveloperModeAdultVisibility()
         if (StorePolicy.current.enableBundledPublicSource) {

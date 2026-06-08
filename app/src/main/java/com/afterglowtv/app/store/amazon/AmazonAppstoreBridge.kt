@@ -4,9 +4,6 @@ import android.content.Context
 import android.util.Log
 import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.app.store.StorePolicy
-import com.amazon.device.drm.LicensingListener
-import com.amazon.device.drm.LicensingService
-import com.amazon.device.drm.model.LicenseResponse
 import com.amazon.device.iap.PurchasingListener
 import com.amazon.device.iap.PurchasingService
 import com.amazon.device.iap.model.ProductType
@@ -16,59 +13,64 @@ import com.amazon.device.iap.model.PurchaseUpdatesResponse
 import com.amazon.device.iap.model.Receipt
 import com.amazon.device.iap.model.UserDataResponse
 import com.amazon.device.iap.model.FulfillmentResult
-import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Dormant Amazon Appstore SDK bridge for Fire builds.
+ * Amazon Appstore SDK bridge for Fire builds.
  *
- * Purchase UI stays hidden until the premium-preview free window ends. The bridge refreshes
- * Amazon receipts at startup so post-preview access is controlled by Amazon entitlement.
+ * App launch DRM is enforced by Amazon's store-side DRM wrapper for submitted
+ * Amazon builds. This bridge deliberately avoids calling LicensingService at
+ * startup because that arms Amazon's lifecycle self-destruct callback on
+ * non-store or not-yet-entitled launches. Premium purchases and restores use IAP
+ * after the app is already running.
  */
-object AmazonAppstoreBridge : PurchasingListener, LicensingListener {
+object AmazonAppstoreBridge : PurchasingListener {
     private const val TAG = "AmazonAppstoreBridge"
-    private const val APPSTORE_AUTHENTICATION_KEY = "AppstoreAuthenticationKey.pem"
-    private val initialized = AtomicBoolean(false)
+    private val iapInitialized = AtomicBoolean(false)
     private val receiptRefreshSawPremium = AtomicBoolean(false)
     private val _premiumEntitled = MutableStateFlow(StorePolicy.isAmazonPremiumEntitledForProcess())
+    @Volatile private var appContext: Context? = null
     val premiumEntitled: StateFlow<Boolean> = _premiumEntitled.asStateFlow()
 
-    fun initialize(context: Context) {
+    fun attach(context: Context) {
         if (!BuildConfig.ENABLE_AMAZON_APPSTORE_SDK) return
-        if (!initialized.compareAndSet(false, true)) return
+        appContext = context.applicationContext
+    }
 
-        val appContext = context.applicationContext
-        if (!appContext.hasAmazonAppstoreClient()) {
-            Log.w(TAG, "Amazon Appstore client not installed; SDK bridge dormant on this device")
-            return
+    fun initialize(context: Context) {
+        attach(context)
+    }
+
+    private fun ensureIapRegistered(): Boolean {
+        if (!BuildConfig.ENABLE_AMAZON_APPSTORE_SDK) return false
+        val context = appContext
+        if (context == null) {
+            Log.w(TAG, "Amazon Appstore SDK bridge has no application context; skipping IAP call")
+            return false
         }
+        if (!context.hasAmazonAppstoreClient()) {
+            Log.w(TAG, "Amazon Appstore client not installed; SDK bridge dormant on this device")
+            return false
+        }
+        if (!iapInitialized.compareAndSet(false, true)) return true
 
-        runCatching {
-            PurchasingService.registerListener(appContext, this)
+        val registered = runCatching {
+            PurchasingService.registerListener(context, this)
             PurchasingService.enablePendingPurchases()
             Log.d(TAG, "Amazon IAP listener registered")
-            refreshEntitlements()
+            true
         }.onFailure { error ->
+            iapInitialized.set(false)
             Log.w(TAG, "Unable to register Amazon IAP listener", error)
-        }
-
-        if (appContext.hasAppstoreAuthenticationKey()) {
-            runCatching {
-                LicensingService.verifyLicense(appContext, this)
-                Log.d(TAG, "Amazon DRM verification requested")
-            }.onFailure { error ->
-                Log.w(TAG, "Unable to request Amazon DRM verification", error)
-            }
-        } else {
-            Log.w(TAG, "Amazon DRM key missing; add $APPSTORE_AUTHENTICATION_KEY to the Fire assets before submission")
-        }
+        }.getOrDefault(false)
+        return registered
     }
 
     fun refreshEntitlements() {
-        if (!BuildConfig.ENABLE_AMAZON_APPSTORE_SDK) return
+        if (!ensureIapRegistered()) return
         runCatching {
             receiptRefreshSawPremium.set(false)
             PurchasingService.getUserData()
@@ -85,15 +87,12 @@ object AmazonAppstoreBridge : PurchasingListener, LicensingListener {
             Log.w(TAG, "Ignoring unknown Amazon premium SKU: $sku")
             return
         }
+        if (!ensureIapRegistered()) return
         runCatching {
             PurchasingService.purchase(sku)
         }.onFailure { error ->
             Log.w(TAG, "Unable to start Amazon purchase flow for $sku", error)
         }
-    }
-
-    override fun onLicenseCommandResponse(licenseResponse: LicenseResponse) {
-        Log.d(TAG, "Amazon DRM status: ${licenseResponse.requestStatus}")
     }
 
     override fun onUserDataResponse(userDataResponse: UserDataResponse) {
@@ -144,10 +143,12 @@ object AmazonAppstoreBridge : PurchasingListener, LicensingListener {
     }
 
     private fun premiumSkus(): Set<String> =
-        setOf(
+        (AfterglowIapConfig.premiumUnlockSkus + setOf(
             BuildConfig.AMAZON_PREMIUM_MONTHLY_SKU,
+            BuildConfig.AMAZON_PREMIUM_QUARTERLY_SKU,
+            BuildConfig.AMAZON_PREMIUM_ANNUALLY_SKU,
             BuildConfig.AMAZON_PREMIUM_LIFETIME_SKU
-        ).filterTo(linkedSetOf()) { it.isNotBlank() }
+        )).filterTo(linkedSetOf()) { it.isNotBlank() }
 
     private fun markPremiumEntitlement(entitled: Boolean) {
         StorePolicy.setAmazonPremiumEntitledForProcess(entitled)
@@ -184,14 +185,7 @@ object AmazonAppstoreBridge : PurchasingListener, LicensingListener {
         listOf("com.amazon.venezia", "com.amazon.sdktestclient")
             .any { packageName ->
                 runCatching {
-                packageManager.getPackageInfo(packageName, 0) != null
+                    packageManager.getPackageInfo(packageName, 0) != null
                 }.getOrDefault(false)
             }
-
-    private fun Context.hasAppstoreAuthenticationKey(): Boolean =
-        try {
-            assets.open(APPSTORE_AUTHENTICATION_KEY).use { true }
-        } catch (_: IOException) {
-            false
-        }
 }
