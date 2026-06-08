@@ -107,7 +107,7 @@ internal fun liveContentPaneWeights(
     isProMode: Boolean
 ): LiveContentPaneWeights = when {
     !isProMode -> LiveContentPaneWeights(channelList = 1f, preview = 0f)
-    adultMode -> LiveContentPaneWeights(channelList = 0.62f, preview = 1.38f)
+    adultMode -> LiveContentPaneWeights(channelList = 1f, preview = 0f)
     else -> LiveContentPaneWeights(channelList = 1.08f, preview = 0.92f)
 }
 
@@ -237,6 +237,13 @@ fun HomeScreen(
         LiveTvChannelMode.COMPACT -> 2.dp
         LiveTvChannelMode.PRO -> 2.dp
     }
+    val adultCompactPreviewWidth = if (screenWidth < 900.dp) {
+        (screenWidth * 0.28f).coerceIn(220.dp, 280.dp)
+    } else {
+        320.dp
+    }
+    val adultCompactPreviewListInset = if (adultMode && isProMode) 104.dp else 0.dp
+    val adultCompactPreviewHeaderEndPadding = if (adultMode && isProMode) adultCompactPreviewWidth + 24.dp else 8.dp
     val previewChannel = remember(uiState.filteredChannels, uiState.previewChannelId) {
         uiState.filteredChannels.firstOrNull { it.id == uiState.previewChannelId }
     }
@@ -923,15 +930,24 @@ fun HomeScreen(
                         .fillMaxHeight(),
                     horizontalArrangement = Arrangement.spacedBy(if (isProMode) 12.dp else 0.dp)
                 ) {
-                    Column(
+                    Box(
                         modifier = Modifier
                             .weight(paneWeights.channelList)
                             .fillMaxHeight()
                     ) {
                         Column(
                             modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                        Column(
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 8.dp, top = 2.dp, bottom = if (isDenseMode) 4.dp else 6.dp, end = 8.dp),
+                                .padding(
+                                    start = 8.dp,
+                                    top = 2.dp,
+                                    bottom = if (isDenseMode) 4.dp else 6.dp,
+                                    end = adultCompactPreviewHeaderEndPadding
+                                ),
                             verticalArrangement = Arrangement.spacedBy(if (isDenseMode) 2.dp else 4.dp)
                         ) {
                             Row(
@@ -1025,6 +1041,7 @@ fun HomeScreen(
 
                         Crossfade(
                             targetState = uiState.selectedCategory?.id,
+                            modifier = Modifier.weight(1f),
                             animationSpec = tween(durationMillis = 200),
                             label = "category_content_transition"
                         ) { _ ->
@@ -1222,6 +1239,7 @@ fun HomeScreen(
                                 contentPadding = PaddingValues(
                                     start = 10.dp,
                                     end = 10.dp,
+                                    top = adultCompactPreviewListInset,
                                     bottom = if (isDenseMode) 8.dp else 12.dp
                                 ),
                                 verticalArrangement = Arrangement.spacedBy(channelListSpacing)
@@ -1327,7 +1345,22 @@ fun HomeScreen(
                         } // Crossfade
                     }
 
-                    if (isProMode) {
+                        if (adultMode && isProMode) {
+                            LivePreviewPane(
+                                channel = previewChannel,
+                                playerEngine = uiState.previewPlayerEngine,
+                                isLoading = uiState.isPreviewLoading,
+                                errorMessage = uiState.previewErrorMessage,
+                                compact = true,
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 4.dp, end = 8.dp)
+                                    .width(adultCompactPreviewWidth)
+                            )
+                        }
+                    }
+
+                    if (isProMode && !adultMode) {
                         LivePreviewPane(
                             channel = previewChannel,
                             playerEngine = uiState.previewPlayerEngine,

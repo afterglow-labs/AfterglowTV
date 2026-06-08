@@ -125,6 +125,7 @@ internal fun LivePreviewPane(
     playerEngine: PlayerEngine?,
     isLoading: Boolean,
     errorMessage: String?,
+    compact: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val renderSurfaceType by (playerEngine?.renderSurfaceType)?.collectAsStateWithLifecycle(
@@ -136,17 +137,24 @@ internal fun LivePreviewPane(
         shape = RoundedCornerShape(18.dp),
         colors = SurfaceDefaults.colors(containerColor = SurfaceElevated.copy(alpha = 0.72f))
     ) {
+        val contentPadding = if (compact) 8.dp else 12.dp
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = if (compact) {
+                Modifier.padding(contentPadding)
+            } else {
+                Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+            },
+            verticalArrangement = Arrangement.spacedBy(if (compact) 0.dp else 10.dp)
         ) {
-            Text(
-                text = stringResource(R.string.live_preview_title),
-                style = MaterialTheme.typography.titleSmall,
-                color = Primary
-            )
+            if (!compact) {
+                Text(
+                    text = stringResource(R.string.live_preview_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Primary
+                )
+            }
 
             Box(
                 modifier = Modifier
@@ -205,7 +213,7 @@ internal fun LivePreviewPane(
                 }
             }
 
-            if (channel != null) {
+            if (channel != null && !compact) {
                 Text(
                     text = channel.name,
                     style = MaterialTheme.typography.titleMedium,
