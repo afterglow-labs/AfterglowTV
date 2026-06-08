@@ -21,7 +21,9 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -306,6 +308,23 @@ class EpgResolutionEngineTest {
         val mappings = captor.firstValue.associateBy { it.providerChannelId }
         assertThat(mappings.getValue(1L).sourceType).isEqualTo(EpgSourceType.PROVIDER.name)
         assertThat(mappings.getValue(2L).sourceType).isEqualTo(EpgSourceType.NONE.name)
+    }
+
+    @Test
+    fun `resolveForProvider_chunksProviderNativeCoverageChecksForLargeGuides`() = runTest {
+        val channels = (1L..1_001L).map { id ->
+            makeChannel(id = id, name = "Channel $id", epgChannelId = "local.$id")
+        }
+        whenever(channelDao.getByProviderSync(PROVIDER_ID)).thenReturn(channels)
+        whenever(providerEpgSourceDao.getEnabledForProviderSync(PROVIDER_ID)).thenReturn(emptyList())
+        whenever(channelEpgMappingDao.getForProvider(PROVIDER_ID)).thenReturn(emptyList())
+
+        engine.resolveForProvider(PROVIDER_ID)
+
+        val idChunks = argumentCaptor<List<String>>()
+        verify(programDao, times(3)).getChannelIdsWithPrograms(eq(PROVIDER_ID), idChunks.capture())
+        assertThat(idChunks.allValues.map { it.size }).containsExactly(450, 450, 101).inOrder()
+        assertThat(idChunks.allValues.flatten()).hasSize(1_001)
     }
 
     // ── getResolvedProgrammes ──────────────────────────────────────

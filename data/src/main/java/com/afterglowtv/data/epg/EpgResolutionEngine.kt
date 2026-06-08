@@ -44,6 +44,7 @@ class EpgResolutionEngine @Inject constructor(
         private const val TAG = "EpgResolutionEngine"
         private const val LOW_CONFIDENCE_THRESHOLD = 0.7f
         private const val MAX_REMATCH_ATTEMPTS = 6
+        private const val SQL_IN_CLAUSE_CHUNK_SIZE = 450
     }
 
     /**
@@ -98,7 +99,11 @@ class EpgResolutionEngine @Inject constructor(
         // Check which channels have provider-native EPG data
         val providerEpgChannelIds = channels.mapNotNull { it.epgChannelId?.trim()?.takeIf(String::isNotEmpty) }
         val providerNativeChannelIds = if (providerEpgChannelIds.isNotEmpty()) {
-            programDao.getChannelIdsWithPrograms(providerId, providerEpgChannelIds).toHashSet()
+            providerEpgChannelIds
+                .distinct()
+                .chunked(SQL_IN_CLAUSE_CHUNK_SIZE)
+                .flatMap { chunk -> programDao.getChannelIdsWithPrograms(providerId, chunk) }
+                .toHashSet()
         } else {
             emptySet()
         }
@@ -257,20 +262,20 @@ class EpgResolutionEngine @Inject constructor(
     ): Map<String, List<Program>> = withContext(Dispatchers.IO) {
         if (channelIds.isEmpty()) return@withContext emptyMap()
 
-        val mappings = if (channelIds.size <= 500) {
+        val mappings = if (channelIds.size <= SQL_IN_CLAUSE_CHUNK_SIZE) {
             channelEpgMappingDao.getForChannels(providerId, channelIds)
         } else {
-            channelIds.chunked(500).flatMap { chunk ->
+            channelIds.chunked(SQL_IN_CLAUSE_CHUNK_SIZE).flatMap { chunk ->
                 channelEpgMappingDao.getForChannels(providerId, chunk)
             }
         }
 
         if (mappings.isEmpty()) return@withContext emptyMap()
 
-        val channels = if (channelIds.size <= 500) {
+        val channels = if (channelIds.size <= SQL_IN_CLAUSE_CHUNK_SIZE) {
             channelDao.getGuideLookupsByIds(channelIds)
         } else {
-            channelIds.chunked(500).flatMap { chunk ->
+            channelIds.chunked(SQL_IN_CLAUSE_CHUNK_SIZE).flatMap { chunk ->
                 channelDao.getGuideLookupsByIds(chunk)
             }
         }
@@ -285,10 +290,10 @@ class EpgResolutionEngine @Inject constructor(
 
         for ((sourceId, sourceMappings) in externalBySource) {
             val xmltvIds = sourceMappings.map { it.xmltvChannelId!! }.distinct()
-            val programmes = if (xmltvIds.size <= 500) {
+            val programmes = if (xmltvIds.size <= SQL_IN_CLAUSE_CHUNK_SIZE) {
                 epgProgrammeDao.getForChannels(sourceId, xmltvIds, startTime, endTime)
             } else {
-                xmltvIds.chunked(500).flatMap { chunk ->
+                xmltvIds.chunked(SQL_IN_CLAUSE_CHUNK_SIZE).flatMap { chunk ->
                     epgProgrammeDao.getForChannels(sourceId, chunk, startTime, endTime)
                 }
             }
@@ -315,10 +320,10 @@ class EpgResolutionEngine @Inject constructor(
         val providerMappings = mappings.filter { it.sourceType == EpgSourceType.PROVIDER.name && it.xmltvChannelId != null }
         if (providerMappings.isNotEmpty()) {
             val providerXmltvIds = providerMappings.mapNotNull { it.xmltvChannelId }.distinct()
-            val providerPrograms = if (providerXmltvIds.size <= 500) {
+            val providerPrograms = if (providerXmltvIds.size <= SQL_IN_CLAUSE_CHUNK_SIZE) {
                 programDao.getForChannelsSync(providerId, providerXmltvIds, startTime, endTime)
             } else {
-                providerXmltvIds.chunked(500).flatMap { chunk ->
+                providerXmltvIds.chunked(SQL_IN_CLAUSE_CHUNK_SIZE).flatMap { chunk ->
                     programDao.getForChannelsSync(providerId, chunk, startTime, endTime)
                 }
             }

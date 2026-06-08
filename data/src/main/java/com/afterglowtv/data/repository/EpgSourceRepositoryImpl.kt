@@ -76,8 +76,8 @@ class EpgSourceRepositoryImpl @Inject constructor(
     companion object {
         private const val TAG = "EpgSourceRepo"
         private const val MAX_EPG_SIZE_BYTES = NetworkTimeoutConfig.EPG_MAX_SIZE_BYTES
-        private const val CHANNEL_BATCH_SIZE = 500
-        private const val PROGRAMME_BATCH_SIZE = 500
+        private const val CHANNEL_BATCH_SIZE = 100
+        private const val PROGRAMME_BATCH_SIZE = 50
         private const val MIN_REFRESH_INTERVAL_MS = 5L * 60L * 1000L // 5 minutes
     }
 

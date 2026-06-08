@@ -295,6 +295,44 @@ class EpgRepositoryImplTest {
     }
 
     @Test
+    fun `refreshEpg_flushesLargeGuidesInSqliteSafeBatches`() = runTest {
+        whenever(xmltvParser.parseStreaming(any(), anyOrNull(), any())).thenAnswer { invocation ->
+            val onProgram = invocation.getArgument<suspend (Program) -> Unit>(2)
+            runBlocking {
+                repeat(125) { index ->
+                    onProgram(
+                        Program(
+                            providerId = 7L,
+                            channelId = "channel-${index % 5}",
+                            title = "Program $index",
+                            description = "",
+                            startTime = 1_735_722_000_000L + index,
+                            endTime = 1_735_725_600_000L + index,
+                            lang = "en"
+                        )
+                    )
+                }
+            }
+        }
+        val repository = EpgRepositoryImpl(
+            programDao = programDao,
+            providerDao = providerDao,
+            xmltvParser = xmltvParser,
+            okHttpClient = okHttpClientReturningXml(),
+            transactionRunner = transactionRunner,
+            epgSourceRepository = epgSourceRepository
+        )
+
+        val result = repository.refreshEpg(7L, "https://example.com/large-epg.xml")
+
+        assertThat(result.isSuccess).isTrue()
+        val insertedPrograms = argumentCaptor<List<ProgramEntity>>()
+        verify(programDao, times(3)).insertAll(insertedPrograms.capture())
+        assertThat(insertedPrograms.allValues.map { it.size }).containsExactly(50, 50, 25).inOrder()
+        assertThat(insertedPrograms.allValues.flatten()).hasSize(125)
+    }
+
+    @Test
     fun `refreshEpg does not double decompress when content encoding and gz suffix are both present`() = runTest {
         val repository = EpgRepositoryImpl(
             programDao = programDao,
@@ -608,7 +646,7 @@ class EpgRepositoryImplTest {
         val result = repository.refreshEpg(7L, "https://example.com/epg.xml")
 
         assertThat(result.isSuccess).isTrue()
-        assertThat(transactionCount).isEqualTo(4)
+        assertThat(transactionCount).isEqualTo(14)
         assertThat(parserCallbackTransactionDepths).hasSize(600)
         assertThat(parserCallbackTransactionDepths.all { it == 0 }).isTrue()
         assertThat(insertTransactionDepths).isNotEmpty()
