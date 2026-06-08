@@ -14,6 +14,7 @@ class ThemePreviewSwatchesTest {
             AppPalette.AfterglowLight2,
             AppPalette.AfterglowLight3,
             AppPalette.AfterglowLight4,
+            AppPalette.AfterglowLabs,
             AppPalette.RachelsSunrise,
         )
 

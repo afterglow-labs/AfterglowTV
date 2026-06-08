@@ -16,6 +16,7 @@ class AppPaletteTest {
             AppPalette.AfterglowLight3,
             AppPalette.AfterglowLight4,
             AppPalette.AfterglowGrayLight,
+            AppPalette.AfterglowLabs,
             AppPalette.RachelsSunrise
         )
 
@@ -117,21 +118,71 @@ class AppPaletteTest {
     @Test
     fun `rachels themes keep peach pink mint teal violet and soft blue energy`() {
         val sunset = AppPalette.SunsetAurora
-        assertThat(sunset.accent.red).isGreaterThan(sunset.accent.green)
-        assertThat(sunset.accent.green).isGreaterThan(sunset.accent.blue)
-        assertThat(sunset.nowLine.red).isGreaterThan(sunset.nowLine.green)
-        assertThat(sunset.nowLine.blue).isGreaterThan(sunset.nowLine.green)
-        assertThat(sunset.success.green).isGreaterThan(sunset.success.red)
+        assertThat(sunset.surfaceCool.red).isGreaterThan(sunset.surfaceCool.green)
+        assertThat(sunset.surfaceCool.green).isGreaterThan(sunset.surfaceCool.blue)
+        assertThat(sunset.surfaceAccent.red).isGreaterThan(sunset.surfaceAccent.green)
+        assertThat(sunset.surfaceAccent.blue).isGreaterThan(sunset.surfaceAccent.green)
+        assertThat(sunset.surfaceBase.green).isGreaterThan(sunset.surfaceBase.red)
+        assertThat(sunset.surfaceBase.blue).isGreaterThan(sunset.surfaceBase.red)
+        assertThat(sunset.accent.blue).isGreaterThan(sunset.accent.red)
         assertThat(sunset.info.blue).isGreaterThan(sunset.info.red)
-        assertThat(sunset.surfaceCool.blue).isGreaterThan(sunset.surfaceCool.red)
 
         val sunrise = AppPalette.RachelsSunrise
-        assertThat(sunrise.surfaceDeep.green).isGreaterThan(sunrise.surfaceDeep.red)
-        assertThat(sunrise.surfaceBase.blue).isGreaterThan(sunrise.surfaceBase.red)
+        assertThat(sunrise.surfaceDeep.red).isGreaterThan(sunrise.surfaceDeep.blue)
+        assertThat(sunrise.surfaceBase.red).isGreaterThan(sunrise.surfaceBase.blue)
+        assertThat(sunrise.surfaceCool.red).isGreaterThan(sunrise.surfaceCool.green)
         assertThat(sunrise.surfaceCool.blue).isGreaterThan(sunrise.surfaceCool.green)
-        assertThat(sunrise.surfaceAccent.red).isGreaterThan(sunrise.surfaceAccent.green)
-        assertThat(sunrise.accentLight.red).isGreaterThan(sunrise.accentLight.blue)
-        assertThat(sunrise.nowLine.red).isGreaterThan(sunrise.nowLine.green)
+        assertThat(sunrise.surfaceAccent.green).isGreaterThan(sunrise.surfaceAccent.red)
+        assertThat(sunrise.surfaceAccent.green).isGreaterThan(sunrise.surfaceAccent.blue)
+        assertThat(sunrise.accent.blue).isGreaterThan(sunrise.accent.red)
+        assertThat(sunrise.accent.luminance()).isLessThan(0.08f)
+    }
+
+    @Test
+    fun `afterglow labs theme matches the website wash with dark controls`() {
+        val palette = AppPalette.AfterglowLabs
+
+        assertThat(palette.displayName).isEqualTo("Afterglow Labs")
+        assertThat(palette.surfaceDeep.red).isGreaterThan(palette.surfaceDeep.blue)
+        assertThat(palette.surfaceBase.red).isGreaterThan(palette.surfaceBase.blue)
+        assertThat(palette.surfaceCool.red).isGreaterThan(palette.surfaceCool.blue)
+        assertThat(palette.surfaceAccent.red).isGreaterThan(palette.surfaceAccent.green)
+        assertThat(palette.surfaceAccent.blue).isGreaterThan(palette.surfaceAccent.green)
+        assertThat(palette.accent.blue).isGreaterThan(palette.accent.red)
+        assertThat(palette.accent.luminance()).isLessThan(0.08f)
+        assertThat(contrastRatio(palette.accent, palette.surfaceAccent)).isAtLeast(4.5f)
+    }
+
+    @Test
+    fun `mint and teal background themes avoid green text and controls`() {
+        listOf(
+            AppPalette.AfterglowLight3,
+            AppPalette.RachelsSunrise,
+            AppPalette.SunsetAurora,
+        ).forEach { palette ->
+            assertWithMessage("${palette.displayName} has a green or teal background")
+                .that(
+                    listOf(
+                        palette.surfaceBase,
+                        palette.surfaceCool,
+                        palette.surfaceAccent,
+                    ).any(::isGreenOrTealBackground)
+                )
+                .isTrue()
+
+            listOf(
+                palette.textPrimary,
+                palette.textSecondary,
+                palette.accent,
+                palette.accentLight,
+                palette.success,
+                palette.info,
+            ).forEach { color ->
+                assertWithMessage("${palette.displayName} uses green foreground/control $color")
+                    .that(isGreenDominant(color))
+                    .isFalse()
+            }
+        }
     }
 
     @Test
@@ -180,6 +231,7 @@ class AppPaletteTest {
     fun `light mixed palettes use readable active colors`() {
         listOf(
             AppPalette.MineralSlate,
+            AppPalette.AfterglowLabs,
             AppPalette.RachelsSunrise,
         ).forEach { palette ->
             assertWithMessage(palette.displayName)
@@ -209,4 +261,11 @@ class AppPaletteTest {
         val blue = a.blue - b.blue
         return kotlin.math.sqrt(red * red + green * green + blue * blue)
     }
+
+    private fun isGreenDominant(color: Color): Boolean =
+        color.green > color.red + 0.08f && color.green > color.blue + 0.04f
+
+    private fun isGreenOrTealBackground(color: Color): Boolean =
+        color.green > color.red + 0.06f &&
+            (color.green > color.blue + 0.04f || color.blue > color.red + 0.06f)
 }

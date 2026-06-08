@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -78,6 +77,20 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlin.math.max
 import kotlinx.coroutines.launch
+
+private const val AFTERGLOW_LABS_THEME_ID = "afterglow_labs"
+private val LabsGuidePanel = Color(0xFFE6865E)
+private val LabsGuidePanelFocused = Color(0xFFFFA15F)
+private val LabsGuideRail = Color(0xFFE07D56)
+private val LabsGuideSlot = Color(0xFFF1A06A)
+private val LabsGuideOutline = Color(0xFF6F35D8)
+private val LabsGuideOutlineWarm = Color(0xFFFF7A18)
+private val LabsGuideText = Color(0xFF101426)
+private val LabsGuideTextMuted = Color(0xB0101426)
+private val LabsGuideDivider = Color(0x44331A5C)
+
+private val isAfterglowLabsGuideTheme: Boolean
+    get() = AppColors.palette.id == AFTERGLOW_LABS_THEME_ID
 
 @Composable
 internal fun GuideMessageState(
@@ -137,7 +150,7 @@ internal fun EpgGrid(
     onRequestMoreChannels: () -> Unit = {}
 ) {
     val channelRailWidth = 180.dp
-    val timelineGap = 4.dp
+    val timelineGap = 0.dp
     val rowHeight = when (density) {
         GuideDensity.COMPACT -> 36.dp
         GuideDensity.COMFORTABLE -> 52.dp
@@ -184,7 +197,7 @@ internal fun EpgGrid(
                 markerStepMs = markerStepMs,
                 scrollState = horizontalScrollState
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(0.dp))
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -203,9 +216,9 @@ internal fun EpgGrid(
                             }
                             else -> false
                         }
-                    },
+                },
                 state = verticalListState,
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 itemsIndexed(
                     items = channels,
@@ -266,16 +279,18 @@ private fun GuideTimelineHeader(
     } else {
         stringResource(R.string.epg_outside_window)
     }
-    val hourMarkers = buildList {
+    val timeSlots = buildList {
         var marker = windowStart
-        while (marker <= windowEnd) {
+        while (marker < windowEnd) {
             add(marker)
             marker += markerStepMs
         }
-        if (lastOrNull() != windowEnd) {
-            add(windowEnd)
-        }
     }
+    val labsGuide = isAfterglowLabsGuideTheme
+    val slotWidth = totalTimelineWidth * (markerStepMs.toFloat() / totalDuration.toFloat())
+    val slotShape = RoundedCornerShape(0.dp)
+    val timelineTextColor = if (labsGuide) LabsGuideTextMuted else OnSurfaceDim
+    val gridLineColor = if (labsGuide) LabsGuideDivider else Color.White.copy(alpha = 0.14f)
 
     Row(
         modifier = Modifier
@@ -296,7 +311,7 @@ private fun GuideTimelineHeader(
                 Text(
                     text = stringResource(R.string.epg_timeline_label),
                     style = MaterialTheme.typography.labelSmall,
-                    color = OnSurfaceDim
+                    color = timelineTextColor
                 )
                 Text(
                     text = stringResource(
@@ -304,13 +319,13 @@ private fun GuideTimelineHeader(
                         formatWindowDuration(totalDuration)
                     ),
                     style = MaterialTheme.typography.labelSmall,
-                    color = OnSurfaceDim
+                    color = timelineTextColor
                 )
             }
             Box(
                 modifier = Modifier
                     .width(timelineViewportWidth)
-                    .height(20.dp)
+                    .height(28.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -320,26 +335,38 @@ private fun GuideTimelineHeader(
                     Box(
                         modifier = Modifier
                             .width(totalTimelineWidth)
-                            .height(20.dp)
+                            .height(28.dp)
                     ) {
-                        hourMarkers.forEach { marker ->
-                            val markerRatio = ((marker - windowStart).toFloat() / totalDuration.toFloat()).coerceIn(0f, 1f)
-                            val markerOffset = totalTimelineWidth * markerRatio
-                            Column(
-                                modifier = Modifier.padding(start = markerOffset),
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Text(
-                                    text = hourFormat.format(Instant.ofEpochMilli(marker).atZone(zone)),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = OnSurfaceDim
-                                )
+                        Row(
+                            modifier = Modifier
+                                .width(totalTimelineWidth)
+                                .fillMaxHeight()
+                        ) {
+                            timeSlots.forEach { marker ->
                                 Box(
                                     modifier = Modifier
-                                        .width(1.dp)
-                                        .height(8.dp)
-                                        .background(Color.White.copy(alpha = 0.16f))
-                                )
+                                        .width(slotWidth)
+                                        .fillMaxHeight()
+                                        .background(
+                                            color = if (labsGuide) LabsGuideSlot else SurfaceElevated,
+                                            shape = slotShape
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = gridLineColor,
+                                            shape = slotShape
+                                        ),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Text(
+                                        text = hourFormat.format(Instant.ofEpochMilli(marker).atZone(zone)),
+                                        modifier = Modifier.padding(horizontal = 8.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (labsGuide) LabsGuideText else OnSurfaceDim,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
                         }
                         if (now in windowStart..windowEnd) {
@@ -348,7 +375,7 @@ private fun GuideTimelineHeader(
                                     .padding(start = totalTimelineWidth * elapsedRatio)
                                     .width(2.dp)
                                     .fillMaxHeight()
-                                    .background(Primary)
+                                    .background(if (labsGuide) LabsGuideText else Primary)
                             )
                         }
                     }
@@ -357,7 +384,11 @@ private fun GuideTimelineHeader(
             Text(
                 text = markerLabel,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (now in windowStart..windowEnd) Primary else OnSurfaceDim
+                color = when {
+                    labsGuide -> LabsGuideText
+                    now in windowStart..windowEnd -> Primary
+                    else -> OnSurfaceDim
+                }
             )
         }
     }
@@ -399,6 +430,16 @@ fun EpgRow(
         GuideDensity.COMFORTABLE -> 30.dp
         GuideDensity.CINEMATIC -> 38.dp
     }
+    val labsGuide = isAfterglowLabsGuideTheme
+    val channelContainerColor = if (labsGuide) LabsGuideRail else SurfaceElevated
+    val channelFocusedColor = if (labsGuide) LabsGuidePanelFocused else SurfaceHighlight
+    val channelFocusedBorderColor = if (labsGuide) LabsGuideOutline else FocusBorder
+    val timelineTrackColor = if (labsGuide) LabsGuideRail else SurfaceElevated
+    val guidePrimaryTextColor = if (labsGuide) LabsGuideText else OnSurface
+    val guideFocusedTextColor = if (labsGuide) LabsGuideText else TextPrimary
+    val guideSecondaryTextColor = if (labsGuide) LabsGuideTextMuted else OnSurfaceDim
+    val rowShape = RoundedCornerShape(0.dp)
+    val rowGridLineColor = if (labsGuide) LabsGuideDivider else Color.White.copy(alpha = 0.10f)
 
     Row(
         modifier = Modifier
@@ -418,14 +459,18 @@ fun EpgRow(
                     isFocused = it.isFocused
                 },
             colors = ClickableSurfaceDefaults.colors(
-                containerColor = SurfaceElevated,
-                focusedContainerColor = SurfaceHighlight
+                containerColor = channelContainerColor,
+                focusedContainerColor = channelFocusedColor
             ),
-            shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp)),
+            shape = ClickableSurfaceDefaults.shape(rowShape),
             border = ClickableSurfaceDefaults.border(
+                border = Border(
+                    border = BorderStroke(1.dp, rowGridLineColor),
+                    shape = rowShape
+                ),
                 focusedBorder = Border(
-                    border = BorderStroke(2.dp, FocusBorder),
-                    shape = RoundedCornerShape(8.dp)
+                    border = BorderStroke(2.dp, channelFocusedBorderColor),
+                    shape = rowShape
                 )
             )
         ) {
@@ -451,14 +496,14 @@ fun EpgRow(
                     Text(
                         text = if (channel.number > 0) "${channel.number}. ${channel.name}" else channel.name,
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (isFocused) TextPrimary else OnSurface,
+                        color = if (isFocused) guideFocusedTextColor else guidePrimaryTextColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = currentProgram?.title ?: stringResource(R.string.epg_no_schedule_short),
                         style = MaterialTheme.typography.labelSmall,
-                        color = OnSurfaceDim,
+                        color = guideSecondaryTextColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -490,8 +535,8 @@ fun EpgRow(
             modifier = Modifier
                 .width(timelineViewportWidth)
                 .fillMaxHeight()
-                .background(SurfaceElevated, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
+                .background(timelineTrackColor, rowShape)
+                .clip(rowShape)
         ) {
             Row(
                 modifier = Modifier
@@ -519,12 +564,12 @@ fun EpgRow(
                             .padding(start = totalTimelineWidth * markerRatio)
                             .width(1.dp)
                             .fillMaxHeight()
-                            .background(Color.White.copy(alpha = 0.08f))
+                            .background(if (labsGuide) LabsGuideDivider else Color.White.copy(alpha = 0.08f))
                     )
                 }
                 if (programs.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.epg_no_schedule_short), color = OnSurfaceDim)
+                        Text(stringResource(R.string.epg_no_schedule_short), color = guideSecondaryTextColor)
                     }
                 } else {
                     programs.forEach { program ->
@@ -561,7 +606,7 @@ fun ProgramItem(
     val isCurrent = !isPlaceholder && now in program.startTime until program.endTime
     val cellStyle = AppStyles.value.epgCell
     val liveStyle = AppStyles.value.epgLiveCell
-    val cellShape = remember(cellStyle) { epgCellShape(cellStyle) }
+    val cellShape: Shape = RoundedCornerShape(0.dp)
 
     val appTimeFormat = LocalAppTimeFormat.current
     val format = remember(appTimeFormat) { appTimeFormat.createTimeFormatter() }
@@ -582,11 +627,7 @@ fun ProgramItem(
     val itemWidth = (totalTimelineWidth * widthRatio).coerceAtLeast(minimumItemWidth)
     val isCompactCell = itemWidth < 148.dp
     val isVeryCompactCell = itemWidth < 116.dp
-    val outerVerticalPadding = when (density) {
-        GuideDensity.COMPACT -> 2.dp
-        GuideDensity.COMFORTABLE -> 3.dp
-        GuideDensity.CINEMATIC -> 5.dp
-    }
+    val outerVerticalPadding = 0.dp
     val innerHorizontalPadding = when {
         isVeryCompactCell -> 5.dp
         isCompactCell -> 6.dp
@@ -676,7 +717,7 @@ fun ProgramItem(
                 shape = cellShape
             ),
             focusedBorder = Border(
-                border = BorderStroke(3.dp, FocusBorder),
+                border = BorderStroke(2.dp, if (isAfterglowLabsGuideTheme) LabsGuideOutline else FocusBorder),
                 shape = cellShape
             )
         )
@@ -688,7 +729,15 @@ fun ProgramItem(
                         .align(Alignment.CenterStart)
                         .width(4.dp)
                         .fillMaxHeight()
-                        .background(if (isCurrent) AppColors.EpgNowLine else AppColors.TiviAccent)
+                        .background(
+                            if (isAfterglowLabsGuideTheme) {
+                                LabsGuideOutlineWarm
+                            } else if (isCurrent) {
+                                AppColors.EpgNowLine
+                            } else {
+                                AppColors.TiviAccent
+                            }
+                        )
                 )
             }
             if (cellStyle == AppShapeSet.EpgCellStyle.BEVELED) {
@@ -697,14 +746,14 @@ fun ProgramItem(
                         .align(Alignment.TopCenter)
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(Color.White.copy(alpha = 0.22f))
+                        .background(if (isAfterglowLabsGuideTheme) LabsGuideDivider else Color.White.copy(alpha = 0.22f))
                 )
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(Color.Black.copy(alpha = 0.28f))
+                        .background(if (isAfterglowLabsGuideTheme) LabsGuideDivider else Color.Black.copy(alpha = 0.28f))
                 )
             }
             if (
@@ -717,7 +766,13 @@ fun ProgramItem(
                         .padding(2.dp)
                         .border(
                             width = 1.dp,
-                            color = if (isCurrent) AppColors.EpgNowLine.copy(alpha = 0.78f) else Color.White.copy(alpha = 0.16f),
+                            color = if (isAfterglowLabsGuideTheme) {
+                                LabsGuideDivider
+                            } else if (isCurrent) {
+                                AppColors.EpgNowLine.copy(alpha = 0.78f)
+                            } else {
+                                Color.White.copy(alpha = 0.16f)
+                            },
                             shape = cellShape
                         )
                 )
@@ -759,7 +814,11 @@ fun ProgramItem(
                     Text(
                         text = program.title,
                         style = titleStyle,
-                        color = if (isPlaceholder && !isFocused) OnSurfaceDim else epgProgramTitleColor(liveStyle, isCurrent, isFocused),
+                        color = if (isPlaceholder && !isFocused) {
+                            epgProgramMetaColor(isFocused)
+                        } else {
+                            epgProgramTitleColor(liveStyle, isCurrent, isFocused)
+                        },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -771,7 +830,7 @@ fun ProgramItem(
                                 "$startStr - $endStr"
                             },
                             style = timeStyle,
-                            color = if (isFocused) TextSecondary else OnSurfaceDim,
+                            color = epgProgramMetaColor(isFocused),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -782,29 +841,24 @@ fun ProgramItem(
     }
 }
 
-private fun epgCellShape(style: AppShapeSet.EpgCellStyle): Shape =
-    when (style) {
-        AppShapeSet.EpgCellStyle.RECTANGULAR -> RoundedCornerShape(0.dp)
-        AppShapeSet.EpgCellStyle.SOFT -> RoundedCornerShape(12.dp)
-        AppShapeSet.EpgCellStyle.ACCENT_STRIPE -> RoundedCornerShape(5.dp)
-        AppShapeSet.EpgCellStyle.BEVELED -> GenericShape { size, _ ->
-            val cut = 10f.coerceAtMost(size.minDimension / 3f)
-            moveTo(cut, 0f)
-            lineTo(size.width, 0f)
-            lineTo(size.width, size.height - cut)
-            lineTo(size.width - cut, size.height)
-            lineTo(0f, size.height)
-            lineTo(0f, cut)
-            close()
-        }
-        AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> RoundedCornerShape(4.dp)
-    }
-
 private fun epgCellContainerColor(
     style: AppShapeSet.EpgCellStyle,
     liveStyle: AppShapeSet.EpgLiveCellStyle,
     isCurrent: Boolean
 ): Color {
+    if (isAfterglowLabsGuideTheme) {
+        return if (isCurrent) {
+            LabsGuidePanelFocused
+        } else {
+            when (style) {
+                AppShapeSet.EpgCellStyle.RECTANGULAR -> LabsGuidePanel
+                AppShapeSet.EpgCellStyle.SOFT -> LabsGuidePanel
+                AppShapeSet.EpgCellStyle.ACCENT_STRIPE -> LabsGuidePanel
+                AppShapeSet.EpgCellStyle.BEVELED -> Color(0xFFD97754)
+                AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> LabsGuidePanel
+            }
+        }
+    }
     if (isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.NOW_FILL) {
         return AppColors.EpgNowFill.copy(alpha = 0.34f)
     }
@@ -822,6 +876,7 @@ private fun epgCellFocusedColor(
     isCurrent: Boolean
 ): Color =
     when {
+        isAfterglowLabsGuideTheme -> LabsGuidePanelFocused
         isCurrent -> AppColors.FocusFill.copy(alpha = 0.55f)
         style == AppShapeSet.EpgCellStyle.RECTANGULAR -> AppColors.SurfaceAccent.copy(alpha = 0.95f)
         else -> SurfaceHighlight
@@ -833,11 +888,12 @@ private fun epgCellBorderColor(
     isCurrent: Boolean
 ): Color =
     when {
-        isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.DOUBLE_EDGE -> AppColors.EpgNowLine
-        isCurrent -> AppColors.EpgNowLine.copy(alpha = 0.72f)
-        style == AppShapeSet.EpgCellStyle.ACCENT_STRIPE -> AppColors.TiviAccent.copy(alpha = 0.42f)
+        isAfterglowLabsGuideTheme -> LabsGuideDivider
+        isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.DOUBLE_EDGE -> AppColors.EpgNowLine.copy(alpha = 0.52f)
+        isCurrent -> AppColors.EpgNowLine.copy(alpha = 0.46f)
+        style == AppShapeSet.EpgCellStyle.ACCENT_STRIPE -> AppColors.TiviAccent.copy(alpha = 0.28f)
         style == AppShapeSet.EpgCellStyle.BEVELED -> Color.White.copy(alpha = 0.18f)
-        style == AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> Color.White.copy(alpha = 0.24f)
+        style == AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> Color.White.copy(alpha = 0.18f)
         else -> Color.White.copy(alpha = 0.12f)
     }
 
@@ -847,9 +903,9 @@ private fun epgCellBorderWidth(
     isCurrent: Boolean
 ): Dp =
     when {
-        isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.DOUBLE_EDGE -> 2.dp
-        style == AppShapeSet.EpgCellStyle.RECTANGULAR -> 1.dp
-        style == AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> 2.dp
+        isAfterglowLabsGuideTheme -> 1.dp
+        isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.DOUBLE_EDGE -> 1.dp
+        style == AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> 1.dp
         else -> 1.dp
     }
 
@@ -859,10 +915,20 @@ private fun epgProgramTitleColor(
     isFocused: Boolean
 ): Color =
     when {
+        isAfterglowLabsGuideTheme -> LabsGuideText
         isFocused -> TextPrimary
         isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.NOW_FILL -> AppColors.TiviAccentLight
         isCurrent -> AppColors.EpgNowLine
         else -> OnSurface
+    }
+
+private fun epgProgramMetaColor(isFocused: Boolean): Color =
+    if (isAfterglowLabsGuideTheme) {
+        if (isFocused) LabsGuideText else LabsGuideTextMuted
+    } else if (isFocused) {
+        TextSecondary
+    } else {
+        OnSurfaceDim
     }
 
 private fun List<Program>.currentProgramAt(now: Long): Program? =

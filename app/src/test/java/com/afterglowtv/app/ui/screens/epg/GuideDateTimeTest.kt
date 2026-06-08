@@ -54,4 +54,32 @@ class GuideDateTimeTest {
 
         assertThat(shiftedLocalDate).isEqualTo(LocalDate.of(2026, 3, 9))
     }
+
+    @Test
+    fun `guide window start snaps to previous half hour after lookback`() {
+        val zoneId = ZoneId.of("America/Chicago")
+        val anchor = LocalDateTime.of(2026, 6, 7, 1, 14, 23)
+            .atZone(zoneId)
+            .toInstant()
+            .toEpochMilli()
+
+        val windowStart = guideWindowStartForAnchor(anchor, zoneId = zoneId)
+        val localWindowStart = Instant.ofEpochMilli(windowStart).atZone(zoneId).toLocalDateTime()
+
+        assertThat(localWindowStart).isEqualTo(LocalDateTime.of(2026, 6, 7, 0, 0))
+    }
+
+    @Test
+    fun `guide window start preserves clean half hour slots`() {
+        val zoneId = ZoneId.of("America/Chicago")
+        val anchor = LocalDateTime.of(2026, 6, 7, 1, 44, 59)
+            .atZone(zoneId)
+            .toInstant()
+            .toEpochMilli()
+
+        val windowStart = guideWindowStartForAnchor(anchor, zoneId = zoneId)
+        val localWindowStart = Instant.ofEpochMilli(windowStart).atZone(zoneId).toLocalDateTime()
+
+        assertThat(localWindowStart).isEqualTo(LocalDateTime.of(2026, 6, 7, 0, 30))
+    }
 }

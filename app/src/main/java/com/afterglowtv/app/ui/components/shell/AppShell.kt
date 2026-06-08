@@ -125,58 +125,87 @@ fun AppScreenScaffold(
     val spacing = LocalAppSpacing.current
     val safeArea = com.afterglowtv.app.ui.design.LocalSafeArea.current
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .then(
-                if (AppColors.backgroundGradientsEnabled) {
-                    Modifier.background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                AppColors.Canvas,
-                                AppColors.CanvasElevated,
-                                AppColors.Surface,
-                            )
-                        )
-                    )
-                } else {
-                    Modifier.background(AppColors.Canvas)
-                }
-            )
-            .let { if (fullBleed) it else it.padding(safeArea) }
-    ) {
-        if (navigationChrome == AppNavigationChrome.Rail) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                DestinationRail(
-                    currentRoute = currentRoute,
-                    onNavigate = onNavigate,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(spacing.railWidth)
-                )
+    Box(modifier = modifier.fillMaxSize()) {
+        AfterglowBackdrop(modifier = Modifier.fillMaxSize())
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .let { if (fullBleed) it else it.padding(safeArea) }
+        ) {
+            if (navigationChrome == AppNavigationChrome.Rail) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    DestinationRail(
+                        currentRoute = currentRoute,
+                        onNavigate = onNavigate,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(spacing.railWidth)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                start = spacing.lg,
+                                end = spacing.screenGutter,
+                                top = spacing.safeTop,
+                                bottom = spacing.safeBottom
+                            )
+                    ) {
+                        if (showScreenHeader) {
+                            AppScreenHeader(
+                                title = title,
+                                subtitle = subtitle,
+                                modifier = Modifier.fillMaxWidth(),
+                                compact = compactHeader
+                            )
+                            if (header != null) {
+                                Spacer(modifier = Modifier.height(spacing.lg))
+                                header()
+                            }
+                            Spacer(modifier = Modifier.height(spacing.lg))
+                        } else if (header != null) {
+                            header()
+                        }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(contentPadding)
+                        ) {
+                            content()
+                        }
+                    }
+                }
+            } else {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(
-                            start = spacing.lg,
-                            end = spacing.screenGutter,
-                            top = spacing.safeTop,
-                            bottom = spacing.safeBottom
-                        )
+                        .let {
+                            if (fullBleed) it
+                            else it.padding(horizontal = 14.dp, vertical = 10.dp)
+                        }
                 ) {
+                    if (topBarVisible) {
+                        TopNavigationBar(
+                            currentRoute = currentRoute,
+                            onNavigate = onNavigate,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
                     if (showScreenHeader) {
                         AppScreenHeader(
                             title = title,
                             subtitle = subtitle,
                             modifier = Modifier.fillMaxWidth(),
-                            compact = compactHeader
+                            compact = true
                         )
                         if (header != null) {
-                            Spacer(modifier = Modifier.height(spacing.lg))
+                            Spacer(modifier = Modifier.height(8.dp))
                             header()
                         }
-                        Spacer(modifier = Modifier.height(spacing.lg))
+                        Spacer(modifier = Modifier.height(8.dp))
                     } else if (header != null) {
                         header()
                     }
@@ -187,46 +216,6 @@ fun AppScreenScaffold(
                     ) {
                         content()
                     }
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .let {
-                        if (fullBleed) it
-                        else it.padding(horizontal = 14.dp, vertical = 10.dp)
-                    }
-            ) {
-                if (topBarVisible) {
-                    TopNavigationBar(
-                        currentRoute = currentRoute,
-                        onNavigate = onNavigate,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
-                if (showScreenHeader) {
-                    AppScreenHeader(
-                        title = title,
-                        subtitle = subtitle,
-                        modifier = Modifier.fillMaxWidth(),
-                        compact = true
-                    )
-                    if (header != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        header()
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                } else if (header != null) {
-                    header()
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding)
-                ) {
-                    content()
                 }
             }
         }

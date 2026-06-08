@@ -99,6 +99,7 @@ import kotlinx.coroutines.launch
 import com.afterglowtv.app.ui.components.dialogs.PinDialog
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
 import com.afterglowtv.app.ui.components.shell.AppScreenScaffold
+import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.theme.FocusBorder
 import com.afterglowtv.app.ui.theme.OnBackground
 import com.afterglowtv.app.ui.theme.OnSurface
@@ -139,6 +140,9 @@ internal enum class GuideEmptyAction {
     ClearSearch,
     ResetFilters
 }
+
+private const val AFTERGLOW_LABS_THEME_ID = "afterglow_labs"
+private val LabsGuideScreenBackground = Color(0xFFF08A62)
 
 internal fun shouldRenderGuideChrome(state: EpgUiState): Boolean {
     if (state.error == EpgViewModel.NO_ACTIVE_PROVIDER) return false
@@ -418,10 +422,17 @@ fun FullEpgScreen(
         showScreenHeader = false,
         fullBleed = true,   // EPG wants every pixel for the program grid
     ) {
+        val useLabsGuideBackground = AppColors.palette.id == AFTERGLOW_LABS_THEME_ID
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .then(
+                    if (useLabsGuideBackground) {
+                        Modifier.background(LabsGuideScreenBackground)
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             val renderGuideChrome = shouldRenderGuideChrome(uiState)
             when {

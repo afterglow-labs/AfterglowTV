@@ -27,12 +27,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.afterglowtv.app.R
@@ -389,6 +391,15 @@ private fun isGuideOnlyAllowedRoute(route: String): Boolean {
     )
 }
 
+private fun isSettingsToolRoute(route: String): Boolean {
+    val baseRoute = route.substringBefore('?')
+    return baseRoute in setOf(
+        Routes.THEMES,
+        Routes.GLOW_SETTINGS,
+        Routes.STYLE_CUSTOMIZER
+    )
+}
+
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
     val navController = rememberNavController()
@@ -497,6 +508,13 @@ fun AppNavigation(mainActivity: MainActivity) {
         if (!entry.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
         val currentRoute = entry.destination.route
         if (currentRoute == route || currentRoute?.startsWith("$route?") == true) return
+
+        if (isSettingsToolRoute(route)) {
+            navController.navigate(route) {
+                launchSingleTop = true
+            }
+            return
+        }
 
         navController.navigate(route) {
             popUpTo(navController.graph.startDestinationId) {
@@ -697,19 +715,40 @@ fun AppNavigation(mainActivity: MainActivity) {
             )
         }
 
-        composable(Routes.THEMES) {
+        dialog(
+            route = Routes.THEMES,
+            dialogProperties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+                usePlatformDefaultWidth = false
+            )
+        ) {
             com.afterglowtv.app.ui.screens.settings.ThemePickerScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
-        composable(Routes.GLOW_SETTINGS) {
+        dialog(
+            route = Routes.GLOW_SETTINGS,
+            dialogProperties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+                usePlatformDefaultWidth = false
+            )
+        ) {
             com.afterglowtv.app.ui.screens.settings.GlowSettingsScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
-        composable(Routes.STYLE_CUSTOMIZER) {
+        dialog(
+            route = Routes.STYLE_CUSTOMIZER,
+            dialogProperties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+                usePlatformDefaultWidth = false
+            )
+        ) {
             com.afterglowtv.app.ui.screens.settings.StyleCustomizerScreen(
                 onBack = { navController.popBackStack() }
             )

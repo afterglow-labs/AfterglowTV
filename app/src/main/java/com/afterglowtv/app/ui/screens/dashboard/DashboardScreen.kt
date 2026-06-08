@@ -54,6 +54,8 @@ import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
 import com.afterglowtv.app.ui.components.shell.AppScreenScaffold
 import com.afterglowtv.app.ui.design.AppColors
+import com.afterglowtv.app.ui.design.GlowSpec
+import com.afterglowtv.app.ui.design.afterglow
 import com.afterglowtv.app.ui.design.AppColors.Brand as Primary
 import com.afterglowtv.app.ui.design.AppColors.Focus as FocusBorder
 import com.afterglowtv.app.ui.design.AppColors.SurfaceElevated as SurfaceElevated
@@ -227,6 +229,57 @@ private data class HomeHubCardModel(
     val accent: Color
 )
 
+private val HomeLabsPurple = Color(0xFF6F35D8)
+
+private val BrightHomeThemeIds = setOf(
+    "afterglow_labs",
+    "afterglow_gray_light",
+    "afterglow_light_1",
+    "afterglow_light_2",
+    "afterglow_light_3",
+    "afterglow_light_4",
+    "rachels_sunrise",
+)
+
+private val isAfterglowLabsTheme: Boolean
+    get() = AppColors.palette.id == "afterglow_labs"
+
+private val isBrightHomeTheme: Boolean
+    get() = AppColors.palette.id in BrightHomeThemeIds
+
+private val homeOutlineColor: Color
+    get() = if (isAfterglowLabsTheme) HomeLabsPurple else AppColors.Outline
+
+private val homeWindowFill: Color
+    get() = if (isBrightHomeTheme) AppColors.SurfaceElevated else SurfaceElevated.copy(alpha = 0.96f)
+
+private fun homeActionFill(accent: Color, selected: Boolean = false): Color =
+    if (isBrightHomeTheme) {
+        AppColors.Surface
+    } else {
+        accent.copy(alpha = if (selected) 0.30f else 0.22f)
+    }
+
+private fun homeActionBorderColor(accent: Color, selected: Boolean = false): Color =
+    if (isBrightHomeTheme) {
+        homeOutlineColor.copy(alpha = if (selected) 0.92f else 0.74f)
+    } else {
+        accent.copy(alpha = if (selected) 0.66f else 0.40f)
+    }
+
+private fun Modifier.homeActiveGlow(shape: RoundedCornerShape, active: Boolean = false): Modifier =
+    if (isAfterglowLabsTheme && active) {
+        this.afterglow(
+            specs = listOf(
+                GlowSpec(HomeLabsPurple, 8.dp, 0.18f),
+                GlowSpec(HomeLabsPurple, 18.dp, 0.08f),
+            ),
+            shape = shape,
+        )
+    } else {
+        this
+    }
+
 @Composable
 private fun HomeWindow(
     title: String,
@@ -235,23 +288,30 @@ private fun HomeWindow(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val outline = homeOutlineColor
     Surface(
         modifier = modifier.fillMaxSize(),
         shape = RoundedCornerShape(20.dp),
-        colors = SurfaceDefaults.colors(containerColor = SurfaceElevated.copy(alpha = 0.86f)),
-        border = Border(BorderStroke(1.dp, accent.copy(alpha = 0.24f)))
+        colors = SurfaceDefaults.colors(containerColor = homeWindowFill),
+        border = Border(BorderStroke(if (isBrightHomeTheme || isAfterglowLabsTheme) 2.dp else 1.dp, outline.copy(alpha = if (isBrightHomeTheme || isAfterglowLabsTheme) 0.82f else 0.38f)))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        listOf(
-                            accent.copy(alpha = 0.10f),
-                            SurfaceElevated.copy(alpha = 0.18f),
-                            Color.Transparent
+                .then(
+                    if (isBrightHomeTheme) {
+                        Modifier
+                    } else {
+                        Modifier.background(
+                            Brush.linearGradient(
+                                listOf(
+                                    accent.copy(alpha = 0.08f),
+                                    SurfaceElevated.copy(alpha = 0.12f),
+                                    Color.Transparent
+                                )
+                            )
                         )
-                    )
+                    }
                 )
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -417,23 +477,30 @@ private fun HomeQuickWindow(
     modifier: Modifier = Modifier
 ) {
     val accent = Color(0xFFFF7A38)
+    val outline = homeOutlineColor
     Surface(
         modifier = modifier.fillMaxSize(),
         shape = RoundedCornerShape(20.dp),
-        colors = SurfaceDefaults.colors(containerColor = SurfaceElevated.copy(alpha = 0.86f)),
-        border = Border(BorderStroke(1.dp, accent.copy(alpha = 0.24f)))
+        colors = SurfaceDefaults.colors(containerColor = homeWindowFill),
+        border = Border(BorderStroke(if (isBrightHomeTheme || isAfterglowLabsTheme) 2.dp else 1.dp, outline.copy(alpha = if (isBrightHomeTheme || isAfterglowLabsTheme) 0.82f else 0.38f)))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        listOf(
-                            accent.copy(alpha = 0.10f),
-                            SurfaceElevated.copy(alpha = 0.18f),
-                            Color.Transparent
+                .then(
+                    if (isBrightHomeTheme) {
+                        Modifier
+                    } else {
+                        Modifier.background(
+                            Brush.linearGradient(
+                                listOf(
+                                    accent.copy(alpha = 0.08f),
+                                    SurfaceElevated.copy(alpha = 0.12f),
+                                    Color.Transparent
+                                )
+                            )
                         )
-                    )
+                    }
                 )
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(7.dp)
@@ -516,22 +583,26 @@ private fun HomeThemeFeatureAction(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(16.dp)
+    val outline = homeOutlineColor
     TvClickableSurface(
         onClick = onClick,
-        modifier = modifier.fillMaxSize(),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(16.dp)),
+        modifier = modifier
+            .fillMaxSize()
+            .homeActiveGlow(shape, active = isAfterglowLabsTheme),
+        shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = model.accent.copy(alpha = 0.14f),
+            containerColor = homeActionFill(model.accent),
             focusedContainerColor = SurfaceHighlight
         ),
         border = ClickableSurfaceDefaults.border(
             border = Border(
-                border = BorderStroke(1.dp, model.accent.copy(alpha = 0.34f)),
-                shape = RoundedCornerShape(16.dp)
+                border = BorderStroke(if (isBrightHomeTheme || isAfterglowLabsTheme) 2.dp else 1.dp, if (isAfterglowLabsTheme) outline.copy(alpha = 0.84f) else homeActionBorderColor(model.accent)),
+                shape = shape
             ),
             focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
-                shape = RoundedCornerShape(16.dp)
+                border = BorderStroke(if (isAfterglowLabsTheme) 4.dp else 2.dp, if (isAfterglowLabsTheme) outline else FocusBorder),
+                shape = shape
             )
         )
     ) {
@@ -578,22 +649,26 @@ private fun HomeWatchAction(
     prominent: Boolean,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(14.dp)
+    val outline = homeOutlineColor
     TvClickableSurface(
         onClick = onClick,
-        modifier = modifier.fillMaxSize(),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(14.dp)),
+        modifier = modifier
+            .fillMaxSize()
+            .homeActiveGlow(shape, active = isAfterglowLabsTheme && prominent),
+        shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = model.accent.copy(alpha = 0.14f),
+            containerColor = homeActionFill(model.accent, selected = prominent),
             focusedContainerColor = SurfaceHighlight
         ),
         border = ClickableSurfaceDefaults.border(
             border = Border(
-                border = BorderStroke(1.dp, model.accent.copy(alpha = 0.28f)),
-                shape = RoundedCornerShape(14.dp)
+                border = BorderStroke(if (isBrightHomeTheme || isAfterglowLabsTheme) 2.dp else 1.dp, if (isAfterglowLabsTheme) outline.copy(alpha = 0.78f) else homeActionBorderColor(model.accent, selected = prominent)),
+                shape = shape
             ),
             focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
-                shape = RoundedCornerShape(14.dp)
+                border = BorderStroke(if (isAfterglowLabsTheme) 4.dp else 2.dp, if (isAfterglowLabsTheme) outline else FocusBorder),
+                shape = shape
             )
         )
     ) {
@@ -640,6 +715,8 @@ private fun HomeSmallTextAction(
     compact: Boolean = false,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(14.dp)
+    val outline = homeOutlineColor
     val iconSize = if (compact) 20.dp else 30.dp
     val verticalPadding = if (compact) 4.dp else 10.dp
     val horizontalPadding = if (compact) 9.dp else 12.dp
@@ -669,20 +746,22 @@ private fun HomeSmallTextAction(
     }
     TvClickableSurface(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(14.dp)),
+        modifier = modifier
+            .fillMaxWidth()
+            .homeActiveGlow(shape, active = isAfterglowLabsTheme && !compact),
+        shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = AppColors.Surface.copy(alpha = 0.42f),
+            containerColor = if (isBrightHomeTheme) AppColors.Surface else AppColors.Surface.copy(alpha = 0.70f),
             focusedContainerColor = SurfaceHighlight
         ),
         border = ClickableSurfaceDefaults.border(
             border = Border(
-                border = BorderStroke(1.dp, accent.copy(alpha = 0.22f)),
-                shape = RoundedCornerShape(14.dp)
+                border = BorderStroke(if (isBrightHomeTheme || isAfterglowLabsTheme) 2.dp else 1.dp, if (isAfterglowLabsTheme) outline.copy(alpha = 0.76f) else homeActionBorderColor(accent)),
+                shape = shape
             ),
             focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
-                shape = RoundedCornerShape(14.dp)
+                border = BorderStroke(if (isAfterglowLabsTheme) 4.dp else 2.dp, if (isAfterglowLabsTheme) outline else FocusBorder),
+                shape = shape
             )
         )
     ) {
@@ -731,22 +810,33 @@ private fun HomeStartupChip(
         else -> stringResource(destination.labelResId)
     }
     val accent = if (selected) Primary else Color(0xFF7DD3FC)
+    val shape = RoundedCornerShape(12.dp)
+    val outline = homeOutlineColor
     TvClickableSurface(
         onClick = onClick,
-        modifier = modifier.height(29.dp),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+        modifier = modifier
+            .height(29.dp)
+            .homeActiveGlow(shape, active = selected),
+        shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = accent.copy(alpha = if (selected) 0.22f else 0.10f),
+            containerColor = if (isBrightHomeTheme) AppColors.Surface else accent.copy(alpha = if (selected) 0.28f else 0.16f),
             focusedContainerColor = SurfaceHighlight
         ),
         border = ClickableSurfaceDefaults.border(
             border = Border(
-                border = BorderStroke(if (selected) 2.dp else 1.dp, accent.copy(alpha = if (selected) 0.65f else 0.24f)),
-                shape = RoundedCornerShape(12.dp)
+                border = BorderStroke(
+                    if (isAfterglowLabsTheme) {
+                        if (selected) 4.dp else 2.dp
+                    } else {
+                        if (selected) 2.dp else 1.dp
+                    },
+                    if (isAfterglowLabsTheme) outline.copy(alpha = if (selected) 0.95f else 0.64f) else homeActionBorderColor(accent, selected)
+                ),
+                shape = shape
             ),
             focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
-                shape = RoundedCornerShape(12.dp)
+                border = BorderStroke(if (isAfterglowLabsTheme) 4.dp else 2.dp, if (isAfterglowLabsTheme) outline else FocusBorder),
+                shape = shape
             )
         )
     ) {
@@ -771,25 +861,35 @@ private fun HomeMiniToggle(
     onCheckedChange: (Boolean) -> Unit
 ) {
     val accent = if (checked) Primary else Color(0xFF7DD3FC)
+    val shape = RoundedCornerShape(11.dp)
+    val outline = homeOutlineColor
     TvClickableSurface(
         onClick = { if (enabled) onCheckedChange(!checked) },
         modifier = modifier
             .fillMaxWidth()
-            .height(29.dp),
+            .height(29.dp)
+            .homeActiveGlow(shape, active = checked),
         enabled = enabled,
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(11.dp)),
+        shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = accent.copy(alpha = if (checked) 0.18f else 0.07f),
+            containerColor = if (isBrightHomeTheme) AppColors.Surface else accent.copy(alpha = if (checked) 0.24f else 0.14f),
             focusedContainerColor = SurfaceHighlight
         ),
         border = ClickableSurfaceDefaults.border(
             border = Border(
-                border = BorderStroke(1.dp, accent.copy(alpha = if (checked) 0.50f else 0.18f)),
-                shape = RoundedCornerShape(11.dp)
+                border = BorderStroke(
+                    if (isAfterglowLabsTheme) {
+                        if (checked) 4.dp else 2.dp
+                    } else {
+                        1.dp
+                    },
+                    if (isAfterglowLabsTheme) outline.copy(alpha = if (checked) 0.95f else 0.60f) else homeActionBorderColor(accent, checked)
+                ),
+                shape = shape
             ),
             focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
-                shape = RoundedCornerShape(11.dp)
+                border = BorderStroke(if (isAfterglowLabsTheme) 4.dp else 2.dp, if (isAfterglowLabsTheme) outline else FocusBorder),
+                shape = shape
             )
         )
     ) {

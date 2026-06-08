@@ -1,7 +1,6 @@
 package com.afterglowtv.app.ui.screens.settings
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,9 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
@@ -46,8 +45,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.afterglowtv.app.R
-import com.afterglowtv.app.ui.components.shell.AfterglowBackdrop
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.AppPalette
 import com.afterglowtv.app.ui.design.FocusSpec
@@ -107,53 +104,15 @@ fun ThemePickerScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        AfterglowBackdrop(modifier = Modifier.fillMaxSize())
-
+    SettingsToolDialog(
+        title = "Themes",
+        subtitle = "Pick a vibe. Everything reflows instantly — no restart, no fuss.",
+        onDismiss = onBack,
+    ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 48.dp, vertical = 32.dp),
+                .fillMaxSize(),
         ) {
-            // ── Hero brand strip ──────────────────────────────────────────
-            Row(
-                modifier = Modifier.padding(bottom = 24.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.afterglow_logo),
-                    contentDescription = "AfterglowTV",
-                    modifier = Modifier
-                        .size(56.dp)
-                        .afterglow(
-                            specs = listOf(
-                                GlowSpec(AppColors.TiviAccent, 16.dp, 0.55f),
-                                GlowSpec(AppColors.EpgNowLine, 28.dp, 0.30f),
-                            ),
-                            shape = RoundedCornerShape(14.dp),
-                        )
-                        .clip(RoundedCornerShape(14.dp)),
-                )
-                Column {
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = "Themes",
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = TextUnit(36f, TextUnitType.Sp),
-                            ),
-                            color = AppColors.TextPrimary,
-                        )
-                    }
-                    Text(
-                        text = "Pick a vibe. Everything reflows instantly — no restart, no fuss.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = AppColors.TiviAccentLight,
-                    )
-                }
-            }
-
             GradientPreferenceCard(
                 enabled = backgroundGradientsEnabled,
                 onEnabledChange = viewModel::setBackgroundGradientsEnabled,
@@ -162,6 +121,7 @@ fun ThemePickerScreen(
 
             LazyColumn(
                 state = listState,
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 contentPadding = PaddingValues(bottom = 32.dp),
             ) {
@@ -236,13 +196,15 @@ private fun GradientPreferenceCard(
                     .size(width = 84.dp, height = 48.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(
-                        Brush.horizontalGradient(
+                        Brush.linearGradient(
                             listOf(
                                 AppColors.TiviSurfaceDeep,
                                 AppColors.TiviSurfaceCool,
                                 AppColors.TiviAccent,
                                 AppColors.EpgNowLine,
                             ),
+                            start = Offset(0f, 0f),
+                            end = Offset(260f, 130f),
                         ),
                     )
                     .border(1.dp, AppColors.Divider, RoundedCornerShape(8.dp)),
@@ -332,7 +294,13 @@ private fun PaletteCard(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(Brush.horizontalGradient(themeSelectionGradient(palette))),
+                .background(
+                    Brush.linearGradient(
+                        colors = themeSelectionGradient(palette),
+                        start = Offset(0f, 0f),
+                        end = Offset(1600f, 520f),
+                    )
+                ),
         )
         Row(
             modifier = Modifier

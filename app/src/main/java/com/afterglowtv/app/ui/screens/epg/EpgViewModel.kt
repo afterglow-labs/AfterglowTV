@@ -109,8 +109,8 @@ data class EpgUiState(
     val lastUpdatedAt: Long? = null,
     val isGuideStale: Boolean = false,
     val guideAnchorTime: Long = DEFAULT_NOW,
-    val guideWindowStart: Long = DEFAULT_NOW - EpgViewModel.LOOKBACK_MS,
-    val guideWindowEnd: Long = DEFAULT_NOW + EpgViewModel.LOOKAHEAD_MS,
+    val guideWindowStart: Long = guideWindowStartForAnchor(DEFAULT_NOW),
+    val guideWindowEnd: Long = guideWindowStartForAnchor(DEFAULT_NOW) + EpgViewModel.PAGE_SHIFT_MS,
     val loadedChannelCount: Int = 0,
     val recordingMessage: String? = null,
     val pendingRecordingConflict: RecordingConflictInfo? = null,
@@ -941,6 +941,8 @@ class EpgViewModel @Inject constructor(
                 if (activeSource == null && activeProvider == null) {
                     guideFallbackJob?.cancel()
                     baseGuideSnapshot.value = null
+                    val now = System.currentTimeMillis()
+                    val windowStart = guideWindowStartForAnchor(now)
                     _uiState.update {
                         it.copy(
                             currentProviderName = null,
@@ -958,9 +960,9 @@ class EpgViewModel @Inject constructor(
                             failedScheduleCount = 0,
                             lastUpdatedAt = null,
                             isGuideStale = false,
-                            guideAnchorTime = System.currentTimeMillis(),
-                            guideWindowStart = System.currentTimeMillis() - LOOKBACK_MS,
-                            guideWindowEnd = System.currentTimeMillis() + LOOKAHEAD_MS
+                            guideAnchorTime = now,
+                            guideWindowStart = windowStart,
+                            guideWindowEnd = windowStart + PAGE_SHIFT_MS
                         )
                     }
                     return@collectLatest
@@ -1035,6 +1037,7 @@ class EpgViewModel @Inject constructor(
                     unlockedCategoryIds = selection.unlockedCategoryIds,
                     fallbackFromEmptyFavorites = selection.isStartupSelection
                 )
+                val windowStart = guideWindowStartForAnchor(selection.anchorTime)
                 GuideBaseRequest(
                     categories = orderedCategories,
                     hiddenCategoryIds = categoryData.hiddenCategoryIds,
@@ -1044,8 +1047,8 @@ class EpgViewModel @Inject constructor(
                     parentalControlLevel = selection.parentalControlLevel,
                     anchorTime = selection.anchorTime,
                     favoritesOnly = selection.favoritesOnly,
-                    windowStart = selection.anchorTime - LOOKBACK_MS,
-                    windowEnd = selection.anchorTime + LOOKAHEAD_MS,
+                    windowStart = windowStart,
+                    windowEnd = windowStart + PAGE_SHIFT_MS,
                     estimatedChannelCount = estimateGuideChannelCount(
                         resolvedCategoryId = resolvedCategoryId,
                         categories = orderedCategories
@@ -1210,6 +1213,7 @@ class EpgViewModel @Inject constructor(
                 unlockedCategoryIds = emptySet(),
                 fallbackFromEmptyFavorites = data.selection.first.isStartupSelection
             )
+            val windowStart = guideWindowStartForAnchor(data.selection.first.anchorTime)
             CombinedGuideRequest(
                 request = GuideBaseRequest(
                     categories = categories,
@@ -1220,8 +1224,8 @@ class EpgViewModel @Inject constructor(
                     parentalControlLevel = data.selection.second,
                     anchorTime = data.selection.first.anchorTime,
                     favoritesOnly = data.selection.first.favoritesOnly,
-                    windowStart = data.selection.first.anchorTime - LOOKBACK_MS,
-                    windowEnd = data.selection.first.anchorTime + LOOKAHEAD_MS,
+                    windowStart = windowStart,
+                    windowEnd = windowStart + PAGE_SHIFT_MS,
                     estimatedChannelCount = estimateGuideChannelCount(
                         resolvedCategoryId = resolvedCategoryId,
                         categories = categories

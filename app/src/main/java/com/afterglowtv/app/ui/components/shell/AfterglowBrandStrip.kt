@@ -44,16 +44,19 @@ private val VoxRoundWideFontFamily = FontFamily(
     Font(R.font.vox_round_wide_semibold, FontWeight.SemiBold)
 )
 
+private const val AFTERGLOW_DARK_2_THEME_ID = "afterglow_sunset"
+
 /**
  * Shared layered backdrop used by every Afterglow-branded screen:
- * vertical surface gradient + warm radial melt (top-right) + cool radial
- * melt (bottom-left). Lives behind the brand strip and screen content.
+ * blended surface mesh with warm and cool washes. Lives behind the brand strip
+ * and screen content.
  *
  * Use as the first child inside a `Box(Modifier.fillMaxSize())`.
  */
 @Composable
 fun AfterglowBackdrop(modifier: Modifier = Modifier) {
     val gradientsEnabled = AppColors.backgroundGradientsEnabled
+    val isAfterglowDark2 = AppColors.palette.id == AFTERGLOW_DARK_2_THEME_ID
     Box(modifier = modifier) {
         Box(
             modifier = Modifier
@@ -61,13 +64,29 @@ fun AfterglowBackdrop(modifier: Modifier = Modifier) {
                 .then(
                     if (gradientsEnabled) {
                         Modifier.background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    AppColors.TiviSurfaceDeep,
-                                    AppColors.TiviSurfaceBase,
-                                    AppColors.TiviSurfaceCool,
-                                ),
-                            )
+                            if (isAfterglowDark2) {
+                                Brush.linearGradient(
+                                    listOf(
+                                        Color(0xFF050914),
+                                        Color(0xFF0D1424),
+                                        Color(0xFF221545),
+                                        Color(0xFF263A5A),
+                                    ),
+                                    start = Offset(0f, 0f),
+                                    end = Offset(2600f, 1800f),
+                                )
+                            } else {
+                                Brush.linearGradient(
+                                    listOf(
+                                        AppColors.TiviSurfaceDeep,
+                                        AppColors.TiviSurfaceBase,
+                                        AppColors.TiviSurfaceCool,
+                                        AppColors.TiviSurfaceAccent,
+                                    ),
+                                    start = Offset(0f, 0f),
+                                    end = Offset(2600f, 1800f),
+                                )
+                            }
                         )
                     } else {
                         Modifier.background(AppColors.TiviSurfaceDeep)
@@ -75,32 +94,86 @@ fun AfterglowBackdrop(modifier: Modifier = Modifier) {
                 )
         )
         if (gradientsEnabled) {
-            Box(
-                modifier = Modifier.fillMaxSize().background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            AppColors.TiviAccentLight.copy(alpha = AppColors.palette.glowAlpha(0.18f)),
-                            AppColors.TiviAccent.copy(alpha = AppColors.palette.glowAlpha(0.10f)),
-                            AppColors.TiviAccent.copy(alpha = 0f),
-                        ),
-                        center = Offset(2400f, -200f),
-                        radius = 1400f,
+            if (isAfterglowDark2) {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                AppColors.TiviAccent.copy(alpha = AppColors.palette.glowAlpha(0.26f)),
+                                AppColors.TiviAccent.copy(alpha = AppColors.palette.glowAlpha(0.10f)),
+                                AppColors.TiviAccent.copy(alpha = 0f),
+                            ),
+                            center = Offset(2300f, -80f),
+                            radius = 1500f,
+                        )
                     )
                 )
-            )
-            Box(
-                modifier = Modifier.fillMaxSize().background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            AppColors.EpgNowLine.copy(alpha = AppColors.palette.glowAlpha(0.14f)),
-                            AppColors.TiviAccent.copy(alpha = AppColors.palette.glowAlpha(0.06f)),
-                            AppColors.EpgNowLine.copy(alpha = 0f),
-                        ),
-                        center = Offset(300f, 1900f),
-                        radius = 1100f,
+                Box(
+                    modifier = Modifier.fillMaxSize().background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFF8A4DFF).copy(alpha = AppColors.palette.glowAlpha(0.24f)),
+                                Color(0xFF5D2BCB).copy(alpha = AppColors.palette.glowAlpha(0.11f)),
+                                Color(0xFF5D2BCB).copy(alpha = 0f),
+                            ),
+                            center = Offset(220f, 1560f),
+                            radius = 1500f,
+                        )
                     )
                 )
-            )
+                Box(
+                    modifier = Modifier.fillMaxSize().background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                AppColors.EpgNowLine.copy(alpha = AppColors.palette.glowAlpha(0.16f)),
+                                AppColors.TiviAccent.copy(alpha = AppColors.palette.glowAlpha(0.07f)),
+                                AppColors.EpgNowLine.copy(alpha = 0f),
+                            ),
+                            center = Offset(1500f, 1700f),
+                            radius = 1250f,
+                        )
+                    )
+                )
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                AppColors.TiviSurfaceAccent.copy(alpha = AppColors.palette.glowAlpha(0.42f)),
+                                AppColors.TiviSurfaceBase.copy(alpha = AppColors.palette.glowAlpha(0.20f)),
+                                AppColors.TiviSurfaceAccent.copy(alpha = 0f),
+                            ),
+                            center = Offset(2200f, 120f),
+                            radius = 1900f,
+                        )
+                    )
+                )
+                Box(
+                    modifier = Modifier.fillMaxSize().background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                AppColors.TiviSurfaceCool.copy(alpha = AppColors.palette.glowAlpha(0.36f)),
+                                AppColors.TiviSurfaceBase.copy(alpha = AppColors.palette.glowAlpha(0.12f)),
+                                AppColors.TiviSurfaceCool.copy(alpha = 0f),
+                            ),
+                            center = Offset(160f, 1600f),
+                            radius = 1600f,
+                        )
+                    )
+                )
+                Box(
+                    modifier = Modifier.fillMaxSize().background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                AppColors.TiviSurfaceBase.copy(alpha = AppColors.palette.glowAlpha(0.24f)),
+                                AppColors.TiviSurfaceBase.copy(alpha = 0f),
+                            ),
+                            center = Offset(1100f, 620f),
+                            radius = 1450f,
+                        )
+                    )
+                )
+            }
         }
     }
 }

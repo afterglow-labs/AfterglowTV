@@ -32,8 +32,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.afterglowtv.app.ui.components.shell.AfterglowBackdrop
-import com.afterglowtv.app.ui.components.shell.AfterglowBrandStrip
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.AppShapeSet
 import com.afterglowtv.app.ui.design.AppStyles
@@ -114,20 +112,16 @@ fun StyleCustomizerScreen(
 ) {
     val active by viewModel.shapeSetValue.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        AfterglowBackdrop()
+    SettingsToolDialog(
+        title = "Customize",
+        subtitle = "Pick a shape for every piece. Changes are instant — no restart, no save button.",
+        onDismiss = onBack,
+    ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 48.dp, vertical = 32.dp),
+            contentPadding = PaddingValues(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            item {
-                AfterglowBrandStrip(
-                    wordmark = "Customize",
-                    tagline = "Pick a shape for every piece. Changes are instant — no restart, no save button.",
-                )
-            }
-
             item {
                 AxisPicker(
                     title = "Buttons",

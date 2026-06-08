@@ -47,6 +47,22 @@ internal fun jumpGuideAnchorToDay(
     return targetDate.atTime(anchorDateTime.toLocalTime()).atZone(zoneId).toInstant().toEpochMilli()
 }
 
+internal fun guideWindowStartForAnchor(
+    anchorTimeMillis: Long,
+    lookbackMillis: Long = EpgViewModel.LOOKBACK_MS,
+    slotMinutes: Int = 30,
+    zoneId: ZoneId = ZoneId.systemDefault()
+): Long {
+    val rawStart = Instant.ofEpochMilli(anchorTimeMillis - lookbackMillis).atZone(zoneId)
+    val snappedMinute = (rawStart.minute / slotMinutes) * slotMinutes
+    return rawStart
+        .withMinute(snappedMinute)
+        .withSecond(0)
+        .withNano(0)
+        .toInstant()
+        .toEpochMilli()
+}
+
 internal fun dayRelativeOffset(
     dayStartMillis: Long,
     today: LocalDate,
