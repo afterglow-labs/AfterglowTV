@@ -15,6 +15,18 @@ if (keystorePropertiesFile.exists()) {
     FileInputStream(keystorePropertiesFile).use(keystoreProperties::load)
 }
 
+val devPlaylistsPropertiesFile = rootProject.file("dev-playlists.properties")
+val devPlaylistsProperties = Properties()
+if (devPlaylistsPropertiesFile.exists()) {
+    FileInputStream(devPlaylistsPropertiesFile).use(devPlaylistsProperties::load)
+}
+
+fun String.asBuildConfigString(): String =
+    "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+
+val devModePlaylistPresetSpecs: String =
+    devPlaylistsProperties.getProperty("devModePlaylistPresetSpecs", "").orEmpty()
+
 val bundledPublicSourceSpec =
     "public_sources/playlist_usa.m3u8" +
         "::afterglow_public_live.m3u8" +
@@ -46,6 +58,7 @@ android {
         buildConfigField("String", "AMAZON_PREMIUM_QUARTERLY_SKU", "\"\"")
         buildConfigField("String", "AMAZON_PREMIUM_ANNUALLY_SKU", "\"\"")
         buildConfigField("String", "AMAZON_PREMIUM_LIFETIME_SKU", "\"\"")
+        buildConfigField("String", "DEV_MODE_PLAYLIST_PRESET_SPECS", devModePlaylistPresetSpecs.asBuildConfigString())
     }
 
     flavorDimensions += "store"

@@ -13,6 +13,7 @@ import coil3.request.crossfade
 import com.afterglowtv.app.diagnostics.CrashReportStore
 import com.afterglowtv.app.diagnostics.RuntimeDiagnosticsManager
 import com.afterglowtv.app.store.BundledPublicSourceSeeder
+import com.afterglowtv.app.store.DevModePlaylistPresetSeeder
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.store.amazon.AmazonAppstoreBridge
@@ -30,6 +31,8 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -66,6 +69,7 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         AmazonAppstoreBridge.attach(this)
         applySavedVisualPreferencesBeforeUi()
         repairDeveloperModeAdultVisibility()
+        seedDevModePlaylistPresetsWhenUnlocked()
         if (StorePolicy.current.enableBundledPublicSource) {
             applicationScope.launch {
                 runCatching {
@@ -79,6 +83,22 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
             cancelColdStartMaintenanceWork()
         }
         scheduleDeferredStartupWork()
+    }
+
+    private fun seedDevModePlaylistPresetsWhenUnlocked() {
+        applicationScope.launch {
+            val entryPoint = startupEntryPoint()
+            entryPoint.preferencesRepository().developerModeEnabled
+                .distinctUntilChanged()
+                .collect { developerModeEnabled ->
+                    if (!developerModeEnabled) return@collect
+                    runCatching {
+                        entryPoint.devModePlaylistPresetSeeder().seedIfNeeded()
+                    }.onFailure { error ->
+                        Log.w(TAG, "Unable to seed developer playlist presets", error)
+                    }
+                }
+        }
     }
 
     private fun repairDeveloperModeAdultVisibility() {
@@ -332,5 +352,6 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         fun preferencesRepository(): PreferencesRepository
         fun gitHubReleaseChecker(): GitHubReleaseChecker
         fun bundledPublicSourceSeeder(): BundledPublicSourceSeeder
+        fun devModePlaylistPresetSeeder(): DevModePlaylistPresetSeeder
     }
 }

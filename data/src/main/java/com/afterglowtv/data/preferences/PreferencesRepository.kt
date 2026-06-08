@@ -270,6 +270,7 @@ class PreferencesRepository @Inject constructor(
         val LAST_MAINTENANCE_EPG_PROGRAMME_ROWS = longPreferencesKey("last_maintenance_epg_programme_rows")
         val LAST_MAINTENANCE_PLAYBACK_HISTORY_ROWS = longPreferencesKey("last_maintenance_playback_history_rows")
         val LAST_MAINTENANCE_FAVORITE_ROWS = longPreferencesKey("last_maintenance_favorite_rows")
+        val DEV_MODE_PLAYLIST_PRESET_SEED_FINGERPRINT = stringPreferencesKey("dev_mode_playlist_preset_seed_fingerprint")
     }
 
     private fun Preferences.toActiveSource(slot: ProviderSourceSlot): ActiveLiveSource? {
@@ -1545,6 +1546,16 @@ class PreferencesRepository @Inject constructor(
 
     val developerModeEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.DEVELOPER_MODE_ENABLED] ?: false
+    }
+
+    val devModePlaylistPresetSeedFingerprint: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DEV_MODE_PLAYLIST_PRESET_SEED_FINGERPRINT]
+    }
+
+    suspend fun setDevModePlaylistPresetSeedFingerprint(fingerprint: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DEV_MODE_PLAYLIST_PRESET_SEED_FINGERPRINT] = fingerprint
+        }
     }
 
     suspend fun setDeveloperModeEnabled(enabled: Boolean) {
