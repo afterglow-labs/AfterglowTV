@@ -33,8 +33,8 @@ android {
         applicationId = "com.afterglowtv.app"
         minSdk = 23
         targetSdk = 36
-        versionCode = 30
-        versionName = "0.1.29"
+        versionCode = 31
+        versionName = "0.1.30"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
         buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "false")
@@ -251,7 +251,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.mediarouter)
     implementation(libs.play.services.cast.framework)
-    implementation(files("libs/amazon-appstore-sdk-3.0.9-stackmaps.jar"))
+    implementation(libs.amazon.appstore.sdk)
 
     // Test
     testImplementation(libs.junit)
