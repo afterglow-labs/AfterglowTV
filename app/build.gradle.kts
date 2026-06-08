@@ -107,8 +107,12 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            // Amazon Appstore SDK 3.0.9 ships legacy bytecode that R8 reports as
+            // malformed during release minification. Do not run R8 over the
+            // submission APK; Amazon DRM/IAP stability matters more than APK
+            // size for this Fire TV build.
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -76,10 +76,8 @@
 -dontwarn androidx.media3.**
 
 # ── Amazon Appstore SDK / Fire IAP + DRM ───────────────────
-# Keep the ENTIRE Amazon SDK, not just iap/drm: the jar ships legacy bytecode
-# (no StackMapTable) and resolves much of its IPC/bridge layer reflectively, so
-# R8 can wrongly assume internal methods unreachable and strip the glue that
-# IAP/DRM depend on at runtime — breaking purchases/licensing on real devices.
+# Keep the ENTIRE Amazon SDK, not just iap/drm: its IPC/bridge layer is
+# reflection-heavy and needed by IAP/DRM on real Fire TV devices.
 -keep class com.amazon.** { *; }
 -keep interface com.amazon.** { *; }
 -keep class com.afterglowtv.app.store.amazon.AmazonAppstoreBridge { *; }
