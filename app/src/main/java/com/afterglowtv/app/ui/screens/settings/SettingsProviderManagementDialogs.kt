@@ -18,10 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -42,6 +44,9 @@ import com.afterglowtv.app.ui.theme.Secondary
 import com.afterglowtv.app.ui.theme.Surface
 import com.afterglowtv.app.ui.theme.SurfaceElevated
 import com.afterglowtv.domain.model.ProviderM3uPlaylistKind
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private enum class AddProviderSourceType {
     M3U_URL,
@@ -286,11 +291,43 @@ private fun AddProviderSourceDialog(
     var httpUserAgent by rememberSaveable { mutableStateOf("") }
     var httpHeaders by rememberSaveable { mutableStateOf("") }
     var showAdvanced by rememberSaveable { mutableStateOf(false) }
+    var pickerError by rememberSaveable { mutableStateOf<String?>(null) }
+    var isCopyingPlaylistFile by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     val playlistFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uri?.let { playlistUrl = it.toString() }
+        uri?.let { selectedUri ->
+            pickerError = null
+            persistReadPermissionIfAvailable(context, selectedUri)
+            scope.launch {
+                isCopyingPlaylistFile = true
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        copyPlaylistUriToInternalFile(context, selectedUri)
+                    }
+                }.onSuccess { copiedUrl ->
+                    playlistUrl = copiedUrl
+                    sourceType = AddProviderSourceType.M3U_FILE
+                }.onFailure { error ->
+                    pickerError = error.message?.takeIf { it.isNotBlank() }
+                        ?: "Could not import the selected playlist file."
+                }
+                isCopyingPlaylistFile = false
+            }
+        }
+    }
+
+    fun launchPlaylistPicker() {
+        launchDocumentPickerSafely(
+            context = context,
+            action = android.content.Intent.ACTION_OPEN_DOCUMENT,
+            unavailableMessage = "This device does not expose a usable file browser. Paste a playlist URL or a file:// path instead.",
+            onError = { pickerError = it },
+            launch = { playlistFileLauncher.launch(arrayOf("*/*")) }
+        )
     }
 
     PremiumDialog(
@@ -325,7 +362,7 @@ private fun AddProviderSourceDialog(
                             onClick = {
                                 sourceType = type
                                 if (type == AddProviderSourceType.M3U_FILE) {
-                                    playlistFileLauncher.launch(arrayOf("*/*"))
+                                    launchPlaylistPicker()
                                 }
                             }
                         )
@@ -388,9 +425,9 @@ private fun AddProviderSourceDialog(
                         )
                         if (sourceType == AddProviderSourceType.M3U_FILE) {
                             AddProviderChoiceButton(
-                                label = "Choose Playlist File",
+                                label = if (isCopyingPlaylistFile) "Importing..." else "Choose Playlist File",
                                 selected = false,
-                                onClick = { playlistFileLauncher.launch(arrayOf("*/*")) }
+                                onClick = { launchPlaylistPicker() }
                             )
                         }
                         EpgSourceTextField(
@@ -438,6 +475,13 @@ private fun AddProviderSourceDialog(
                         color = OnSurfaceDim
                     )
                 }
+                pickerError?.let { error ->
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = com.afterglowtv.app.ui.theme.ErrorColor
+                    )
+                }
                 uiState.addProviderSourceError?.let { error ->
                     Text(
                         text = error,
@@ -464,7 +508,7 @@ private fun AddProviderSourceDialog(
                         AddProviderSourceType.PORTAL -> onAddPortal(name, portalUrl, macAddress, deviceProfile, timezone, locale)
                     }
                 },
-                enabled = !uiState.isAddingProviderSource
+                enabled = !uiState.isAddingProviderSource && !isCopyingPlaylistFile
             )
         }
     )

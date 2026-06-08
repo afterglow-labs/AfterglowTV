@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
+import android.content.Intent
 import com.afterglowtv.app.backup.BackupFileBridge
 import com.afterglowtv.app.diagnostics.CrashReportStore
 import com.afterglowtv.app.ui.components.shell.AppNavigationChrome
@@ -235,16 +236,40 @@ fun SettingsScreen(
                     dialogState = dialogState,
                     providerState = providerState,
                     onNavigateToParentalControl = onNavigateToParentalControl,
-                    onChooseRecordingFolder = { recordingFolderLauncher.launch(null) },
-                    onChooseLocalMediaLibrary = { localMediaFolderLauncher.launch(null) },
+                    onChooseRecordingFolder = {
+                        launchDocumentPickerSafely(
+                            context = context,
+                            action = Intent.ACTION_OPEN_DOCUMENT_TREE,
+                            unavailableMessage = "This device does not expose a usable folder browser for DVR storage.",
+                            onError = viewModel::showUserMessage,
+                            launch = { recordingFolderLauncher.launch(null) }
+                        )
+                    },
+                    onChooseLocalMediaLibrary = {
+                        launchDocumentPickerSafely(
+                            context = context,
+                            action = Intent.ACTION_OPEN_DOCUMENT_TREE,
+                            unavailableMessage = "This device does not expose a usable folder browser. Use Add network share for NAS/SMB folders.",
+                            onError = viewModel::showUserMessage,
+                            launch = { localMediaFolderLauncher.launch(null) }
+                        )
+                    },
                     onCreateBackup = ::exportBackupToDownloads,
                     onShareBackup = ::shareBackup,
                     onViewCrashReport = viewModel::viewCrashReport,
                     onShareCrashReport = ::shareCrashReport,
                     onDeleteCrashReport = viewModel::deleteCrashReport,
                     onRestoreBackup = {
-                        openDocumentLauncher.launch(
-                            arrayOf("application/json", "text/json", "application/x-json", "application/octet-stream", "*/*")
+                        launchDocumentPickerSafely(
+                            context = context,
+                            action = Intent.ACTION_OPEN_DOCUMENT,
+                            unavailableMessage = "This device does not expose a usable file browser for backup restore.",
+                            onError = viewModel::showUserMessage,
+                            launch = {
+                                openDocumentLauncher.launch(
+                                    arrayOf("application/json", "text/json", "application/x-json", "application/octet-stream", "*/*")
+                                )
+                            }
                         )
                     },
                     onOpenUri = uriHandler::openUri,

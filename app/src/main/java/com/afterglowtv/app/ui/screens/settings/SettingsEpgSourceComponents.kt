@@ -148,19 +148,15 @@ internal fun EpgSourceCard(
 internal fun AddEpgSourceCard(viewModel: SettingsViewModel) {
     var newName by remember { mutableStateOf("") }
     var newUrl by remember { mutableStateOf("") }
+    var pickerError by remember { mutableStateOf<String?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            try {
-                context.contentResolver.takePersistableUriPermission(
-                    uri,
-                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            } catch (_: SecurityException) {
-            }
+            persistReadPermissionIfAvailable(context, uri)
+            pickerError = null
             newUrl = uri.toString()
         }
     }
@@ -184,7 +180,15 @@ internal fun AddEpgSourceCard(viewModel: SettingsViewModel) {
                 }
                 val addActionShape = RoundedCornerShape(8.dp)
                 TvClickableSurface(
-                    onClick = { filePickerLauncher.launch(arrayOf("*/*")) },
+                    onClick = {
+                        launchDocumentPickerSafely(
+                            context = context,
+                            action = android.content.Intent.ACTION_OPEN_DOCUMENT,
+                            unavailableMessage = "This device does not expose a usable file browser. Paste an EPG URL or a file:// path instead.",
+                            onError = { pickerError = it },
+                            launch = { filePickerLauncher.launch(arrayOf("*/*")) }
+                        )
+                    },
                     shape = ClickableSurfaceDefaults.shape(addActionShape),
                     colors = ClickableSurfaceDefaults.colors(
                         containerColor = Primary.copy(alpha = 0.15f),
@@ -195,6 +199,9 @@ internal fun AddEpgSourceCard(viewModel: SettingsViewModel) {
                 ) {
                     Text("Browse", modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp), style = MaterialTheme.typography.labelMedium, color = Primary)
                 }
+            }
+            pickerError?.let { error ->
+                Text(error, style = MaterialTheme.typography.bodySmall, color = Color(0xFFEF5350))
             }
             val addSourceShape = RoundedCornerShape(8.dp)
             TvClickableSurface(
