@@ -1,7 +1,7 @@
 package com.afterglowtv.app.ui.screens.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -297,9 +297,9 @@ private fun AddProviderSourceDialog(
     val scope = rememberCoroutineScope()
 
     val playlistFileLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        uri?.let { selectedUri ->
+        contract = StartActivityForResult()
+    ) { result ->
+        result.data?.data?.let { selectedUri ->
             pickerError = null
             persistReadPermissionIfAvailable(context, selectedUri)
             scope.launch {
@@ -321,12 +321,12 @@ private fun AddProviderSourceDialog(
     }
 
     fun launchPlaylistPicker() {
+        val mimeTypes = arrayOf("*/*")
         launchDocumentPickerSafely(
-            context = context,
-            action = android.content.Intent.ACTION_OPEN_DOCUMENT,
-            unavailableMessage = "This device does not expose a usable file browser. Paste a playlist URL or a file:// path instead.",
+            unavailableMessage = "Could not open the file picker. Paste a playlist URL or a file:// path instead.",
             onError = { pickerError = it },
-            launch = { playlistFileLauncher.launch(arrayOf("*/*")) }
+            launchPrimary = { playlistFileLauncher.launch(openDocumentIntent(mimeTypes)) },
+            launchFallback = { playlistFileLauncher.launch(getContentIntent(mimeTypes)) }
         )
     }
 

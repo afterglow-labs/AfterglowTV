@@ -3,50 +3,65 @@ package com.afterglowtv.app.ui.screens.settings
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
 import android.provider.OpenableColumns
 import java.io.File
 import java.util.UUID
 
-private const val TV_FRAMEWORK_STUBS_PACKAGE = "com.android.tv.frameworkpackagestubs"
-
 internal fun launchDocumentPickerSafely(
-    context: Context,
-    action: String,
     unavailableMessage: String,
     onError: (String) -> Unit,
-    launch: () -> Unit
+    launchPrimary: () -> Unit,
+    launchFallback: (() -> Unit)? = null
 ) {
-    if (!context.hasUsableDocumentPicker(action)) {
-        onError(unavailableMessage)
-        return
-    }
-    runCatching { launch() }
+    runCatching { launchPrimary() }
         .onFailure { error ->
-            val message = when (error) {
-                is ActivityNotFoundException -> unavailableMessage
-                else -> error.message?.takeIf { it.isNotBlank() } ?: unavailableMessage
+            if (error is ActivityNotFoundException && launchFallback != null) {
+                runCatching { launchFallback() }
+                    .onFailure { fallbackError ->
+                        onError(fallbackError.toPickerErrorMessage(unavailableMessage))
+                    }
+            } else {
+                onError(error.toPickerErrorMessage(unavailableMessage))
             }
-            onError(message)
         }
 }
 
-internal fun Context.hasUsableDocumentPicker(action: String): Boolean {
-    val intent = Intent(action).apply {
-        if (action == Intent.ACTION_OPEN_DOCUMENT) {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "*/*"
+internal fun openDocumentIntent(mimeTypes: Array<String>): Intent =
+    Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = mimeTypes.singleOrNull() ?: "*/*"
+        if (mimeTypes.size > 1) {
+            putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
         }
+        addFlags(
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        )
     }
-    @Suppress("DEPRECATION")
-    val activities = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-    return activities.any { resolved ->
-        val info = resolved.activityInfo ?: return@any false
-        info.enabled && info.packageName != TV_FRAMEWORK_STUBS_PACKAGE
+
+internal fun getContentIntent(mimeTypes: Array<String>): Intent =
+    Intent(Intent.ACTION_GET_CONTENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = mimeTypes.singleOrNull() ?: "*/*"
+        if (mimeTypes.size > 1) {
+            putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
+        }
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-}
+
+internal fun openDocumentTreeIntent(): Intent =
+    Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+        addFlags(
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        )
+    }
+
+private fun Throwable.toPickerErrorMessage(fallback: String): String =
+    message?.takeIf { it.isNotBlank() } ?: fallback
 
 internal fun persistReadPermissionIfAvailable(context: Context, uri: Uri) {
     runCatching {

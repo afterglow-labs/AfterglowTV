@@ -18,7 +18,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.graphics.Color
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.documentfile.provider.DocumentFile
 import android.content.Intent
 import com.afterglowtv.app.backup.BackupFileBridge
@@ -67,9 +67,9 @@ fun SettingsScreen(
     var showPremiumPurchaseDialog by rememberSaveable { mutableStateOf(false) }
 
     val openDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        uri?.let { viewModel.inspectBackup(it.toString()) }
+        contract = StartActivityForResult()
+    ) { result ->
+        result.data?.data?.let { viewModel.inspectBackup(it.toString()) }
     }
 
     fun exportBackupToDownloads() {
@@ -113,9 +113,9 @@ fun SettingsScreen(
     }
 
     val recordingFolderLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        uri?.let {
+        contract = StartActivityForResult()
+    ) { result ->
+        result.data?.data?.let {
             runCatching {
                 context.contentResolver.takePersistableUriPermission(
                     it,
@@ -129,9 +129,9 @@ fun SettingsScreen(
     }
 
     val localMediaFolderLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        uri?.let {
+        contract = StartActivityForResult()
+    ) { result ->
+        result.data?.data?.let {
             runCatching {
                 context.contentResolver.takePersistableUriPermission(
                     it,
@@ -238,20 +238,16 @@ fun SettingsScreen(
                     onNavigateToParentalControl = onNavigateToParentalControl,
                     onChooseRecordingFolder = {
                         launchDocumentPickerSafely(
-                            context = context,
-                            action = Intent.ACTION_OPEN_DOCUMENT_TREE,
-                            unavailableMessage = "This device does not expose a usable folder browser for DVR storage.",
+                            unavailableMessage = "Could not open the folder picker for DVR storage.",
                             onError = viewModel::showUserMessage,
-                            launch = { recordingFolderLauncher.launch(null) }
+                            launchPrimary = { recordingFolderLauncher.launch(openDocumentTreeIntent()) }
                         )
                     },
                     onChooseLocalMediaLibrary = {
                         launchDocumentPickerSafely(
-                            context = context,
-                            action = Intent.ACTION_OPEN_DOCUMENT_TREE,
-                            unavailableMessage = "This device does not expose a usable folder browser. Use Add network share for NAS/SMB folders.",
+                            unavailableMessage = "Could not open the folder picker. You can still add NAS/SMB folders from network shares.",
                             onError = viewModel::showUserMessage,
-                            launch = { localMediaFolderLauncher.launch(null) }
+                            launchPrimary = { localMediaFolderLauncher.launch(openDocumentTreeIntent()) }
                         )
                     },
                     onCreateBackup = ::exportBackupToDownloads,
@@ -260,16 +256,12 @@ fun SettingsScreen(
                     onShareCrashReport = ::shareCrashReport,
                     onDeleteCrashReport = viewModel::deleteCrashReport,
                     onRestoreBackup = {
+                        val mimeTypes = arrayOf("application/json", "text/json", "application/x-json", "application/octet-stream", "*/*")
                         launchDocumentPickerSafely(
-                            context = context,
-                            action = Intent.ACTION_OPEN_DOCUMENT,
-                            unavailableMessage = "This device does not expose a usable file browser for backup restore.",
+                            unavailableMessage = "Could not open the file picker for backup restore.",
                             onError = viewModel::showUserMessage,
-                            launch = {
-                                openDocumentLauncher.launch(
-                                    arrayOf("application/json", "text/json", "application/x-json", "application/octet-stream", "*/*")
-                                )
-                            }
+                            launchPrimary = { openDocumentLauncher.launch(openDocumentIntent(mimeTypes)) },
+                            launchFallback = { openDocumentLauncher.launch(getContentIntent(mimeTypes)) }
                         )
                     },
                     onOpenUri = uriHandler::openUri,
