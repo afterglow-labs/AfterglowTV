@@ -4,6 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.app.store.StorePolicy
+import com.amazon.device.drm.LicensingListener
+import com.amazon.device.drm.LicensingService
+import com.amazon.device.drm.model.LicenseResponse
 import com.amazon.device.iap.PurchasingListener
 import com.amazon.device.iap.PurchasingService
 import com.amazon.device.iap.model.ProductType
@@ -14,22 +17,18 @@ import com.amazon.device.iap.model.Receipt
 import com.amazon.device.iap.model.UserDataResponse
 import com.amazon.device.iap.model.FulfillmentResult
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Amazon Appstore SDK bridge for Fire builds.
- *
- * App launch DRM is enforced by Amazon's store-side DRM wrapper for submitted
- * Amazon builds. This bridge deliberately avoids calling LicensingService at
- * startup because that arms Amazon's lifecycle self-destruct callback on
- * non-store or not-yet-entitled launches. Premium purchases and restores use IAP
- * after the app is already running.
  */
-object AmazonAppstoreBridge : PurchasingListener {
+object AmazonAppstoreBridge : PurchasingListener, LicensingListener {
     private const val TAG = "AmazonAppstoreBridge"
     private val iapInitialized = AtomicBoolean(false)
+    private val drmVerificationStarted = AtomicBoolean(false)
     private val receiptRefreshSawPremium = AtomicBoolean(false)
     private val _premiumEntitled = MutableStateFlow(StorePolicy.isAmazonPremiumEntitledForProcess())
     @Volatile private var appContext: Context? = null
@@ -38,10 +37,31 @@ object AmazonAppstoreBridge : PurchasingListener {
     fun attach(context: Context) {
         if (!BuildConfig.ENABLE_AMAZON_APPSTORE_SDK) return
         appContext = context.applicationContext
+        verifyAmazonLicenseOrExit()
     }
 
     fun initialize(context: Context) {
         attach(context)
+    }
+
+    private fun verifyAmazonLicenseOrExit() {
+        if (!BuildConfig.ENABLE_AMAZON_DRM_LICENSING) return
+        val context = appContext ?: return
+        if (!context.hasAmazonAppstoreClient()) {
+            Log.e(TAG, "Amazon DRM licensing required, but no Amazon Appstore or SDK Tester client is installed")
+            terminateUnlicensedApp()
+            return
+        }
+        if (!drmVerificationStarted.compareAndSet(false, true)) return
+
+        runCatching {
+            val requestId = LicensingService.verifyLicense(context, this)
+            Log.i(TAG, "Amazon DRM license verification requested: $requestId")
+        }.onFailure { error ->
+            drmVerificationStarted.set(false)
+            Log.e(TAG, "Unable to start Amazon DRM license verification", error)
+            terminateUnlicensedApp()
+        }
     }
 
     private fun ensureIapRegistered(): Boolean {
@@ -97,6 +117,22 @@ object AmazonAppstoreBridge : PurchasingListener {
 
     override fun onUserDataResponse(userDataResponse: UserDataResponse) {
         Log.d(TAG, "Amazon user data status: ${userDataResponse.requestStatus}")
+    }
+
+    override fun onLicenseCommandResponse(licenseResponse: LicenseResponse) {
+        when (val status = licenseResponse.requestStatus) {
+            LicenseResponse.RequestStatus.LICENSED -> {
+                Log.i(TAG, "Amazon DRM license verified: ${licenseResponse.requestId}")
+            }
+            LicenseResponse.RequestStatus.NOT_LICENSED,
+            LicenseResponse.RequestStatus.ERROR_VERIFICATION,
+            LicenseResponse.RequestStatus.ERROR_INVALID_LICENSING_KEYS,
+            LicenseResponse.RequestStatus.EXPIRED,
+            LicenseResponse.RequestStatus.UNKNOWN_ERROR -> {
+                Log.e(TAG, "Amazon DRM license denied: status=$status request=${licenseResponse.requestId}")
+                terminateUnlicensedApp()
+            }
+        }
     }
 
     override fun onProductDataResponse(productDataResponse: ProductDataResponse) {
@@ -188,4 +224,9 @@ object AmazonAppstoreBridge : PurchasingListener {
                     packageManager.getPackageInfo(packageName, 0) != null
                 }.getOrDefault(false)
             }
+
+    private fun terminateUnlicensedApp(): Nothing {
+        android.os.Process.killProcess(android.os.Process.myPid())
+        exitProcess(1)
+    }
 }
