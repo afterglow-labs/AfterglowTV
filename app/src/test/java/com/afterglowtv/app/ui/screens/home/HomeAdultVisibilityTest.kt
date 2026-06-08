@@ -22,6 +22,40 @@ class HomeAdultVisibilityTest {
     }
 
     @Test
+    fun `adult generated category hide removes shared channels from other adult categories`() {
+        val gay = Category(
+            id = -88001L,
+            name = "Gay",
+            type = ContentType.LIVE,
+            isVirtual = true,
+            isAdult = true
+        )
+        val cartoon = Category(
+            id = -88002L,
+            name = "Cartoon",
+            type = ContentType.LIVE,
+            isVirtual = true,
+            isAdult = true
+        )
+        val context = AdultLiveContext(
+            categories = listOf(gay, cartoon),
+            channelIdsByCategoryId = linkedMapOf(
+                gay.id to listOf(10L),
+                cartoon.id to listOf(10L, 20L)
+            )
+        )
+
+        val filtered = filterAdultVisibility(
+            context = context,
+            hiddenCategoryIds = setOf(gay.id),
+            hiddenChannelIds = emptySet()
+        )
+
+        assertThat(filtered.categories.map(Category::name)).containsExactly("Cartoon")
+        assertThat(filtered.channelIdsByCategoryId[cartoon.id]).containsExactly(20L)
+    }
+
+    @Test
     fun `regular live tv still protects virtual categories from provider hide`() {
         val category = Category(
             id = ChannelRepository.ALL_CHANNELS_ID,

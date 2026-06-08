@@ -140,7 +140,7 @@ internal fun HomeDialogsHost(
             onTogglePinned = if (!isCategoryLocked && !category.isVirtual && category.id != ChannelRepository.ALL_CHANNELS_ID) {
                 { viewModel.toggleCategoryPinned(category) }
             } else null,
-            onHide = if (!isCategoryLocked && !category.isVirtual && category.id != ChannelRepository.ALL_CHANNELS_ID) {
+            onHide = if (!isCategoryLocked && canHideHomeCategory(category, uiState.isAdultMode)) {
                 { viewModel.hideCategory(category) }
             } else null,
             onHideFromLiveTV = if (!isCategoryLocked && category.id in setOf(VirtualCategoryIds.RECENT, ChannelRepository.ALL_CHANNELS_ID)) {
@@ -158,7 +158,7 @@ internal fun HomeDialogsHost(
                     viewModel.dismissCategoryOptions()
                 }
             } else null,
-            onRename = if (!isCategoryLocked && category.isVirtual && category.id !in setOf(VirtualCategoryIds.FAVORITES, VirtualCategoryIds.RECENT)) {
+            onRename = if (!isCategoryLocked && !uiState.isAdultMode && category.isVirtual && category.id !in setOf(VirtualCategoryIds.FAVORITES, VirtualCategoryIds.RECENT)) {
                 { viewModel.requestRenameGroup(category) }
             } else null,
             onToggleLock = {
@@ -166,10 +166,10 @@ internal fun HomeDialogsHost(
                 onPendingLockToggleCategoryChange(category)
                 onShowPinDialogChange(true)
             },
-            onDelete = if (!isCategoryLocked && category.isVirtual && category.id !in setOf(VirtualCategoryIds.FAVORITES, VirtualCategoryIds.RECENT)) {
+            onDelete = if (!isCategoryLocked && !uiState.isAdultMode && category.isVirtual && category.id !in setOf(VirtualCategoryIds.FAVORITES, VirtualCategoryIds.RECENT)) {
                 { viewModel.requestDeleteGroup(category) }
             } else null,
-            onReorderChannels = if (!isCategoryLocked && category.isVirtual && category.id != VirtualCategoryIds.RECENT) {
+            onReorderChannels = if (!isCategoryLocked && !uiState.isAdultMode && category.isVirtual && category.id != VirtualCategoryIds.RECENT) {
                 { viewModel.enterChannelReorderMode(category) }
             } else null
         )

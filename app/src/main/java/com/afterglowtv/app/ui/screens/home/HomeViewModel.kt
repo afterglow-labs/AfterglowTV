@@ -1794,7 +1794,7 @@ class HomeViewModel @Inject constructor(
 
     fun hideCategory(category: Category) {
         if (_uiState.value.isCombinedLiveSource) return
-        if (category.isVirtual || category.id == ChannelRepository.ALL_CHANNELS_ID) return
+        if (!canHideHomeCategory(category, _uiState.value.isAdultMode)) return
         val providerId = _uiState.value.provider?.id ?: return
         viewModelScope.launch {
             preferencesRepository.setCategoryHidden(
