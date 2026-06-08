@@ -9,6 +9,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,30 +62,41 @@ fun LivePanelOverlay(
         modifier = modifier,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(spacing.livePanelWidth)
-                    .background(AppColors.PanelScrim),
-            ) {
-                CategoryColumn(
-                    items = categories,
-                    selectedId = selectedCategoryId,
-                    onSelect = onCategorySelected,
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val panelWidth = minOf(spacing.livePanelWidth, maxWidth * 0.94f)
+                val categoryColumnWidth = when {
+                    panelWidth < 460.dp -> 132.dp
+                    panelWidth < 560.dp -> 168.dp
+                    else -> 232.dp
+                }
+                val channelColumnWidth = (panelWidth - categoryColumnWidth).coerceAtLeast(240.dp)
+                val columnHorizontalPadding = if (panelWidth < 560.dp) 6.dp else 8.dp
+
+                Row(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .width(spacing.livePanelColumn)
-                        .padding(vertical = 16.dp, horizontal = 8.dp),
-                )
-                ChannelColumn(
-                    items = channels,
-                    currentIndex = currentChannelIndex,
-                    onSelect = onChannelSelected,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(spacing.livePanelColumn)
-                        .padding(vertical = 16.dp, horizontal = 8.dp),
-                )
+                        .width(panelWidth)
+                        .background(AppColors.PanelScrim),
+                ) {
+                    CategoryColumn(
+                        items = categories,
+                        selectedId = selectedCategoryId,
+                        onSelect = onCategorySelected,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(categoryColumnWidth)
+                            .padding(vertical = 16.dp, horizontal = columnHorizontalPadding),
+                    )
+                    ChannelColumn(
+                        items = channels,
+                        currentIndex = currentChannelIndex,
+                        onSelect = onChannelSelected,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(channelColumnWidth)
+                            .padding(vertical = 16.dp, horizontal = columnHorizontalPadding),
+                    )
+                }
             }
         }
     }

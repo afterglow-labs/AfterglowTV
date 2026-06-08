@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -74,33 +75,41 @@ internal fun AdultSurface(
         ?: categories.firstOrNull { it.key != AdultCategoryBuilder.ALL_CATEGORY_KEY }
         ?: categories.first()
 
-    Row(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
-        AdultCategoryRail(
-            categories = categories,
-            selectedCategoryKey = selectedCategory.key,
-            onCategorySelected = onCategorySelected,
-            modifier = Modifier
-                .width(220.dp)
-                .fillMaxHeight()
-        )
-        AdultChannelList(
-            category = selectedCategory,
-            favoriteChannelIds = favoriteChannelIds,
-            hasMoreChannels = hasMoreChannels,
-            isChannelLocked = isChannelLocked,
-            onChannelClick = onChannelClick,
-            onChannelFocused = onChannelFocused,
-            onRequestGuideToolbarFocus = onRequestGuideToolbarFocus,
-            onRequestMoreChannels = onRequestMoreChannels,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-        )
+        val tightWidth = maxWidth < 760.dp
+        val railWidth = if (tightWidth) 156.dp else 220.dp
+        val railGap = if (tightWidth) 8.dp else 12.dp
+
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(railGap)
+        ) {
+            AdultCategoryRail(
+                categories = categories,
+                selectedCategoryKey = selectedCategory.key,
+                onCategorySelected = onCategorySelected,
+                modifier = Modifier
+                    .width(railWidth)
+                    .fillMaxHeight()
+            )
+            AdultChannelList(
+                category = selectedCategory,
+                favoriteChannelIds = favoriteChannelIds,
+                hasMoreChannels = hasMoreChannels,
+                isChannelLocked = isChannelLocked,
+                onChannelClick = onChannelClick,
+                onChannelFocused = onChannelFocused,
+                onRequestGuideToolbarFocus = onRequestGuideToolbarFocus,
+                onRequestMoreChannels = onRequestMoreChannels,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+        }
     }
 }
 
@@ -329,51 +338,61 @@ private fun AdultChannelCard(
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = FocusSpec.FocusedScale)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ChannelLogoBadge(
-                channelName = channel.name,
-                logoUrl = channel.logoUrl,
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val compact = maxWidth < 380.dp
+            val showBadges = maxWidth >= 340.dp
+            val logoWidth = if (compact) 48.dp else 64.dp
+            val contentPadding = if (compact) 8.dp else 10.dp
+            val contentGap = if (compact) 8.dp else 10.dp
+
+            Row(
                 modifier = Modifier
-                    .width(64.dp)
-                    .fillMaxHeight(),
-                shape = RoundedCornerShape(7.dp)
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                    .fillMaxSize()
+                    .padding(contentPadding),
+                horizontalArrangement = Arrangement.spacedBy(contentGap),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = if (channel.number > 0) "${channel.number}. ${channel.name}" else channel.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (isFocused) TextPrimary else OnSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                ChannelLogoBadge(
+                    channelName = channel.name,
+                    logoUrl = channel.logoUrl,
+                    modifier = Modifier
+                        .width(logoWidth)
+                        .fillMaxHeight(),
+                    shape = RoundedCornerShape(7.dp)
                 )
-                Text(
-                    text = channel.categoryName?.takeIf { it.isNotBlank() }
-                        ?: channel.groupTitle?.takeIf { it.isNotBlank() }
-                        ?: "Loops daily",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = OnSurfaceDim,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 6.dp)
                 ) {
-                    AdultBadge(label = "Loops daily")
-                    if (isFavorite) {
-                        AdultBadge(label = stringResource(R.string.epg_favorite_badge))
-                    }
-                    if (isLocked) {
-                        AdultBadge(label = stringResource(R.string.home_locked_short), emphasis = true)
+                    Text(
+                        text = if (channel.number > 0) "${channel.number}. ${channel.name}" else channel.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = if (isFocused) TextPrimary else OnSurface,
+                        maxLines = if (compact) 2 else 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = channel.categoryName?.takeIf { it.isNotBlank() }
+                            ?: channel.groupTitle?.takeIf { it.isNotBlank() }
+                            ?: "Loops daily",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = OnSurfaceDim,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (showBadges) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AdultBadge(label = "Loops daily")
+                            if (isFavorite) {
+                                AdultBadge(label = stringResource(R.string.epg_favorite_badge))
+                            }
+                            if (isLocked) {
+                                AdultBadge(label = stringResource(R.string.home_locked_short), emphasis = true)
+                            }
+                        }
                     }
                 }
             }
