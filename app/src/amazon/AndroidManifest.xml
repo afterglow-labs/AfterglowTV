@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:amazon="http://schemas.amazon.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <permission
+        android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE" />
+    <uses-permission android:name="com.amazon.device.messaging.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <uses-permission
         android:name="android.permission.REQUEST_INSTALL_PACKAGES"
@@ -12,6 +21,14 @@
     </queries>
 
     <application>
+        <amazon:enable-feature
+            android:name="com.amazon.device.messaging"
+            android:required="false" />
+
+        <uses-library
+            android:name="com.amazon.device.messaging"
+            android:required="false" />
+
         <receiver
             android:name="com.amazon.device.iap.ResponseReceiver"
             android:exported="true"
@@ -27,6 +44,21 @@
             android:permission="com.amazon.drm.Permission.NOTIFY">
             <intent-filter>
                 <action android:name="com.amazon.drm.NOTIFY" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".store.amazon.adm.AmazonDeviceMessageHandler"
+            android:exported="false" />
+
+        <receiver
+            android:name=".store.amazon.adm.AmazonDeviceMessageReceiver"
+            android:exported="true"
+            android:permission="com.amazon.device.messaging.permission.SEND">
+            <intent-filter>
+                <action android:name="com.amazon.device.messaging.intent.REGISTRATION" />
+                <action android:name="com.amazon.device.messaging.intent.RECEIVE" />
+                <category android:name="${applicationId}" />
             </intent-filter>
         </receiver>
     </application>

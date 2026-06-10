@@ -66,6 +66,7 @@ internal fun ProviderSettingsCard(
     diagnostics: ProviderDiagnosticsUiModel?,
     databaseMaintenance: DatabaseMaintenanceUiModel?,
     syncWarnings: List<String>,
+    firstActionFocusRequester: FocusRequester? = null,
     onRetryWarningAction: (ProviderWarningAction) -> Unit,
     onConnect: () -> Unit,
     onRefresh: () -> Unit,
@@ -228,6 +229,7 @@ internal fun ProviderSettingsCard(
             isActive = isActive,
             isSyncing = isSyncing,
             liveOnboardingIncomplete = liveOnboardingIncomplete,
+            firstActionFocusRequester = firstActionFocusRequester,
             onConnect = onConnect,
             onRefresh = onRefresh,
             onEdit = onEdit,
@@ -309,5 +311,4 @@ internal fun sectionCatalogCount(
         ProviderCatalogCountUiModel(count, ProviderCatalogCountStatus.PENDING)
     }
 }
-
 

@@ -400,6 +400,15 @@ private fun isSettingsToolRoute(route: String): Boolean {
     )
 }
 
+private fun topLevelDestinationRoute(route: String): String =
+    when (route.substringBefore('?')) {
+        Routes.LIVE_TV -> Routes.LIVE_TV_DESTINATION
+        Routes.EPG -> Routes.EPG_DESTINATION
+        Routes.SETTINGS -> Routes.SETTINGS_DESTINATION
+        Routes.SEARCH -> Routes.SEARCH_DESTINATION
+        else -> route.substringBefore('?')
+    }
+
 @Composable
 fun AppNavigation(mainActivity: MainActivity) {
     val navController = rememberNavController()
@@ -516,12 +525,14 @@ fun AppNavigation(mainActivity: MainActivity) {
             return
         }
 
+        if (route.substringBefore('?') != Routes.HOME &&
+            navController.popBackStack(topLevelDestinationRoute(route), inclusive = false)
+        ) {
+            return
+        }
+
         navController.navigate(route) {
-            popUpTo(navController.graph.startDestinationId) {
-                saveState = true
-            }
             launchSingleTop = true
-            restoreState = true
         }
     }
 

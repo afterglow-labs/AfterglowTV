@@ -12,12 +12,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ClickableSurfaceDefaults
@@ -209,6 +211,7 @@ private fun ProviderSettingsContainer(
                 }
             }
             val selectedProvider = providers.firstOrNull { it.id == selectedProviderId } ?: providers.first()
+            val firstProviderActionFocusRequester = remember(selectedProvider.id) { FocusRequester() }
 
             Text(
                 text = stringResource(R.string.settings_provider_selector_hint),
@@ -224,6 +227,7 @@ private fun ProviderSettingsContainer(
                         provider = provider,
                         isSelected = provider.id == selectedProvider.id,
                         activeLabels = provider.activeRoleLabels(uiState),
+                        downFocusRequester = firstProviderActionFocusRequester,
                         onClick = { selectedProviderId = provider.id }
                     )
                 }
@@ -239,6 +243,7 @@ private fun ProviderSettingsContainer(
                 diagnostics = uiState.diagnosticsByProvider[selectedProvider.id],
                 databaseMaintenance = uiState.databaseMaintenance,
                 syncWarnings = uiState.syncWarningsByProvider[selectedProvider.id].orEmpty(),
+                firstActionFocusRequester = firstProviderActionFocusRequester,
                 onRetryWarningAction = { action -> viewModel.retryWarningAction(selectedProvider.id, action) },
                 onConnect = { viewModel.setActiveProvider(selectedProvider.id) },
                 onRefresh = {

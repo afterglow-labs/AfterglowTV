@@ -22,6 +22,7 @@ import com.afterglowtv.app.navigation.ExternalDestination
 import com.afterglowtv.app.navigation.ExternalNavigationRequest
 import com.afterglowtv.app.navigation.PlayerNavigationRequest
 import com.afterglowtv.app.player.PlayerNowPlayingStore
+import com.afterglowtv.app.store.amazon.AmazonAppstoreBridge
 import com.afterglowtv.app.tv.LauncherRecommendationsManager
 import com.afterglowtv.app.tv.WatchNextManager
 import com.afterglowtv.app.tvinput.TvInputChannelSyncManager
@@ -37,9 +38,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Density
 import android.content.res.Configuration
 import android.text.TextUtils
 import android.view.View
@@ -134,6 +138,8 @@ class MainActivity : ComponentActivity() {
             val appLanguage by preferencesRepository.appLanguage.collectAsState(initial = "system")
             val appTimeFormat by preferencesRepository.appTimeFormat.collectAsState(initial = com.afterglowtv.domain.model.AppTimeFormat.SYSTEM)
             val currentContext = LocalContext.current
+            val screenConfiguration = LocalConfiguration.current
+            val baseDensity = LocalDensity.current
             
             val configuration = remember(appLanguage) {
                 val locale = resolveAppLocale(
@@ -168,17 +174,56 @@ class MainActivity : ComponentActivity() {
                     LayoutDirection.Ltr
                 }
             }
+            val appDensity = remember(
+                baseDensity,
+                screenConfiguration.screenWidthDp,
+                screenConfiguration.screenHeightDp
+            ) {
+                resolveAppUiDensity(
+                    context = currentContext,
+                    baseDensity = baseDensity,
+                    configuration = screenConfiguration
+                )
+            }
 
             CompositionLocalProvider(
                 LocalContext provides localizedContext,
                 LocalLayoutDirection provides layoutDirection,
-                LocalAppTimeFormat provides appTimeFormat
+                LocalAppTimeFormat provides appTimeFormat,
+                LocalDensity provides appDensity
             ) {
                 AfterglowTVTheme {
                     AppNavigation(mainActivity = this@MainActivity)
                 }
             }
         }
+    }
+
+    private fun resolveAppUiDensity(
+        context: Context,
+        baseDensity: Density,
+        configuration: Configuration
+    ): Density {
+        val widthDp = configuration.screenWidthDp.takeIf { it > 0 } ?: return baseDensity
+        val heightDp = configuration.screenHeightDp.takeIf { it > 0 } ?: return baseDensity
+        val widthPx = widthDp * baseDensity.density
+        val heightPx = heightDp * baseDensity.density
+        val isLargeLivingRoomCanvas = widthPx >= 1600f && heightPx >= 900f
+        if (!context.isTelevisionDevice() && !isLargeLivingRoomCanvas) return baseDensity
+
+        val targetWidthDp = 1280f
+        val targetHeightDp = 720f
+        val targetDensity = minOf(
+            baseDensity.density,
+            widthPx / targetWidthDp,
+            heightPx / targetHeightDp
+        ).coerceAtLeast(1f)
+
+        if (targetDensity >= baseDensity.density) return baseDensity
+        return Density(
+            density = targetDensity,
+            fontScale = baseDensity.fontScale
+        )
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -193,6 +238,11 @@ class MainActivity : ComponentActivity() {
             resumePlayerAfterActivityStop = false
             mainPlayerEngine.play()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AmazonAppstoreBridge.refreshEntitlements()
     }
 
     override fun onStop() {

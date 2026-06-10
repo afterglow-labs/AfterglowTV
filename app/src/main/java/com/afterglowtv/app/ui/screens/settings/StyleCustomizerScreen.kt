@@ -1,9 +1,7 @@
 package com.afterglowtv.app.ui.screens.settings
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +18,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
@@ -30,13 +31,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.tv.material3.Border
+import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.AppShapeSet
 import com.afterglowtv.app.ui.design.AppStyles
+import com.afterglowtv.app.ui.design.FocusSpec
 import com.afterglowtv.app.ui.design.GlowSpec
 import com.afterglowtv.app.ui.design.afterglow
+import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.data.preferences.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -225,37 +230,49 @@ private fun StyleChip(
     onClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(999.dp)
-    Box(
+    var isFocused by remember { mutableStateOf(false) }
+    TvClickableSurface(
+        onClick = onClick,
         modifier = Modifier
+            .onFocusChanged { isFocused = it.isFocused }
             .let { base ->
-                if (isSelected) base.afterglow(
-                    specs = listOf(GlowSpec(AppColors.TiviAccent, 14.dp, 0.6f)),
+                if (isSelected || isFocused) base.afterglow(
+                    specs = listOf(GlowSpec(if (isFocused) AppColors.Focus else AppColors.TiviAccent, 14.dp, 0.6f)),
                     shape = shape,
                 ) else base
-            }
-            .clip(shape)
-            .background(
-                if (isSelected) AppColors.TiviAccent.copy(alpha = 0.20f)
-                else AppColors.TiviSurfaceBase
-            )
-            .border(
-                BorderStroke(
+            },
+        shape = ClickableSurfaceDefaults.shape(shape),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = if (isSelected) AppColors.TiviAccent.copy(alpha = 0.24f) else AppColors.TiviSurfaceBase,
+            focusedContainerColor = AppColors.FocusFill.copy(alpha = 0.62f)
+        ),
+        border = ClickableSurfaceDefaults.border(
+            border = Border(
+                border = BorderStroke(
                     width = if (isSelected) 2.dp else 1.dp,
                     color = if (isSelected) AppColors.TiviAccent else AppColors.TiviSurfaceAccent,
                 ),
-                shape,
-            )
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                shape = shape,
             ),
-            color = if (isSelected) AppColors.TextPrimary else AppColors.TextSecondary,
-        )
+            focusedBorder = Border(
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                shape = shape,
+            )
+        ),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)
+    ) {
+        Box(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = if (isSelected || isFocused) FontWeight.SemiBold else FontWeight.Normal,
+                ),
+                color = if (isSelected || isFocused) AppColors.TextPrimary else AppColors.TextSecondary,
+            )
+        }
     }
 }
 

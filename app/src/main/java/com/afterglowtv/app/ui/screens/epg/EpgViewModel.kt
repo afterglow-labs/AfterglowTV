@@ -50,6 +50,7 @@ import com.afterglowtv.player.PlayerEngine
 import com.afterglowtv.data.preferences.AdultCategoryCache
 import com.afterglowtv.data.preferences.AdultCategoryCacheEntry
 import com.afterglowtv.data.preferences.PreferencesRepository
+import com.afterglowtv.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -195,8 +196,9 @@ private data class GuideBaseRequest(
     val estimatedChannelCount: Int
 )
 
-private data class GuideBaseSnapshot(
+data class GuideBaseSnapshot(
     val providerId: Long,
+    val combinedProfileId: Long?,
     val currentProviderName: String,
     val providerSourceLabel: String,
     val providerArchiveSummary: String,
@@ -274,9 +276,11 @@ class EpgViewModel @Inject constructor(
     private val scheduleRecording: ScheduleRecording,
     private val recordingManager: RecordingManager,
     private val livePreviewHandoffManager: LivePreviewHandoffManager,
+    private val syncManager: SyncManager,
     @param:AuxiliaryPlayerEngine
     private val playerEngineProvider: InjectProvider<PlayerEngine>,
     private val positionMemo: EpgPositionMemo,
+    private val stateCache: EpgStateCache,
 ) : ViewModel() {
     private val appContext = application
 
@@ -305,23 +309,25 @@ class EpgViewModel @Inject constructor(
         private const val DEFAULT_ADULT_SORT_BATCH_SIZE = 200
     }
 
-    private val _uiState = MutableStateFlow(EpgUiState())
+    private val cachedInitialState = stateCache.snapshot()
+    private val cachedInitialBaseSnapshot = stateCache.baseSnapshot()
+    private val _uiState = MutableStateFlow(cachedInitialState ?: EpgUiState())
     val uiState: StateFlow<EpgUiState> = _uiState.asStateFlow()
     val developerModeEnabled: StateFlow<Boolean> = preferencesRepository.developerModeEnabled
         .map(StorePolicy::effectiveDeveloperModeEnabled)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
-    private val selectedCategoryId = MutableStateFlow(ChannelRepository.ALL_CHANNELS_ID)
-    private val guideAnchorTime = MutableStateFlow(System.currentTimeMillis())
-    private val showScheduledOnly = MutableStateFlow(false)
-    private val selectedChannelMode = MutableStateFlow(GuideChannelMode.ALL)
-    private val selectedDensity = MutableStateFlow(GuideDensity.COMPACT)
-    private val showFavoritesOnly = MutableStateFlow(false)
-    private val programSearchQuery = MutableStateFlow("")
+    private val selectedCategoryId = MutableStateFlow(cachedInitialState?.selectedCategoryId ?: ChannelRepository.ALL_CHANNELS_ID)
+    private val guideAnchorTime = MutableStateFlow(cachedInitialState?.guideAnchorTime ?: System.currentTimeMillis())
+    private val showScheduledOnly = MutableStateFlow(cachedInitialState?.showScheduledOnly ?: false)
+    private val selectedChannelMode = MutableStateFlow(cachedInitialState?.selectedChannelMode ?: GuideChannelMode.ALL)
+    private val selectedDensity = MutableStateFlow(cachedInitialState?.selectedDensity ?: GuideDensity.COMPACT)
+    private val showFavoritesOnly = MutableStateFlow(cachedInitialState?.showFavoritesOnly ?: false)
+    private val programSearchQuery = MutableStateFlow(cachedInitialState?.programSearchQuery.orEmpty())
     private val startupCategoryId = MutableStateFlow<Long?>(null)
     private val fixedCategoryId = MutableStateFlow<Long?>(null)
     private val refreshNonce = MutableStateFlow(0)
-    private val baseGuideSnapshot = MutableStateFlow<GuideBaseSnapshot?>(null)
+    private val baseGuideSnapshot = MutableStateFlow(cachedInitialBaseSnapshot)
     private val _overrideUiState = MutableStateFlow(EpgOverrideUiState())
     val overrideUiState: StateFlow<EpgOverrideUiState> = _overrideUiState.asStateFlow()
     private val _programReminderUiState = MutableStateFlow(ProgramReminderUiState())
@@ -336,12 +342,24 @@ class EpgViewModel @Inject constructor(
     private var combinedCategoriesById: Map<Long, CombinedCategory> = emptyMap()
     private var adultRenderLimit: Int = ADULT_RENDER_PAGE_SIZE
     private val adultSortBatchSize = MutableStateFlow(DEFAULT_ADULT_SORT_BATCH_SIZE)
+    private var cachedBaseSnapshotForRestore: GuideBaseSnapshot? = cachedInitialBaseSnapshot
 
     init {
+        observeGuideStateCache()
         restoreGuidePreferences()
         observeAdultSortBatchSize()
         observeGuideBase()
         observeGuidePresentation()
+    }
+
+    private fun observeGuideStateCache() {
+        viewModelScope.launch {
+            uiState.collectLatest { state ->
+                if (!state.isInitialLoading && state.hasGuideContent()) {
+                    stateCache.remember(state)
+                }
+            }
+        }
     }
 
     fun selectCategory(categoryId: Long) {
@@ -384,6 +402,34 @@ class EpgViewModel @Inject constructor(
 
     fun refresh() {
         refreshNonce.update { it + 1 }
+    }
+
+    fun syncCurrentEpgData() {
+        val snapshot = baseGuideSnapshot.value
+        val providerIds = when {
+            snapshot == null -> emptyList()
+            snapshot.providerId > 0L -> listOf(snapshot.providerId)
+            else -> snapshot.visibleChannels
+                .map { it.providerId }
+                .filter { it > 0L }
+                .distinct()
+        }
+        if (providerIds.isEmpty()) {
+            _uiState.update { it.copy(recordingMessage = "No provider is available for EPG sync.") }
+            return
+        }
+        viewModelScope.launch {
+            providerIds.forEach(syncManager::scheduleBackgroundEpgSync)
+            _uiState.update {
+                it.copy(
+                    recordingMessage = if (providerIds.size == 1) {
+                        "EPG sync started in the background."
+                    } else {
+                        "EPG sync started for ${providerIds.size} playlists in the background."
+                    }
+                )
+            }
+        }
     }
 
     fun previewChannel(channel: Channel) {
@@ -911,6 +957,9 @@ class EpgViewModel @Inject constructor(
         favoritesOnly: Boolean?,
         lockCategory: Boolean = false
     ) {
+        val hasExplicitNavigationContext = lockCategory || categoryId != null || anchorTime != null || favoritesOnly == true
+        if (!hasExplicitNavigationContext) return
+
         fixedCategoryId.value = if (lockCategory) categoryId else null
         categoryId?.let { requested ->
             startupCategoryId.value = null
@@ -1059,6 +1108,22 @@ class EpgViewModel @Inject constructor(
                 val hasVisibleGuide = _uiState.value.channels.isNotEmpty() || _uiState.value.programsByChannel.isNotEmpty()
                 val providerSourceLabel = buildProviderSourceLabel(provider)
                 val providerArchiveSummary = buildProviderArchiveSummary(provider)
+                if (restoreCachedGuideIfCurrent(
+                        providerId = provider.id,
+                        combinedProfileId = null,
+                        providerName = provider.name,
+                        providerSourceLabel = providerSourceLabel,
+                        providerArchiveSummary = providerArchiveSummary,
+                        request = request,
+                        favoriteIds = favoriteRepository.getFavorites(provider.id, ContentType.LIVE)
+                            .first()
+                            .map { it.contentId }
+                            .toSet()
+                    )
+                ) {
+                    finalizeStartupCategory(request.resolvedCategoryId)
+                    return@collectLatest
+                }
                 if (request.isAdultRequest()) {
                     adultRenderLimit = ADULT_RENDER_PAGE_SIZE
                 } else {
@@ -1104,6 +1169,7 @@ class EpgViewModel @Inject constructor(
                     )
                     publishGuideSnapshot(
                         providerId = provider.id,
+                        combinedProfileId = null,
                         providerName = provider.name,
                         providerSourceLabel = providerSourceLabel,
                         providerArchiveSummary = providerArchiveSummary,
@@ -1151,6 +1217,7 @@ class EpgViewModel @Inject constructor(
                     }
                     publishGuideSnapshot(
                         providerId = provider.id,
+                        combinedProfileId = null,
                         providerName = provider.name,
                         providerSourceLabel = providerSourceLabel,
                         providerArchiveSummary = providerArchiveSummary,
@@ -1240,6 +1307,22 @@ class EpgViewModel @Inject constructor(
             val profile = combinedM3uRepository.getProfile(profileId)
             val profileName = profile?.name ?: "Combined M3U"
             val hasVisibleGuide = _uiState.value.channels.isNotEmpty() || _uiState.value.programsByChannel.isNotEmpty()
+            if (restoreCachedGuideIfCurrent(
+                    providerId = 0L,
+                    combinedProfileId = profileId,
+                    providerName = profileName,
+                    providerSourceLabel = "Combined M3U",
+                    providerArchiveSummary = "Guide data is merged from each member playlist's own EPG sources.",
+                    request = request,
+                    favoriteIds = observeLiveFavorites(providerIds)
+                        .first()
+                        .map { it.contentId }
+                        .toSet()
+                )
+            ) {
+                finalizeStartupCategory(request.resolvedCategoryId)
+                return@collectLatest
+            }
             if (request.isAdultRequest()) {
                 adultRenderLimit = ADULT_RENDER_PAGE_SIZE
             } else {
@@ -1285,6 +1368,7 @@ class EpgViewModel @Inject constructor(
                 )
                 publishGuideSnapshot(
                     providerId = 0L,
+                    combinedProfileId = profileId,
                     providerName = profileName,
                     providerSourceLabel = "Combined M3U",
                     providerArchiveSummary = "Guide data is merged from each member playlist's own EPG sources.",
@@ -1338,6 +1422,7 @@ class EpgViewModel @Inject constructor(
                 }
                 publishGuideSnapshot(
                     providerId = 0L,
+                    combinedProfileId = profileId,
                     providerName = profileName,
                     providerSourceLabel = "Combined M3U",
                     providerArchiveSummary = "Guide data is merged from each member playlist's own EPG sources.",
@@ -1363,6 +1448,61 @@ class EpgViewModel @Inject constructor(
                 finalizeStartupCategory(request.resolvedCategoryId)
             }
         }
+    }
+
+    private fun restoreCachedGuideIfCurrent(
+        providerId: Long,
+        combinedProfileId: Long?,
+        providerName: String,
+        providerSourceLabel: String,
+        providerArchiveSummary: String,
+        request: GuideBaseRequest,
+        favoriteIds: Set<Long>
+    ): Boolean {
+        val cachedSnapshot = cachedBaseSnapshotForRestore ?: return false
+        cachedBaseSnapshotForRestore = null
+        if (!cachedSnapshot.matchesGuideRequest(providerId, combinedProfileId, request, favoriteIds)) {
+            return false
+        }
+
+        val restoredSnapshot = cachedSnapshot.copy(
+            providerId = providerId,
+            combinedProfileId = combinedProfileId,
+            currentProviderName = providerName,
+            providerSourceLabel = providerSourceLabel,
+            providerArchiveSummary = providerArchiveSummary,
+            categories = request.categories,
+            selectedCategoryId = request.resolvedCategoryId,
+            parentalControlLevel = request.parentalControlLevel,
+            showFavoritesOnly = request.favoritesOnly,
+            favoriteChannelIds = favoriteIds,
+            guideAnchorTime = request.anchorTime,
+            guideWindowStart = request.windowStart,
+            guideWindowEnd = request.windowEnd,
+            hiddenCategoryIds = request.hiddenCategoryIds
+        )
+        baseGuideSnapshot.value = restoredSnapshot
+        stateCache.rememberBaseSnapshot(restoredSnapshot)
+        _uiState.update {
+            it.copy(
+                currentProviderName = providerName,
+                providerSourceLabel = providerSourceLabel,
+                providerArchiveSummary = providerArchiveSummary,
+                combinedProfileId = combinedProfileId,
+                categories = request.categories,
+                selectedCategoryId = request.resolvedCategoryId,
+                parentalControlLevel = request.parentalControlLevel,
+                showFavoritesOnly = request.favoritesOnly,
+                favoriteChannelIds = favoriteIds,
+                isInitialLoading = false,
+                isRefreshing = false,
+                error = null,
+                guideAnchorTime = request.anchorTime,
+                guideWindowStart = request.windowStart,
+                guideWindowEnd = request.windowEnd
+            )
+        }
+        return true
     }
 
     private fun combinedGuideChannels(
@@ -1441,6 +1581,7 @@ class EpgViewModel @Inject constructor(
 
     private suspend fun publishGuideSnapshot(
         providerId: Long,
+        combinedProfileId: Long?,
         providerName: String,
         providerSourceLabel: String,
         providerArchiveSummary: String,
@@ -1461,6 +1602,7 @@ class EpgViewModel @Inject constructor(
         }
         val snapshot = GuideBaseSnapshot(
             providerId = providerId,
+            combinedProfileId = combinedProfileId,
             currentProviderName = providerName,
             providerSourceLabel = providerSourceLabel,
             providerArchiveSummary = providerArchiveSummary,
@@ -1486,6 +1628,7 @@ class EpgViewModel @Inject constructor(
             )
         )
         baseGuideSnapshot.value = snapshot
+        stateCache.rememberBaseSnapshot(snapshot)
         restoreAdultCategorizationFromDisk(snapshot)
     }
 
@@ -1770,25 +1913,30 @@ class EpgViewModel @Inject constructor(
 
     private fun restoreGuidePreferences() {
         viewModelScope.launch {
-            preferencesRepository.guideDensity.first()
-                ?.let { saved ->
-                    GuideDensity.entries.firstOrNull { it.name == saved }?.let { density ->
-                        selectedDensity.value = density
+            val hasRestoredGuide = cachedInitialState?.hasGuideContent() == true
+            if (!hasRestoredGuide) {
+                preferencesRepository.guideDensity.first()
+                    ?.let { saved ->
+                        GuideDensity.entries.firstOrNull { it.name == saved }?.let { density ->
+                            selectedDensity.value = density
+                        }
                     }
-                }
-            preferencesRepository.guideChannelMode.first()
-                ?.let { saved ->
-                    GuideChannelMode.entries.firstOrNull { it.name == saved }?.let { mode ->
-                        selectedChannelMode.value = mode
+                preferencesRepository.guideChannelMode.first()
+                    ?.let { saved ->
+                        GuideChannelMode.entries.firstOrNull { it.name == saved }?.let { mode ->
+                            selectedChannelMode.value = mode
+                        }
                     }
-                }
+            }
             if (fixedCategoryId.value == null) {
-                startupCategoryId.value = preferencesRepository.guideDefaultCategoryId.first() ?: VirtualCategoryIds.FAVORITES
-                showFavoritesOnly.value = preferencesRepository.guideFavoritesOnly.first()
-                showScheduledOnly.value = preferencesRepository.guideScheduledOnly.first()
-                preferencesRepository.guideAnchorTime.first()
-                    ?.takeIf { it > 0L }
-                    ?.let { guideAnchorTime.value = it }
+                if (!hasRestoredGuide) {
+                    startupCategoryId.value = preferencesRepository.guideDefaultCategoryId.first() ?: VirtualCategoryIds.FAVORITES
+                    showFavoritesOnly.value = preferencesRepository.guideFavoritesOnly.first()
+                    showScheduledOnly.value = preferencesRepository.guideScheduledOnly.first()
+                    preferencesRepository.guideAnchorTime.first()
+                        ?.takeIf { it > 0L }
+                        ?.let { guideAnchorTime.value = it }
+                }
             } else {
                 startupCategoryId.value = null
                 showFavoritesOnly.value = false
@@ -2122,6 +2270,7 @@ class EpgViewModel @Inject constructor(
                 return@launch
             }
 
+            var enrichedSnapshot: GuideBaseSnapshot? = null
             baseGuideSnapshot.update { currentSnapshot ->
                 if (currentSnapshot == null || !currentSnapshot.matches(snapshotContext)) {
                     return@update currentSnapshot
@@ -2138,8 +2287,9 @@ class EpgViewModel @Inject constructor(
                     lastUpdatedAt = System.currentTimeMillis(),
                     baseChannelsWithSchedule = channelsWithSchedule,
                     baseGuideStale = visibleChannels.isNotEmpty() && (channelsWithSchedule == 0 || !hasUpcomingData)
-                )
+                ).also { enrichedSnapshot = it }
             }
+            enrichedSnapshot?.let(stateCache::rememberBaseSnapshot)
         }
     }
 
@@ -2448,6 +2598,35 @@ class EpgViewModel @Inject constructor(
         }
     }
 
+    private fun GuideBaseSnapshot.matchesGuideRequest(
+        providerId: Long,
+        combinedProfileId: Long?,
+        request: GuideBaseRequest,
+        favoriteIds: Set<Long>
+    ): Boolean =
+        this.providerId == providerId &&
+            this.combinedProfileId == combinedProfileId &&
+            selectedCategoryId == request.resolvedCategoryId &&
+            parentalControlLevel == request.parentalControlLevel &&
+            showFavoritesOnly == request.favoritesOnly &&
+            guideAnchorTime == request.anchorTime &&
+            guideWindowStart == request.windowStart &&
+            guideWindowEnd == request.windowEnd &&
+            hiddenCategoryIds == request.hiddenCategoryIds &&
+            favoriteChannelIds == favoriteIds &&
+            categories.guideCategorySignature() == request.categories.guideCategorySignature()
+
+    private fun List<Category>.guideCategorySignature(): List<GuideCategorySignature> =
+        map { category ->
+            GuideCategorySignature(
+                id = category.id,
+                name = category.name,
+                count = category.count,
+                isVirtual = category.isVirtual,
+                isUserProtected = category.isUserProtected
+            )
+        }
+
     override fun onCleared() {
         overrideSearchJob?.cancel()
         guideFallbackJob?.cancel()
@@ -2456,6 +2635,17 @@ class EpgViewModel @Inject constructor(
         super.onCleared()
     }
 }
+
+private fun EpgUiState.hasGuideContent(): Boolean =
+    channels.isNotEmpty() || programsByChannel.isNotEmpty() || error != null
+
+private data class GuideCategorySignature(
+    val id: Long,
+    val name: String,
+    val count: Int,
+    val isVirtual: Boolean,
+    val isUserProtected: Boolean
+)
 
 private data class GuidePresentationState(
     val baseSnapshot: GuideBaseSnapshot?,

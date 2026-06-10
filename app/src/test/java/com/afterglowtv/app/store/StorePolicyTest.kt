@@ -216,7 +216,7 @@ class StorePolicyTest {
             "afterglow_public_live.m3u8"
         )
         assertThat(policy.bundledPublicSources.map { it.providerName }).containsExactly(
-            "Free, Authorized Public M3U Playlist"
+            "Demo Playlist"
         )
         assertThat(policy.bundledPublicSources.map { it.sourceSlot }).containsExactly(
             ProviderSourceSlot.LIVE

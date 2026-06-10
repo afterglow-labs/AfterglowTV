@@ -3660,7 +3660,9 @@ abstract class ChannelEpgMappingDao {
     open suspend fun replaceForProvider(providerId: Long, mappings: List<ChannelEpgMappingEntity>) {
         deleteByProvider(providerId)
         if (mappings.isNotEmpty()) {
-            insertAll(mappings)
+            mappings.chunked(80).forEach { batch ->
+                insertAll(batch)
+            }
         }
     }
 

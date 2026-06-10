@@ -33,6 +33,7 @@ import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderStatus
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 
 @Composable
@@ -40,6 +41,7 @@ internal fun ProviderSelectorTab(
     provider: Provider,
     isSelected: Boolean,
     activeLabels: List<String>,
+    downFocusRequester: FocusRequester? = null,
     onClick: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -47,6 +49,11 @@ internal fun ProviderSelectorTab(
         onClick = onClick,
         modifier = Modifier
             .focusRequester(focusRequester)
+            .focusProperties {
+                if (isSelected && downFocusRequester != null) {
+                    down = downFocusRequester
+                }
+            }
             .mouseClickable(
                 focusRequester = focusRequester,
                 onClick = onClick

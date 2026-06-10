@@ -825,6 +825,10 @@ fun FullEpgScreen(
             onToggleScheduledOnly = viewModel::toggleScheduledOnly,
             onToggleFavoritesOnly = viewModel::toggleFavoritesOnly,
             onRefresh = viewModel::refresh,
+            onSyncEpgData = {
+                showGuideOptions = false
+                viewModel.syncCurrentEpgData()
+            },
             onManageEpgMatch = focusedChannel?.takeIf { it.providerId > 0L }?.let { ch ->
                 {
                     showGuideOptions = false

@@ -1212,6 +1212,7 @@
     <string name="epg_archive_unavailable_hint">Archive playback is not available for this channel.</string>
     <string name="epg_archive_stale_hint">Guide data looks stale, so replay availability may be incomplete until the guide refreshes.</string>
     <string name="epg_refresh_guide">Refresh Guide</string>
+    <string name="epg_sync_data">Sync EPG Data</string>
     <string name="epg_upcoming_schedule">Upcoming Schedule</string>
     <string name="epg_minutes_remaining">%1$d min left</string>
     <string name="epg_no_info">No EPG information</string>

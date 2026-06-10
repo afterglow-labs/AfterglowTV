@@ -27,17 +27,25 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 object AmazonAppstoreBridge : PurchasingListener, LicensingListener {
     private const val TAG = "AmazonAppstoreBridge"
+    private const val PREMIUM_PREFS = "afterglow_amazon_premium"
+    private const val KEY_PREMIUM_ENTITLED = "premium_entitled"
+    private const val KEY_PREMIUM_SKU = "premium_sku"
     private val iapInitialized = AtomicBoolean(false)
     private val drmVerificationStarted = AtomicBoolean(false)
     private val receiptRefreshSawPremium = AtomicBoolean(false)
     private val _premiumEntitled = MutableStateFlow(StorePolicy.isAmazonPremiumEntitledForProcess())
+    private val _premiumOwnedSku = MutableStateFlow<String?>(null)
     @Volatile private var appContext: Context? = null
     val premiumEntitled: StateFlow<Boolean> = _premiumEntitled.asStateFlow()
+    val premiumOwnedSku: StateFlow<String?> = _premiumOwnedSku.asStateFlow()
 
     fun attach(context: Context) {
         if (!BuildConfig.ENABLE_AMAZON_APPSTORE_SDK) return
-        appContext = context.applicationContext
+        val applicationContext = context.applicationContext
+        appContext = applicationContext
+        restoreCachedPremiumState(applicationContext)
         verifyAmazonLicenseOrExit()
+        refreshEntitlements()
     }
 
     fun initialize(context: Context) {
@@ -143,11 +151,11 @@ object AmazonAppstoreBridge : PurchasingListener, LicensingListener {
         Log.d(TAG, "Amazon purchase updates status: ${purchaseUpdatesResponse.requestStatus}")
         if (purchaseUpdatesResponse.requestStatus == PurchaseUpdatesResponse.RequestStatus.SUCCESSFUL) {
             val receipts = purchaseUpdatesResponse.receipts.orEmpty()
-            val hasPremiumReceipt = receipts.hasActivePremiumReceipt()
-            if (hasPremiumReceipt) {
+            val premiumReceipt = receipts.firstActivePremiumReceipt()
+            if (premiumReceipt != null) {
                 receiptRefreshSawPremium.set(true)
                 receipts.notifyFulfilledPremiumReceipts()
-                markPremiumEntitlement(true)
+                markPremiumEntitlement(true, premiumReceipt.matchedPremiumSku())
             }
             if (purchaseUpdatesResponse.hasMore()) {
                 runCatching {
@@ -166,13 +174,13 @@ object AmazonAppstoreBridge : PurchasingListener, LicensingListener {
         when (purchaseResponse.requestStatus) {
             PurchaseResponse.RequestStatus.SUCCESSFUL,
             PurchaseResponse.RequestStatus.ALREADY_PURCHASED -> {
-                purchaseResponse.receipt
-                    ?.takeIf { it.isActivePremiumReceipt() }
-                    ?.let { receipt ->
-                        receipt.notifyFulfilledPremiumReceipt()
-                        markPremiumEntitlement(true)
-                    }
-                refreshEntitlements()
+                val premiumReceipt = purchaseResponse.receipt?.takeIf { it.isActivePremiumReceipt() }
+                if (premiumReceipt != null) {
+                    premiumReceipt.notifyFulfilledPremiumReceipt()
+                    markPremiumEntitlement(true, premiumReceipt.matchedPremiumSku())
+                } else {
+                    refreshEntitlements()
+                }
             }
             else -> Unit
         }
@@ -186,25 +194,52 @@ object AmazonAppstoreBridge : PurchasingListener, LicensingListener {
             BuildConfig.AMAZON_PREMIUM_LIFETIME_SKU
         )).filterTo(linkedSetOf()) { it.isNotBlank() }
 
-    private fun markPremiumEntitlement(entitled: Boolean) {
+    private fun markPremiumEntitlement(entitled: Boolean, ownedSku: String? = null) {
         StorePolicy.setAmazonPremiumEntitledForProcess(entitled)
         _premiumEntitled.value = entitled
+        _premiumOwnedSku.value = ownedSku.takeIf { entitled }
+        appContext?.getSharedPreferences(PREMIUM_PREFS, Context.MODE_PRIVATE)?.edit()?.apply {
+            putBoolean(KEY_PREMIUM_ENTITLED, entitled)
+            if (entitled && !ownedSku.isNullOrBlank()) {
+                putString(KEY_PREMIUM_SKU, ownedSku)
+            } else if (!entitled) {
+                remove(KEY_PREMIUM_SKU)
+            }
+            apply()
+        }
         Log.d(TAG, "Amazon premium entitlement active: $entitled")
     }
 
-    private fun Collection<Receipt>.hasActivePremiumReceipt(): Boolean =
-        any { it.isActivePremiumReceipt() }
+    private fun restoreCachedPremiumState(context: Context) {
+        val prefs = context.getSharedPreferences(PREMIUM_PREFS, Context.MODE_PRIVATE)
+        val entitled = prefs.getBoolean(KEY_PREMIUM_ENTITLED, false)
+        val sku = prefs.getString(KEY_PREMIUM_SKU, null)
+        StorePolicy.setAmazonPremiumEntitledForProcess(entitled)
+        _premiumEntitled.value = entitled
+        _premiumOwnedSku.value = sku.takeIf { entitled }
+    }
+
+    private fun Collection<Receipt>.firstActivePremiumReceipt(): Receipt? =
+        firstOrNull { it.isActivePremiumReceipt() }
 
     private fun Collection<Receipt>.notifyFulfilledPremiumReceipts() {
         forEach { it.notifyFulfilledPremiumReceipt() }
+    }
+
+    private fun Receipt.matchedPremiumSku(): String? {
+        val skus = premiumSkus()
+        return when {
+            sku in skus -> sku
+            termSku in skus -> termSku
+            else -> null
+        }
     }
 
     private fun Receipt.isActivePremiumReceipt(): Boolean {
         if (isCanceled) return false
         if (productType != ProductType.ENTITLED && productType != ProductType.SUBSCRIPTION) return false
 
-        val skus = premiumSkus()
-        return sku in skus || termSku in skus
+        return matchedPremiumSku() != null
     }
 
     private fun Receipt.notifyFulfilledPremiumReceipt() {

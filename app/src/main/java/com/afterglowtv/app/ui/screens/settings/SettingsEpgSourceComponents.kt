@@ -156,8 +156,14 @@ internal fun AddEpgSourceCard(viewModel: SettingsViewModel) {
     ) { result ->
         result.data?.data?.let { selectedUri ->
             persistReadPermissionIfAvailable(context, selectedUri)
-            pickerError = null
-            newUrl = selectedUri.toString()
+            runCatching {
+                copyEpgUriToInternalFile(context, selectedUri)
+            }.onSuccess { fileUrl ->
+                pickerError = null
+                newUrl = fileUrl
+            }.onFailure { error ->
+                pickerError = error.message ?: "Could not copy selected EPG file."
+            }
         }
     }
 

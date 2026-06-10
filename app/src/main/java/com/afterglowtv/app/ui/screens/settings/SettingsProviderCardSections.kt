@@ -14,6 +14,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -182,6 +184,7 @@ internal fun ProviderActionButtons(
     isActive: Boolean,
     isSyncing: Boolean,
     liveOnboardingIncomplete: Boolean,
+    firstActionFocusRequester: FocusRequester? = null,
     onConnect: () -> Unit,
     onRefresh: () -> Unit,
     onEdit: (() -> Unit)?,
@@ -199,12 +202,14 @@ internal fun ProviderActionButtons(
                 accent = Primary,
                 filled = true,
                 contentColor = Color.White,
+                modifier = firstActionFocusRequester?.let { Modifier.focusRequester(it) } ?: Modifier,
                 onClick = if (liveOnboardingIncomplete) onRefresh else onConnect
             )
         } else {
             ProviderActionButton(
                 label = if (isSyncing) stringResource(R.string.settings_syncing_btn) else stringResource(R.string.settings_sync_btn),
                 accent = Primary,
+                modifier = firstActionFocusRequester?.let { Modifier.focusRequester(it) } ?: Modifier,
                 onClick = onRefresh
             )
         }
@@ -238,12 +243,14 @@ private fun ProviderActionButton(
     label: String,
     accent: Color,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     filled: Boolean = false,
     contentColor: Color = accent
 ) {
     val buttonShape = afterglowButtonShape(AppStyles.value.button)
     TvClickableSurface(
         onClick = onClick,
+        modifier = modifier,
         shape = ClickableSurfaceDefaults.shape(buttonShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (filled) accent else accent.copy(alpha = 0.2f),

@@ -89,6 +89,7 @@ internal fun SettingsNavigationRail(
     developerModeEnabled: Boolean,
     focusRequester: FocusRequester,
     onCategorySelected: (Int) -> Unit,
+    onEnterCategoryContent: (Int) -> Unit,
     onNavigate: (String) -> Unit = {},
 ) {
     val policy = StorePolicy.currentFor(developerModeEnabled)
@@ -181,7 +182,8 @@ internal fun SettingsNavigationRail(
                     modifier = if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS) Modifier.focusRequester(focusRequester) else Modifier,
                     indent = 28.dp,
                     compact = true,
-                    onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS) }
+                    onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS) },
+                    onEnterContent = { onEnterCategoryContent(SETTINGS_CATEGORY_PROVIDERS) }
                 )
             }
         }
@@ -195,7 +197,8 @@ internal fun SettingsNavigationRail(
                     modifier = if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD) Modifier.focusRequester(focusRequester) else Modifier,
                     indent = 28.dp,
                     compact = true,
-                    onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS_VOD) }
+                    onClick = { onCategorySelected(SETTINGS_CATEGORY_PROVIDERS_VOD) },
+                    onEnterContent = { onEnterCategoryContent(SETTINGS_CATEGORY_PROVIDERS_VOD) }
                 )
             }
         }
@@ -206,7 +209,8 @@ internal fun SettingsNavigationRail(
                 accentColor = entry.accent,
                 isSelected = selectedCategory == entry.categoryId,
                 modifier = if (selectedCategory == entry.categoryId) Modifier.focusRequester(focusRequester) else Modifier,
-                onClick = { onCategorySelected(entry.categoryId) }
+                onClick = { onCategorySelected(entry.categoryId) },
+                onEnterContent = { onEnterCategoryContent(entry.categoryId) }
             )
         }
         item {

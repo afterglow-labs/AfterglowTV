@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.unit.dp
 import com.afterglowtv.app.BuildConfig
+import com.afterglowtv.app.store.amazon.AfterglowIapConfig
 
 internal fun LazyListScope.settingsPremiumSection(
     amazonPremiumEntitled: Boolean,
+    amazonPremiumOwnedSku: String?,
     onOpenPremiumPurchase: () -> Unit,
     onRefreshPremiumEntitlements: () -> Unit
 ) {
@@ -21,7 +23,7 @@ internal fun LazyListScope.settingsPremiumSection(
             )
             SettingsRow(
                 label = "Status",
-                value = if (amazonPremiumEntitled) "Active" else "Available"
+                value = if (amazonPremiumEntitled) premiumStatusLabel(amazonPremiumOwnedSku) else "Available"
             )
             ClickableSettingsRow(
                 label = "Purchase Premium",
@@ -36,6 +38,18 @@ internal fun LazyListScope.settingsPremiumSection(
         }
     }
 }
+
+private fun premiumStatusLabel(sku: String?): String =
+    when (sku) {
+        AfterglowIapConfig.LIFETIME -> "Lifetime active"
+        AfterglowIapConfig.MONTHLY,
+        AfterglowIapConfig.TEST_MONTHLY -> "Monthly active"
+        AfterglowIapConfig.QUARTERLY -> "Quarterly active"
+        AfterglowIapConfig.ANNUAL,
+        AfterglowIapConfig.TEST_YEARLY -> "Annual active"
+        null -> "Active"
+        else -> "Active"
+    }
 
 private fun premiumPurchaseSummary(): String {
     val terms = buildList {

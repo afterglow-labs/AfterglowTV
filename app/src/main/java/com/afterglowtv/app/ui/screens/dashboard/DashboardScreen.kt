@@ -241,7 +241,7 @@ private fun HomeCommandHub(
     val visibleStartupDestination = StartupDestination.visibleOrDefault(startupDestination, developerModeEnabled)
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val layoutMode = if (maxHeight < 560.dp || maxWidth < 900.dp) {
+        val layoutMode = if (maxHeight < 540.dp || maxWidth < 800.dp) {
             HomeDashboardLayoutMode.CompactGrid
         } else {
             HomeDashboardLayoutMode.SpaciousGrid
@@ -401,7 +401,7 @@ private fun HomeCommandHub(
             HomeDashboardLayoutMode.SpaciousGrid -> {
                 val originalRowHeight = ((maxHeight - outerVerticalPadding * 2 - gap) / 2).coerceAtLeast(0.dp)
                 val topRowHeight = originalRowHeight * 0.825f
-                val bottomRowHeight = originalRowHeight * 0.82f
+                val bottomRowHeight = originalRowHeight * 0.225f
 
                 Column(
                     modifier = Modifier
@@ -433,7 +433,7 @@ private fun HomeCommandHub(
                         )
                     }
                     Row(
-                        modifier = Modifier.height(bottomRowHeight),
+                        modifier = Modifier.height(originalRowHeight),
                         horizontalArrangement = Arrangement.spacedBy(gap)
                     ) {
                         HomeAppearanceWindow(

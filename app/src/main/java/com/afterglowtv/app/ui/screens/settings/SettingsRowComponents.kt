@@ -28,6 +28,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -297,6 +300,7 @@ internal fun SettingsNavItem(
     modifier: Modifier = Modifier,
     indent: Dp = 0.dp,
     compact: Boolean = false,
+    onEnterContent: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -315,6 +319,18 @@ internal fun SettingsNavItem(
         modifier = modifier
             .fillMaxWidth()
             .focusRequester(focusRequester)
+            .onPreviewKeyEvent { event ->
+                if (
+                    onEnterContent != null &&
+                    event.type == KeyEventType.KeyDown &&
+                    event.nativeKeyEvent.keyCode == android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+                ) {
+                    onEnterContent()
+                    true
+                } else {
+                    false
+                }
+            }
             .mouseClickable(focusRequester = focusRequester, onClick = onClick)
     ) {
         Row(

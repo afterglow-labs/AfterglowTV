@@ -155,7 +155,7 @@ data class StorePolicySnapshot(
                 BundledPublicSourceSpec(
                     playlistAssetPath = "public_sources/playlist_usa.m3u8",
                     playlistFileName = "afterglow_public_live.m3u8",
-                    providerName = "Free, Authorized Public M3U Playlist",
+                    providerName = "Demo Playlist",
                     sourceSlot = ProviderSourceSlot.LIVE,
                     m3uVodClassificationEnabled = false,
                     guideFileName = "afterglow_public_live.xml",

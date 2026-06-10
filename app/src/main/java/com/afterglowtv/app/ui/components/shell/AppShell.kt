@@ -88,10 +88,11 @@ import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.design.AppMotion
 import com.afterglowtv.app.ui.design.FocusSpec
-import com.afterglowtv.app.ui.interaction.mouseClickable
-import com.afterglowtv.app.ui.interaction.rememberTvInteractionSounds
 import com.afterglowtv.app.ui.design.LocalAppShapes
 import com.afterglowtv.app.ui.design.LocalAppSpacing
+import com.afterglowtv.app.ui.design.requestFocusSafely
+import com.afterglowtv.app.ui.interaction.mouseClickable
+import com.afterglowtv.app.ui.interaction.rememberTvInteractionSounds
 
 enum class AppNavigationChrome {
     Rail,
@@ -120,6 +121,8 @@ fun AppScreenScaffold(
      *  every pixel for the program grid. Caller's [content] is expected to
      *  handle its own insets if any are needed. */
     fullBleed: Boolean = false,
+    /** Auto-hidden top bars should never be visible without owning focus. */
+    focusTopBarOnShow: Boolean = fullBleed,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val spacing = LocalAppSpacing.current
@@ -190,6 +193,7 @@ fun AppScreenScaffold(
                         TopNavigationBar(
                             currentRoute = currentRoute,
                             onNavigate = onNavigate,
+                            requestFocusOnShow = focusTopBarOnShow,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(10.dp))
@@ -266,6 +270,7 @@ private fun TopNavigationBar(
     currentRoute: String,
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier,
+    requestFocusOnShow: Boolean = false,
     viewModel: AppShellViewModel = hiltViewModel()
 ) {
     val showAdultTab by viewModel.showAdultTab.collectAsStateWithLifecycle()
@@ -290,6 +295,19 @@ private fun TopNavigationBar(
         }
     }
 
+    LaunchedEffect(requestFocusOnShow, currentRoute, items) {
+        if (requestFocusOnShow) {
+            activeTopNavigationFocusRequester(
+                items = items,
+                currentRoute = currentRoute,
+                focusRequesters = focusRequesters
+            ).requestFocusSafely(
+                tag = "AppShell",
+                target = "Top navigation item"
+            )
+        }
+    }
+
     if (showExitConfirmation) {
         ConfirmCloseAppDialog(
             onDismiss = { showExitConfirmation = false },
@@ -303,8 +321,11 @@ private fun TopNavigationBar(
     Surface(
         modifier = modifier.focusProperties {
             onEnter = {
-                val activeItem = findActiveDestinationItem(items, currentRoute)
-                focusRequesters[activeItem?.route] ?: FocusRequester.Default
+                activeTopNavigationFocusRequester(
+                    items = items,
+                    currentRoute = currentRoute,
+                    focusRequesters = focusRequesters
+                )
             }
         },
         shape = RoundedCornerShape(28.dp),
@@ -1031,6 +1052,16 @@ private fun findActiveDestinationItem(
         .filter { currentRoute.startsWith(it.route) }
         .maxByOrNull { it.route.length }
         ?: items.firstOrNull { it.route == currentRoute }
+
+private fun activeTopNavigationFocusRequester(
+    items: List<DestinationItem>,
+    currentRoute: String,
+    focusRequesters: MutableMap<String, FocusRequester>
+): FocusRequester {
+    val activeItem = findActiveDestinationItem(items, currentRoute)
+    return activeItem?.let { focusRequesters.getOrPut(it.route) { FocusRequester() } }
+        ?: FocusRequester.Default
+}
 
 private fun buildDestinationItems(
     showAdultTab: Boolean = false,

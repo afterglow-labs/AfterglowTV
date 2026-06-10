@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -75,6 +76,7 @@ import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.Program
 import java.time.Instant
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import kotlin.math.max
 import kotlinx.coroutines.launch
 
@@ -287,7 +289,6 @@ private fun GuideTimelineHeader(
         }
     }
     val labsGuide = isAfterglowLabsGuideTheme
-    val slotWidth = totalTimelineWidth * (markerStepMs.toFloat() / totalDuration.toFloat())
     val slotShape = RoundedCornerShape(0.dp)
     val timelineTextColor = if (labsGuide) LabsGuideTextMuted else OnSurfaceDim
     val gridLineColor = if (labsGuide) LabsGuideDivider else Color.White.copy(alpha = 0.14f)
@@ -314,12 +315,13 @@ private fun GuideTimelineHeader(
                     color = timelineTextColor
                 )
                 Text(
-                    text = stringResource(
-                        R.string.epg_timeline_range_label,
-                        formatWindowDuration(totalDuration)
-                    ),
+                    text = markerLabel,
                     style = MaterialTheme.typography.labelSmall,
-                    color = timelineTextColor
+                    color = when {
+                        labsGuide -> LabsGuideText
+                        now in windowStart..windowEnd -> Primary
+                        else -> timelineTextColor
+                    }
                 )
             }
             Box(
@@ -337,42 +339,40 @@ private fun GuideTimelineHeader(
                             .width(totalTimelineWidth)
                             .height(28.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .width(totalTimelineWidth)
-                                .fillMaxHeight()
-                        ) {
-                            timeSlots.forEach { marker ->
-                                Box(
-                                    modifier = Modifier
-                                        .width(slotWidth)
-                                        .fillMaxHeight()
-                                        .background(
-                                            color = if (labsGuide) LabsGuideSlot else SurfaceElevated,
-                                            shape = slotShape
-                                        )
-                                        .border(
-                                            width = 1.dp,
-                                            color = gridLineColor,
-                                            shape = slotShape
-                                        ),
-                                    contentAlignment = Alignment.CenterStart
-                                ) {
-                                    Text(
-                                        text = hourFormat.format(Instant.ofEpochMilli(marker).atZone(zone)),
-                                        modifier = Modifier.padding(horizontal = 8.dp),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (labsGuide) LabsGuideText else OnSurfaceDim,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                        timeSlots.forEach { marker ->
+                            val slotStartRatio = ((marker - windowStart).toFloat() / totalDuration.toFloat()).coerceIn(0f, 1f)
+                            val slotEnd = (marker + markerStepMs).coerceAtMost(windowEnd)
+                            val slotWidthRatio = ((slotEnd - marker).toFloat() / totalDuration.toFloat()).coerceIn(0f, 1f)
+                            Box(
+                                modifier = Modifier
+                                    .offset(x = totalTimelineWidth * slotStartRatio)
+                                    .width(totalTimelineWidth * slotWidthRatio)
+                                    .fillMaxHeight()
+                                    .background(
+                                        color = if (labsGuide) LabsGuideSlot else SurfaceElevated,
+                                        shape = slotShape
                                     )
-                                }
+                                    .border(
+                                        width = 1.dp,
+                                        color = gridLineColor,
+                                        shape = slotShape
+                                    ),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = hourFormat.format(Instant.ofEpochMilli(marker).atZone(zone)),
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (labsGuide) LabsGuideText else OnSurfaceDim,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
                         if (now in windowStart..windowEnd) {
                             Box(
                                 modifier = Modifier
-                                    .padding(start = totalTimelineWidth * elapsedRatio)
+                                    .offset(x = totalTimelineWidth * elapsedRatio)
                                     .width(2.dp)
                                     .fillMaxHeight()
                                     .background(if (labsGuide) LabsGuideText else Primary)
@@ -381,15 +381,6 @@ private fun GuideTimelineHeader(
                     }
                 }
             }
-            Text(
-                text = markerLabel,
-                style = MaterialTheme.typography.labelSmall,
-                color = when {
-                    labsGuide -> LabsGuideText
-                    now in windowStart..windowEnd -> Primary
-                    else -> OnSurfaceDim
-                }
-            )
         }
     }
 }
@@ -472,7 +463,8 @@ fun EpgRow(
                     border = BorderStroke(2.dp, channelFocusedBorderColor),
                     shape = rowShape
                 )
-            )
+            ),
+            scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)
         ) {
             Row(
                 modifier = Modifier
@@ -561,7 +553,7 @@ fun EpgRow(
                     val markerRatio = ((marker - windowStart).toFloat() / totalDuration.toFloat()).coerceIn(0f, 1f)
                     Box(
                         modifier = Modifier
-                            .padding(start = totalTimelineWidth * markerRatio)
+                            .offset(x = totalTimelineWidth * markerRatio)
                             .width(1.dp)
                             .fillMaxHeight()
                             .background(if (labsGuide) LabsGuideDivider else Color.White.copy(alpha = 0.08f))
@@ -614,8 +606,15 @@ fun ProgramItem(
     val startStr = format.format(Instant.ofEpochMilli(program.startTime).atZone(zone))
     val endStr = format.format(Instant.ofEpochMilli(program.endTime).atZone(zone))
     val totalDuration = (windowEnd - windowStart).coerceAtLeast(1L)
-    val visibleStart = max(program.startTime, windowStart)
-    val visibleEnd = max(visibleStart + 1, minOf(program.endTime, windowEnd))
+    val positionedStartTime = remember(program.startTime, windowStart, windowEnd, zone) {
+        snapProgramTimeToDisplayedMinuteBoundary(program.startTime, zone, windowStart, windowEnd)
+    }
+    val positionedEndTime = remember(program.endTime, positionedStartTime, windowStart, windowEnd, zone) {
+        snapProgramTimeToDisplayedMinuteBoundary(program.endTime, zone, windowStart, windowEnd)
+            .coerceAtLeast(positionedStartTime + 1)
+    }
+    val visibleStart = max(positionedStartTime, windowStart)
+    val visibleEnd = max(visibleStart + 1, minOf(positionedEndTime, windowEnd))
     val startRatio = ((visibleStart - windowStart).toFloat() / totalDuration.toFloat()).coerceIn(0f, 1f)
     val widthRatio = ((visibleEnd - visibleStart).toFloat() / totalDuration.toFloat()).coerceIn(0f, 1f)
     val itemStart = totalTimelineWidth * startRatio
@@ -677,7 +676,8 @@ fun ProgramItem(
     val contentStartPadding = innerHorizontalPadding + leadingStripeWidth
     val showCornerTag = isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.CORNER_TAG && !isVeryCompactCell
     val modifierWithGlow = Modifier
-        .padding(start = itemStart, top = outerVerticalPadding, bottom = outerVerticalPadding)
+        .offset(x = itemStart)
+        .padding(top = outerVerticalPadding, bottom = outerVerticalPadding)
         .width(itemWidth)
         .fillMaxHeight()
         .let { base ->
@@ -720,7 +720,8 @@ fun ProgramItem(
                 border = BorderStroke(2.dp, if (isAfterglowLabsGuideTheme) LabsGuideOutline else FocusBorder),
                 shape = cellShape
             )
-        )
+        ),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             if (cellStyle == AppShapeSet.EpgCellStyle.ACCENT_STRIPE) {
@@ -942,6 +943,21 @@ internal fun formatWindowDuration(durationMs: Long): String {
     } else {
         "${hours}h ${minutes}m"
     }
+}
+
+private fun snapProgramTimeToDisplayedMinuteBoundary(
+    timestamp: Long,
+    zone: ZoneId,
+    windowStart: Long,
+    windowEnd: Long
+): Long {
+    if (timestamp <= windowStart || timestamp >= windowEnd) return timestamp
+    val roundedToMinute = ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), zone)
+        .withSecond(0)
+        .withNano(0)
+        .toInstant()
+        .toEpochMilli()
+    return roundedToMinute.takeIf { kotlin.math.abs(timestamp - it) < 60_000L } ?: timestamp
 }
 
 internal fun epgChannelKey(channel: Channel, index: Int): String {

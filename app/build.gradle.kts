@@ -30,7 +30,7 @@ val devModePlaylistPresetSpecs: String =
 val bundledPublicSourceSpec =
     "public_sources/playlist_usa.m3u8" +
         "::afterglow_public_live.m3u8" +
-        "::Free, Authorized Public M3U Playlist" +
+        "::Demo Playlist" +
         "::LIVE" +
         "::false" +
         "::afterglow_public_live.xml" +
@@ -45,8 +45,8 @@ android {
         applicationId = "com.afterglowtv.app"
         minSdk = 23
         targetSdk = 36
-        versionCode = 31
-        versionName = "0.1.30"
+        versionCode = 32
+        versionName = "0.1.31"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.afterglowtv.app\"")
         buildConfigField("boolean", "DATE_UNLOCKS_HIDDEN_FEATURES", "false")
@@ -54,6 +54,7 @@ android {
         buildConfigField("long", "PREMIUM_PREVIEW_FREE_UNTIL_EPOCH_MS", "0L")
         buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "false")
         buildConfigField("boolean", "ENABLE_AMAZON_DRM_LICENSING", "false")
+        buildConfigField("boolean", "ENABLE_AMAZON_DEVICE_MESSAGING", "false")
         buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"\"")
         buildConfigField("String", "AMAZON_PREMIUM_QUARTERLY_SKU", "\"\"")
         buildConfigField("String", "AMAZON_PREMIUM_ANNUALLY_SKU", "\"\"")
@@ -87,6 +88,7 @@ android {
             buildConfigField("boolean", "ALLOW_DVR_DEVELOPER_UNLOCK", "true")
             buildConfigField("boolean", "ENABLE_AMAZON_APPSTORE_SDK", "true")
             buildConfigField("boolean", "ENABLE_AMAZON_DRM_LICENSING", "true")
+            buildConfigField("boolean", "ENABLE_AMAZON_DEVICE_MESSAGING", "true")
             buildConfigField("String", "AMAZON_PREMIUM_MONTHLY_SKU", "\"com.afterglowtv.app.premium.monthly.v1\"")
             buildConfigField("String", "AMAZON_PREMIUM_QUARTERLY_SKU", "\"com.afterglowtv.app.premium.quarterly.v1\"")
             buildConfigField("String", "AMAZON_PREMIUM_ANNUALLY_SKU", "\"com.afterglowtv.app.premium.annually.v1\"")
@@ -106,6 +108,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "ENABLE_AMAZON_DRM_LICENSING", "false")
+        }
+
         release {
             // Amazon Appstore SDK 3.0.9 ships legacy bytecode that R8 reports as
             // malformed during release minification. Do not run R8 over the
@@ -269,6 +275,7 @@ dependencies {
     implementation(libs.mediarouter)
     implementation(libs.play.services.cast.framework)
     implementation(libs.amazon.appstore.sdk)
+    compileOnly(files("libs/amazon-device-messaging-1.2.0.jar"))
 
     // Test
     testImplementation(libs.junit)

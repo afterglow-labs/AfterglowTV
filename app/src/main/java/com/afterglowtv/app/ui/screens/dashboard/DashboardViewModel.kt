@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.afterglowtv.app.BuildConfig
 import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.ui.design.AppColors
+import com.afterglowtv.app.ui.design.AppPalette
 import com.afterglowtv.app.ui.model.orderedByRequestedRawIds
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.data.sync.SyncManager
 import com.afterglowtv.app.update.AppUpdateInstaller
 import com.afterglowtv.domain.model.ActiveLiveSource
+import com.afterglowtv.domain.model.ActiveLiveSourceOption
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.Channel
 import com.afterglowtv.domain.model.ContentType
@@ -18,6 +21,7 @@ import com.afterglowtv.domain.model.PlaybackHistory
 import com.afterglowtv.domain.model.Provider
 import com.afterglowtv.domain.model.ProviderStatus
 import com.afterglowtv.domain.model.ProviderType
+import com.afterglowtv.domain.model.Result
 import com.afterglowtv.domain.model.SyncState
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
@@ -96,6 +100,27 @@ class DashboardViewModel @Inject constructor(
     val remoteShowInfoOnZap: StateFlow<Boolean> = preferencesRepository.remoteShowInfoOnZap
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    val preventStandbyDuringPlayback: StateFlow<Boolean> = preferencesRepository.preventStandbyDuringPlayback
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val autoPlayNextEpisode: StateFlow<Boolean> = preferencesRepository.autoPlayNextEpisode
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val backgroundGradientsEnabled: StateFlow<Boolean> = preferencesRepository.backgroundGradientsEnabled
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val themePaletteId: StateFlow<String> = preferencesRepository.themePalette
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "afterglow_sunset")
+
+    val showLiveSourceSwitcher: StateFlow<Boolean> = preferencesRepository.showLiveSourceSwitcher
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val showAllChannelsCategory: StateFlow<Boolean> = preferencesRepository.showAllChannelsCategory
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val showRecentChannelsCategory: StateFlow<Boolean> = preferencesRepository.showRecentChannelsCategory
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     fun setStartupDestination(destination: StartupDestination) {
         viewModelScope.launch {
             preferencesRepository.setStartupDestination(destination.storageValue)
@@ -120,22 +145,82 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun setPreventStandbyDuringPlayback(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setPreventStandbyDuringPlayback(enabled)
+        }
+    }
+
+    fun setAutoPlayNextEpisode(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setAutoPlayNextEpisode(enabled)
+        }
+    }
+
+    fun setBackgroundGradientsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            AppColors.applyBackgroundGradientsEnabled(enabled)
+            preferencesRepository.setBackgroundGradientsEnabled(enabled)
+        }
+    }
+
+    fun setThemePalette(palette: AppPalette) {
+        AppColors.applyPalette(palette)
+        viewModelScope.launch {
+            preferencesRepository.setThemePalette(palette.id)
+        }
+    }
+
+    fun setShowLiveSourceSwitcher(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setShowLiveSourceSwitcher(enabled)
+        }
+    }
+
+    fun setShowAllChannelsCategory(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setShowAllChannelsCategory(enabled)
+        }
+    }
+
+    fun setShowRecentChannelsCategory(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setShowRecentChannelsCategory(enabled)
+        }
+    }
+
     init {
         viewModelScope.launch {
             combine(
                 combinedM3uRepository.getActiveLiveSource(),
-                providerRepository.getActiveProvider()
-            ) { activeSource, activeProvider ->
-                Pair(activeSource ?: activeProvider?.id?.let { ActiveLiveSource.ProviderSource(it) }, activeProvider)
+                providerRepository.getActiveProvider(),
+                combinedM3uRepository.getActiveLiveSourceOptions().onStart { emit(emptyList()) }
+            ) { activeSource, activeProvider, sourceOptions ->
+                DashboardSourceSelection(
+                    activeSource = activeSource ?: activeProvider?.id?.let { ActiveLiveSource.ProviderSource(it) },
+                    activeProvider = activeProvider,
+                    sourceOptions = sourceOptions
+                )
             }
                 .distinctUntilChanged { old, new ->
-                    old.first == new.first && old.second?.id == new.second?.id
+                    old.activeSource == new.activeSource &&
+                        old.activeProvider?.id == new.activeProvider?.id &&
+                        old.sourceOptions == new.sourceOptions
                 }
-                .flatMapLatest { (activeSource, activeProvider) ->
+                .flatMapLatest { selection ->
                     flow {
+                        val activeSource = selection.activeSource
+                        val activeProvider = selection.activeProvider
+                        val sourceOptions = selection.sourceOptions
                         if (activeSource == null && activeProvider == null) {
                             delay(PROVIDER_SETTLE_DELAY_MS)
-                            emit(DashboardUiState(isLoading = false))
+                            emit(
+                                DashboardUiState(
+                                    activeLiveSource = activeSource,
+                                    liveSourceOptions = sourceOptions,
+                                    isLoading = false
+                                )
+                            )
                             return@flow
                         }
 
@@ -144,10 +229,24 @@ class DashboardViewModel @Inject constructor(
                                 val provider = activeProvider?.takeIf { it.id == activeSource.providerId }
                                     ?: providerRepository.getProvider(activeSource.providerId)
                                     ?: run {
-                                        emit(DashboardUiState(isLoading = false))
+                                        emit(
+                                            DashboardUiState(
+                                                activeLiveSource = activeSource,
+                                                liveSourceOptions = sourceOptions,
+                                                isLoading = false
+                                            )
+                                        )
                                         return@flow
                                     }
-                                emitAll(observeDashboard(provider, listOf(provider.id), combinedProfileId = null))
+                                emitAll(
+                                    observeDashboard(
+                                        provider = provider,
+                                        liveProviderIds = listOf(provider.id),
+                                        combinedProfileId = null,
+                                        activeSource = activeSource,
+                                        sourceOptions = sourceOptions
+                                    )
+                                )
                             }
 
                             is ActiveLiveSource.CombinedM3uSource -> {
@@ -160,13 +259,34 @@ class DashboardViewModel @Inject constructor(
                                 val provider = activeProvider?.takeIf { it.id in liveProviderIds }
                                     ?: liveProviderIds.firstOrNull()?.let { providerRepository.getProvider(it) }
                                     ?: run {
-                                        emit(DashboardUiState(isLoading = false, currentCombinedProfileId = activeSource.profileId))
+                                        emit(
+                                            DashboardUiState(
+                                                activeLiveSource = activeSource,
+                                                liveSourceOptions = sourceOptions,
+                                                isLoading = false,
+                                                currentCombinedProfileId = activeSource.profileId
+                                            )
+                                        )
                                         return@flow
                                     }
-                                emitAll(observeDashboard(provider, liveProviderIds, combinedProfileId = activeSource.profileId))
+                                emitAll(
+                                    observeDashboard(
+                                        provider = provider,
+                                        liveProviderIds = liveProviderIds,
+                                        combinedProfileId = activeSource.profileId,
+                                        activeSource = activeSource,
+                                        sourceOptions = sourceOptions
+                                    )
+                                )
                             }
 
-                            null -> emit(DashboardUiState(isLoading = false))
+                            null -> emit(
+                                DashboardUiState(
+                                    activeLiveSource = activeSource,
+                                    liveSourceOptions = sourceOptions,
+                                    isLoading = false
+                                )
+                            )
                         }
                     }
                 }
@@ -179,7 +299,9 @@ class DashboardViewModel @Inject constructor(
     private fun observeDashboard(
         provider: Provider,
         liveProviderIds: List<Long>,
-        combinedProfileId: Long?
+        combinedProfileId: Long?,
+        activeSource: ActiveLiveSource?,
+        sourceOptions: List<ActiveLiveSourceOption>
     ): Flow<DashboardUiState> {
         val contentShelves = flowOf(
             DashboardContentShelves(
@@ -207,6 +329,8 @@ class DashboardViewModel @Inject constructor(
             val providerDisplayName = provider.name
             DashboardUiState(
                 provider = provider,
+                activeLiveSource = activeSource,
+                liveSourceOptions = sourceOptions,
                 showProviderChrome = true,
                 favoriteChannels = snapshot.shelves.favoriteChannels,
                 recentChannels = snapshot.shelves.recentChannels,
@@ -511,10 +635,67 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun switchLiveSource(source: ActiveLiveSource) {
+        viewModelScope.launch {
+            when (source) {
+                is ActiveLiveSource.ProviderSource -> switchProviderSource(source.providerId)
+                is ActiveLiveSource.CombinedM3uSource -> switchCombinedSource(source.profileId)
+            }
+        }
+    }
+
+    private suspend fun switchProviderSource(providerId: Long) {
+        val provider = providerRepository.getProvider(providerId)
+        if (provider == null) {
+            _uiState.value = _uiState.value.copy(userMessage = "Could not activate source: provider not found")
+            return
+        }
+        when (val result = providerRepository.setActiveProvider(providerId)) {
+            is Result.Error -> {
+                _uiState.value = _uiState.value.copy(userMessage = "Could not activate ${provider.name}: ${result.message}")
+                return
+            }
+            else -> Unit
+        }
+        preferencesRepository.setLastActiveProviderId(providerId)
+        when (val result = combinedM3uRepository.setActiveLiveSource(ActiveLiveSource.ProviderSource(providerId))) {
+            is Result.Error -> _uiState.value = _uiState.value.copy(userMessage = "Could not save active source: ${result.message}")
+            else -> _uiState.value = _uiState.value.copy(userMessage = "Connected to ${provider.name}")
+        }
+    }
+
+    private suspend fun switchCombinedSource(profileId: Long) {
+        val profile = combinedM3uRepository.getProfile(profileId)
+        when {
+            profile == null -> {
+                _uiState.value = _uiState.value.copy(userMessage = "Could not activate combined source: profile not found")
+                return
+            }
+            profile.members.isEmpty() -> {
+                _uiState.value = _uiState.value.copy(userMessage = "Add at least one playlist to this combined source before activating it")
+                return
+            }
+            profile.members.none { it.enabled } -> {
+                _uiState.value = _uiState.value.copy(userMessage = "Enable at least one playlist in this combined source before activating it")
+                return
+            }
+        }
+        when (val result = combinedM3uRepository.setActiveLiveSource(ActiveLiveSource.CombinedM3uSource(profileId))) {
+            is Result.Error -> _uiState.value = _uiState.value.copy(userMessage = "Could not activate ${profile.name}: ${result.message}")
+            else -> _uiState.value = _uiState.value.copy(userMessage = "Connected to ${profile.name}")
+        }
+    }
+
     fun userMessageShown() {
         _uiState.value = _uiState.value.copy(userMessage = null)
     }
 }
+
+private data class DashboardSourceSelection(
+    val activeSource: ActiveLiveSource?,
+    val activeProvider: Provider?,
+    val sourceOptions: List<ActiveLiveSourceOption>
+)
 
 private data class DashboardLiveContext(
     val lastVisitedCategory: Category?,
@@ -542,6 +723,8 @@ private data class DashboardSnapshot(
 
 data class DashboardUiState(
     val provider: Provider? = null,
+    val activeLiveSource: ActiveLiveSource? = null,
+    val liveSourceOptions: List<ActiveLiveSourceOption> = emptyList(),
     val showProviderChrome: Boolean = true,
     val favoriteChannels: List<Channel> = emptyList(),
     val recentChannels: List<Channel> = emptyList(),

@@ -17,6 +17,7 @@ import com.afterglowtv.app.store.DevModePlaylistPresetSeeder
 import com.afterglowtv.app.store.StorePolicy
 import com.afterglowtv.app.store.StorePolicySnapshot
 import com.afterglowtv.app.store.amazon.AmazonAppstoreBridge
+import com.afterglowtv.app.store.amazon.adm.AmazonDeviceMessagingManager
 import com.afterglowtv.app.update.GitHubReleaseChecker
 import com.afterglowtv.app.ui.accessibility.isReducedMotionEnabled
 import com.afterglowtv.app.ui.design.AppColors
@@ -67,6 +68,7 @@ class AfterglowTVApp : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         CrashReportStore.install(this)
         AmazonAppstoreBridge.attach(this)
+        AmazonDeviceMessagingManager.registerIfAvailable(this)
         applySavedVisualPreferencesBeforeUi()
         repairDeveloperModeAdultVisibility()
         seedDevModePlaylistPresetsWhenUnlocked()

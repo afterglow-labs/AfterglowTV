@@ -1,15 +1,26 @@
 package com.afterglowtv.app.ui.screens.settings
 
 import android.content.Context
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.afterglowtv.app.store.StorePolicy
+import com.afterglowtv.app.ui.design.requestFocusSafely
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun SettingsContentPane(
@@ -32,6 +43,9 @@ internal fun SettingsContentPane(
     onOpenPremiumPurchase: () -> Unit,
     onRefreshPremiumEntitlements: () -> Unit,
     amazonPremiumEntitled: Boolean,
+    amazonPremiumOwnedSku: String?,
+    returnFocusRequester: FocusRequester,
+    entryFocusRequest: Int,
     modifier: Modifier = Modifier
 ) {
     val policy = StorePolicy.currentFor(uiState.developerModeEnabled)
@@ -42,15 +56,38 @@ internal fun SettingsContentPane(
             developerModeEnabled = effectiveDeveloperModeEnabled
         )
     } ?: SETTINGS_CATEGORY_PROVIDERS
+    val listState = rememberLazyListState()
+    val entryFocusRequester = androidx.compose.runtime.remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(selectedCategory) {
+        listState.scrollToItem(0)
+    }
+
+    LaunchedEffect(entryFocusRequest, selectedCategory) {
+        if (entryFocusRequest <= 0) {
+            return@LaunchedEffect
+        }
+        listState.scrollToItem(0)
+        delay(32)
+        if (entryFocusRequester.requestFocusSafely(tag = "SettingsContentPane", target = "Content entry")) {
+            delay(16)
+            focusManager.moveFocus(FocusDirection.Down)
+        }
+    }
 
     LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxHeight()
             .imePadding(),
         contentPadding = PaddingValues(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
-        userScrollEnabled = !uiState.isSyncing
+        userScrollEnabled = true
     ) {
+        item(key = "settings-content-entry-$selectedCategory") {
+            SettingsContentEntryTarget(entryFocusRequester)
+        }
         if (selectedCategory == SETTINGS_CATEGORY_PROVIDERS || selectedCategory == SETTINGS_CATEGORY_PROVIDERS_VOD) {
             providerSection(
                 uiState = uiState,
@@ -66,6 +103,7 @@ internal fun SettingsContentPane(
         } else if (selectedCategory == SETTINGS_CATEGORY_PREMIUM) {
             settingsPremiumSection(
                 amazonPremiumEntitled = amazonPremiumEntitled,
+                amazonPremiumOwnedSku = amazonPremiumOwnedSku,
                 onOpenPremiumPurchase = onOpenPremiumPurchase,
                 onRefreshPremiumEntitlements = onRefreshPremiumEntitlements
             )
@@ -191,4 +229,14 @@ internal fun SettingsContentPane(
             )
         }
     }
+}
+
+@Composable
+private fun SettingsContentEntryTarget(focusRequester: FocusRequester) {
+    Box(
+        modifier = Modifier
+            .size(1.dp)
+            .focusRequester(focusRequester)
+            .focusable()
+    )
 }

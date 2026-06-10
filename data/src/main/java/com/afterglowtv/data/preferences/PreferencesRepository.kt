@@ -138,6 +138,7 @@ class PreferencesRepository @Inject constructor(
         val DEFAULT_VIEW_MODE = stringPreferencesKey("default_view_mode")
         val STARTUP_DESTINATION = stringPreferencesKey("startup_destination")
         val STARTUP_DESTINATION_HOME_DEFAULT_MIGRATED = booleanPreferencesKey("startup_destination_home_default_migrated")
+        val STARTUP_DESTINATION_GUIDE_RESET_MIGRATED = booleanPreferencesKey("startup_destination_guide_reset_migrated")
         val PARENTAL_CONTROL_LEVEL = intPreferencesKey("parental_control_level")
         val PARENTAL_V2_MIGRATED = booleanPreferencesKey("parental_v2_migrated")
         val LEGACY_PARENTAL_PIN = stringPreferencesKey("parental_pin")
@@ -567,15 +568,19 @@ class PreferencesRepository @Inject constructor(
 
     suspend fun migrateStartupDestinationToHomeDefault() {
         context.dataStore.edit { preferences ->
-            if (preferences[PreferencesKeys.STARTUP_DESTINATION_HOME_DEFAULT_MIGRATED] == true) {
-                return@edit
-            }
-            if (preferences[PreferencesKeys.STARTUP_DESTINATION].isNullOrBlank() ||
-                preferences[PreferencesKeys.STARTUP_DESTINATION] == "iptv_guide"
+            if (preferences[PreferencesKeys.STARTUP_DESTINATION_HOME_DEFAULT_MIGRATED] != true &&
+                preferences[PreferencesKeys.STARTUP_DESTINATION].isNullOrBlank()
             ) {
                 preferences[PreferencesKeys.STARTUP_DESTINATION] = "home"
             }
             preferences[PreferencesKeys.STARTUP_DESTINATION_HOME_DEFAULT_MIGRATED] = true
+
+            if (preferences[PreferencesKeys.STARTUP_DESTINATION_GUIDE_RESET_MIGRATED] != true &&
+                preferences[PreferencesKeys.STARTUP_DESTINATION] == "iptv_guide"
+            ) {
+                preferences[PreferencesKeys.STARTUP_DESTINATION] = "home"
+            }
+            preferences[PreferencesKeys.STARTUP_DESTINATION_GUIDE_RESET_MIGRATED] = true
         }
     }
 

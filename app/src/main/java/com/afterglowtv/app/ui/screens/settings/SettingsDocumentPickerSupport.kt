@@ -85,6 +85,19 @@ internal fun copyPlaylistUriToInternalFile(context: Context, uri: Uri): String {
     return Uri.fromFile(target).toString()
 }
 
+internal fun copyEpgUriToInternalFile(context: Context, uri: Uri): String {
+    if (uri.scheme == "file") return uri.toString()
+    val displayName = context.displayNameForUri(uri)
+        ?.takeIf { it.isNotBlank() }
+        ?: "guide-${UUID.randomUUID()}.xml"
+    val targetDir = File(context.filesDir, "epg_sources").apply { mkdirs() }
+    val target = File(targetDir, displayName.safeEpgFileName())
+    context.contentResolver.openInputStream(uri)?.use { input ->
+        target.outputStream().use { output -> input.copyTo(output) }
+    } ?: error("Cannot open selected EPG file.")
+    return Uri.fromFile(target).toString()
+}
+
 private fun Context.displayNameForUri(uri: Uri): String? {
     var cursor: Cursor? = null
     return try {
@@ -112,5 +125,19 @@ private fun String.safePlaylistFileName(): String {
         cleaned
     } else {
         "$cleaned.m3u"
+    }
+}
+
+private fun String.safeEpgFileName(): String {
+    val cleaned = replace(Regex("[^A-Za-z0-9._-]+"), "_")
+        .trim('_', '.', '-')
+        .ifBlank { "guide-${UUID.randomUUID()}.xml" }
+    return if (cleaned.endsWith(".xml", ignoreCase = true) ||
+        cleaned.endsWith(".xmltv", ignoreCase = true) ||
+        cleaned.endsWith(".gz", ignoreCase = true)
+    ) {
+        cleaned
+    } else {
+        "$cleaned.xml"
     }
 }

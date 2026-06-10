@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +51,7 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val amazonPremiumEntitled by AmazonAppstoreBridge.premiumEntitled.collectAsStateWithLifecycle()
+    val amazonPremiumOwnedSku by AmazonAppstoreBridge.premiumOwnedSku.collectAsStateWithLifecycle()
     val settingsNavFocusRequester = remember { FocusRequester() }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -62,6 +64,7 @@ fun SettingsScreen(
     )
     val dialogState = rememberSettingsScreenDialogState()
     val providerState = rememberSettingsProviderSectionState(dialogState)
+    var settingsContentEntryRequest by remember { mutableIntStateOf(0) }
     var handledInitialBackupImportUri by remember { mutableStateOf<String?>(null) }
     var handledInitialProviderUri by remember { mutableStateOf<String?>(null) }
     var showPremiumPurchaseDialog by rememberSaveable { mutableStateOf(false) }
@@ -152,6 +155,13 @@ fun SettingsScreen(
         }
     }
 
+    LaunchedEffect(amazonPremiumEntitled) {
+        if (amazonPremiumEntitled && showPremiumPurchaseDialog) {
+            showPremiumPurchaseDialog = false
+            viewModel.showUserMessage("Premium is active on this Amazon account.")
+        }
+    }
+
     LaunchedEffect(uiState.recordingItems) {
         dialogState.selectedRecordingId = when {
             uiState.recordingItems.isEmpty() -> null
@@ -197,7 +207,7 @@ fun SettingsScreen(
         }
     }
 
-    LaunchedEffect(currentRoute, dialogState.selectedCategory) {
+    LaunchedEffect(currentRoute) {
         delay(80)
         settingsNavFocusRequester.requestFocusSafely(tag = "SettingsScreen", target = "Selected settings section")
     }
@@ -205,7 +215,7 @@ fun SettingsScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         AppScreenScaffold(
             currentRoute = currentRoute,
-            onNavigate = { if (!uiState.isSyncing) onNavigate(it) },
+            onNavigate = onNavigate,
             title = stringResource(R.string.settings_title),
             subtitle = "",
             navigationChrome = AppNavigationChrome.TopBar,
@@ -218,6 +228,10 @@ fun SettingsScreen(
                     developerModeEnabled = uiState.developerModeEnabled,
                     focusRequester = settingsNavFocusRequester,
                     onCategorySelected = { dialogState.selectedCategory = it },
+                    onEnterCategoryContent = { category ->
+                        dialogState.selectedCategory = category
+                        settingsContentEntryRequest += 1
+                    },
                     onNavigate = onNavigate,
                 )
 
@@ -268,6 +282,9 @@ fun SettingsScreen(
                     onOpenPremiumPurchase = { showPremiumPurchaseDialog = true },
                     onRefreshPremiumEntitlements = AmazonAppstoreBridge::refreshEntitlements,
                     amazonPremiumEntitled = amazonPremiumEntitled,
+                    amazonPremiumOwnedSku = amazonPremiumOwnedSku,
+                    returnFocusRequester = settingsNavFocusRequester,
+                    entryFocusRequest = settingsContentEntryRequest,
                     modifier = Modifier.weight(1f)
                 )
                 SettingsNowPlayingSidecar(

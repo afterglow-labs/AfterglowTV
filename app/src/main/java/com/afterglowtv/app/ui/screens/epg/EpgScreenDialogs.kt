@@ -201,6 +201,7 @@ internal fun GuideOptionsOverlay(
     onToggleScheduledOnly: () -> Unit,
     onToggleFavoritesOnly: () -> Unit,
     onRefresh: () -> Unit,
+    onSyncEpgData: () -> Unit,
     onManageEpgMatch: (() -> Unit)? = null
 ) {
     val optionsFocusRequester = remember { FocusRequester() }
@@ -295,6 +296,10 @@ internal fun GuideOptionsOverlay(
                     GuideShortcutChip(
                         label = stringResource(R.string.epg_refresh_guide),
                         onClick = onRefresh
+                    )
+                    GuideShortcutChip(
+                        label = stringResource(R.string.epg_sync_data),
+                        onClick = onSyncEpgData
                     )
                 }
             }
