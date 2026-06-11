@@ -1,5 +1,6 @@
 package com.afterglowtv.app.ui.screens.dashboard
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -73,6 +75,7 @@ import com.afterglowtv.app.ui.design.AppColors.SurfaceElevated as SurfaceElevate
 import com.afterglowtv.app.ui.design.AppColors.SurfaceEmphasis as SurfaceHighlight
 import com.afterglowtv.app.ui.design.AppColors.TextPrimary as TextPrimary
 import com.afterglowtv.app.ui.design.AppColors.TextSecondary as OnSurfaceDim
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.BorderStroke
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
@@ -412,11 +415,18 @@ private fun HomeCommandHub(
                         .padding(horizontal = outerHorizontalPadding, vertical = outerVerticalPadding),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
-                    HomeDashboardWordmark(
+                    HomeBottomToolbarRow(
+                        cards = watchCards,
+                        searchEnabled = searchEnabled,
+                        onNavigate = onNavigate,
+                        onAddProvider = onAddProvider,
+                        onOpenSourceSettings = { onNavigate(Routes.SETTINGS) },
+                        layoutMode = layoutMode,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f)
+                            .height(toolbarHeight)
                     )
+                    Box(modifier = Modifier.weight(1f))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -458,16 +468,10 @@ private fun HomeCommandHub(
                             modifier = Modifier.weight(0.76f)
                         )
                     }
-                    HomeBottomToolbarRow(
-                        cards = watchCards,
-                        searchEnabled = searchEnabled,
-                        onNavigate = onNavigate,
-                        onAddProvider = onAddProvider,
-                        onOpenSourceSettings = { onNavigate(Routes.SETTINGS) },
-                        layoutMode = layoutMode,
+                    HomeDashboardWordmark(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(toolbarHeight)
+                            .height(if (compactHome) 56.dp else 74.dp)
                     )
                 }
             }
@@ -479,7 +483,19 @@ private fun HomeCommandHub(
 private fun HomeDashboardWordmark(
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier)
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(R.drawable.afterglow_labs_wordmark),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxWidth(0.46f)
+                .fillMaxHeight()
+        )
+    }
 }
 
 @Composable
