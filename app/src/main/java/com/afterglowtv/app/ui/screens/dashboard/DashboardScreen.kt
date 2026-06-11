@@ -42,12 +42,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -417,9 +420,9 @@ private fun HomeCommandHub(
 
             HomeDashboardLayoutMode.CompactGrid,
             HomeDashboardLayoutMode.SpaciousGrid -> {
-                val wordmarkHeight = if (compactHome) 72.dp else 96.dp
+                val wordmarkHeight = if (compactHome) 70.dp else 92.dp
                 val watchToolbarHeight = if (compactHome) 116.dp else 144.dp
-                val centeredBodyHeight = ((maxHeight - outerVerticalPadding * 2 - wordmarkHeight - watchToolbarHeight - gap * 2) * 0.72f)
+                val centeredBodyHeight = ((maxHeight - outerVerticalPadding * 2 - watchToolbarHeight - wordmarkHeight - gap * 2) * 0.92f)
                     .coerceAtMost(if (compactHome) 340.dp else 430.dp)
                     .coerceAtLeast(if (compactHome) 260.dp else 330.dp)
 
@@ -429,11 +432,6 @@ private fun HomeCommandHub(
                         .padding(horizontal = outerHorizontalPadding, vertical = outerVerticalPadding),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
-                    HomeDashboardWordmark(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(wordmarkHeight)
-                    )
                     HomeWatchToolbarRow(
                         cards = watchCards,
                         searchEnabled = searchEnabled,
@@ -443,6 +441,11 @@ private fun HomeCommandHub(
                             .fillMaxWidth()
                             .height(watchToolbarHeight)
                     )
+                    HomeDashboardWordmark(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(wordmarkHeight)
+                    )
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -451,6 +454,7 @@ private fun HomeCommandHub(
                     ) {
                         Row(
                             modifier = Modifier
+                                .align(Alignment.Center)
                                 .fillMaxWidth()
                                 .height(centeredBodyHeight),
                             horizontalArrangement = Arrangement.spacedBy(gap)
@@ -508,33 +512,47 @@ private fun HomeCommandHub(
 private fun HomeDashboardWordmark(
     modifier: Modifier = Modifier
 ) {
-    val gold = Color(0xFFFFC857)
-    val warmGold = Color(0xFFFF9F1C)
+    val orange = Color(0xFFFF8A18)
+    val pink = Color(0xFFFF2D8D)
+    val purple = Color(0xFFB437FF)
     Box(
         modifier = modifier.afterglow(
             specs = listOf(
-                GlowSpec(gold, 22.dp, 0.38f),
-                GlowSpec(warmGold, 46.dp, 0.20f),
-                GlowSpec(HomeNeonOrange, 76.dp, 0.10f),
+                GlowSpec(orange, 18.dp, 0.20f),
+                GlowSpec(pink, 34.dp, 0.18f),
+                GlowSpec(purple, 58.dp, 0.12f),
             ),
             shape = RoundedCornerShape(999.dp)
         ),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "AFTERGLOW LABS",
+            text = buildAnnotatedString {
+                withStyle(
+                    SpanStyle(
+                        brush = Brush.linearGradient(
+                            0.00f to orange,
+                            0.52f to pink,
+                            1.00f to purple,
+                            start = Offset.Zero,
+                            end = Offset(760f, 0f),
+                        )
+                    )
+                ) {
+                    append("Afterglow Labs")
+                }
+            },
             style = MaterialTheme.typography.displaySmall.copy(
                 fontFamily = HomeVoxRoundWideBold,
                 fontWeight = FontWeight.Bold,
-                fontSize = 46.sp,
-                lineHeight = 52.sp,
+                fontSize = 42.sp,
+                lineHeight = 48.sp,
                 shadow = Shadow(
-                    color = gold.copy(alpha = 0.52f),
+                    color = pink.copy(alpha = 0.36f),
                     offset = Offset.Zero,
-                    blurRadius = 16f
+                    blurRadius = 14f
                 )
             ),
-            color = gold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
@@ -1598,9 +1616,9 @@ private fun HomeQuickWindow(
                     }
                 }
             } else {
-                Column(
+                Row(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     HomeSourcesInlineSection(
                         activeProviderName = activeProviderName,
@@ -1609,53 +1627,63 @@ private fun HomeQuickWindow(
                         sourceOptions = sourceOptions,
                         compact = false,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(132.dp),
+                            .weight(1.05f)
+                            .fillMaxHeight(),
                         onAddProvider = onAddProvider,
                         onOpenSettings = onOpenSourceSettings,
                         onSourceSelected = onSourceSelected
                     )
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    Column(
+                        modifier = Modifier.weight(1.55f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        HomeStartupOptionsColumn(
-                            selectedDestination = selectedDestination,
-                            startupOptions = startupOptions,
-                            compact = false,
-                            modifier = Modifier.weight(0.95f),
-                            onDestinationSelected = onDestinationSelected
-                        )
-                        HomeLiveBrowsingOptionsColumn(
-                            showLiveSourceSwitcher = showLiveSourceSwitcher,
-                            showAllChannelsCategory = showAllChannelsCategory,
-                            showRecentChannelsCategory = showRecentChannelsCategory,
-                            compact = false,
+                        Row(
                             modifier = Modifier.weight(1f),
-                            onShowLiveSourceSwitcherChange = onShowLiveSourceSwitcherChange,
-                            onShowAllChannelsCategoryChange = onShowAllChannelsCategoryChange,
-                            onShowRecentChannelsCategoryChange = onShowRecentChannelsCategoryChange
-                        )
-                        HomeRemoteOptionsColumn(
-                            remoteDpadChannelZapping = remoteDpadChannelZapping,
-                            remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
-                            remoteShowInfoOnZap = remoteShowInfoOnZap,
-                            compact = false,
-                            modifier = Modifier.weight(1.08f),
-                            onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
-                            onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
-                            onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange
-                        )
-                        HomePlaybackOptionsColumn(
-                            preventStandbyDuringPlayback = preventStandbyDuringPlayback,
-                            autoPlayNextEpisode = autoPlayNextEpisode,
-                            backgroundGradientsEnabled = backgroundGradientsEnabled,
-                            compact = false,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            HomeStartupOptionsColumn(
+                                selectedDestination = selectedDestination,
+                                startupOptions = startupOptions,
+                                compact = false,
+                                modifier = Modifier.weight(0.95f),
+                                onDestinationSelected = onDestinationSelected
+                            )
+                            HomeLiveBrowsingOptionsColumn(
+                                showLiveSourceSwitcher = showLiveSourceSwitcher,
+                                showAllChannelsCategory = showAllChannelsCategory,
+                                showRecentChannelsCategory = showRecentChannelsCategory,
+                                compact = false,
+                                modifier = Modifier.weight(1f),
+                                onShowLiveSourceSwitcherChange = onShowLiveSourceSwitcherChange,
+                                onShowAllChannelsCategoryChange = onShowAllChannelsCategoryChange,
+                                onShowRecentChannelsCategoryChange = onShowRecentChannelsCategoryChange
+                            )
+                        }
+                        Row(
                             modifier = Modifier.weight(1f),
-                            onPreventStandbyDuringPlaybackChange = onPreventStandbyDuringPlaybackChange,
-                            onAutoPlayNextEpisodeChange = onAutoPlayNextEpisodeChange,
-                            onBackgroundGradientsEnabledChange = onBackgroundGradientsEnabledChange
-                        )
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            HomeRemoteOptionsColumn(
+                                remoteDpadChannelZapping = remoteDpadChannelZapping,
+                                remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
+                                remoteShowInfoOnZap = remoteShowInfoOnZap,
+                                compact = false,
+                                modifier = Modifier.weight(1.08f),
+                                onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
+                                onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
+                                onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange
+                            )
+                            HomePlaybackOptionsColumn(
+                                preventStandbyDuringPlayback = preventStandbyDuringPlayback,
+                                autoPlayNextEpisode = autoPlayNextEpisode,
+                                backgroundGradientsEnabled = backgroundGradientsEnabled,
+                                compact = false,
+                                modifier = Modifier.weight(1f),
+                                onPreventStandbyDuringPlaybackChange = onPreventStandbyDuringPlaybackChange,
+                                onAutoPlayNextEpisodeChange = onAutoPlayNextEpisodeChange,
+                                onBackgroundGradientsEnabledChange = onBackgroundGradientsEnabledChange
+                            )
+                        }
                     }
                 }
             }
