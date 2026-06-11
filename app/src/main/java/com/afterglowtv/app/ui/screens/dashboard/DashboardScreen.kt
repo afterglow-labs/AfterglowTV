@@ -1,6 +1,7 @@
 package com.afterglowtv.app.ui.screens.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,20 +38,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -78,6 +75,7 @@ import com.afterglowtv.app.ui.design.AppColors.SurfaceElevated as SurfaceElevate
 import com.afterglowtv.app.ui.design.AppColors.SurfaceEmphasis as SurfaceHighlight
 import com.afterglowtv.app.ui.design.AppColors.TextPrimary as TextPrimary
 import com.afterglowtv.app.ui.design.AppColors.TextSecondary as OnSurfaceDim
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.BorderStroke
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
@@ -512,51 +510,17 @@ private fun HomeCommandHub(
 private fun HomeDashboardWordmark(
     modifier: Modifier = Modifier
 ) {
-    val orange = Color(0xFFFF8A18)
-    val pink = Color(0xFFFF2D8D)
-    val purple = Color(0xFFB437FF)
     Box(
-        modifier = modifier.afterglow(
-            specs = listOf(
-                GlowSpec(orange, 18.dp, 0.20f),
-                GlowSpec(pink, 34.dp, 0.18f),
-                GlowSpec(purple, 58.dp, 0.12f),
-            ),
-            shape = RoundedCornerShape(999.dp)
-        ),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = buildAnnotatedString {
-                withStyle(
-                    SpanStyle(
-                        brush = Brush.linearGradient(
-                            0.00f to orange,
-                            0.52f to pink,
-                            1.00f to purple,
-                            start = Offset.Zero,
-                            end = Offset(760f, 0f),
-                        )
-                    )
-                ) {
-                    append("Afterglow Labs")
-                }
-            },
-            style = MaterialTheme.typography.displaySmall.copy(
-                fontFamily = HomeVoxRoundWideBold,
-                fontWeight = FontWeight.Bold,
-                fontSize = 42.sp,
-                lineHeight = 48.sp,
-                shadow = Shadow(
-                    color = pink.copy(alpha = 0.36f),
-                    offset = Offset.Zero,
-                    blurRadius = 14f
-                )
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(0.86f)
+        Image(
+            painter = painterResource(id = R.drawable.afterglow_labs_dashboard_art),
+            contentDescription = "Afterglow Labs",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(0.72f)
         )
     }
 }
@@ -1708,71 +1672,79 @@ private fun HomeSourcesInlineSection(
         options = sourceOptions,
         maxRows = if (compact) 4 else 6
     )
-    Row(
+    Column(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(if (compact) 5.dp else 7.dp)
     ) {
-        Column(
-            modifier = Modifier.width(if (compact) 148.dp else 184.dp),
-            verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
+        HomeQuickSectionLabel(text = "Sources", compact = compact)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
+            Column(
+                modifier = Modifier.width(if (compact) 148.dp else 174.dp),
+                verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
+                ) {
+                    HomeSourceCommandAction(
+                        title = "Add Source",
+                        icon = Icons.Default.Add,
+                        accent = Color(0xFFFFD166),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(if (compact) 44.dp else 52.dp),
+                        compact = compact,
+                        centered = true,
+                        onClick = onAddProvider
+                    )
+                    HomeSourceCommandAction(
+                        title = "Add VOD",
+                        icon = Icons.Default.Star,
+                        accent = Color(0xFFFF7A38),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(if (compact) 44.dp else 52.dp),
+                        compact = compact,
+                        centered = true,
+                        onClick = onAddProvider
+                    )
+                }
                 HomeSourceCommandAction(
-                    title = "Add Source",
-                    icon = Icons.Default.Add,
-                    accent = Color(0xFFFFD166),
+                    title = "Settings",
+                    icon = Icons.Default.Menu,
+                    accent = Color(0xFFB4F06B),
                     modifier = Modifier
-                        .weight(1f)
-                        .height(if (compact) 44.dp else 54.dp),
-                    compact = true,
-                    centered = true,
-                    onClick = onAddProvider
-                )
-                HomeSourceCommandAction(
-                    title = "Add VOD",
-                    icon = Icons.Default.Star,
-                    accent = Color(0xFFFF7A38),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(if (compact) 44.dp else 54.dp),
-                    compact = true,
-                    centered = true,
-                    onClick = onAddProvider
+                        .fillMaxWidth()
+                        .height(if (compact) 38.dp else 44.dp),
+                    compact = compact,
+                    onClick = onOpenSettings
                 )
             }
-            HomeSourceCommandAction(
-                title = "Settings",
-                icon = Icons.Default.Menu,
-                accent = Color(0xFFB4F06B),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(if (compact) 38.dp else 46.dp),
-                compact = true,
-                onClick = onOpenSettings
-            )
-        }
-        if (rows.isEmpty()) {
-            HomeSourceStatusPanel(
-                title = activeProviderName ?: "No playlist connected",
-                subtitle = if (activeProviderName != null) {
-                    "${providerTypeLabel(providerHealth.type)} - ${providerStatusLabel(providerHealth.status)}"
-                } else {
-                    "Add a playlist or provider"
-                },
-                compact = true,
-                modifier = Modifier.weight(1f)
-            )
-        } else {
-            HomeSourceTileGrid(
-                rows = rows,
-                compact = true,
-                modifier = Modifier.weight(1f),
-                onSourceSelected = onSourceSelected
-            )
+            if (rows.isEmpty()) {
+                HomeSourceStatusPanel(
+                    title = activeProviderName ?: "No playlist connected",
+                    subtitle = if (activeProviderName != null) {
+                        "${providerTypeLabel(providerHealth.type)} - ${providerStatusLabel(providerHealth.status)}"
+                    } else {
+                        "Add a playlist or provider"
+                    },
+                    compact = compact,
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                HomeSourceTileGrid(
+                    rows = rows,
+                    compact = compact,
+                    modifier = Modifier.weight(1f),
+                    onSourceSelected = onSourceSelected
+                )
+            }
         }
     }
 }
