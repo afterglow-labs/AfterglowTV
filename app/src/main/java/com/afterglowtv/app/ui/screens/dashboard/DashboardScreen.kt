@@ -401,10 +401,10 @@ private fun HomeCommandHub(
 
             HomeDashboardLayoutMode.CompactGrid,
             HomeDashboardLayoutMode.SpaciousGrid -> {
-                val toolbarHeight = if (compactHome) 104.dp else 124.dp
-                val topPanelHeight = ((maxHeight - outerVerticalPadding * 2 - toolbarHeight - gap * 2) * 0.52f)
-                    .coerceAtMost(if (compactHome) 300.dp else 380.dp)
-                    .coerceAtLeast(if (compactHome) 230.dp else 295.dp)
+                val toolbarHeight = if (compactHome) 112.dp else 134.dp
+                val topPanelHeight = ((maxHeight - outerVerticalPadding * 2 - toolbarHeight - gap * 2) * 0.56f)
+                    .coerceAtMost(if (compactHome) 320.dp else 405.dp)
+                    .coerceAtLeast(if (compactHome) 245.dp else 310.dp)
 
                 Column(
                     modifier = Modifier
@@ -511,7 +511,7 @@ private fun HomeBottomToolbarRow(
                 HomeWatchToolbarButton(
                     model = card,
                     compact = compact,
-                    modifier = Modifier.width(if (compact) 64.dp else 76.dp),
+                    modifier = Modifier.width(if (compact) 70.dp else 84.dp),
                     onClick = { card.route?.let(onNavigate) }
                 )
             }
@@ -541,7 +541,7 @@ private fun HomeBottomToolbarRow(
                     compact = compact,
                     modifier = Modifier
                         .weight(1f)
-                        .height(if (compact) 58.dp else 68.dp),
+                        .height(if (compact) 64.dp else 74.dp),
                     onSubmit = { query -> onNavigate(Routes.search(query)) }
                 )
             } else {
@@ -561,7 +561,7 @@ private fun HomeSourceToolbarButton(
     onClick: () -> Unit
 ) {
     Column(
-        modifier = modifier.width(if (compact) 64.dp else 78.dp),
+        modifier = modifier.width(if (compact) 70.dp else 86.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -569,7 +569,7 @@ private fun HomeSourceToolbarButton(
             title = "",
             icon = icon,
             accent = accent,
-            modifier = Modifier.size(if (compact) 42.dp else 50.dp),
+            modifier = Modifier.size(if (compact) 46.dp else 54.dp),
             compact = compact,
             centered = true,
             onClick = onClick
@@ -578,8 +578,8 @@ private fun HomeSourceToolbarButton(
             text = title,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.SemiBold,
-                fontSize = if (compact) 8.sp else 9.sp,
-                lineHeight = if (compact) 9.sp else 11.sp
+                fontSize = if (compact) 9.sp else 10.sp,
+                lineHeight = if (compact) 10.sp else 12.sp
             ),
             color = TextPrimary,
             maxLines = 2,
@@ -900,7 +900,7 @@ private fun HomeWatchToolbarButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val circleSize = if (compact) 48.dp else 56.dp
+    val circleSize = if (compact) 52.dp else 62.dp
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -919,8 +919,8 @@ private fun HomeWatchToolbarButton(
             text = model.title,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.SemiBold,
-                fontSize = if (compact) 9.sp else 10.sp,
-                lineHeight = if (compact) 10.sp else 12.sp
+                fontSize = if (compact) 10.sp else 11.sp,
+                lineHeight = if (compact) 11.sp else 13.sp
             ),
             color = TextPrimary,
             maxLines = 1,
@@ -975,21 +975,21 @@ private fun HomeDashboardSearchPanel(
                 IconBadge(
                     icon = Icons.Default.Search,
                     accent = Color(0xFFFF77FF),
-                    size = if (compact) 21.dp else 26.dp
+                    size = if (compact) 23.dp else 28.dp
                 )
                 Text(
                     text = "Search",
                     style = if (compact) {
                         MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
-                            lineHeight = 15.sp
+                            fontSize = 14.sp,
+                            lineHeight = 16.sp
                         )
                     } else {
                         MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
-                            lineHeight = 18.sp
+                            fontSize = 17.sp,
+                            lineHeight = 19.sp
                         )
                     },
                     color = TextPrimary,
@@ -1005,7 +1005,7 @@ private fun HomeDashboardSearchPanel(
                 onSearch = submit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(if (compact) 42.dp else 50.dp)
+                    .height(if (compact) 46.dp else 54.dp)
             )
         }
     }
@@ -2081,7 +2081,7 @@ private fun HomeThemeSwatchGrid(
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val gap = if (compact) 5.dp else 6.dp
-        val swatchSize = if (compact) 21.dp else 26.dp
+        val swatchSize = if (compact) 23.dp else 29.dp
         val columns = ((maxWidth.value + gap.value) / (swatchSize.value + gap.value))
             .toInt()
             .coerceAtLeast(4)
