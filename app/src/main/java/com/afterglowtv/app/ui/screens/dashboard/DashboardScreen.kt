@@ -294,6 +294,10 @@ private fun HomeCommandHub(
                         )
                     }
                     HomeQuickWindow(
+                        activeProviderName = activeProviderName,
+                        providerHealth = providerHealth,
+                        activeSource = activeSource,
+                        sourceOptions = sourceOptions,
                         selectedDestination = visibleStartupDestination,
                         startupOptions = startupOptions,
                         remoteDpadChannelZapping = remoteDpadChannelZapping,
@@ -306,6 +310,9 @@ private fun HomeCommandHub(
                         showAllChannelsCategory = showAllChannelsCategory,
                         showRecentChannelsCategory = showRecentChannelsCategory,
                         onDestinationSelected = onStartupDestinationChange,
+                        onAddProvider = onAddProvider,
+                        onOpenSourceSettings = { onNavigate(Routes.SETTINGS) },
+                        onSourceSelected = onSourceSelected,
                         onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
                         onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
                         onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange,
@@ -360,6 +367,10 @@ private fun HomeCommandHub(
                         verticalArrangement = Arrangement.spacedBy(gap)
                     ) {
                         HomeQuickWindow(
+                            activeProviderName = activeProviderName,
+                            providerHealth = providerHealth,
+                            activeSource = activeSource,
+                            sourceOptions = sourceOptions,
                             selectedDestination = visibleStartupDestination,
                             startupOptions = startupOptions,
                             remoteDpadChannelZapping = remoteDpadChannelZapping,
@@ -372,6 +383,9 @@ private fun HomeCommandHub(
                             showAllChannelsCategory = showAllChannelsCategory,
                             showRecentChannelsCategory = showRecentChannelsCategory,
                             onDestinationSelected = onStartupDestinationChange,
+                            onAddProvider = onAddProvider,
+                            onOpenSourceSettings = { onNavigate(Routes.SETTINGS) },
+                            onSourceSelected = onSourceSelected,
                             onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
                             onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
                             onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange,
@@ -399,9 +413,7 @@ private fun HomeCommandHub(
 
             HomeDashboardLayoutMode.CompactGrid,
             HomeDashboardLayoutMode.SpaciousGrid -> {
-                val originalRowHeight = ((maxHeight - outerVerticalPadding * 2 - gap) / 2).coerceAtLeast(0.dp)
-                val topRowHeight = originalRowHeight * 0.825f
-                val bottomRowHeight = originalRowHeight * 0.225f
+                val watchToolbarHeight = if (compactHome) 106.dp else 132.dp
 
                 Column(
                     modifier = Modifier
@@ -409,31 +421,19 @@ private fun HomeCommandHub(
                         .padding(horizontal = outerHorizontalPadding, vertical = outerVerticalPadding),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
+                    HomeWatchToolbarRow(
+                        cards = watchCards,
+                        searchEnabled = searchEnabled,
+                        onNavigate = onNavigate,
+                        layoutMode = layoutMode,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(watchToolbarHeight)
+                    )
                     Row(
-                        modifier = Modifier.height(topRowHeight),
-                        horizontalArrangement = Arrangement.spacedBy(gap)
-                    ) {
-                        HomeWatchWindow(
-                            cards = watchCards,
-                            searchEnabled = searchEnabled,
-                            onNavigate = onNavigate,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(1f)
-                        )
-                        HomeSourcesShortcutWindow(
-                            activeProviderName = activeProviderName,
-                            providerHealth = providerHealth,
-                            activeSource = activeSource,
-                            sourceOptions = sourceOptions,
-                            onAddProvider = onAddProvider,
-                            onOpenSettings = { onNavigate(Routes.SETTINGS) },
-                            onSourceSelected = onSourceSelected,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.height(originalRowHeight),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(gap)
                     ) {
                         HomeAppearanceWindow(
@@ -446,6 +446,10 @@ private fun HomeCommandHub(
                             modifier = Modifier.weight(0.9f)
                         )
                         HomeQuickWindow(
+                            activeProviderName = activeProviderName,
+                            providerHealth = providerHealth,
+                            activeSource = activeSource,
+                            sourceOptions = sourceOptions,
                             selectedDestination = visibleStartupDestination,
                             startupOptions = startupOptions,
                             remoteDpadChannelZapping = remoteDpadChannelZapping,
@@ -458,6 +462,9 @@ private fun HomeCommandHub(
                             showAllChannelsCategory = showAllChannelsCategory,
                             showRecentChannelsCategory = showRecentChannelsCategory,
                             onDestinationSelected = onStartupDestinationChange,
+                            onAddProvider = onAddProvider,
+                            onOpenSourceSettings = { onNavigate(Routes.SETTINGS) },
+                            onSourceSelected = onSourceSelected,
                             onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
                             onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
                             onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange,
@@ -678,7 +685,7 @@ private fun HomeWatchWindow(
     ) {
         val watchActions = cards.take(4)
         val actionGap = if (compact) 8.dp else 10.dp
-        val circleSize = if (compact) 76.dp else 96.dp
+        val circleSize = if (compact) 76.dp else 104.dp
         val actionColumns = if (watchActions.size <= 2) 1 else 2
         val actionGridWidth = circleSize * actionColumns + actionGap * (actionColumns - 1)
         Row(
@@ -719,9 +726,59 @@ private fun HomeWatchWindow(
             if (searchEnabled) {
                 HomeDashboardSearchPanel(
                     compact = compact,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(if (compact) 120.dp else 142.dp),
                     onSubmit = { query -> onNavigate(Routes.search(query)) }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeWatchToolbarRow(
+    cards: List<HomeHubCardModel>,
+    searchEnabled: Boolean,
+    onNavigate: (String) -> Unit,
+    layoutMode: HomeDashboardLayoutMode,
+    modifier: Modifier = Modifier
+) {
+    val compact = layoutMode != HomeDashboardLayoutMode.SpaciousGrid
+    HomeWindow(
+        title = "Watch",
+        subtitle = "Fast routes into playback.",
+        accent = Color(0xFF60A5FA),
+        modifier = modifier,
+        compact = compact
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp)
+        ) {
+            cards.take(4).forEach { card ->
+                HomeWatchAction(
+                    model = card,
+                    modifier = Modifier.size(if (compact) 70.dp else 84.dp),
+                    prominent = false,
+                    compact = compact,
+                    circular = true,
+                    onClick = { card.route?.let(onNavigate) }
+                )
+            }
+            if (searchEnabled) {
+                HomeDashboardSearchPanel(
+                    compact = compact,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(if (compact) 74.dp else 86.dp),
+                    onSubmit = { query -> onNavigate(Routes.search(query)) }
+                )
+            } else {
+                Box(modifier = Modifier.weight(1f))
             }
         }
     }
@@ -743,7 +800,6 @@ private fun HomeDashboardSearchPanel(
     val shape = RoundedCornerShape(14.dp)
     Surface(
         modifier = modifier
-            .fillMaxSize()
             .homeActiveGlow(shape, active = false),
         shape = shape,
         colors = SurfaceDefaults.colors(
@@ -759,8 +815,8 @@ private fun HomeDashboardSearchPanel(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(if (compact) 10.dp else 12.dp),
-            verticalArrangement = Arrangement.Center
+                .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = if (compact) 8.dp else 10.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp, Alignment.CenterVertically)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -775,9 +831,17 @@ private fun HomeDashboardSearchPanel(
                 Text(
                     text = "Search",
                     style = if (compact) {
-                        MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                        MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            lineHeight = 16.sp
+                        )
                     } else {
-                        MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp,
+                            lineHeight = 20.sp
+                        )
                     },
                     color = TextPrimary,
                     maxLines = 1,
@@ -792,7 +856,7 @@ private fun HomeDashboardSearchPanel(
                 onSearch = submit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = if (compact) 8.dp else 12.dp)
+                    .height(if (compact) 48.dp else 58.dp)
             )
         }
     }
@@ -832,31 +896,48 @@ private fun HomeSourcesShortcutWindow(
         ) {
             Column(
                 modifier = Modifier
-                    .width(if (compact) 142.dp else 166.dp)
+                    .width(if (compact) 156.dp else 222.dp)
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(
-                    space = if (compact) 12.dp else 14.dp,
+                    space = if (compact) 8.dp else 10.dp,
                     alignment = Alignment.CenterVertically
                 )
             ) {
-                HomeSourceCommandAction(
-                    title = "Add Source",
-                    icon = Icons.Default.Add,
-                    accent = Color(0xFFFFD166),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(if (compact) 60.dp else 72.dp),
-                    compact = compact,
-                    onClick = onAddProvider
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp)
+                ) {
+                    HomeSourceCommandAction(
+                        title = "Add Source",
+                        icon = Icons.Default.Add,
+                        accent = Color(0xFFFFD166),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(if (compact) 58.dp else 72.dp),
+                        compact = compact,
+                        centered = true,
+                        onClick = onAddProvider
+                    )
+                    HomeSourceCommandAction(
+                        title = "Add VOD",
+                        icon = Icons.Default.Star,
+                        accent = Color(0xFFFF7A38),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(if (compact) 58.dp else 72.dp),
+                        compact = compact,
+                        centered = true,
+                        onClick = onAddProvider
+                    )
+                }
                 HomeSourceCommandAction(
                     title = "Settings",
                     icon = Icons.Default.Menu,
                     accent = Color(0xFFB4F06B),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(if (compact) 60.dp else 72.dp),
+                        .height(if (compact) 50.dp else 60.dp),
                     compact = compact,
                     onClick = onOpenSettings
                 )
@@ -896,17 +977,14 @@ private fun HomeSourceTileGrid(
         contentAlignment = Alignment.Center
     ) {
         val gap = if (compact) 10.dp else 14.dp
-        val maxTileSize = if (compact) 84.dp else 102.dp
-        val availableTileSize = (maxWidth - gap) / 2
-        val tileSize = if (availableTileSize < maxTileSize) availableTileSize else maxTileSize
-        val gridWidth = tileSize * 2 + gap
+        val tileHeight = if (compact) 42.dp else 52.dp
         val rowCount = (rows.size + 1) / 2
 
         Column(
-            modifier = Modifier.width(gridWidth),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(
-                space = if (compact) 10.dp else 12.dp,
+                space = if (compact) 8.dp else 10.dp,
                 alignment = Alignment.CenterVertically
             )
         ) {
@@ -914,7 +992,7 @@ private fun HomeSourceTileGrid(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(tileSize),
+                        .height(tileHeight),
                     horizontalArrangement = Arrangement.spacedBy(gap)
                 ) {
                     repeat(2) { columnIndex ->
@@ -924,14 +1002,15 @@ private fun HomeSourceTileGrid(
                             HomeSourceRow(
                                 model = row,
                                 compact = compact,
-                                circular = true,
-                                modifier = Modifier.size(tileSize),
+                                circular = false,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
                                 onClick = { onSourceSelected(row.source) }
                             )
                         } else {
                             Box(
-                                modifier = Modifier
-                                    .size(tileSize)
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
@@ -1119,6 +1198,7 @@ private fun HomeSourceCommandAction(
     accent: Color,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
+    centered: Boolean = false,
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(8.dp)
@@ -1147,25 +1227,50 @@ private fun HomeSourceCommandAction(
             )
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = if (compact) 10.dp else 12.dp, vertical = if (compact) 6.dp else 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
-        ) {
-            IconBadge(icon = icon, accent = accent, size = if (compact) 22.dp else 26.dp)
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = if (compact) 12.sp else 14.sp,
-                    lineHeight = if (compact) 14.sp else 16.sp
-                ),
-                color = TextPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+        if (centered) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = if (compact) 6.dp else 8.dp, vertical = if (compact) 5.dp else 7.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                IconBadge(icon = icon, accent = accent, size = if (compact) 20.dp else 24.dp)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = if (compact) 10.sp else 12.sp,
+                        lineHeight = if (compact) 11.sp else 14.sp
+                    ),
+                    color = TextPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 3.dp)
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = if (compact) 10.dp else 12.dp, vertical = if (compact) 6.dp else 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
+            ) {
+                IconBadge(icon = icon, accent = accent, size = if (compact) 22.dp else 26.dp)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = if (compact) 12.sp else 14.sp,
+                        lineHeight = if (compact) 14.sp else 16.sp
+                    ),
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
@@ -1248,6 +1353,10 @@ private fun HomeAppearanceWindow(
 
 @Composable
 private fun HomeQuickWindow(
+    activeProviderName: String?,
+    providerHealth: DashboardProviderHealth,
+    activeSource: ActiveLiveSource?,
+    sourceOptions: List<ActiveLiveSourceOption>,
     selectedDestination: StartupDestination,
     startupOptions: List<StartupDestination>,
     remoteDpadChannelZapping: Boolean,
@@ -1260,6 +1369,9 @@ private fun HomeQuickWindow(
     showAllChannelsCategory: Boolean,
     showRecentChannelsCategory: Boolean,
     onDestinationSelected: (StartupDestination) -> Unit,
+    onAddProvider: () -> Unit,
+    onOpenSourceSettings: () -> Unit,
+    onSourceSelected: (ActiveLiveSource) -> Unit,
     onRemoteDpadChannelZappingChange: (Boolean) -> Unit,
     onRemoteDpadInvertChannelZappingChange: (Boolean) -> Unit,
     onRemoteShowInfoOnZapChange: (Boolean) -> Unit,
@@ -1324,6 +1436,19 @@ private fun HomeQuickWindow(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+                    HomeSourcesInlineSection(
+                        activeProviderName = activeProviderName,
+                        providerHealth = providerHealth,
+                        activeSource = activeSource,
+                        sourceOptions = sourceOptions,
+                        compact = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(104.dp),
+                        onAddProvider = onAddProvider,
+                        onOpenSettings = onOpenSourceSettings,
+                        onSourceSelected = onSourceSelected
+                    )
                     Row(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(7.dp)
@@ -1373,49 +1498,153 @@ private fun HomeQuickWindow(
                     }
                 }
             } else {
-                Row(
+                Column(
                     modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
                 ) {
-                    HomeStartupOptionsColumn(
-                        selectedDestination = selectedDestination,
-                        startupOptions = startupOptions,
+                    HomeSourcesInlineSection(
+                        activeProviderName = activeProviderName,
+                        providerHealth = providerHealth,
+                        activeSource = activeSource,
+                        sourceOptions = sourceOptions,
                         compact = false,
-                        modifier = Modifier.weight(0.95f),
-                        onDestinationSelected = onDestinationSelected
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(132.dp),
+                        onAddProvider = onAddProvider,
+                        onOpenSettings = onOpenSourceSettings,
+                        onSourceSelected = onSourceSelected
                     )
-                    HomeLiveBrowsingOptionsColumn(
-                        showLiveSourceSwitcher = showLiveSourceSwitcher,
-                        showAllChannelsCategory = showAllChannelsCategory,
-                        showRecentChannelsCategory = showRecentChannelsCategory,
-                        compact = false,
+                    Row(
                         modifier = Modifier.weight(1f),
-                        onShowLiveSourceSwitcherChange = onShowLiveSourceSwitcherChange,
-                        onShowAllChannelsCategoryChange = onShowAllChannelsCategoryChange,
-                        onShowRecentChannelsCategoryChange = onShowRecentChannelsCategoryChange
-                    )
-                    HomeRemoteOptionsColumn(
-                        remoteDpadChannelZapping = remoteDpadChannelZapping,
-                        remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
-                        remoteShowInfoOnZap = remoteShowInfoOnZap,
-                        compact = false,
-                        modifier = Modifier.weight(1.08f),
-                        onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
-                        onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
-                        onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange
-                    )
-                    HomePlaybackOptionsColumn(
-                        preventStandbyDuringPlayback = preventStandbyDuringPlayback,
-                        autoPlayNextEpisode = autoPlayNextEpisode,
-                        backgroundGradientsEnabled = backgroundGradientsEnabled,
-                        compact = false,
-                        modifier = Modifier.weight(1f),
-                        onPreventStandbyDuringPlaybackChange = onPreventStandbyDuringPlaybackChange,
-                        onAutoPlayNextEpisodeChange = onAutoPlayNextEpisodeChange,
-                        onBackgroundGradientsEnabledChange = onBackgroundGradientsEnabledChange
-                    )
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        HomeStartupOptionsColumn(
+                            selectedDestination = selectedDestination,
+                            startupOptions = startupOptions,
+                            compact = false,
+                            modifier = Modifier.weight(0.95f),
+                            onDestinationSelected = onDestinationSelected
+                        )
+                        HomeLiveBrowsingOptionsColumn(
+                            showLiveSourceSwitcher = showLiveSourceSwitcher,
+                            showAllChannelsCategory = showAllChannelsCategory,
+                            showRecentChannelsCategory = showRecentChannelsCategory,
+                            compact = false,
+                            modifier = Modifier.weight(1f),
+                            onShowLiveSourceSwitcherChange = onShowLiveSourceSwitcherChange,
+                            onShowAllChannelsCategoryChange = onShowAllChannelsCategoryChange,
+                            onShowRecentChannelsCategoryChange = onShowRecentChannelsCategoryChange
+                        )
+                        HomeRemoteOptionsColumn(
+                            remoteDpadChannelZapping = remoteDpadChannelZapping,
+                            remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
+                            remoteShowInfoOnZap = remoteShowInfoOnZap,
+                            compact = false,
+                            modifier = Modifier.weight(1.08f),
+                            onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
+                            onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
+                            onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange
+                        )
+                        HomePlaybackOptionsColumn(
+                            preventStandbyDuringPlayback = preventStandbyDuringPlayback,
+                            autoPlayNextEpisode = autoPlayNextEpisode,
+                            backgroundGradientsEnabled = backgroundGradientsEnabled,
+                            compact = false,
+                            modifier = Modifier.weight(1f),
+                            onPreventStandbyDuringPlaybackChange = onPreventStandbyDuringPlaybackChange,
+                            onAutoPlayNextEpisodeChange = onAutoPlayNextEpisodeChange,
+                            onBackgroundGradientsEnabledChange = onBackgroundGradientsEnabledChange
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun HomeSourcesInlineSection(
+    activeProviderName: String?,
+    providerHealth: DashboardProviderHealth,
+    activeSource: ActiveLiveSource?,
+    sourceOptions: List<ActiveLiveSourceOption>,
+    compact: Boolean,
+    modifier: Modifier = Modifier,
+    onAddProvider: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onSourceSelected: (ActiveLiveSource) -> Unit
+) {
+    val rows = buildDashboardSourceRows(
+        activeSource = activeSource,
+        options = sourceOptions,
+        maxRows = if (compact) 4 else 6
+    )
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.width(if (compact) 148.dp else 184.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
+            ) {
+                HomeSourceCommandAction(
+                    title = "Add Source",
+                    icon = Icons.Default.Add,
+                    accent = Color(0xFFFFD166),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(if (compact) 44.dp else 54.dp),
+                    compact = true,
+                    centered = true,
+                    onClick = onAddProvider
+                )
+                HomeSourceCommandAction(
+                    title = "Add VOD",
+                    icon = Icons.Default.Star,
+                    accent = Color(0xFFFF7A38),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(if (compact) 44.dp else 54.dp),
+                    compact = true,
+                    centered = true,
+                    onClick = onAddProvider
+                )
+            }
+            HomeSourceCommandAction(
+                title = "Settings",
+                icon = Icons.Default.Menu,
+                accent = Color(0xFFB4F06B),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(if (compact) 38.dp else 46.dp),
+                compact = true,
+                onClick = onOpenSettings
+            )
+        }
+        if (rows.isEmpty()) {
+            HomeSourceStatusPanel(
+                title = activeProviderName ?: "No playlist connected",
+                subtitle = if (activeProviderName != null) {
+                    "${providerTypeLabel(providerHealth.type)} - ${providerStatusLabel(providerHealth.status)}"
+                } else {
+                    "Add a playlist or provider"
+                },
+                compact = true,
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            HomeSourceTileGrid(
+                rows = rows,
+                compact = true,
+                modifier = Modifier.weight(1f),
+                onSourceSelected = onSourceSelected
+            )
         }
     }
 }
