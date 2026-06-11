@@ -401,10 +401,10 @@ private fun HomeCommandHub(
 
             HomeDashboardLayoutMode.CompactGrid,
             HomeDashboardLayoutMode.SpaciousGrid -> {
-                val toolbarHeight = if (compactHome) 116.dp else 138.dp
-                val topPanelHeight = ((maxHeight - outerVerticalPadding * 2 - toolbarHeight - gap * 2) * 0.58f)
-                    .coerceAtMost(if (compactHome) 330.dp else 420.dp)
-                    .coerceAtLeast(if (compactHome) 250.dp else 315.dp)
+                val toolbarHeight = if (compactHome) 104.dp else 124.dp
+                val topPanelHeight = ((maxHeight - outerVerticalPadding * 2 - toolbarHeight - gap * 2) * 0.52f)
+                    .coerceAtMost(if (compactHome) 300.dp else 380.dp)
+                    .coerceAtLeast(if (compactHome) 230.dp else 295.dp)
 
                 Column(
                     modifier = Modifier
@@ -425,7 +425,7 @@ private fun HomeCommandHub(
                             onNavigate = onNavigate,
                             onThemeSelected = onThemeSelected,
                             layoutMode = layoutMode,
-                            modifier = Modifier.weight(1.18f)
+                            modifier = Modifier.weight(1.24f)
                         )
                         HomeQuickWindow(
                             selectedDestination = visibleStartupDestination,
@@ -450,7 +450,7 @@ private fun HomeCommandHub(
                             onShowAllChannelsCategoryChange = onShowAllChannelsCategoryChange,
                             onShowRecentChannelsCategoryChange = onShowRecentChannelsCategoryChange,
                             layoutMode = layoutMode,
-                            modifier = Modifier.weight(0.82f)
+                            modifier = Modifier.weight(0.76f)
                         )
                     }
                     HomeDashboardWordmark(
@@ -493,7 +493,7 @@ private fun HomeBottomToolbarRow(
     modifier: Modifier = Modifier
 ) {
     val compact = layoutMode != HomeDashboardLayoutMode.SpaciousGrid
-    val shape = RoundedCornerShape(if (compact) 16.dp else 20.dp)
+    val shape = RoundedCornerShape(if (compact) 14.dp else 18.dp)
     Surface(
         modifier = modifier,
         shape = shape,
@@ -503,15 +503,15 @@ private fun HomeBottomToolbarRow(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = if (compact) 12.dp else 18.dp, vertical = if (compact) 8.dp else 10.dp),
+                .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = if (compact) 7.dp else 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp)
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp)
         ) {
             cards.take(4).forEach { card ->
                 HomeWatchToolbarButton(
                     model = card,
                     compact = compact,
-                    modifier = Modifier.width(if (compact) 70.dp else 84.dp),
+                    modifier = Modifier.width(if (compact) 64.dp else 76.dp),
                     onClick = { card.route?.let(onNavigate) }
                 )
             }
@@ -541,7 +541,7 @@ private fun HomeBottomToolbarRow(
                     compact = compact,
                     modifier = Modifier
                         .weight(1f)
-                        .height(if (compact) 68.dp else 78.dp),
+                        .height(if (compact) 58.dp else 68.dp),
                     onSubmit = { query -> onNavigate(Routes.search(query)) }
                 )
             } else {
@@ -561,7 +561,7 @@ private fun HomeSourceToolbarButton(
     onClick: () -> Unit
 ) {
     Column(
-        modifier = modifier.width(if (compact) 74.dp else 92.dp),
+        modifier = modifier.width(if (compact) 64.dp else 78.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -569,7 +569,7 @@ private fun HomeSourceToolbarButton(
             title = "",
             icon = icon,
             accent = accent,
-            modifier = Modifier.size(if (compact) 48.dp else 58.dp),
+            modifier = Modifier.size(if (compact) 42.dp else 50.dp),
             compact = compact,
             centered = true,
             onClick = onClick
@@ -578,8 +578,8 @@ private fun HomeSourceToolbarButton(
             text = title,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.SemiBold,
-                fontSize = if (compact) 9.sp else 10.sp,
-                lineHeight = if (compact) 10.sp else 12.sp
+                fontSize = if (compact) 8.sp else 9.sp,
+                lineHeight = if (compact) 9.sp else 11.sp
             ),
             color = TextPrimary,
             maxLines = 2,
@@ -587,7 +587,7 @@ private fun HomeSourceToolbarButton(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 5.dp)
+                .padding(top = 3.dp)
         )
     }
 }
@@ -900,7 +900,7 @@ private fun HomeWatchToolbarButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val circleSize = if (compact) 54.dp else 64.dp
+    val circleSize = if (compact) 48.dp else 56.dp
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -919,8 +919,8 @@ private fun HomeWatchToolbarButton(
             text = model.title,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.SemiBold,
-                fontSize = if (compact) 10.sp else 11.sp,
-                lineHeight = if (compact) 11.sp else 13.sp
+                fontSize = if (compact) 9.sp else 10.sp,
+                lineHeight = if (compact) 10.sp else 12.sp
             ),
             color = TextPrimary,
             maxLines = 1,
@@ -928,7 +928,7 @@ private fun HomeWatchToolbarButton(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 5.dp)
+                .padding(top = 3.dp)
         )
     }
 }
@@ -964,32 +964,32 @@ private fun HomeDashboardSearchPanel(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = if (compact) 8.dp else 10.dp),
-            verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp, Alignment.CenterVertically)
+                .padding(horizontal = if (compact) 8.dp else 10.dp, vertical = if (compact) 6.dp else 8.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp, Alignment.CenterVertically)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconBadge(
                     icon = Icons.Default.Search,
                     accent = Color(0xFFFF77FF),
-                    size = if (compact) 24.dp else 30.dp
+                    size = if (compact) 21.dp else 26.dp
                 )
                 Text(
                     text = "Search",
                     style = if (compact) {
                         MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            lineHeight = 16.sp
+                            fontSize = 13.sp,
+                            lineHeight = 15.sp
                         )
                     } else {
                         MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 18.sp,
-                            lineHeight = 20.sp
+                            fontSize = 16.sp,
+                            lineHeight = 18.sp
                         )
                     },
                     color = TextPrimary,
@@ -1005,7 +1005,7 @@ private fun HomeDashboardSearchPanel(
                 onSearch = submit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(if (compact) 48.dp else 58.dp)
+                    .height(if (compact) 42.dp else 50.dp)
             )
         }
     }
@@ -1465,7 +1465,7 @@ private fun HomeAppearanceWindow(
     ) {
         Row(
             modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(if (compact) 7.dp else 10.dp)
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
         ) {
             HomeThemeFeatureAction(
                 model = cards[0],
@@ -1473,16 +1473,16 @@ private fun HomeAppearanceWindow(
                 activePaletteId = activePaletteId,
                 compact = compact,
                 modifier = Modifier
-                    .weight(if (compact) 1.05f else 0.92f)
+                    .weight(if (compact) 0.96f else 0.86f)
                     .fillMaxHeight(),
                 onOpenThemes = { cards[0].route?.let(onNavigate) },
                 onThemeSelected = onThemeSelected
             )
             Column(
                 modifier = Modifier
-                    .weight(if (compact) 0.95f else 1.08f)
+                    .weight(if (compact) 1.04f else 1.14f)
                     .fillMaxHeight(),
-                verticalArrangement = Arrangement.spacedBy(if (compact) 7.dp else 10.dp)
+                verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
             ) {
                 cards.drop(1).forEach { card ->
                     HomeSmallTextAction(
@@ -1556,12 +1556,12 @@ private fun HomeQuickWindow(
                         )
                     }
                 )
-                .padding(horizontal = if (compact) 12.dp else 16.dp, vertical = if (compact) 10.dp else 12.dp),
-            verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 7.dp)
+                .padding(horizontal = if (compact) 10.dp else 12.dp, vertical = if (compact) 8.dp else 10.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 3.dp else 5.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = "Quick Settings",
@@ -1631,11 +1631,11 @@ private fun HomeQuickWindow(
             } else {
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
                         modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         HomeStartupOptionsColumn(
                             selectedDestination = selectedDestination,
@@ -1657,7 +1657,7 @@ private fun HomeQuickWindow(
                     }
                     Row(
                         modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         HomeRemoteOptionsColumn(
                             remoteDpadChannelZapping = remoteDpadChannelZapping,
@@ -1984,8 +1984,8 @@ private fun HomeThemeFeatureAction(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(if (compact) 12.dp else 14.dp),
-            verticalArrangement = Arrangement.spacedBy(if (compact) 7.dp else 9.dp)
+                .padding(if (compact) 10.dp else 12.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 7.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2043,8 +2043,8 @@ private fun HomeOpenThemesButton(
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier
-            .width(if (compact) 48.dp else 56.dp)
-            .height(if (compact) 24.dp else 28.dp),
+                .width(if (compact) 42.dp else 50.dp)
+                .height(if (compact) 22.dp else 25.dp),
         shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
@@ -2080,8 +2080,8 @@ private fun HomeThemeSwatchGrid(
     onThemeSelected: (AppPalette) -> Unit
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val gap = if (compact) 6.dp else 8.dp
-        val swatchSize = if (compact) 24.dp else 30.dp
+        val gap = if (compact) 5.dp else 6.dp
+        val swatchSize = if (compact) 21.dp else 26.dp
         val columns = ((maxWidth.value + gap.value) / (swatchSize.value + gap.value))
             .toInt()
             .coerceAtLeast(4)
@@ -2174,8 +2174,8 @@ private fun HomeWatchAction(
     val shape = RoundedCornerShape(if (circular) 999.dp else 14.dp)
     val outline = homeOutlineColor
     val iconSize = when {
-        circular && !compact -> 32.dp
-        circular -> 28.dp
+        circular && !compact -> 28.dp
+        circular -> 24.dp
         prominent && !compact -> 34.dp
         prominent -> 34.dp
         compact -> 24.dp
@@ -2210,7 +2210,7 @@ private fun HomeWatchAction(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -2224,14 +2224,14 @@ private fun HomeWatchAction(
                         text = model.title,
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = if (compact) 10.sp else 12.sp,
-                            lineHeight = if (compact) 12.sp else 14.sp
+                            fontSize = if (compact) 9.sp else 11.sp,
+                            lineHeight = if (compact) 11.sp else 13.sp
                         ),
                         color = TextPrimary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 5.dp)
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
@@ -2305,20 +2305,20 @@ private fun HomeSmallTextAction(
 ) {
     val shape = RoundedCornerShape(14.dp)
     val outline = homeOutlineColor
-    val iconSize = if (compact) 20.dp else 30.dp
-    val verticalPadding = if (compact) 4.dp else 10.dp
-    val horizontalPadding = if (compact) 9.dp else 12.dp
-    val horizontalGap = if (compact) 7.dp else 10.dp
+    val iconSize = if (compact) 18.dp else 26.dp
+    val verticalPadding = if (compact) 3.dp else 8.dp
+    val horizontalPadding = if (compact) 8.dp else 10.dp
+    val horizontalGap = if (compact) 6.dp else 8.dp
     val titleStyle = if (compact) {
         MaterialTheme.typography.labelLarge.copy(
             fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp,
-            lineHeight = 15.sp
+            fontSize = 12.sp,
+            lineHeight = 14.sp
         )
     } else {
         MaterialTheme.typography.titleSmall.copy(
             fontWeight = FontWeight.SemiBold,
-            lineHeight = 22.sp
+            lineHeight = 20.sp
         )
     }
     val subtitleStyle = if (compact) {
@@ -2328,8 +2328,8 @@ private fun HomeSmallTextAction(
         )
     } else {
         MaterialTheme.typography.labelSmall.copy(
-            fontSize = 11.sp,
-            lineHeight = 15.sp
+            fontSize = 10.sp,
+            lineHeight = 13.sp
         )
     }
     TvClickableSurface(
