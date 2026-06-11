@@ -1,6 +1,7 @@
 package com.afterglowtv.app.ui.screens.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.FontWeight
@@ -72,6 +74,7 @@ import com.afterglowtv.app.ui.design.AppColors.SurfaceEmphasis as SurfaceHighlig
 import com.afterglowtv.app.ui.design.AppColors.TextPrimary as TextPrimary
 import com.afterglowtv.app.ui.design.AppColors.TextSecondary as OnSurfaceDim
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.BorderStroke
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.domain.model.ActiveLiveSource
@@ -413,8 +416,9 @@ private fun HomeCommandHub(
 
             HomeDashboardLayoutMode.CompactGrid,
             HomeDashboardLayoutMode.SpaciousGrid -> {
+                val wordmarkHeight = if (compactHome) 72.dp else 96.dp
                 val watchToolbarHeight = if (compactHome) 116.dp else 144.dp
-                val centeredBodyHeight = ((maxHeight - outerVerticalPadding * 2 - watchToolbarHeight - gap) * 0.72f)
+                val centeredBodyHeight = ((maxHeight - outerVerticalPadding * 2 - wordmarkHeight - watchToolbarHeight - gap * 2) * 0.72f)
                     .coerceAtMost(if (compactHome) 340.dp else 430.dp)
                     .coerceAtLeast(if (compactHome) 260.dp else 330.dp)
 
@@ -424,6 +428,11 @@ private fun HomeCommandHub(
                         .padding(horizontal = outerHorizontalPadding, vertical = outerVerticalPadding),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
+                    HomeDashboardWordmark(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(wordmarkHeight)
+                    )
                     HomeWatchToolbarRow(
                         cards = watchCards,
                         searchEnabled = searchEnabled,
@@ -491,6 +500,25 @@ private fun HomeCommandHub(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HomeDashboardWordmark(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.afterglow_tv_wordmark_dashboard),
+            contentDescription = "Afterglow TV",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(0.62f)
+        )
     }
 }
 
