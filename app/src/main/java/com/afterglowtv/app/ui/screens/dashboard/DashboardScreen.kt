@@ -412,6 +412,11 @@ private fun HomeCommandHub(
                         .padding(horizontal = outerHorizontalPadding, vertical = outerVerticalPadding),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
+                    HomeDashboardWordmark(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -464,11 +469,6 @@ private fun HomeCommandHub(
                             .fillMaxWidth()
                             .height(toolbarHeight)
                     )
-                    HomeDashboardWordmark(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
                 }
             }
         }
@@ -515,6 +515,12 @@ private fun HomeBottomToolbarRow(
                     onClick = { card.route?.let(onNavigate) }
                 )
             }
+            Box(
+                modifier = Modifier
+                    .width(if (compact) 1.dp else 2.dp)
+                    .fillMaxHeight(0.62f)
+                    .background(homeOutlineColor.copy(alpha = if (isAfterglowLabsTheme) 0.72f else 0.38f))
+            )
             HomeSourceToolbarButton(
                 title = "Add Source",
                 icon = Icons.Default.Add,
