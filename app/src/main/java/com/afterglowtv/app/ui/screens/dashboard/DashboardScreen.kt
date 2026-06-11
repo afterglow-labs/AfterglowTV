@@ -37,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -426,7 +427,6 @@ private fun HomeCommandHub(
                             .fillMaxWidth()
                             .height(toolbarHeight)
                     )
-                    Box(modifier = Modifier.weight(1f))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -468,10 +468,11 @@ private fun HomeCommandHub(
                             modifier = Modifier.weight(0.76f)
                         )
                     }
+                    Box(modifier = Modifier.weight(1f))
                     HomeDashboardWordmark(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(if (compactHome) 56.dp else 74.dp)
+                            .height(if (compactHome) 30.dp else 40.dp)
                     )
                 }
             }
@@ -485,15 +486,16 @@ private fun HomeDashboardWordmark(
 ) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.BottomCenter
     ) {
         Image(
             painter = painterResource(R.drawable.afterglow_labs_wordmark),
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
-                .fillMaxWidth(0.46f)
+                .fillMaxWidth(0.14f)
                 .fillMaxHeight()
+                .alpha(0.56f)
         )
     }
 }
@@ -510,64 +512,86 @@ private fun HomeBottomToolbarRow(
 ) {
     val compact = layoutMode != HomeDashboardLayoutMode.SpaciousGrid
     val shape = RoundedCornerShape(if (compact) 14.dp else 18.dp)
-    Surface(
+    Row(
         modifier = modifier,
-        shape = shape,
-        colors = SurfaceDefaults.colors(containerColor = homeWindowFill),
-        border = Border(BorderStroke(if (isBrightHomeTheme || isAfterglowLabsTheme) 2.dp else 1.dp, homeOutlineColor.copy(alpha = if (isBrightHomeTheme || isAfterglowLabsTheme) 0.82f else 0.38f)))
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Surface(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = if (compact) 7.dp else 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp)
+                .weight(1.34f)
+                .fillMaxHeight(),
+            shape = shape,
+            colors = SurfaceDefaults.colors(containerColor = homeWindowFill),
+            border = Border(BorderStroke(if (isBrightHomeTheme || isAfterglowLabsTheme) 2.dp else 1.dp, homeOutlineColor.copy(alpha = if (isBrightHomeTheme || isAfterglowLabsTheme) 0.82f else 0.38f)))
         ) {
-            cards.take(4).forEach { card ->
-                HomeWatchToolbarButton(
-                    model = card,
-                    compact = compact,
-                    modifier = Modifier.width(if (compact) 70.dp else 84.dp),
-                    onClick = { card.route?.let(onNavigate) }
-                )
-            }
-            Box(
+            Row(
                 modifier = Modifier
-                    .width(if (compact) 1.dp else 2.dp)
-                    .fillMaxHeight(0.62f)
-                    .background(homeOutlineColor.copy(alpha = if (isAfterglowLabsTheme) 0.72f else 0.38f))
-            )
-            HomeSourceToolbarButton(
-                title = "Add Source",
-                icon = Icons.Default.Add,
-                accent = Color(0xFFFFD166),
-                compact = compact,
-                onClick = onAddProvider
-            )
-            HomeSourceToolbarButton(
-                title = "Add VOD",
-                icon = Icons.Default.Star,
-                accent = Color(0xFFFF7A38),
-                compact = compact,
-                onClick = onAddProvider
-            )
-            HomeSourceToolbarButton(
-                title = "Source Settings",
-                icon = Icons.Default.Menu,
-                accent = Color(0xFFB4F06B),
-                compact = compact,
-                onClick = onOpenSourceSettings
-            )
-            if (searchEnabled) {
-                HomeDashboardSearchPanel(
+                    .fillMaxSize()
+                    .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = if (compact) 7.dp else 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp)
+            ) {
+                cards.take(4).forEach { card ->
+                    HomeWatchToolbarButton(
+                        model = card,
+                        compact = compact,
+                        modifier = Modifier.width(if (compact) 70.dp else 84.dp),
+                        onClick = { card.route?.let(onNavigate) }
+                    )
+                }
+                if (searchEnabled) {
+                    HomeDashboardSearchPanel(
+                        compact = compact,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(if (compact) 64.dp else 74.dp),
+                        onSubmit = { query -> onNavigate(Routes.search(query)) }
+                    )
+                } else {
+                    Box(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        Surface(
+            modifier = Modifier
+                .weight(0.66f)
+                .fillMaxHeight(),
+            shape = shape,
+            colors = SurfaceDefaults.colors(containerColor = homeWindowFill),
+            border = Border(BorderStroke(if (isBrightHomeTheme || isAfterglowLabsTheme) 2.dp else 1.dp, homeOutlineColor.copy(alpha = if (isBrightHomeTheme || isAfterglowLabsTheme) 0.82f else 0.38f)))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = if (compact) 7.dp else 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp)
+            ) {
+                HomeSourceToolbarButton(
+                    title = "Add Source",
+                    icon = Icons.Default.Add,
+                    accent = Color(0xFFFFD166),
                     compact = compact,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(if (compact) 64.dp else 74.dp),
-                    onSubmit = { query -> onNavigate(Routes.search(query)) }
+                    modifier = Modifier.weight(1f),
+                    onClick = onAddProvider
                 )
-            } else {
-                Box(modifier = Modifier.weight(1f))
+                HomeSourceToolbarButton(
+                    title = "Add VOD",
+                    icon = Icons.Default.Star,
+                    accent = Color(0xFFFF7A38),
+                    compact = compact,
+                    modifier = Modifier.weight(1f),
+                    onClick = onAddProvider
+                )
+                HomeSourceToolbarButton(
+                    title = "Settings",
+                    icon = Icons.Default.Menu,
+                    accent = Color(0xFFB4F06B),
+                    compact = compact,
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenSourceSettings
+                )
             }
         }
     }
@@ -1495,14 +1519,14 @@ private fun HomeAppearanceWindow(
                 activePaletteId = activePaletteId,
                 compact = compact,
                 modifier = Modifier
-                    .weight(if (compact) 1.22f else 1.28f)
+                    .weight(if (compact) 1.34f else 1.42f)
                     .fillMaxHeight(),
                 onOpenThemes = { cards[0].route?.let(onNavigate) },
                 onThemeSelected = onThemeSelected
             )
             Column(
                 modifier = Modifier
-                    .weight(if (compact) 0.78f else 0.72f)
+                    .weight(if (compact) 0.66f else 0.58f)
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
             ) {
@@ -2327,31 +2351,32 @@ private fun HomeSmallTextAction(
 ) {
     val shape = RoundedCornerShape(14.dp)
     val outline = homeOutlineColor
-    val iconSize = if (compact) 18.dp else 26.dp
-    val verticalPadding = if (compact) 3.dp else 8.dp
-    val horizontalPadding = if (compact) 8.dp else 10.dp
-    val horizontalGap = if (compact) 6.dp else 8.dp
+    val iconSize = if (compact) 22.dp else 30.dp
+    val verticalPadding = if (compact) 6.dp else 9.dp
+    val horizontalPadding = if (compact) 10.dp else 12.dp
+    val horizontalGap = if (compact) 8.dp else 10.dp
     val titleStyle = if (compact) {
         MaterialTheme.typography.labelLarge.copy(
             fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp,
-            lineHeight = 14.sp
+            fontSize = 13.sp,
+            lineHeight = 16.sp
         )
     } else {
         MaterialTheme.typography.titleSmall.copy(
             fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
             lineHeight = 20.sp
         )
     }
     val subtitleStyle = if (compact) {
         MaterialTheme.typography.labelSmall.copy(
-            fontSize = 9.sp,
-            lineHeight = 10.sp
+            fontSize = 10.sp,
+            lineHeight = 12.sp
         )
     } else {
         MaterialTheme.typography.labelSmall.copy(
-            fontSize = 10.sp,
-            lineHeight = 13.sp
+            fontSize = 11.sp,
+            lineHeight = 14.sp
         )
     }
     TvClickableSurface(
