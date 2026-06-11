@@ -453,11 +453,6 @@ private fun HomeCommandHub(
                             modifier = Modifier.weight(0.76f)
                         )
                     }
-                    HomeDashboardWordmark(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
                     HomeBottomToolbarRow(
                         cards = watchCards,
                         searchEnabled = searchEnabled,
@@ -468,6 +463,11 @@ private fun HomeCommandHub(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(toolbarHeight)
+                    )
+                    HomeDashboardWordmark(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
                     )
                 }
             }
@@ -1473,14 +1473,14 @@ private fun HomeAppearanceWindow(
                 activePaletteId = activePaletteId,
                 compact = compact,
                 modifier = Modifier
-                    .weight(if (compact) 0.96f else 0.86f)
+                    .weight(if (compact) 1.22f else 1.28f)
                     .fillMaxHeight(),
                 onOpenThemes = { cards[0].route?.let(onNavigate) },
                 onThemeSelected = onThemeSelected
             )
             Column(
                 modifier = Modifier
-                    .weight(if (compact) 1.04f else 1.14f)
+                    .weight(if (compact) 0.78f else 0.72f)
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
             ) {
