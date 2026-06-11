@@ -1,7 +1,6 @@
 package com.afterglowtv.app.ui.screens.dashboard
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -38,11 +37,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -74,7 +76,6 @@ import com.afterglowtv.app.ui.design.AppColors.SurfaceEmphasis as SurfaceHighlig
 import com.afterglowtv.app.ui.design.AppColors.TextPrimary as TextPrimary
 import com.afterglowtv.app.ui.design.AppColors.TextSecondary as OnSurfaceDim
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.BorderStroke
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.domain.model.ActiveLiveSource
@@ -507,17 +508,37 @@ private fun HomeCommandHub(
 private fun HomeDashboardWordmark(
     modifier: Modifier = Modifier
 ) {
+    val gold = Color(0xFFFFC857)
+    val warmGold = Color(0xFFFF9F1C)
     Box(
-        modifier = modifier,
+        modifier = modifier.afterglow(
+            specs = listOf(
+                GlowSpec(gold, 22.dp, 0.38f),
+                GlowSpec(warmGold, 46.dp, 0.20f),
+                GlowSpec(HomeNeonOrange, 76.dp, 0.10f),
+            ),
+            shape = RoundedCornerShape(999.dp)
+        ),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.afterglow_tv_wordmark_dashboard),
-            contentDescription = "Afterglow TV",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(0.62f)
+        Text(
+            text = "AFTERGLOW LABS",
+            style = MaterialTheme.typography.displaySmall.copy(
+                fontFamily = HomeVoxRoundWideBold,
+                fontWeight = FontWeight.Bold,
+                fontSize = 46.sp,
+                lineHeight = 52.sp,
+                shadow = Shadow(
+                    color = gold.copy(alpha = 0.52f),
+                    offset = Offset.Zero,
+                    blurRadius = 16f
+                )
+            ),
+            color = gold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(0.86f)
         )
     }
 }
@@ -587,6 +608,9 @@ private fun String.asDashboardSourceTitle(): String =
 
 private val HomeLabsPurple = Color(0xFF6F35D8)
 private val HomeNeonOrange = Color(0xFFFF6A00)
+private val HomeVoxRoundWideBold = FontFamily(
+    Font(R.font.vox_round_wide_bold, FontWeight.Bold)
+)
 
 private val BrightHomeThemeIds = setOf(
     "afterglow_labs",
