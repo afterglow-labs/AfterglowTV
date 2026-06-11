@@ -6,7 +6,7 @@
 
     <string name="dashboard_provider_xtream">Server Login</string>
     <string name="dashboard_provider_m3u">Playlist Link</string>
-    <string name="dashboard_empty_title">Welcome to AfterglowTV</string>
+    <string name="dashboard_empty_title">Welcome to Afterglow TV</string>
     <string name="dashboard_empty_body">Browse your personal videos and network shares any time. Want your own channels and on-demand rows on Home too? Add a playlist link or local playlist file from Settings whenever you like.</string>
     <string name="dashboard_library_ready">Your TV library is ready</string>
 
@@ -73,5 +73,5 @@
     <string name="setup_discard_draft_body">This source setup is incomplete. Go back and lose the current draft?</string>
 
     <string name="tv_input_setup_no_provider_title">No source configured</string>
-    <string name="tv_input_setup_no_provider_body">Add at least one source in AfterglowTV, then return here to scan channels into Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">Add at least one source in Afterglow TV, then return here to scan channels into Android TV Live TV.</string>
 </resources>

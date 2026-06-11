@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">AfterglowTV</string>
+    <string name="app_name">Afterglow TV</string>
     <string name="nav_home">Acasă</string>
     <string name="nav_live_tv">TV în direct</string>
     <string name="nav_movies">Filme</string>
@@ -108,7 +108,7 @@
     <string name="dashboard_provider_no_expiry">Nicio expirare raportată</string>
     <string name="dashboard_warning_title">Furnizorul are nevoie de atenție</string>
     <string name="dashboard_warning_review">Deschideți detaliile furnizorului</string>
-    <string name="dashboard_update_title">AfterglowTV %1$s este disponibil</string>
+    <string name="dashboard_update_title">Afterglow TV %1$s este disponibil</string>
     <string name="dashboard_update_available">O versiune mai nouă a aplicației este memorată în cache și gata de verificat din Setări.</string>
     <string name="dashboard_update_install_ready">Cea mai recentă actualizare a fost deja descărcată. Deschide Setări pentru a o instala.</string>
     <string name="dashboard_update_open_settings">Deschide actualizările</string>
@@ -120,7 +120,7 @@
     <string name="dashboard_stat_resume">%1$d pentru a relua</string>
     <string name="dashboard_stat_movies">%1$d filme</string>
     <string name="dashboard_stat_series">seria %1$d.</string>
-    <string name="dashboard_empty_title">Bun venit la AfterglowTV</string>
+    <string name="dashboard_empty_title">Bun venit la Afterglow TV</string>
     <string name="dashboard_empty_body">Răsfoiți Ghidul personal și partajările de rețea oricând. Doriți și canale live și rânduri la cerere pe Acasă? Adăugați o listă de redare sau un furnizor Xtream oricând doriți.</string>
     <string name="pin_dialog_title">Introduceți codul PIN</string>
     <string name="pin_dialog_cancel">Anulează</string>
@@ -430,7 +430,7 @@
     <string name="settings_about_subtitle">Versiune, versiune și detalii de asistență pentru această instalare.</string>
     <string name="settings_app_version">Versiunea aplicației</string>
     <string name="settings_build">Construiește</string>
-    <string name="settings_build_desc">AfterglowTV pentru Android TV</string>
+    <string name="settings_build_desc">Afterglow TV pentru Android TV</string>
     <string name="settings_enabled">Activat</string>
     <string name="settings_disabled">Dezactivat</string>
     <string name="settings_developed_by">Dezvoltat de</string>
@@ -440,7 +440,7 @@
     <string name="settings_donate">Asistență pe Ko-fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">Actualizări</string>
-    <string name="settings_updates_subtitle">Verifică versiunile noi AfterglowTV pe GitHub Releases fără a părăsi aplicația.</string>
+    <string name="settings_updates_subtitle">Verifică versiunile noi Afterglow TV pe GitHub Releases fără a părăsi aplicația.</string>
     <string name="settings_update_auto_check">Verifică automat actualizările</string>
     <string name="settings_update_latest_release">Ultima versiune</string>
     <string name="settings_update_status">Stare actualizare</string>
@@ -464,8 +464,8 @@
     <string name="settings_update_status_check_failed">Ultima verificare a eșuat</string>
     <string name="settings_update_status_downloading">Se descarcă actualizarea</string>
     <string name="settings_update_status_ready_to_install">Gata de instalare</string>
-    <string name="settings_update_available_message">AfterglowTV %1$s este disponibil.</string>
-    <string name="settings_update_current_message">Ai deja cea mai recentă versiune AfterglowTV.</string>
+    <string name="settings_update_available_message">Afterglow TV %1$s este disponibil.</string>
+    <string name="settings_update_current_message">Ai deja cea mai recentă versiune Afterglow TV.</string>
     <string name="content_responsibility_title">Notificare anti-piraterie</string>
     <string name="content_responsibility_body">Afterglow TV este un player media care le permite utilizatorilor să redea și să organizeze conținut media din surse pe care aleg să le adauge. În scopuri demonstrative și de testare, aplicația poate include o mică selecție de fluxuri media public accesibile și disponibile legal. Aceste surse demonstrative sunt furnizate exclusiv pentru a prezenta funcționalitatea aplicației și nu sunt destinate să fie o ofertă completă de conținut.\n\nUtilizatorii sunt singurii responsabili să se asigure că au drepturile legale și autorizarea necesare pentru a accesa, reda în streaming, înregistra sau distribui orice conținut utilizat cu această aplicație.\n\nAccesul neautorizat la, reproducerea sau distribuirea conținutului protejat prin drepturi de autor poate încălca United States Copyright Act (17 U.S.C. §§ 101 et seq.) și Digital Millennium Copyright Act (17 U.S.C. § 1201 et seq.), precum și alte legi aplicabile. Afterglow TV nu susține, nu promovează și nu încurajează încălcarea drepturilor de autor, pirateria sau utilizarea neautorizată a operelor protejate prin drepturi de autor.</string>
     <string name="content_responsibility_confirm">Am înțeles</string>
@@ -524,7 +524,7 @@
     <string name="settings_backup_restore">Backup și restaurare</string>
     <string name="settings_backup_subtitle">Exportați sau importați favorite, grupuri și preferințe.</string>
     <string name="settings_backup_data">Exportați date</string>
-    <string name="settings_backup_export_subtitle">Salvează fișierele bazei de date/setărilor AfterglowTV în Downloads/AfterglowTV. Fișierele video nu sunt incluse în backup.</string>
+    <string name="settings_backup_export_subtitle">Salvează fișierele bazei de date/setărilor Afterglow TV în Downloads/AfterglowTV. Fișierele video nu sunt incluse în backup.</string>
     <string name="settings_backup_export_prepare_failed">Nu s-a putut pregăti fișierul backup.</string>
     <string name="settings_backup_export_saved_to">Backup salvat în %1$s</string>
     <string name="settings_restore_data">Importați date</string>
@@ -1154,21 +1154,21 @@
     <string name="settings_history_cleared">Istoricul vizionărilor și recentele au fost șters</string>
     <string name="settings_pin_changed">PIN-ul a fost salvat cu succes</string>
     <string name="home_reorder_channels">Reordonați canalele</string>
-    <string name="tv_input_setup_scanning_title">Scanarea canalelor AfterglowTV</string>
+    <string name="tv_input_setup_scanning_title">Scanarea canalelor Afterglow TV</string>
     <string name="tv_input_setup_success_title">Live TV este gata</string>
     <string name="tv_input_setup_no_provider_title">Nu a fost configurat niciun furnizor IPTV</string>
     <string name="tv_input_setup_error_title">Scanarea automată a eșuat</string>
     <string name="tv_input_setup_idle_title">Pregătirea integrării Live TV</string>
-    <string name="tv_input_setup_scanning_body">AfterglowTV sincronizează furnizorul dvs. activ cu Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">Afterglow TV sincronizează furnizorul dvs. activ cu Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">Canalele dvs. au fost sincronizate cu succes.</string>
-    <string name="tv_input_setup_no_provider_body">Adaugă cel puțin un furnizor IPTV în AfterglowTV, apoi revino aici pentru a scana canalele în Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">Adaugă cel puțin un furnizor IPTV în Afterglow TV, apoi revino aici pentru a scana canalele în Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">Sincronizarea intrării televizorului nu s-a finalizat.</string>
     <string name="tv_input_setup_idle_body">Va rugam asteptati.</string>
     <string name="tv_input_setup_source_format">Sursa: %1$s</string>
-    <string name="tv_input_setup_open_setup">Deschideți AfterglowTV Setup</string>
+    <string name="tv_input_setup_open_setup">Deschideți Afterglow TV Setup</string>
     <string name="tv_input_setup_try_scan_again">Încearcă din nou scanarea automată</string>
     <string name="tv_input_setup_retry_scan">Reîncearcă scanarea automată</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV vă poate deschide acum canalele AfterglowTV.</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV vă poate deschide acum canalele Afterglow TV.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1195,8 +1195,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d sloturi</string>
     <string name="movie_detail_related">Mai multe ca asta</string>
     <string name="movie_detail_resume_from">Continuă din %1$s</string>
-    <string name="notification_permission_recording_alert_required">Activează notificările pentru AfterglowTV pentru a primi alerte de eșec înregistrare.</string>
-    <string name="notification_permission_reminder_required">Activează notificările pentru AfterglowTV pentru a primi remindere de programe.</string>
+    <string name="notification_permission_recording_alert_required">Activează notificările pentru Afterglow TV pentru a primi alerte de eșec înregistrare.</string>
+    <string name="notification_permission_reminder_required">Activează notificările pentru Afterglow TV pentru a primi remindere de programe.</string>
     <string name="player_action_variants">Variante</string>
     <string name="player_auto_play_cancel">Anulează</string>
     <string name="player_auto_play_countdown">Redare în %1$d s</string>
@@ -1411,7 +1411,7 @@
     <string name="settings_recording_skipped">Apariție omisă</string>
     <string name="settings_recording_wifi_only">Înregistrează doar pe Wi-Fi</string>
     <string name="settings_reset">Resetare</string>
-    <string name="settings_restore_subtitle">Alege un fișier backup sau deschide un backup cu AfterglowTV dintr-un manager de fișiere.</string>
+    <string name="settings_restore_subtitle">Alege un fișier backup sau deschide un backup cu Afterglow TV dintr-un manager de fișiere.</string>
     <string name="settings_select_guide_default_category">Selectează categoria implicită a ghidului</string>
     <string name="settings_select_live_timeshift_depth">Selectează Adâncimea Rewind Live Local</string>
     <string name="settings_select_time_format">Selectează formatul orei</string>

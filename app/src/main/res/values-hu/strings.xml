@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">AfterglowTV</string>
+    <string name="app_name">Afterglow TV</string>
     <string name="nav_home">Otthon</string>
     <string name="nav_live_tv">Élő TV</string>
     <string name="nav_movies">Filmek</string>
@@ -101,7 +101,7 @@
     <string name="dashboard_provider_no_expiry">Lejáratot nem jelentettek</string>
     <string name="dashboard_warning_title">A szolgáltató figyelmet igényel</string>
     <string name="dashboard_warning_review">Szolgáltató részletei megnyitása</string>
-    <string name="dashboard_update_title">A AfterglowTV %1$s elérhető</string>
+    <string name="dashboard_update_title">A Afterglow TV %1$s elérhető</string>
     <string name="dashboard_update_available">Egy újabb alkalmazásverzió gyorsítótárban van, és a Beállításokban megtekinthető.</string>
     <string name="dashboard_update_install_ready">A legújabb frissítés már le lett töltve. Nyisd meg a Beállításokat a telepítéshez.</string>
     <string name="dashboard_update_open_settings">Frissítések megnyitása</string>
@@ -397,7 +397,7 @@
     <string name="settings_about_subtitle">Verzió-, build- és támogatási információk ehhez a telepítéshez.</string>
     <string name="settings_app_version">Alkalmazás verziója</string>
     <string name="settings_build">Építsd meg</string>
-    <string name="settings_build_desc">AfterglowTV Android TV-hez</string>
+    <string name="settings_build_desc">Afterglow TV Android TV-hez</string>
     <string name="settings_enabled">Engedélyezve</string>
     <string name="settings_disabled">Letiltva</string>
     <string name="settings_developed_by">által kifejlesztett</string>
@@ -407,7 +407,7 @@
     <string name="settings_donate">Támogatás a Ko-fi-n</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">Frissítések</string>
-    <string name="settings_updates_subtitle">Ellenőrizze a GitHub Releases oldalon az újabb AfterglowTV verziókat az alkalmazás elhagyása nélkül.</string>
+    <string name="settings_updates_subtitle">Ellenőrizze a GitHub Releases oldalon az újabb Afterglow TV verziókat az alkalmazás elhagyása nélkül.</string>
     <string name="settings_update_auto_check">Frissítések automatikus keresése</string>
     <string name="settings_update_latest_release">Legújabb kiadás</string>
     <string name="settings_update_status">Frissítés állapota</string>
@@ -431,8 +431,8 @@
     <string name="settings_update_status_check_failed">Az utolsó ellenőrzés sikertelen volt</string>
     <string name="settings_update_status_downloading">Frissítés letöltése</string>
     <string name="settings_update_status_ready_to_install">Telepítésre kész</string>
-    <string name="settings_update_available_message">A AfterglowTV %1$s elérhető.</string>
-    <string name="settings_update_current_message">Már a AfterglowTV legújabb kiadását használja.</string>
+    <string name="settings_update_available_message">A Afterglow TV %1$s elérhető.</string>
+    <string name="settings_update_current_message">Már a Afterglow TV legújabb kiadását használja.</string>
     <string name="settings_syncing">Adatok szinkronizálása, kérjük várjon...</string>
     <string name="settings_syncing_title">Adatok szinkronizálása...</string>
     <string name="settings_syncing_subtitle">Kérjük, várjon, amíg a lejátszási lista importálása befejeződik.</string>
@@ -1105,21 +1105,21 @@
     <string name="settings_history_cleared">A nézési előzmények és a legutóbbi elemek törölve</string>
     <string name="settings_pin_changed">A PIN sikeresen mentve</string>
     <string name="home_reorder_channels">Csatornák átrendezése</string>
-    <string name="tv_input_setup_scanning_title">AfterglowTV csatornák keresése</string>
+    <string name="tv_input_setup_scanning_title">Afterglow TV csatornák keresése</string>
     <string name="tv_input_setup_success_title">A Live TV készen áll</string>
     <string name="tv_input_setup_no_provider_title">Nincs konfigurálva IPTV-szolgáltató</string>
     <string name="tv_input_setup_error_title">Az automatikus keresés sikertelen</string>
     <string name="tv_input_setup_idle_title">Live TV integráció előkészítése</string>
-    <string name="tv_input_setup_scanning_body">A AfterglowTV szinkronizálja az aktív szolgáltatót az Android TV Live TV-vel.</string>
+    <string name="tv_input_setup_scanning_body">A Afterglow TV szinkronizálja az aktív szolgáltatót az Android TV Live TV-vel.</string>
     <string name="tv_input_setup_success_body">Csatornái sikeresen szinkronizálva.</string>
     <string name="tv_input_setup_no_provider_body">Adjon hozzá legalább egy IPTV szolgáltatót a Afterglowban, majd térjen vissza ide, hogy csatornákat keressen az Android TV Live TV-be.</string>
     <string name="tv_input_setup_error_body">A TV bemeneti szinkronizálása nem fejeződött be.</string>
     <string name="tv_input_setup_idle_body">Kérjük, várjon.</string>
     <string name="tv_input_setup_source_format">Forrás: %1$s</string>
-    <string name="tv_input_setup_open_setup">AfterglowTV beállítások megnyitása</string>
+    <string name="tv_input_setup_open_setup">Afterglow TV beállítások megnyitása</string>
     <string name="tv_input_setup_try_scan_again">Automatikus keresés újrapróbálása</string>
     <string name="tv_input_setup_retry_scan">Automatikus keresés újrapróbálása</string>
-    <string name="tv_input_setup_success_hint">Az Android TV Live TV mostantól megnyithatja AfterglowTV csatornáit.</string>
+    <string name="tv_input_setup_success_hint">Az Android TV Live TV mostantól megnyithatja Afterglow TV csatornáit.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1146,8 +1146,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d slot</string>
     <string name="movie_detail_related">Hasonló tartalmak</string>
     <string name="movie_detail_resume_from">Folytatás innen: %1$s</string>
-    <string name="notification_permission_recording_alert_required">Engedélyezze az értesítéseket a AfterglowTV számára a felvételi hibák fogadásához.</string>
-    <string name="notification_permission_reminder_required">Engedélyezze az értesítéseket a AfterglowTV számára a műsoremlékeztetők fogadásához.</string>
+    <string name="notification_permission_recording_alert_required">Engedélyezze az értesítéseket a Afterglow TV számára a felvételi hibák fogadásához.</string>
+    <string name="notification_permission_reminder_required">Engedélyezze az értesítéseket a Afterglow TV számára a műsoremlékeztetők fogadásához.</string>
     <string name="player_action_variants">Változatok</string>
     <string name="player_auto_play_cancel">Mégse</string>
     <string name="player_auto_play_countdown">Lejátszás %1$d mp múlva</string>
@@ -1317,7 +1317,7 @@
     <string name="settings_recording_skipped">Előfordulás kihagyva</string>
     <string name="settings_recording_wifi_only">Felvétel csak Wi-Fi-n</string>
     <string name="settings_reset">Visszaállítás</string>
-    <string name="settings_restore_subtitle">Válasszon biztonsági mentési fájlt, vagy nyisson meg egy mentést a AfterglowTV-tal fájlkezelőből.</string>
+    <string name="settings_restore_subtitle">Válasszon biztonsági mentési fájlt, vagy nyisson meg egy mentést a Afterglow TV-tal fájlkezelőből.</string>
     <string name="settings_select_guide_default_category">Válasszon alapértelmezett EPG kategóriát</string>
     <string name="settings_select_live_timeshift_depth">Válasszon helyi élő visszatekerési mélységet</string>
     <string name="settings_select_time_format">Válasszon időformátumot</string>
@@ -1391,7 +1391,7 @@
     <string name="search_vod">VOD</string>
     <string name="settings_backup_export_prepare_failed">Nem sikerült előkészíteni a biztonsági mentési fájlt.</string>
     <string name="settings_backup_export_saved_to">Biztonsági mentés elmentve ide: %1$s</string>
-    <string name="settings_backup_export_subtitle">Az AfterglowTV adatbázis- és beállításfájljait a Downloads/AfterglowTV mappába menti. A videófájlokról nem készül biztonsági mentés.</string>
+    <string name="settings_backup_export_subtitle">Az Afterglow TV adatbázis- és beállításfájljait a Downloads/AfterglowTV mappába menti. A videófájlokról nem készül biztonsági mentés.</string>
     <string name="settings_catalog_count_indexing">Indexelés</string>
     <string name="settings_category_sort_vod_movies">VOD filmkategóriák</string>
     <string name="settings_category_sort_vod_tv">VOD TV-kategóriák</string>

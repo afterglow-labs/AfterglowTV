@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">AfterglowTV</string>
+    <string name="app_name">Afterglow TV</string>
     <string name="nav_home">Rumah</string>
     <string name="nav_live_tv">siaran langsung</string>
     <string name="nav_movies">Film</string>
@@ -101,7 +101,7 @@
     <string name="dashboard_provider_no_expiry">Tidak ada kadaluwarsa yang dilaporkan</string>
     <string name="dashboard_warning_title">Penyedia Perlu Perhatian</string>
     <string name="dashboard_warning_review">Buka Detail Penyedia</string>
-    <string name="dashboard_update_title">AfterglowTV %1$s tersedia</string>
+    <string name="dashboard_update_title">Afterglow TV %1$s tersedia</string>
     <string name="dashboard_update_available">Rilis aplikasi yang lebih baru sudah di-cache dan siap ditinjau dari Setelan.</string>
     <string name="dashboard_update_install_ready">Pembaruan terbaru sudah diunduh. Buka Setelan untuk memasangnya.</string>
     <string name="dashboard_update_open_settings">Buka Pembaruan</string>
@@ -397,7 +397,7 @@
     <string name="settings_about_subtitle">Detail versi, build, dan dukungan untuk instalasi ini.</string>
     <string name="settings_app_version">Versi Aplikasi</string>
     <string name="settings_build">Membangun</string>
-    <string name="settings_build_desc">AfterglowTV untuk Android TV</string>
+    <string name="settings_build_desc">Afterglow TV untuk Android TV</string>
     <string name="settings_enabled">Diaktifkan</string>
     <string name="settings_disabled">Dinonaktifkan</string>
     <string name="settings_developed_by">Dikembangkan oleh</string>
@@ -407,7 +407,7 @@
     <string name="settings_donate">Dukungan pada Ko-fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">Pembaruan</string>
-    <string name="settings_updates_subtitle">Periksa GitHub Releases untuk versi AfterglowTV yang lebih baru tanpa keluar dari aplikasi.</string>
+    <string name="settings_updates_subtitle">Periksa GitHub Releases untuk versi Afterglow TV yang lebih baru tanpa keluar dari aplikasi.</string>
     <string name="settings_update_auto_check">Periksa pembaruan otomatis</string>
     <string name="settings_update_latest_release">Rilis terbaru</string>
     <string name="settings_update_status">Status pembaruan</string>
@@ -431,8 +431,8 @@
     <string name="settings_update_status_check_failed">Pemeriksaan terakhir gagal</string>
     <string name="settings_update_status_downloading">Mengunduh pembaruan</string>
     <string name="settings_update_status_ready_to_install">Siap dipasang</string>
-    <string name="settings_update_available_message">AfterglowTV %1$s tersedia.</string>
-    <string name="settings_update_current_message">Anda sudah memiliki rilis AfterglowTV terbaru.</string>
+    <string name="settings_update_available_message">Afterglow TV %1$s tersedia.</string>
+    <string name="settings_update_current_message">Anda sudah memiliki rilis Afterglow TV terbaru.</string>
     <string name="settings_syncing">Menyinkronkan data, harap tunggu...</string>
     <string name="settings_syncing_title">Menyinkronkan data...</string>
     <string name="settings_syncing_subtitle">Harap tunggu sementara playlist Anda diimpor.</string>
@@ -1105,21 +1105,21 @@
     <string name="settings_history_cleared">Riwayat tontonan dan terkini dihapus</string>
     <string name="settings_pin_changed">PIN berhasil disimpan</string>
     <string name="home_reorder_channels">Susun Ulang Saluran</string>
-    <string name="tv_input_setup_scanning_title">Memindai saluran AfterglowTV</string>
+    <string name="tv_input_setup_scanning_title">Memindai saluran Afterglow TV</string>
     <string name="tv_input_setup_success_title">TV langsung sudah siap</string>
     <string name="tv_input_setup_no_provider_title">Tidak ada penyedia IPTV yang dikonfigurasi</string>
     <string name="tv_input_setup_error_title">Pemindaian otomatis gagal</string>
     <string name="tv_input_setup_idle_title">Mempersiapkan integrasi TV Langsung</string>
-    <string name="tv_input_setup_scanning_body">AfterglowTV sedang menyinkronkan penyedia aktif Anda ke Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">Afterglow TV sedang menyinkronkan penyedia aktif Anda ke Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">Saluran Anda berhasil disinkronkan.</string>
-    <string name="tv_input_setup_no_provider_body">Tambahkan setidaknya satu penyedia IPTV di AfterglowTV, lalu kembali ke sini untuk memindai saluran ke Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">Tambahkan setidaknya satu penyedia IPTV di Afterglow TV, lalu kembali ke sini untuk memindai saluran ke Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">Sinkronisasi input TV tidak selesai.</string>
     <string name="tv_input_setup_idle_body">Harap tunggu.</string>
     <string name="tv_input_setup_source_format">Sumber: %1$s</string>
-    <string name="tv_input_setup_open_setup">Buka Pengaturan AfterglowTV</string>
+    <string name="tv_input_setup_open_setup">Buka Pengaturan Afterglow TV</string>
     <string name="tv_input_setup_try_scan_again">Coba Pindai Otomatis Lagi</string>
     <string name="tv_input_setup_retry_scan">Coba lagi Pindai Otomatis</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV sekarang dapat membuka saluran AfterglowTV Anda.</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV sekarang dapat membuka saluran Afterglow TV Anda.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1146,8 +1146,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d slot</string>
     <string name="movie_detail_related">Lebih Banyak Seperti Ini</string>
     <string name="movie_detail_resume_from">Lanjutkan dari %1$s</string>
-    <string name="notification_permission_recording_alert_required">Aktifkan notifikasi untuk AfterglowTV agar menerima peringatan kegagalan rekaman.</string>
-    <string name="notification_permission_reminder_required">Aktifkan notifikasi untuk AfterglowTV agar menerima pengingat program.</string>
+    <string name="notification_permission_recording_alert_required">Aktifkan notifikasi untuk Afterglow TV agar menerima peringatan kegagalan rekaman.</string>
+    <string name="notification_permission_reminder_required">Aktifkan notifikasi untuk Afterglow TV agar menerima pengingat program.</string>
     <string name="player_action_variants">Varian</string>
     <string name="player_auto_play_cancel">Batal</string>
     <string name="player_auto_play_countdown">Memutar dalam %1$d dtk</string>
@@ -1317,7 +1317,7 @@
     <string name="settings_recording_skipped">Kejadian dilewati</string>
     <string name="settings_recording_wifi_only">Rekam hanya melalui Wi-Fi</string>
     <string name="settings_reset">Reset</string>
-    <string name="settings_restore_subtitle">Pilih file cadangan, atau buka cadangan dengan AfterglowTV dari manajer file.</string>
+    <string name="settings_restore_subtitle">Pilih file cadangan, atau buka cadangan dengan Afterglow TV dari manajer file.</string>
     <string name="settings_select_guide_default_category">Pilih kategori panduan default</string>
     <string name="settings_select_live_timeshift_depth">Pilih Kedalaman Putar Ulang Langsung Lokal</string>
     <string name="settings_select_time_format">Pilih format waktu</string>
@@ -1409,7 +1409,7 @@
     <string name="content_responsibility_body">Afterglow TV adalah pemutar media yang memungkinkan pengguna memutar dan mengatur media dari sumber yang mereka pilih untuk ditambahkan. Untuk tujuan demonstrasi dan pengujian, aplikasi dapat menyertakan sejumlah kecil stream media yang dapat diakses publik dan tersedia secara legal. Sumber demonstrasi ini disediakan semata-mata untuk menunjukkan fungsi aplikasi dan tidak dimaksudkan sebagai penawaran konten yang lengkap.\n\nPengguna bertanggung jawab penuh untuk memastikan bahwa mereka memiliki hak hukum dan izin untuk mengakses, melakukan streaming, merekam, atau mendistribusikan konten apa pun yang digunakan dengan aplikasi ini.\n\nAkses, reproduksi, atau distribusi konten berhak cipta tanpa izin dapat melanggar Undang-Undang Hak Cipta Amerika Serikat (17 U.S.C. &#167;&#167; 101 et seq.) dan Digital Millennium Copyright Act (17 U.S.C. &#167; 1201 et seq.), serta hukum lain yang berlaku. Afterglow TV tidak mendukung, mempromosikan, atau mendorong pelanggaran hak cipta, pembajakan, atau penggunaan karya berhak cipta tanpa izin.</string>
     <string name="content_responsibility_confirm">Saya Mengerti</string>
     <string name="settings_sync_option_vod">VOD</string>
-    <string name="settings_backup_export_subtitle">Menyimpan file database/pengaturan AfterglowTV ke Downloads/AfterglowTV. File video tidak dicadangkan.</string>
+    <string name="settings_backup_export_subtitle">Menyimpan file database/pengaturan Afterglow TV ke Downloads/AfterglowTV. File video tidak dicadangkan.</string>
     <string name="settings_backup_export_prepare_failed">Tidak dapat menyiapkan file cadangan.</string>
     <string name="settings_backup_export_saved_to">Cadangan disimpan ke %1$s</string>
     <string name="settings_crash_reports_title">Laporan Kerusakan</string>

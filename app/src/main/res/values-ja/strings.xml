@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">AfterglowTV</string>
+    <string name="app_name">Afterglow TV</string>
     <string name="nav_home">ホーム</string>
     <string name="nav_live_tv">ライブテレビ</string>
     <string name="nav_movies">映画</string>
@@ -101,7 +101,7 @@
     <string name="dashboard_provider_no_expiry">有効期限の報告なし</string>
     <string name="dashboard_warning_title">プロバイダーの確認が必要です</string>
     <string name="dashboard_warning_review">プロバイダー詳細を開く</string>
-    <string name="dashboard_update_title">AfterglowTV %1$s が利用可能です</string>
+    <string name="dashboard_update_title">Afterglow TV %1$s が利用可能です</string>
     <string name="dashboard_update_available">新しいアプリ版がキャッシュされ、設定から確認できます。</string>
     <string name="dashboard_update_install_ready">最新の更新はすでにダウンロード済みです。設定を開いてインストールしてください。</string>
     <string name="dashboard_update_open_settings">更新を開く</string>
@@ -113,7 +113,7 @@
     <string name="dashboard_stat_resume">%1$d 件を再開</string>
     <string name="dashboard_stat_movies">%1$d 本の映画</string>
     <string name="dashboard_stat_series">%1$d 件のシリーズ</string>
-    <string name="dashboard_empty_title">AfterglowTV へようこそ</string>
+    <string name="dashboard_empty_title">Afterglow TV へようこそ</string>
     <string name="dashboard_empty_body">パーソナルガイドやネットワーク共有はいつでも閲覧できます。ホームにライブチャンネルやオンデマンドの行も表示したいですか？お好きなときにプレイリストや Xtream プロバイダーを追加してください。</string>
     <string name="pin_dialog_title">PIN を入力</string>
     <string name="pin_dialog_cancel">キャンセル</string>
@@ -397,7 +397,7 @@
     <string name="settings_about_subtitle">このインストールのバージョン、ビルド、サポート情報です。</string>
     <string name="settings_app_version">アプリバージョン</string>
     <string name="settings_build">ビルド</string>
-    <string name="settings_build_desc">Android TV向けAfterglowTV</string>
+    <string name="settings_build_desc">Android TV向けAfterglow TV</string>
     <string name="settings_enabled">有効</string>
     <string name="settings_disabled">無効</string>
     <string name="settings_developed_by">開発者</string>
@@ -407,7 +407,7 @@
     <string name="settings_donate">Ko-fiで支援</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">アップデート</string>
-    <string name="settings_updates_subtitle">アプリを離れずにGitHub Releasesで新しいAfterglowTVのバージョンを確認できます。</string>
+    <string name="settings_updates_subtitle">アプリを離れずにGitHub Releasesで新しいAfterglow TVのバージョンを確認できます。</string>
     <string name="settings_update_auto_check">アップデートを自動確認</string>
     <string name="settings_update_latest_release">最新リリース</string>
     <string name="settings_update_status">更新状況</string>
@@ -431,8 +431,8 @@
     <string name="settings_update_status_check_failed">前回の確認に失敗しました</string>
     <string name="settings_update_status_downloading">アップデートをダウンロード中</string>
     <string name="settings_update_status_ready_to_install">インストール準備完了</string>
-    <string name="settings_update_available_message">AfterglowTV %1$s が利用可能です。</string>
-    <string name="settings_update_current_message">すでに最新のAfterglowTVリリースを使用しています。</string>
+    <string name="settings_update_available_message">Afterglow TV %1$s が利用可能です。</string>
+    <string name="settings_update_current_message">すでに最新のAfterglow TVリリースを使用しています。</string>
     <string name="settings_syncing">データを同期中です。お待ちください...</string>
     <string name="settings_syncing_title">データを同期中...</string>
     <string name="settings_syncing_subtitle">プレイリストをインポートしています。しばらくお待ちください。</string>
@@ -1105,21 +1105,21 @@
     <string name="settings_history_cleared">視聴履歴と最近の項目を消去しました</string>
     <string name="settings_pin_changed">PINを保存しました</string>
     <string name="home_reorder_channels">チャンネルの並べ替え</string>
-    <string name="tv_input_setup_scanning_title">AfterglowTV チャネルのスキャン</string>
+    <string name="tv_input_setup_scanning_title">Afterglow TV チャネルのスキャン</string>
     <string name="tv_input_setup_success_title">ライブテレビの準備ができました</string>
     <string name="tv_input_setup_no_provider_title">IPTVプロバイダーが構成されていません</string>
     <string name="tv_input_setup_error_title">自動スキャンに失敗しました</string>
     <string name="tv_input_setup_idle_title">ライブ TV 統合の準備</string>
-    <string name="tv_input_setup_scanning_body">AfterglowTV は、アクティブなプロバイダーを Android TV ライブ TV に同期しています。</string>
+    <string name="tv_input_setup_scanning_body">Afterglow TV は、アクティブなプロバイダーを Android TV ライブ TV に同期しています。</string>
     <string name="tv_input_setup_success_body">チャンネルは正常に同期されました。</string>
-    <string name="tv_input_setup_no_provider_body">AfterglowTV に少なくとも 1 つの IPTV プロバイダーを追加し、ここに戻って Android TV Live TV にチャンネルをスキャンします。</string>
+    <string name="tv_input_setup_no_provider_body">Afterglow TV に少なくとも 1 つの IPTV プロバイダーを追加し、ここに戻って Android TV Live TV にチャンネルをスキャンします。</string>
     <string name="tv_input_setup_error_body">テレビ入力の同期が完了しませんでした。</string>
     <string name="tv_input_setup_idle_body">お待ちください。</string>
     <string name="tv_input_setup_source_format">出典: %1$s</string>
-    <string name="tv_input_setup_open_setup">AfterglowTV セットアップを開く</string>
+    <string name="tv_input_setup_open_setup">Afterglow TV セットアップを開く</string>
     <string name="tv_input_setup_try_scan_again">自動スキャンを再試行してください</string>
     <string name="tv_input_setup_retry_scan">自動スキャンを再試行します</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV で AfterglowTV チャンネルを開くことができるようになりました。</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV で Afterglow TV チャンネルを開くことができるようになりました。</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1146,8 +1146,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d スロット</string>
     <string name="movie_detail_related">類似コンテンツ</string>
     <string name="movie_detail_resume_from">%1$s から再開</string>
-    <string name="notification_permission_recording_alert_required">録画失敗アラートを受け取るためにAfterglowTVの通知を有効にしてください。</string>
-    <string name="notification_permission_reminder_required">番組リマインダーを受け取るためにAfterglowTVの通知を有効にしてください。</string>
+    <string name="notification_permission_recording_alert_required">録画失敗アラートを受け取るためにAfterglow TVの通知を有効にしてください。</string>
+    <string name="notification_permission_reminder_required">番組リマインダーを受け取るためにAfterglow TVの通知を有効にしてください。</string>
     <string name="player_action_variants">バリアント</string>
     <string name="player_auto_play_cancel">キャンセル</string>
     <string name="player_auto_play_countdown">%1$d 秒後に再生</string>
@@ -1317,7 +1317,7 @@
     <string name="settings_recording_skipped">この回をスキップしました</string>
     <string name="settings_recording_wifi_only">Wi-Fi のみで録画</string>
     <string name="settings_reset">リセット</string>
-    <string name="settings_restore_subtitle">バックアップファイルを選択するか、ファイルマネージャーからAfterglowTVでバックアップを開いてください。</string>
+    <string name="settings_restore_subtitle">バックアップファイルを選択するか、ファイルマネージャーからAfterglow TVでバックアップを開いてください。</string>
     <string name="settings_select_guide_default_category">ガイドのデフォルトカテゴリーを選択</string>
     <string name="settings_select_live_timeshift_depth">ローカルライブ巻き戻し深度を選択</string>
     <string name="settings_select_time_format">時刻形式を選択</string>
@@ -1409,7 +1409,7 @@
     <string name="content_responsibility_body">Afterglow TV は、ユーザーが追加することを選択したソースからメディアを再生および整理できるメディアプレーヤーです。デモおよびテスト目的で、アプリケーションには公開され合法的に利用可能なメディアストリームが少数含まれる場合があります。これらのデモソースはアプリケーション機能を紹介するためだけに提供され、包括的なコンテンツ提供を意図したものではありません。\n\nユーザーは、このアプリケーションで使用するコンテンツへのアクセス、ストリーミング、録画、配布について、法的な権利と許可を有していることを自ら確認する責任があります。\n\n著作権で保護されたコンテンツへの無断アクセス、複製、配布は、米国著作権法 (17 U.S.C. &#167;&#167; 101 et seq.) およびデジタルミレニアム著作権法 (17 U.S.C. &#167; 1201 et seq.)、ならびにその他の適用法に違反する可能性があります。Afterglow TV は、著作権侵害、海賊版利用、または著作権保護作品の無断使用を支持、促進、奨励しません。</string>
     <string name="content_responsibility_confirm">理解しました</string>
     <string name="settings_sync_option_vod">VOD</string>
-    <string name="settings_backup_export_subtitle">AfterglowTV のデータベース/設定ファイルを Downloads/AfterglowTV に保存します。動画ファイルはバックアップされません。</string>
+    <string name="settings_backup_export_subtitle">Afterglow TV のデータベース/設定ファイルを Downloads/AfterglowTV に保存します。動画ファイルはバックアップされません。</string>
     <string name="settings_backup_export_prepare_failed">バックアップファイルを準備できませんでした。</string>
     <string name="settings_backup_export_saved_to">バックアップを %1$s に保存しました</string>
     <string name="settings_crash_reports_title">クラッシュレポート</string>

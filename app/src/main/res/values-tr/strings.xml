@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">AfterglowTV</string>
+    <string name="app_name">Afterglow TV</string>
     <string name="nav_home">Ana sayfa</string>
     <string name="nav_live_tv">Canlı TV</string>
     <string name="nav_movies">Filmler</string>
@@ -101,7 +101,7 @@
     <string name="dashboard_provider_no_expiry">Son kullanma tarihi bildirilmedi</string>
     <string name="dashboard_warning_title">Sağlayıcıya Dikkat Gerekli</string>
     <string name="dashboard_warning_review">Sağlayıcı Ayrıntılarını Aç</string>
-    <string name="dashboard_update_title">AfterglowTV %1$s kullanılabilir</string>
+    <string name="dashboard_update_title">Afterglow TV %1$s kullanılabilir</string>
     <string name="dashboard_update_available">Daha yeni bir uygulama sürümü önbelleğe alındı ve Ayarlar\'dan incelemeye hazır.</string>
     <string name="dashboard_update_install_ready">En son güncelleme zaten indirildi. Yüklemek için Ayarlar\'ı açın.</string>
     <string name="dashboard_update_open_settings">Güncellemeleri Aç</string>
@@ -397,7 +397,7 @@
     <string name="settings_about_subtitle">Bu kurulum için sürüm, derleme ve destek bilgileri.</string>
     <string name="settings_app_version">Uygulama Sürümü</string>
     <string name="settings_build">Yapı</string>
-    <string name="settings_build_desc">Android TV için AfterglowTV</string>
+    <string name="settings_build_desc">Android TV için Afterglow TV</string>
     <string name="settings_enabled">Etkin</string>
     <string name="settings_disabled">Devre Dışı</string>
     <string name="settings_developed_by">Geliştiren</string>
@@ -407,7 +407,7 @@
     <string name="settings_donate">Ko-fi üzerinden destek olun</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">Güncellemeler</string>
-    <string name="settings_updates_subtitle">Uygulamadan çıkmadan yeni AfterglowTV sürümleri için GitHub Releases\'i kontrol edin.</string>
+    <string name="settings_updates_subtitle">Uygulamadan çıkmadan yeni Afterglow TV sürümleri için GitHub Releases\'i kontrol edin.</string>
     <string name="settings_update_auto_check">Güncellemeleri otomatik kontrol et</string>
     <string name="settings_update_latest_release">En son sürüm</string>
     <string name="settings_update_status">Güncelleme durumu</string>
@@ -431,8 +431,8 @@
     <string name="settings_update_status_check_failed">Son kontrol başarısız oldu</string>
     <string name="settings_update_status_downloading">Güncelleme indiriliyor</string>
     <string name="settings_update_status_ready_to_install">Kuruluma hazır</string>
-    <string name="settings_update_available_message">AfterglowTV %1$s kullanılabilir.</string>
-    <string name="settings_update_current_message">AfterglowTV\'un en son sürümüne zaten sahipsiniz.</string>
+    <string name="settings_update_available_message">Afterglow TV %1$s kullanılabilir.</string>
+    <string name="settings_update_current_message">Afterglow TV\'un en son sürümüne zaten sahipsiniz.</string>
     <string name="settings_syncing">Veriler eşitleniyor, lütfen bekleyin...</string>
     <string name="settings_syncing_title">Veriler senkronize ediliyor...</string>
     <string name="settings_syncing_subtitle">Çalma listeniz içe aktarılırken lütfen bekleyin.</string>
@@ -1105,21 +1105,21 @@
     <string name="settings_history_cleared">İzleme geçmişi ve son öğeler temizlendi</string>
     <string name="settings_pin_changed">PIN başarıyla kaydedildi</string>
     <string name="home_reorder_channels">Kanalları Yeniden Sırala</string>
-    <string name="tv_input_setup_scanning_title">AfterglowTV kanallarını tarama</string>
+    <string name="tv_input_setup_scanning_title">Afterglow TV kanallarını tarama</string>
     <string name="tv_input_setup_success_title">Canlı TV hazır</string>
     <string name="tv_input_setup_no_provider_title">Yapılandırılmış IPTV sağlayıcısı yok</string>
     <string name="tv_input_setup_error_title">Otomatik tarama başarısız oldu</string>
     <string name="tv_input_setup_idle_title">Canlı TV entegrasyonunun hazırlanması</string>
-    <string name="tv_input_setup_scanning_body">AfterglowTV, aktif sağlayıcınızı Android TV Live TV ile senkronize ediyor.</string>
+    <string name="tv_input_setup_scanning_body">Afterglow TV, aktif sağlayıcınızı Android TV Live TV ile senkronize ediyor.</string>
     <string name="tv_input_setup_success_body">Kanallarınız başarıyla senkronize edildi.</string>
-    <string name="tv_input_setup_no_provider_body">AfterglowTV\'ta en az bir IPTV sağlayıcısı ekleyin, ardından kanalları Android TV Live TV\'ye taramak için buraya geri dönün.</string>
+    <string name="tv_input_setup_no_provider_body">Afterglow TV\'ta en az bir IPTV sağlayıcısı ekleyin, ardından kanalları Android TV Live TV\'ye taramak için buraya geri dönün.</string>
     <string name="tv_input_setup_error_body">TV girişi senkronizasyonu tamamlanmadı.</string>
     <string name="tv_input_setup_idle_body">Lütfen bekleyin.</string>
     <string name="tv_input_setup_source_format">Kaynak: %1$s</string>
-    <string name="tv_input_setup_open_setup">AfterglowTV Kurulumunu Aç</string>
+    <string name="tv_input_setup_open_setup">Afterglow TV Kurulumunu Aç</string>
     <string name="tv_input_setup_try_scan_again">Otomatik Taramayı Tekrar Deneyin</string>
     <string name="tv_input_setup_retry_scan">Otomatik Taramayı Yeniden Dene</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV artık AfterglowTV kanallarınızı açabilir.</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV artık Afterglow TV kanallarınızı açabilir.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1146,8 +1146,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d yuva</string>
     <string name="movie_detail_related">Bunun Gibi Daha Fazlası</string>
     <string name="movie_detail_resume_from">%1$s konumundan devam et</string>
-    <string name="notification_permission_recording_alert_required">Kayıt hatası uyarıları almak için AfterglowTV bildirimlerini etkinleştirin.</string>
-    <string name="notification_permission_reminder_required">Program hatırlatıcıları almak için AfterglowTV bildirimlerini etkinleştirin.</string>
+    <string name="notification_permission_recording_alert_required">Kayıt hatası uyarıları almak için Afterglow TV bildirimlerini etkinleştirin.</string>
+    <string name="notification_permission_reminder_required">Program hatırlatıcıları almak için Afterglow TV bildirimlerini etkinleştirin.</string>
     <string name="player_action_variants">Varyantlar</string>
     <string name="player_auto_play_cancel">İptal</string>
     <string name="player_auto_play_countdown">%1$d sn içinde oynatılıyor</string>
@@ -1317,7 +1317,7 @@
     <string name="settings_recording_skipped">Tekrar atlandı</string>
     <string name="settings_recording_wifi_only">Yalnızca Wi-Fi\'de kayıt yap</string>
     <string name="settings_reset">Sıfırla</string>
-    <string name="settings_restore_subtitle">Bir yedek dosyası seçin veya bir dosya yöneticisinden AfterglowTV ile bir yedek açın.</string>
+    <string name="settings_restore_subtitle">Bir yedek dosyası seçin veya bir dosya yöneticisinden Afterglow TV ile bir yedek açın.</string>
     <string name="settings_select_guide_default_category">Rehber varsayılan kategorisini seçin</string>
     <string name="settings_select_live_timeshift_depth">Yerel Canlı Geri Sarım Derinliğini Seçin</string>
     <string name="settings_select_time_format">Saat biçimini seçin</string>
@@ -1409,7 +1409,7 @@
     <string name="content_responsibility_body">Afterglow TV, kullanıcıların eklemeyi seçtikleri kaynaklardan medya oynatmasına ve düzenlemesine olanak tanıyan bir medya oynatıcıdır. Gösterim ve test amaçları için uygulama, herkese açık ve yasal olarak erişilebilen medya akışlarından küçük bir seçki içerebilir. Bu gösterim kaynakları yalnızca uygulamanın işlevlerini sergilemek için sağlanır ve kapsamlı bir içerik sunumu olarak amaçlanmaz.\n\nKullanıcılar, bu uygulamayla kullanılan herhangi bir içeriğe erişmek, onu yayınlamak, kaydetmek veya dağıtmak için gerekli yasal haklara ve yetkilere sahip olduklarından yalnızca kendileri sorumludur.\n\nTelif hakkıyla korunan içeriğe yetkisiz erişim, bu içeriğin çoğaltılması veya dağıtılması, United States Copyright Act (17 U.S.C. §§ 101 et seq.) ve Digital Millennium Copyright Act (17 U.S.C. § 1201 et seq.) ile diğer geçerli yasaları ihlal edebilir. Afterglow TV telif hakkı ihlalini, korsanlığı veya telif hakkıyla korunan eserlerin yetkisiz kullanımını desteklemez, teşvik etmez veya özendirmez.</string>
     <string name="content_responsibility_confirm">Anladım</string>
     <string name="settings_sync_option_vod">VOD</string>
-    <string name="settings_backup_export_subtitle">AfterglowTV veritabanı/ayar dosyalarını Downloads/AfterglowTV klasörüne kaydeder. Video dosyaları yedeklenmez.</string>
+    <string name="settings_backup_export_subtitle">Afterglow TV veritabanı/ayar dosyalarını Downloads/AfterglowTV klasörüne kaydeder. Video dosyaları yedeklenmez.</string>
     <string name="settings_backup_export_prepare_failed">Yedek dosyası hazırlanamadı.</string>
     <string name="settings_backup_export_saved_to">Yedek %1$s konumuna kaydedildi</string>
     <string name="settings_crash_reports_title">Çökme Raporları</string>

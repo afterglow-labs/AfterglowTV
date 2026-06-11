@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">AfterglowTV</string>
+    <string name="app_name">Afterglow TV</string>
     <string name="nav_home">Trang chủ</string>
     <string name="nav_live_tv">TV trực tiếp</string>
     <string name="nav_movies">Phim</string>
@@ -101,7 +101,7 @@
     <string name="dashboard_provider_no_expiry">Không có thông tin hết hạn</string>
     <string name="dashboard_warning_title">Nhà cung cấp cần chú ý</string>
     <string name="dashboard_warning_review">Mở chi tiết nhà cung cấp</string>
-    <string name="dashboard_update_title">AfterglowTV %1$s đã có sẵn</string>
+    <string name="dashboard_update_title">Afterglow TV %1$s đã có sẵn</string>
     <string name="dashboard_update_available">Một bản phát hành mới hơn đã được lưu sẵn và có thể xem lại trong Cài đặt.</string>
     <string name="dashboard_update_install_ready">Bản cập nhật mới nhất đã được tải xuống. Mở Cài đặt để cài đặt.</string>
     <string name="dashboard_update_open_settings">Mở cập nhật</string>
@@ -397,7 +397,7 @@
     <string name="settings_about_subtitle">Thông tin phiên bản, bản dựng và hỗ trợ cho bản cài đặt này.</string>
     <string name="settings_app_version">Phiên bản ứng dụng</string>
     <string name="settings_build">Bản dựng</string>
-    <string name="settings_build_desc">AfterglowTV cho Android TV</string>
+    <string name="settings_build_desc">Afterglow TV cho Android TV</string>
     <string name="settings_enabled">Đã bật</string>
     <string name="settings_disabled">Đã tắt</string>
     <string name="settings_developed_by">Phát triển bởi</string>
@@ -407,7 +407,7 @@
     <string name="settings_donate">Ủng hộ trên Ko-fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">Cập nhật</string>
-    <string name="settings_updates_subtitle">Kiểm tra các bản phát hành GitHub để có phiên bản AfterglowTV mới hơn mà không cần rời khỏi ứng dụng.</string>
+    <string name="settings_updates_subtitle">Kiểm tra các bản phát hành GitHub để có phiên bản Afterglow TV mới hơn mà không cần rời khỏi ứng dụng.</string>
     <string name="settings_update_auto_check">Tự động kiểm tra cập nhật</string>
     <string name="settings_update_latest_release">Bản phát hành mới nhất</string>
     <string name="settings_update_status">Trạng thái cập nhật</string>
@@ -431,8 +431,8 @@
     <string name="settings_update_status_check_failed">Lần kiểm tra trước thất bại</string>
     <string name="settings_update_status_downloading">Đang tải bản cập nhật</string>
     <string name="settings_update_status_ready_to_install">Sẵn sàng cài đặt</string>
-    <string name="settings_update_available_message">AfterglowTV %1$s đã có sẵn.</string>
-    <string name="settings_update_current_message">Bạn đã có bản phát hành AfterglowTV mới nhất.</string>
+    <string name="settings_update_available_message">Afterglow TV %1$s đã có sẵn.</string>
+    <string name="settings_update_current_message">Bạn đã có bản phát hành Afterglow TV mới nhất.</string>
     <string name="settings_syncing">Đang đồng bộ dữ liệu, vui lòng đợi...</string>
     <string name="settings_syncing_title">Đang đồng bộ dữ liệu...</string>
     <string name="settings_syncing_subtitle">Vui lòng đợi trong khi danh sách phát của bạn được nhập.</string>
@@ -1105,21 +1105,21 @@
     <string name="settings_history_cleared">Đã xóa lịch sử xem và mục gần đây</string>
     <string name="settings_pin_changed">Đã lưu PIN thành công</string>
     <string name="home_reorder_channels">Sắp xếp lại kênh</string>
-    <string name="tv_input_setup_scanning_title">Đang quét kênh AfterglowTV</string>
+    <string name="tv_input_setup_scanning_title">Đang quét kênh Afterglow TV</string>
     <string name="tv_input_setup_success_title">Live TV đã sẵn sàng</string>
     <string name="tv_input_setup_no_provider_title">Chưa cấu hình nhà cung cấp IPTV</string>
     <string name="tv_input_setup_error_title">Quét tự động thất bại</string>
     <string name="tv_input_setup_idle_title">Đang chuẩn bị tích hợp Live TV</string>
-    <string name="tv_input_setup_scanning_body">AfterglowTV đang đồng bộ hóa nhà cung cấp đang hoạt động của bạn với Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">Afterglow TV đang đồng bộ hóa nhà cung cấp đang hoạt động của bạn với Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">Các kênh của bạn đã được đồng bộ thành công.</string>
-    <string name="tv_input_setup_no_provider_body">Thêm ít nhất một nhà cung cấp IPTV trong AfterglowTV, rồi quay lại đây để quét kênh vào Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">Thêm ít nhất một nhà cung cấp IPTV trong Afterglow TV, rồi quay lại đây để quét kênh vào Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">Đồng bộ hóa đầu vào TV không hoàn tất.</string>
     <string name="tv_input_setup_idle_body">Vui lòng chờ.</string>
     <string name="tv_input_setup_source_format">Nguồn: %1$s</string>
-    <string name="tv_input_setup_open_setup">Mở cài đặt AfterglowTV</string>
+    <string name="tv_input_setup_open_setup">Mở cài đặt Afterglow TV</string>
     <string name="tv_input_setup_try_scan_again">Thử quét tự động lại</string>
     <string name="tv_input_setup_retry_scan">Thử quét tự động lại</string>
-    <string name="tv_input_setup_success_hint">Android TV Live TV giờ có thể mở các kênh AfterglowTV của bạn.</string>
+    <string name="tv_input_setup_success_hint">Android TV Live TV giờ có thể mở các kênh Afterglow TV của bạn.</string>
     <string name="badge_beta">Beta</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1146,8 +1146,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d vị trí</string>
     <string name="movie_detail_related">Tương Tự Như Thế Này</string>
     <string name="movie_detail_resume_from">Tiếp tục từ %1$s</string>
-    <string name="notification_permission_recording_alert_required">Bật thông báo cho AfterglowTV để nhận cảnh báo lỗi ghi.</string>
-    <string name="notification_permission_reminder_required">Bật thông báo cho AfterglowTV để nhận nhắc nhở chương trình.</string>
+    <string name="notification_permission_recording_alert_required">Bật thông báo cho Afterglow TV để nhận cảnh báo lỗi ghi.</string>
+    <string name="notification_permission_reminder_required">Bật thông báo cho Afterglow TV để nhận nhắc nhở chương trình.</string>
     <string name="player_action_variants">Biến thể</string>
     <string name="player_auto_play_cancel">Hủy</string>
     <string name="player_auto_play_countdown">Phát trong %1$d giây</string>
@@ -1317,7 +1317,7 @@
     <string name="settings_recording_skipped">Đã bỏ qua lần này</string>
     <string name="settings_recording_wifi_only">Chỉ ghi trên Wi-Fi</string>
     <string name="settings_reset">Đặt lại</string>
-    <string name="settings_restore_subtitle">Chọn tệp sao lưu, hoặc mở sao lưu bằng AfterglowTV từ trình quản lý tệp.</string>
+    <string name="settings_restore_subtitle">Chọn tệp sao lưu, hoặc mở sao lưu bằng Afterglow TV từ trình quản lý tệp.</string>
     <string name="settings_select_guide_default_category">Chọn danh mục mặc định hướng dẫn</string>
     <string name="settings_select_live_timeshift_depth">Chọn Độ Sâu Tua Lại Trực Tiếp Cục Bộ</string>
     <string name="settings_select_time_format">Chọn định dạng giờ</string>
@@ -1409,7 +1409,7 @@
     <string name="content_responsibility_body">Afterglow TV là trình phát media cho phép người dùng phát và sắp xếp media từ các nguồn mà họ chọn thêm vào. Vì mục đích minh họa và thử nghiệm, ứng dụng có thể bao gồm một số ít stream media có thể truy cập công khai và hợp pháp. Các nguồn minh họa này chỉ được cung cấp để giới thiệu chức năng của ứng dụng và không nhằm đại diện cho một dịch vụ nội dung đầy đủ.\n\nNgười dùng hoàn toàn chịu trách nhiệm bảo đảm rằng họ có quyền pháp lý và sự cho phép để truy cập, stream, ghi hoặc phân phối bất kỳ nội dung nào được dùng với ứng dụng này.\n\nViệc truy cập, sao chép hoặc phân phối nội dung có bản quyền khi chưa được phép có thể vi phạm Đạo luật Bản quyền Hoa Kỳ (17 U.S.C. &#167;&#167; 101 et seq.) và Digital Millennium Copyright Act (17 U.S.C. &#167; 1201 et seq.), cũng như các luật hiện hành khác. Afterglow TV không xác nhận, quảng bá hoặc khuyến khích hành vi vi phạm bản quyền, sao chép lậu hoặc sử dụng trái phép tác phẩm có bản quyền.</string>
     <string name="content_responsibility_confirm">Tôi hiểu</string>
     <string name="settings_sync_option_vod">VOD</string>
-    <string name="settings_backup_export_subtitle">Lưu các tệp cơ sở dữ liệu/cài đặt của AfterglowTV vào Downloads/AfterglowTV. Tệp video không được sao lưu.</string>
+    <string name="settings_backup_export_subtitle">Lưu các tệp cơ sở dữ liệu/cài đặt của Afterglow TV vào Downloads/AfterglowTV. Tệp video không được sao lưu.</string>
     <string name="settings_backup_export_prepare_failed">Không thể chuẩn bị tệp sao lưu.</string>
     <string name="settings_backup_export_saved_to">Đã lưu sao lưu vào %1$s</string>
     <string name="settings_crash_reports_title">Báo cáo sự cố</string>

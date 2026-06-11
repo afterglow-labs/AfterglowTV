@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AfterglowTV</string>
+    <string name="app_name">Afterglow TV</string>
     <string name="nav_home">الرئيسية</string>
     <string name="nav_live_tv">البث التلفزيوني المباشر</string>
     <string name="nav_movies">أفلام</string>
@@ -108,7 +108,7 @@
     <string name="dashboard_provider_no_expiry">لم يتم الإبلاغ عن انتهاء الصلاحية</string>
     <string name="dashboard_warning_title">مقدم يحتاج إلى الاهتمام</string>
     <string name="dashboard_warning_review">افتح تفاصيل المزود</string>
-    <string name="dashboard_update_title">يتوفر AfterglowTV %1$s</string>
+    <string name="dashboard_update_title">يتوفر Afterglow TV %1$s</string>
     <string name="dashboard_update_available">تم تخزين إصدار أحدث من التطبيق وهو جاهز للمراجعة من الإعدادات.</string>
     <string name="dashboard_update_install_ready">تم تنزيل آخر تحديث بالفعل. افتح الإعدادات لتثبيته.</string>
     <string name="dashboard_update_open_settings">فتح التحديثات</string>
@@ -120,7 +120,7 @@
     <string name="dashboard_stat_resume">%1$d للاستئناف</string>
     <string name="dashboard_stat_movies">%1$d افلام</string>
     <string name="dashboard_stat_series">سلسلة %1$d</string>
-    <string name="dashboard_empty_title">مرحبًا بك في AfterglowTV</string>
+    <string name="dashboard_empty_title">مرحبًا بك في Afterglow TV</string>
     <string name="dashboard_empty_body">تصفح دليلك الشخصي ومشاركات الشبكة في أي وقت. هل تريد أيضًا قنوات مباشرة وصفوفًا عند الطلب على الصفحة الرئيسية؟ أضف قائمة تشغيل أو مزود Xtream متى شئت.</string>
     <string name="pin_dialog_title">أدخل رقم التعريف الشخصي</string>
     <string name="pin_dialog_cancel">إلغاء</string>
@@ -430,7 +430,7 @@
     <string name="settings_about_subtitle">تفاصيل الإصدار والبنية والدعم لهذا التثبيت.</string>
     <string name="settings_app_version">إصدار التطبيق</string>
     <string name="settings_build">الإصدار</string>
-    <string name="settings_build_desc">AfterglowTV لـ Android TV</string>
+    <string name="settings_build_desc">Afterglow TV لـ Android TV</string>
     <string name="settings_enabled">مفعّل</string>
     <string name="settings_disabled">معطّل</string>
     <string name="settings_developed_by">تم التطوير بواسطة</string>
@@ -440,7 +440,7 @@
     <string name="settings_donate">ادعمنا على Ko-fi</string>
     <string name="settings_donate_url"></string>
     <string name="settings_updates_title">التحديثات</string>
-    <string name="settings_updates_subtitle">تحقق من إصدارات GitHub للحصول على نسخ أحدث من AfterglowTV دون مغادرة التطبيق.</string>
+    <string name="settings_updates_subtitle">تحقق من إصدارات GitHub للحصول على نسخ أحدث من Afterglow TV دون مغادرة التطبيق.</string>
     <string name="settings_update_auto_check">التحقق من التحديثات تلقائيًا</string>
     <string name="settings_update_latest_release">أحدث إصدار</string>
     <string name="settings_update_status">حالة التحديث</string>
@@ -464,8 +464,8 @@
     <string name="settings_update_status_check_failed">فشل آخر فحص</string>
     <string name="settings_update_status_downloading">جارٍ تنزيل التحديث</string>
     <string name="settings_update_status_ready_to_install">جاهز للتثبيت</string>
-    <string name="settings_update_available_message">يتوفر AfterglowTV %1$s.</string>
-    <string name="settings_update_current_message">لديك بالفعل أحدث إصدار من AfterglowTV.</string>
+    <string name="settings_update_available_message">يتوفر Afterglow TV %1$s.</string>
+    <string name="settings_update_current_message">لديك بالفعل أحدث إصدار من Afterglow TV.</string>
     <string name="content_responsibility_title">إشعار مكافحة القرصنة</string>
     <string name="content_responsibility_body">Afterglow TV مشغل وسائط يتيح للمستخدمين تشغيل وتنظيم الوسائط من المصادر التي يختارون إضافتها. لأغراض العرض التوضيحي والاختبار، قد يتضمن التطبيق مجموعة صغيرة من تدفقات الوسائط المتاحة علنًا والقانونية. تُوفَّر مصادر العرض هذه فقط لإظهار وظائف التطبيق ولا يُقصد بها أن تكون عرضًا شاملاً للمحتوى.\n\nيتحمل المستخدمون وحدهم مسؤولية التأكد من امتلاكهم الحقوق القانونية والتفويض اللازم للوصول إلى أي محتوى مستخدم مع هذا التطبيق أو بثه أو تسجيله أو توزيعه.\n\nقد يؤدي الوصول غير المصرح به إلى المحتوى المحمي بحقوق الطبع والنشر أو نسخه أو توزيعه إلى انتهاك قانون حقوق الطبع والنشر في الولايات المتحدة (17 U.S.C. §§ 101 et seq.) وقانون الألفية الرقمية لحقوق الطبع والنشر (17 U.S.C. § 1201 et seq.)، إضافةً إلى قوانين أخرى سارية. لا تؤيد Afterglow TV انتهاك حقوق الطبع والنشر أو القرصنة أو الاستخدام غير المصرح به للمصنفات المحمية بحقوق الطبع والنشر ولا تروّج له أو تشجع عليه.</string>
     <string name="content_responsibility_confirm">أفهم</string>
@@ -524,7 +524,7 @@
     <string name="settings_backup_restore">النسخ الاحتياطي والاستعادة</string>
     <string name="settings_backup_subtitle">صدّر أو استورد المفضلة والمجموعات والإعدادات.</string>
     <string name="settings_backup_data">تصدير البيانات</string>
-    <string name="settings_backup_export_subtitle">يحفظ ملفات قاعدة بيانات AfterglowTV والإعدادات في Downloads/AfterglowTV. لا يتم نسخ ملفات الفيديو احتياطيًا.</string>
+    <string name="settings_backup_export_subtitle">يحفظ ملفات قاعدة بيانات Afterglow TV والإعدادات في Downloads/AfterglowTV. لا يتم نسخ ملفات الفيديو احتياطيًا.</string>
     <string name="settings_backup_export_prepare_failed">تعذّر تحضير ملف النسخة الاحتياطية.</string>
     <string name="settings_backup_export_saved_to">تم حفظ النسخة الاحتياطية في %1$s</string>
     <string name="settings_restore_data">استيراد البيانات</string>
@@ -1154,21 +1154,21 @@
     <string name="settings_history_cleared">تم مسح سجل المشاهدة والعناصر الأخيرة</string>
     <string name="settings_pin_changed">تم حفظ رمز PIN بنجاح</string>
     <string name="home_reorder_channels">إعادة ترتيب القنوات</string>
-    <string name="tv_input_setup_scanning_title">جارٍ فحص قنوات AfterglowTV</string>
+    <string name="tv_input_setup_scanning_title">جارٍ فحص قنوات Afterglow TV</string>
     <string name="tv_input_setup_success_title">البث التلفزيوني المباشر جاهز</string>
     <string name="tv_input_setup_no_provider_title">لم يتم إعداد أي مزود IPTV</string>
     <string name="tv_input_setup_error_title">فشل الفحص التلقائي</string>
     <string name="tv_input_setup_idle_title">جارٍ تجهيز تكامل البث التلفزيوني المباشر</string>
-    <string name="tv_input_setup_scanning_body">يقوم AfterglowTV بمزامنة المزود النشط لديك مع Android TV Live TV.</string>
+    <string name="tv_input_setup_scanning_body">يقوم Afterglow TV بمزامنة المزود النشط لديك مع Android TV Live TV.</string>
     <string name="tv_input_setup_success_body">تمت مزامنة قنواتك بنجاح.</string>
-    <string name="tv_input_setup_no_provider_body">أضف مزود IPTV واحدًا على الأقل في AfterglowTV، ثم عد هنا لفحص القنوات إلى Android TV Live TV.</string>
+    <string name="tv_input_setup_no_provider_body">أضف مزود IPTV واحدًا على الأقل في Afterglow TV، ثم عد هنا لفحص القنوات إلى Android TV Live TV.</string>
     <string name="tv_input_setup_error_body">لم تكتمل مزامنة إدخال التلفزيون.</string>
     <string name="tv_input_setup_idle_body">يرجى الانتظار.</string>
     <string name="tv_input_setup_source_format">المصدر: %1$s</string>
-    <string name="tv_input_setup_open_setup">فتح إعداد AfterglowTV</string>
+    <string name="tv_input_setup_open_setup">فتح إعداد Afterglow TV</string>
     <string name="tv_input_setup_try_scan_again">حاول الفحص التلقائي مرة أخرى</string>
     <string name="tv_input_setup_retry_scan">إعادة محاولة الفحص التلقائي</string>
-    <string name="tv_input_setup_success_hint">يمكن لـ Android TV Live TV الآن فتح قنوات AfterglowTV الخاصة بك.</string>
+    <string name="tv_input_setup_success_hint">يمكن لـ Android TV Live TV الآن فتح قنوات Afterglow TV الخاصة بك.</string>
     <string name="badge_beta">بيتا</string>
     <string name="badge_recording">REC</string>
     <string name="badge_scheduled">SCHED</string>
@@ -1195,8 +1195,8 @@
     <string name="label_slots_count_dynamic">%1$d/%2$d خانات</string>
     <string name="movie_detail_related">مشابه لهذا</string>
     <string name="movie_detail_resume_from">استئناف من %1$s</string>
-    <string name="notification_permission_recording_alert_required">فعّل الإشعارات لـ AfterglowTV لتلقي تنبيهات فشل التسجيل.</string>
-    <string name="notification_permission_reminder_required">فعّل الإشعارات لـ AfterglowTV لتلقي تذكيرات البرامج.</string>
+    <string name="notification_permission_recording_alert_required">فعّل الإشعارات لـ Afterglow TV لتلقي تنبيهات فشل التسجيل.</string>
+    <string name="notification_permission_reminder_required">فعّل الإشعارات لـ Afterglow TV لتلقي تذكيرات البرامج.</string>
     <string name="player_action_variants">متغيرات</string>
     <string name="player_auto_play_cancel">إلغاء</string>
     <string name="player_auto_play_countdown">التشغيل بعد %1$d ثانية</string>
@@ -1411,7 +1411,7 @@
     <string name="settings_recording_skipped">تم تخطي الحلقة</string>
     <string name="settings_recording_wifi_only">التسجيل على Wi-Fi فقط</string>
     <string name="settings_reset">إعادة تعيين</string>
-    <string name="settings_restore_subtitle">اختر ملف نسخ احتياطي، أو افتح نسخة احتياطية مع AfterglowTV من مدير الملفات.</string>
+    <string name="settings_restore_subtitle">اختر ملف نسخ احتياطي، أو افتح نسخة احتياطية مع Afterglow TV من مدير الملفات.</string>
     <string name="settings_select_guide_default_category">اختر الفئة الافتراضية للدليل</string>
     <string name="settings_select_live_timeshift_depth">اختر عمق الإرجاع المحلي للبث المباشر</string>
     <string name="settings_select_time_format">اختر تنسيق الوقت</string>
