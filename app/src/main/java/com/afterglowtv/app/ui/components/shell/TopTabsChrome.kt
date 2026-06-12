@@ -44,6 +44,7 @@ fun defaultTopTabs(
         add(TopTab("home", "Home"))
         add(TopTab("live_tv", "Live TV"))
         add(TopTab("epg", "TV Guide"))
+        add(TopTab("search", "Search"))
         add(TopTab("settings", "Settings"))
         return@buildList
     }

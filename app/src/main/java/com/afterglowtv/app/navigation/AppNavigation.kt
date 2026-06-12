@@ -384,6 +384,7 @@ private fun isGuideOnlyAllowedRoute(route: String): Boolean {
         Routes.LIVE_TV,
         Routes.EPG,
         Routes.PLAYER,
+        Routes.SEARCH,
         Routes.SETTINGS,
         Routes.THEMES,
         Routes.GLOW_SETTINGS,

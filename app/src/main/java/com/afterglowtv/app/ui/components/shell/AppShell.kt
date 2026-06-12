@@ -1071,6 +1071,7 @@ private fun buildDestinationItems(
         add(DestinationItem(Routes.HOME, R.string.nav_home, Icons.Default.Home))
         add(DestinationItem(Routes.LIVE_TV, R.string.nav_live_tv, Icons.Default.PlayArrow))
         add(DestinationItem(Routes.EPG, R.string.nav_iptv_guide, Icons.Default.Info))
+        add(DestinationItem(Routes.SEARCH, R.string.search_title, Icons.Default.Search))
         add(DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings))
         return@buildList
     }

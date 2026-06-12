@@ -231,7 +231,7 @@ private fun HomeCommandHub(
             add(HomeHubCardModel("Library", "Personal media", Routes.LOCAL_MEDIA, Icons.Default.Menu, Color(0xFFB4F06B)))
         }
     }
-    val searchEnabled = !policy.guideOnlyReviewSurface
+    val searchEnabled = true
     val appearanceCards = listOf(
         HomeHubCardModel("Themes", "Colors", Routes.THEMES, Icons.Default.Star, Color(0xFFFF77FF)),
         HomeHubCardModel("Glow", "Focus light", Routes.GLOW_SETTINGS, Icons.Default.Info, Color(0xFF5EEAD4)),
