@@ -1519,14 +1519,14 @@ private fun HomeAppearanceWindow(
                 activePaletteId = activePaletteId,
                 compact = compact,
                 modifier = Modifier
-                    .weight(if (compact) 1.34f else 1.42f)
+                    .weight(if (compact) 1.62f else 1.72f)
                     .fillMaxHeight(),
                 onOpenThemes = { cards[0].route?.let(onNavigate) },
                 onThemeSelected = onThemeSelected
             )
             Column(
                 modifier = Modifier
-                    .weight(if (compact) 0.66f else 0.58f)
+                    .weight(if (compact) 0.38f else 0.28f)
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(
                     space = if (compact) 8.dp else 10.dp,
@@ -2350,6 +2350,7 @@ private fun HomeSmallTextAction(
     accent: Color,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
+    showSubtitle: Boolean = true,
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(14.dp)
@@ -2423,13 +2424,15 @@ private fun HomeSmallTextAction(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = subtitle,
-                    style = subtitleStyle,
-                    color = OnSurfaceDim,
-                    maxLines = if (compact) 2 else 1,
-                    overflow = if (compact) TextOverflow.Clip else TextOverflow.Ellipsis
-                )
+                if (showSubtitle) {
+                    Text(
+                        text = subtitle,
+                        style = subtitleStyle,
+                        color = OnSurfaceDim,
+                        maxLines = if (compact) 2 else 1,
+                        overflow = if (compact) TextOverflow.Clip else TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
