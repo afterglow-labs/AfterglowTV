@@ -732,6 +732,18 @@ private val homeFocusOutlineColor: Color
 private val homeWindowFill: Color
     get() = AppColors.PanelScrim.copy(alpha = if (isBrightHomeTheme) 0.90f else 0.94f)
 
+private val homeWindowTextColor: Color
+    get() = AppColors.primaryContentColorFor(homeWindowFill)
+
+private val homeWindowSecondaryTextColor: Color
+    get() = AppColors.secondaryContentColorFor(homeWindowFill)
+
+private fun homeSurfaceTextColor(background: Color): Color =
+    AppColors.primaryContentColorFor(background)
+
+private fun homeSurfaceSecondaryTextColor(background: Color): Color =
+    AppColors.secondaryContentColorFor(background)
+
 private fun homeActionFill(accent: Color, selected: Boolean = false): Color =
     if (isBrightHomeTheme) {
         AppColors.PanelScrim.copy(alpha = if (selected) 0.98f else 0.86f)
@@ -805,7 +817,7 @@ private fun HomeWindow(
                     } else {
                         MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     },
-                    color = TextPrimary,
+                    color = homeWindowTextColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -813,7 +825,7 @@ private fun HomeWindow(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = OnSurfaceDim,
+                        color = homeWindowSecondaryTextColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -947,6 +959,7 @@ private fun HomeWatchToolbarButton(
     onClick: () -> Unit
 ) {
     val circleSize = if (compact) 52.dp else 62.dp
+    val labelColor = homeWindowTextColor
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -968,7 +981,7 @@ private fun HomeWatchToolbarButton(
                 fontSize = if (compact) 10.sp else 11.sp,
                 lineHeight = if (compact) 11.sp else 13.sp
             ),
-            color = TextPrimary,
+            color = labelColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
@@ -993,12 +1006,14 @@ private fun HomeDashboardSearchPanel(
         }
     }
     val shape = RoundedCornerShape(14.dp)
+    val containerColor = if (isBrightHomeTheme) AppColors.Surface else AppColors.Surface.copy(alpha = 0.64f)
+    val titleColor = homeSurfaceTextColor(containerColor)
     Surface(
         modifier = modifier
             .homeActiveGlow(shape, active = false),
         shape = shape,
         colors = SurfaceDefaults.colors(
-            containerColor = if (isBrightHomeTheme) AppColors.Surface else AppColors.Surface.copy(alpha = 0.64f)
+            containerColor = containerColor
         ),
         border = Border(
             BorderStroke(
@@ -1038,7 +1053,7 @@ private fun HomeDashboardSearchPanel(
                             lineHeight = 19.sp
                         )
                     },
-                    color = TextPrimary,
+                    color = titleColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1223,11 +1238,14 @@ private fun HomeSourceStatusPanel(
     modifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(14.dp)
+    val containerColor = if (isBrightHomeTheme) AppColors.Surface else AppColors.Surface.copy(alpha = 0.62f)
+    val titleColor = homeSurfaceTextColor(containerColor)
+    val subtitleColor = homeSurfaceSecondaryTextColor(containerColor)
     Surface(
         modifier = modifier.fillMaxSize(),
         shape = shape,
         colors = SurfaceDefaults.colors(
-            containerColor = if (isBrightHomeTheme) AppColors.Surface else AppColors.Surface.copy(alpha = 0.62f)
+            containerColor = containerColor
         ),
         border = Border(
             BorderStroke(
@@ -1249,7 +1267,7 @@ private fun HomeSourceStatusPanel(
                 } else {
                     MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                 },
-                color = TextPrimary,
+                color = titleColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -1259,7 +1277,7 @@ private fun HomeSourceStatusPanel(
                     fontSize = if (compact) 10.sp else 11.sp,
                     lineHeight = if (compact) 12.sp else 14.sp
                 ),
-                color = OnSurfaceDim,
+                color = subtitleColor,
                 maxLines = if (compact) 2 else 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -1287,6 +1305,12 @@ private fun HomeSourceRow(
         DashboardSourceStatus.READY -> accent.copy(alpha = 0.88f)
         DashboardSourceStatus.UNAVAILABLE -> OnSurfaceDim.copy(alpha = 0.44f)
     }
+    val labelColor = homeWindowTextColor.copy(alpha = if (model.status == DashboardSourceStatus.UNAVAILABLE) 0.68f else 1f)
+    val statusColor = AppColors.ensureReadableColor(
+        borderColor,
+        homeWindowFill,
+        minimumContrast = 3.0f
+    ).copy(alpha = if (model.status == DashboardSourceStatus.UNAVAILABLE) 0.58f else 0.92f)
     TvClickableSurface(
         onClick = { if (model.canActivate) onClick() },
         enabled = model.status != DashboardSourceStatus.UNAVAILABLE,
@@ -1337,7 +1361,7 @@ private fun HomeSourceRow(
                     fontSize = if (compact) 11.sp else 12.sp,
                     lineHeight = if (compact) 12.sp else 14.sp
                 ),
-                color = TextPrimary.copy(alpha = if (model.status == DashboardSourceStatus.UNAVAILABLE) 0.68f else 1f),
+                color = labelColor,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
@@ -1348,7 +1372,7 @@ private fun HomeSourceRow(
                     fontSize = if (compact) 9.sp else 10.sp,
                     lineHeight = if (compact) 10.sp else 12.sp
                 ),
-                color = borderColor.copy(alpha = if (model.status == DashboardSourceStatus.UNAVAILABLE) 0.58f else 0.92f),
+                color = statusColor,
                 maxLines = 1
             )
         }
@@ -1397,6 +1421,7 @@ private fun HomeSourceCommandAction(
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(8.dp)
+    val labelColor = homeWindowTextColor
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier
@@ -1438,7 +1463,7 @@ private fun HomeSourceCommandAction(
                         fontSize = if (compact) 10.sp else 12.sp,
                         lineHeight = if (compact) 11.sp else 14.sp
                     ),
-                    color = TextPrimary,
+                    color = labelColor,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
@@ -1461,7 +1486,7 @@ private fun HomeSourceCommandAction(
                         fontSize = if (compact) 12.sp else 14.sp,
                         lineHeight = if (compact) 14.sp else 16.sp
                     ),
-                    color = TextPrimary,
+                    color = labelColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1581,6 +1606,7 @@ private fun HomeQuickWindow(
     val outline = homeOutlineColor
     val compact = layoutMode != HomeDashboardLayoutMode.SpaciousGrid
     val shape = RoundedCornerShape(if (compact) 16.dp else 20.dp)
+    val titleColor = homeWindowTextColor
     Surface(
         modifier = modifier.fillMaxSize(),
         shape = shape,
@@ -1619,7 +1645,7 @@ private fun HomeQuickWindow(
                     } else {
                         MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     },
-                    color = TextPrimary,
+                    color = titleColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1997,7 +2023,7 @@ private fun HomeQuickSectionLabel(
         } else {
             MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
         },
-        color = OnSurfaceDim,
+        color = homeWindowSecondaryTextColor,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier.fillMaxWidth(),
@@ -2017,11 +2043,14 @@ private fun HomeThemeFeatureAction(
 ) {
     val shape = RoundedCornerShape(16.dp)
     val outline = homeOutlineColor
+    val containerColor = if (isBrightHomeTheme) AppColors.Surface else AppColors.Surface.copy(alpha = 0.70f)
+    val titleColor = homeSurfaceTextColor(containerColor)
+    val subtitleColor = homeSurfaceSecondaryTextColor(containerColor)
     Surface(
         modifier = modifier.fillMaxSize(),
         shape = shape,
         colors = SurfaceDefaults.colors(
-            containerColor = if (isBrightHomeTheme) AppColors.Surface else AppColors.Surface.copy(alpha = 0.70f)
+            containerColor = containerColor
         ),
         border = Border(
             BorderStroke(
@@ -2049,7 +2078,7 @@ private fun HomeThemeFeatureAction(
                         } else {
                             MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                         },
-                        color = TextPrimary,
+                        color = titleColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -2059,7 +2088,7 @@ private fun HomeThemeFeatureAction(
                             fontSize = if (compact) 10.sp else 11.sp,
                             lineHeight = if (compact) 12.sp else 14.sp
                         ),
-                        color = OnSurfaceDim,
+                        color = subtitleColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

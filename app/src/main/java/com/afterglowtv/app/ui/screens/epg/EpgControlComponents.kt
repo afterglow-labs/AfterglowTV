@@ -59,6 +59,7 @@ import com.afterglowtv.app.R
 import com.afterglowtv.app.device.rememberIsTelevisionDevice
 import com.afterglowtv.app.ui.components.SelectionChip
 import com.afterglowtv.app.ui.components.SelectionChipRow
+import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.theme.FocusBorder
 import com.afterglowtv.app.ui.theme.OnSurface
@@ -317,6 +318,11 @@ internal fun GuideSearchField(
         }
     }
 
+    val guideColors = epgThemeColors()
+    val searchSurface = if (isFocused) guideColors.toolbarFocusedSurface else guideColors.toolbarSurface
+    val searchText = AppColors.primaryContentColorFor(searchSurface)
+    val searchMutedText = AppColors.secondaryContentColorFor(searchSurface)
+
     TvClickableSurface(
         onClick = { requestKeyboard() },
         modifier = modifier
@@ -325,15 +331,15 @@ internal fun GuideSearchField(
             .bringIntoViewRequester(bringIntoViewRequester)
             .onFocusChanged { hasContainerFocus = it.isFocused },
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = if (isFocused) SurfaceHighlight else SurfaceElevated,
-            focusedContainerColor = SurfaceHighlight,
-            contentColor = OnSurface,
-            focusedContentColor = OnSurface
+            containerColor = guideColors.toolbarSurface,
+            focusedContainerColor = guideColors.toolbarFocusedSurface,
+            contentColor = searchText,
+            focusedContentColor = searchText
         ),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
+                border = BorderStroke(2.dp, guideColors.focusBorder),
                 shape = RoundedCornerShape(10.dp)
             )
         )
@@ -348,7 +354,7 @@ internal fun GuideSearchField(
             androidx.tv.material3.Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = null,
-                tint = if (isFocused) Primary else OnSurfaceDim
+                tint = if (isFocused) guideColors.focusBorder else searchMutedText
             )
             Box(
                 modifier = Modifier.weight(1f),
@@ -358,7 +364,7 @@ internal fun GuideSearchField(
                     Text(
                         text = placeholder,
                         style = MaterialTheme.typography.bodySmall,
-                        color = OnSurfaceDim,
+                        color = searchMutedText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -412,9 +418,9 @@ internal fun GuideSearchField(
                                 keyboardController?.hide()
                             }
                         },
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = OnSurface),
+                    textStyle = MaterialTheme.typography.bodySmall.copy(color = searchText),
                     singleLine = true,
-                    cursorBrush = SolidColor(Primary),
+                    cursorBrush = SolidColor(guideColors.focusBorder),
                     readOnly = isTelevisionDevice && !acceptsInput,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = {
@@ -480,6 +486,8 @@ internal fun GuideTimeControlsRow(
     contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
     showLabel: Boolean = true
 ) {
+    val guideColors = epgThemeColors()
+    val labelColor = guideColors.heroSecondaryText
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -489,7 +497,7 @@ internal fun GuideTimeControlsRow(
             Text(
                 text = stringResource(R.string.epg_time_controls),
                 style = MaterialTheme.typography.labelMedium,
-                color = OnSurfaceDim
+                color = labelColor
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -522,6 +530,8 @@ internal fun GuideDayRow(
     contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 4.dp),
     showLabel: Boolean = true
 ) {
+    val guideColors = epgThemeColors()
+    val labelColor = guideColors.heroSecondaryText
     val dayFormat = remember { SimpleDateFormat("EEE d MMM", Locale.getDefault()) }
     val dayAnchors = remember(selectedDayStart) {
         (-1L..3L).map { offset ->
@@ -538,7 +548,7 @@ internal fun GuideDayRow(
             Text(
                 text = stringResource(R.string.epg_day_selector_label),
                 style = MaterialTheme.typography.labelMedium,
-                color = OnSurfaceDim
+                color = labelColor
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -548,15 +558,15 @@ internal fun GuideDayRow(
                 TvClickableSurface(
                     onClick = { onDaySelected(dayStart) },
                     colors = ClickableSurfaceDefaults.colors(
-                        containerColor = if (isSelected) Primary.copy(alpha = 0.18f) else SurfaceElevated,
-                        focusedContainerColor = SurfaceHighlight,
-                        contentColor = if (isSelected) Primary else OnSurface,
-                        focusedContentColor = OnSurface
+                        containerColor = if (isSelected) guideColors.badgeHighlightSurface else guideColors.badgeSurface,
+                        focusedContainerColor = guideColors.toolbarFocusedSurface,
+                        contentColor = if (isSelected) AppColors.primaryContentColorFor(guideColors.badgeHighlightSurface) else guideColors.badgeText,
+                        focusedContentColor = guideColors.toolbarFocusedText
                     ),
                     shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
                     border = ClickableSurfaceDefaults.border(
                         focusedBorder = Border(
-                            border = BorderStroke(2.dp, FocusBorder),
+                            border = BorderStroke(2.dp, guideColors.focusBorder),
                             shape = RoundedCornerShape(999.dp)
                         )
                     )
@@ -569,7 +579,11 @@ internal fun GuideDayRow(
                         Text(
                             text = dayFormat.format(Date(dayStart)),
                             style = MaterialTheme.typography.bodySmall,
-                            color = OnSurfaceDim
+                            color = if (isSelected) {
+                                AppColors.secondaryContentColorFor(guideColors.badgeHighlightSurface)
+                            } else {
+                                AppColors.secondaryContentColorFor(guideColors.badgeSurface)
+                            }
                         )
                     }
                 }
@@ -583,6 +597,7 @@ internal fun GuideViewOptionsRow(
     showScheduledOnly: Boolean,
     onToggleScheduledOnly: () -> Unit
 ) {
+    val guideColors = epgThemeColors()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -591,7 +606,7 @@ internal fun GuideViewOptionsRow(
         Text(
             text = stringResource(R.string.epg_view_options_label),
             style = MaterialTheme.typography.labelMedium,
-            color = OnSurfaceDim
+            color = guideColors.heroSecondaryText
         )
         Spacer(modifier = Modifier.height(8.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -599,15 +614,15 @@ internal fun GuideViewOptionsRow(
                 TvClickableSurface(
                     onClick = onToggleScheduledOnly,
                     colors = ClickableSurfaceDefaults.colors(
-                        containerColor = if (showScheduledOnly) Primary.copy(alpha = 0.18f) else SurfaceElevated,
-                        focusedContainerColor = SurfaceHighlight,
-                        contentColor = if (showScheduledOnly) Primary else OnSurface,
-                        focusedContentColor = OnSurface
+                        containerColor = if (showScheduledOnly) guideColors.badgeHighlightSurface else guideColors.badgeSurface,
+                        focusedContainerColor = guideColors.toolbarFocusedSurface,
+                        contentColor = if (showScheduledOnly) AppColors.primaryContentColorFor(guideColors.badgeHighlightSurface) else guideColors.badgeText,
+                        focusedContentColor = guideColors.toolbarFocusedText
                     ),
                     shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
                     border = ClickableSurfaceDefaults.border(
                         focusedBorder = Border(
-                            border = BorderStroke(2.dp, FocusBorder),
+                            border = BorderStroke(2.dp, guideColors.focusBorder),
                             shape = RoundedCornerShape(999.dp)
                         )
                     )
@@ -626,7 +641,11 @@ internal fun GuideViewOptionsRow(
                         Text(
                             text = stringResource(R.string.epg_view_scheduled_only_hint),
                             style = MaterialTheme.typography.bodySmall,
-                            color = OnSurfaceDim
+                            color = if (showScheduledOnly) {
+                                AppColors.secondaryContentColorFor(guideColors.badgeHighlightSurface)
+                            } else {
+                                AppColors.secondaryContentColorFor(guideColors.badgeSurface)
+                            }
                         )
                     }
                 }
@@ -673,19 +692,21 @@ internal fun GuideShortcutChip(
     onClick: () -> Unit,
     isSelected: Boolean = false
 ) {
+    val guideColors = epgThemeColors()
+    val containerColor = if (isSelected) guideColors.badgeHighlightSurface else guideColors.badgeSurface
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier,
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = if (isSelected) Primary.copy(alpha = 0.18f) else SurfaceElevated,
-            focusedContainerColor = SurfaceHighlight,
-            contentColor = if (isSelected) Primary else OnSurface,
-            focusedContentColor = OnSurface
+            containerColor = containerColor,
+            focusedContainerColor = guideColors.toolbarFocusedSurface,
+            contentColor = AppColors.primaryContentColorFor(containerColor),
+            focusedContentColor = guideColors.toolbarFocusedText
         ),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
+                border = BorderStroke(2.dp, guideColors.focusBorder),
                 shape = RoundedCornerShape(999.dp)
             )
         )

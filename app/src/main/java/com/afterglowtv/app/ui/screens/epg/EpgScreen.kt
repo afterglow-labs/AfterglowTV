@@ -141,9 +141,6 @@ internal enum class GuideEmptyAction {
     ResetFilters
 }
 
-private const val AFTERGLOW_LABS_THEME_ID = "afterglow_labs"
-private val LabsGuideScreenBackground = Color(0xFFF08A62)
-
 internal fun shouldRenderGuideChrome(state: EpgUiState): Boolean {
     if (state.error == EpgViewModel.NO_ACTIVE_PROVIDER) return false
     if (state.error != null && state.channels.isEmpty() && state.totalChannelCount == 0 && state.currentProviderName == null) {
@@ -422,17 +419,11 @@ fun FullEpgScreen(
         showScreenHeader = false,
         fullBleed = true,   // EPG wants every pixel for the program grid
     ) {
-        val useLabsGuideBackground = AppColors.palette.id == AFTERGLOW_LABS_THEME_ID
+        val guideColors = epgThemeColors()
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .then(
-                    if (useLabsGuideBackground) {
-                        Modifier.background(LabsGuideScreenBackground)
-                    } else {
-                        Modifier
-                    }
-                )
+                .background(guideColors.screenBackground)
         ) {
             val renderGuideChrome = shouldRenderGuideChrome(uiState)
             when {
@@ -450,12 +441,12 @@ fun FullEpgScreen(
                         ) {
                             LinearProgressIndicator(
                                 modifier = Modifier.fillMaxWidth(),
-                                color = Primary,
-                                trackColor = SurfaceHighlight
+                                color = guideColors.nowLine,
+                                trackColor = guideColors.timelineSurface
                             )
                             Text(
                                 stringResource(R.string.epg_loading_named, stringResource(titleRes)),
-                                color = OnBackground
+                                color = AppColors.primaryContentColorFor(guideColors.screenBackground)
                             )
                             val expectedChannels = maxOf(uiState.totalChannelCount, uiState.channels.size, uiState.loadedChannelCount)
                             Text(
@@ -465,7 +456,7 @@ fun FullEpgScreen(
                                     expectedChannels
                                 ),
                                 style = MaterialTheme.typography.labelMedium,
-                                color = OnSurfaceDim
+                                color = AppColors.secondaryContentColorFor(guideColors.screenBackground)
                             )
                         }
                     }
@@ -1009,6 +1000,9 @@ private fun GuideProgramMetadataRow(
     label: String,
     value: String
 ) {
+    val guideColors = epgThemeColors()
+    val rowTextColor = AppColors.primaryContentColorFor(guideColors.heroSurface)
+    val rowMutedColor = AppColors.secondaryContentColorFor(guideColors.heroSurface)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1017,12 +1011,12 @@ private fun GuideProgramMetadataRow(
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = OnSurfaceDim
+            color = rowMutedColor
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = OnSurface,
+            color = rowTextColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -1035,9 +1029,14 @@ private fun GuideStatusCard(
     providerCatchUpSupported: Boolean,
     isGuideStale: Boolean
 ) {
+    val guideColors = epgThemeColors()
+    val containerColor = guideColors.heroAccentSurface
+    val titleColor = AppColors.primaryContentColorFor(containerColor)
+    val secondaryColor = AppColors.secondaryContentColorFor(containerColor)
+    val highlightColor = AppColors.ensureReadableColor(guideColors.nowLine, containerColor, 4.5f)
     Surface(
         shape = RoundedCornerShape(16.dp),
-        colors = SurfaceDefaults.colors(containerColor = SurfaceHighlight)
+        colors = SurfaceDefaults.colors(containerColor = containerColor)
     ) {
         Column(
             modifier = Modifier
@@ -1048,7 +1047,7 @@ private fun GuideStatusCard(
             Text(
                 text = stringResource(R.string.epg_program_status_title),
                 style = MaterialTheme.typography.titleSmall,
-                color = OnSurface
+                color = titleColor
             )
             Text(
                 text = when {
@@ -1057,13 +1056,13 @@ private fun GuideStatusCard(
                     else -> stringResource(R.string.epg_archive_unavailable_hint)
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (isArchiveReady) Primary else OnSurfaceDim
+                color = if (isArchiveReady) highlightColor else secondaryColor
             )
             if (isGuideStale) {
                 Text(
                     text = stringResource(R.string.epg_archive_stale_hint),
                     style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceDim
+                    color = secondaryColor
                 )
             }
         }
@@ -1077,9 +1076,14 @@ private fun GuideProviderTroubleshootingCard(
     program: Program,
     isGuideStale: Boolean
 ) {
+    val guideColors = epgThemeColors()
+    val containerColor = guideColors.heroAccentSurface
+    val titleColor = AppColors.primaryContentColorFor(containerColor)
+    val secondaryColor = AppColors.secondaryContentColorFor(containerColor)
+    val highlightColor = AppColors.ensureReadableColor(guideColors.nowLine, containerColor, 4.5f)
     Surface(
         shape = RoundedCornerShape(16.dp),
-        colors = SurfaceDefaults.colors(containerColor = SurfaceHighlight.copy(alpha = 0.85f))
+        colors = SurfaceDefaults.colors(containerColor = containerColor)
     ) {
         Column(
             modifier = Modifier
@@ -1090,12 +1094,12 @@ private fun GuideProviderTroubleshootingCard(
             Text(
                 text = stringResource(R.string.epg_provider_troubleshooting_title),
                 style = MaterialTheme.typography.titleSmall,
-                color = OnSurface
+                color = titleColor
             )
             Text(
                 text = summary,
                 style = MaterialTheme.typography.bodyMedium,
-                color = OnSurface
+                color = titleColor
             )
             val channelReason = when {
                 !channel.catchUpSupported && !program.hasArchive ->
@@ -1110,13 +1114,13 @@ private fun GuideProviderTroubleshootingCard(
             Text(
                 text = channelReason,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (program.hasArchive) Primary else OnSurfaceDim
+                color = if (program.hasArchive) highlightColor else secondaryColor
             )
             if (isGuideStale) {
                 Text(
                     text = stringResource(R.string.epg_provider_troubleshooting_stale),
                     style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceDim
+                    color = secondaryColor
                 )
             }
         }

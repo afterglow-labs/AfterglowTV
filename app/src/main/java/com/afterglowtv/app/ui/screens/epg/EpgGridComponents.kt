@@ -80,20 +80,6 @@ import java.time.ZonedDateTime
 import kotlin.math.max
 import kotlinx.coroutines.launch
 
-private const val AFTERGLOW_LABS_THEME_ID = "afterglow_labs"
-private val LabsGuidePanel = Color(0xFFE6865E)
-private val LabsGuidePanelFocused = Color(0xFFFFA15F)
-private val LabsGuideRail = Color(0xFFE07D56)
-private val LabsGuideSlot = Color(0xFFF1A06A)
-private val LabsGuideOutline = Color(0xFF6F35D8)
-private val LabsGuideOutlineWarm = Color(0xFFFF7A18)
-private val LabsGuideText = Color(0xFF101426)
-private val LabsGuideTextMuted = Color(0xB0101426)
-private val LabsGuideDivider = Color(0x44331A5C)
-
-private val isAfterglowLabsGuideTheme: Boolean
-    get() = AppColors.palette.id == AFTERGLOW_LABS_THEME_ID
-
 @Composable
 internal fun GuideMessageState(
     modifier: Modifier = Modifier,
@@ -102,6 +88,9 @@ internal fun GuideMessageState(
     actionLabel: String?,
     onAction: (() -> Unit)?
 ) {
+    val colors = epgThemeColors()
+    val actionColor = colors.badgeHighlightSurface
+    val actionTextColor = AppColors.primaryContentColorFor(actionColor)
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -111,21 +100,21 @@ internal fun GuideMessageState(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
-                color = OnSurface
+                color = colors.heroText
             )
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = OnSurfaceDim
+                    color = colors.heroSecondaryText
                 )
             }
             if (actionLabel != null && onAction != null) {
                 TvButton(
                     onClick = onAction,
                     colors = ButtonDefaults.colors(
-                        containerColor = Primary,
-                        contentColor = Color.White
+                        containerColor = actionColor,
+                        contentColor = actionTextColor
                     )
                 ) {
                     Text(actionLabel)
@@ -288,10 +277,10 @@ private fun GuideTimelineHeader(
             marker += markerStepMs
         }
     }
-    val labsGuide = isAfterglowLabsGuideTheme
+    val colors = epgThemeColors()
     val slotShape = RoundedCornerShape(0.dp)
-    val timelineTextColor = if (labsGuide) LabsGuideTextMuted else OnSurfaceDim
-    val gridLineColor = if (labsGuide) LabsGuideDivider else Color.White.copy(alpha = 0.14f)
+    val timelineTextColor = colors.timelineText
+    val gridLineColor = colors.gridLine
 
     Row(
         modifier = Modifier
@@ -318,8 +307,7 @@ private fun GuideTimelineHeader(
                     text = markerLabel,
                     style = MaterialTheme.typography.labelSmall,
                     color = when {
-                        labsGuide -> LabsGuideText
-                        now in windowStart..windowEnd -> Primary
+                        now in windowStart..windowEnd -> AppColors.ensureReadableColor(colors.nowLine, colors.screenBackground, 3.0f)
                         else -> timelineTextColor
                     }
                 )
@@ -349,7 +337,7 @@ private fun GuideTimelineHeader(
                                     .width(totalTimelineWidth * slotWidthRatio)
                                     .fillMaxHeight()
                                     .background(
-                                        color = if (labsGuide) LabsGuideSlot else SurfaceElevated,
+                                        color = colors.timelineSurface,
                                         shape = slotShape
                                     )
                                     .border(
@@ -363,7 +351,7 @@ private fun GuideTimelineHeader(
                                     text = hourFormat.format(Instant.ofEpochMilli(marker).atZone(zone)),
                                     modifier = Modifier.padding(horizontal = 8.dp),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (labsGuide) LabsGuideText else OnSurfaceDim,
+                                    color = AppColors.primaryContentColorFor(colors.timelineSurface),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -375,7 +363,7 @@ private fun GuideTimelineHeader(
                                     .offset(x = totalTimelineWidth * elapsedRatio)
                                     .width(2.dp)
                                     .fillMaxHeight()
-                                    .background(if (labsGuide) LabsGuideText else Primary)
+                                    .background(colors.nowLine)
                             )
                         }
                     }
@@ -421,16 +409,16 @@ fun EpgRow(
         GuideDensity.COMFORTABLE -> 30.dp
         GuideDensity.CINEMATIC -> 38.dp
     }
-    val labsGuide = isAfterglowLabsGuideTheme
-    val channelContainerColor = if (labsGuide) LabsGuideRail else SurfaceElevated
-    val channelFocusedColor = if (labsGuide) LabsGuidePanelFocused else SurfaceHighlight
-    val channelFocusedBorderColor = if (labsGuide) LabsGuideOutline else FocusBorder
-    val timelineTrackColor = if (labsGuide) LabsGuideRail else SurfaceElevated
-    val guidePrimaryTextColor = if (labsGuide) LabsGuideText else OnSurface
-    val guideFocusedTextColor = if (labsGuide) LabsGuideText else TextPrimary
-    val guideSecondaryTextColor = if (labsGuide) LabsGuideTextMuted else OnSurfaceDim
+    val colors = epgThemeColors()
+    val channelContainerColor = colors.channelRailSurface
+    val channelFocusedColor = colors.channelFocusedSurface
+    val channelFocusedBorderColor = colors.focusBorder
+    val timelineTrackColor = colors.emptyGridSurface
+    val guidePrimaryTextColor = AppColors.primaryContentColorFor(channelContainerColor)
+    val guideFocusedTextColor = AppColors.primaryContentColorFor(channelFocusedColor)
+    val guideSecondaryTextColor = AppColors.secondaryContentColorFor(channelContainerColor)
     val rowShape = RoundedCornerShape(0.dp)
-    val rowGridLineColor = if (labsGuide) LabsGuideDivider else Color.White.copy(alpha = 0.10f)
+    val rowGridLineColor = colors.gridLine
 
     Row(
         modifier = Modifier
@@ -556,7 +544,7 @@ fun EpgRow(
                             .offset(x = totalTimelineWidth * markerRatio)
                             .width(1.dp)
                             .fillMaxHeight()
-                            .background(if (labsGuide) LabsGuideDivider else Color.White.copy(alpha = 0.08f))
+                            .background(rowGridLineColor)
                     )
                 }
                 if (programs.isEmpty()) {
@@ -599,6 +587,9 @@ fun ProgramItem(
     val cellStyle = AppStyles.value.epgCell
     val liveStyle = AppStyles.value.epgLiveCell
     val cellShape: Shape = RoundedCornerShape(0.dp)
+    val colors = epgThemeColors()
+    val cellContainerColor = epgCellContainerColor(cellStyle, liveStyle, isCurrent)
+    val focusedCellColor = epgCellFocusedColor(cellStyle, isCurrent)
 
     val appTimeFormat = LocalAppTimeFormat.current
     val format = remember(appTimeFormat) { appTimeFormat.createTimeFormatter() }
@@ -684,8 +675,8 @@ fun ProgramItem(
             if (isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.GLOW) {
                 base.afterglow(
                     listOf(
-                        GlowSpec(AppColors.EpgNowLine, 12.dp, 0.55f),
-                        GlowSpec(AppColors.TiviAccent, 26.dp, 0.28f),
+                        GlowSpec(colors.nowLine, 12.dp, 0.55f),
+                        GlowSpec(colors.accentStripe, 26.dp, 0.28f),
                     ),
                     cellShape
                 )
@@ -704,8 +695,8 @@ fun ProgramItem(
                 isFocused = it.isFocused
             },
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = epgCellContainerColor(cellStyle, liveStyle, isCurrent),
-            focusedContainerColor = epgCellFocusedColor(cellStyle, isCurrent)
+            containerColor = cellContainerColor,
+            focusedContainerColor = focusedCellColor
         ),
         shape = ClickableSurfaceDefaults.shape(cellShape),
         border = ClickableSurfaceDefaults.border(
@@ -717,7 +708,7 @@ fun ProgramItem(
                 shape = cellShape
             ),
             focusedBorder = Border(
-                border = BorderStroke(2.dp, if (isAfterglowLabsGuideTheme) LabsGuideOutline else FocusBorder),
+                border = BorderStroke(2.dp, colors.focusBorder),
                 shape = cellShape
             )
         ),
@@ -731,12 +722,10 @@ fun ProgramItem(
                         .width(4.dp)
                         .fillMaxHeight()
                         .background(
-                            if (isAfterglowLabsGuideTheme) {
-                                LabsGuideOutlineWarm
-                            } else if (isCurrent) {
-                                AppColors.EpgNowLine
+                            if (isCurrent) {
+                                colors.nowLine
                             } else {
-                                AppColors.TiviAccent
+                                colors.accentStripe
                             }
                         )
                 )
@@ -747,14 +736,14 @@ fun ProgramItem(
                         .align(Alignment.TopCenter)
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(if (isAfterglowLabsGuideTheme) LabsGuideDivider else Color.White.copy(alpha = 0.22f))
+                        .background(colors.gridLine.copy(alpha = 0.80f))
                 )
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(if (isAfterglowLabsGuideTheme) LabsGuideDivider else Color.Black.copy(alpha = 0.28f))
+                        .background(colors.gridLine.copy(alpha = 0.65f))
                 )
             }
             if (
@@ -767,12 +756,10 @@ fun ProgramItem(
                         .padding(2.dp)
                         .border(
                             width = 1.dp,
-                            color = if (isAfterglowLabsGuideTheme) {
-                                LabsGuideDivider
-                            } else if (isCurrent) {
-                                AppColors.EpgNowLine.copy(alpha = 0.78f)
+                            color = if (isCurrent) {
+                                colors.nowLine.copy(alpha = 0.78f)
                             } else {
-                                Color.White.copy(alpha = 0.16f)
+                                colors.gridLine.copy(alpha = 0.78f)
                             },
                             shape = cellShape
                         )
@@ -783,7 +770,7 @@ fun ProgramItem(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .background(
-                            color = AppColors.EpgNowLine,
+                            color = colors.nowLine,
                             shape = RoundedCornerShape(bottomStart = 5.dp)
                         )
                         .padding(horizontal = 5.dp, vertical = 1.dp)
@@ -794,7 +781,7 @@ fun ProgramItem(
                             fontSize = 8.sp,
                             lineHeight = 9.sp
                         ),
-                        color = AppColors.TiviSurfaceDeep,
+                        color = AppColors.primaryContentColorFor(colors.nowLine),
                         maxLines = 1
                     )
                 }
@@ -816,9 +803,9 @@ fun ProgramItem(
                         text = program.title,
                         style = titleStyle,
                         color = if (isPlaceholder && !isFocused) {
-                            epgProgramMetaColor(isFocused)
+                            epgProgramMetaColor(isFocused, cellContainerColor, focusedCellColor)
                         } else {
-                            epgProgramTitleColor(liveStyle, isCurrent, isFocused)
+                            epgProgramTitleColor(liveStyle, isCurrent, isFocused, cellContainerColor, focusedCellColor)
                         },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -831,7 +818,7 @@ fun ProgramItem(
                                 "$startStr - $endStr"
                             },
                             style = timeStyle,
-                            color = epgProgramMetaColor(isFocused),
+                            color = epgProgramMetaColor(isFocused, cellContainerColor, focusedCellColor),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -847,28 +834,16 @@ private fun epgCellContainerColor(
     liveStyle: AppShapeSet.EpgLiveCellStyle,
     isCurrent: Boolean
 ): Color {
-    if (isAfterglowLabsGuideTheme) {
-        return if (isCurrent) {
-            LabsGuidePanelFocused
-        } else {
-            when (style) {
-                AppShapeSet.EpgCellStyle.RECTANGULAR -> LabsGuidePanel
-                AppShapeSet.EpgCellStyle.SOFT -> LabsGuidePanel
-                AppShapeSet.EpgCellStyle.ACCENT_STRIPE -> LabsGuidePanel
-                AppShapeSet.EpgCellStyle.BEVELED -> Color(0xFFD97754)
-                AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> LabsGuidePanel
-            }
-        }
-    }
-    if (isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.NOW_FILL) {
-        return AppColors.EpgNowFill.copy(alpha = 0.34f)
+    val colors = epgThemeColors()
+    if (isCurrent) {
+        return colors.programCurrentSurface
     }
     return when (style) {
-        AppShapeSet.EpgCellStyle.RECTANGULAR -> AppColors.TiviSurfaceBase.copy(alpha = 0.92f)
-        AppShapeSet.EpgCellStyle.SOFT -> AppColors.TiviSurfaceCool.copy(alpha = 0.94f)
-        AppShapeSet.EpgCellStyle.ACCENT_STRIPE -> AppColors.TiviSurfaceCool.copy(alpha = 0.92f)
-        AppShapeSet.EpgCellStyle.BEVELED -> AppColors.SurfaceAccent.copy(alpha = 0.86f)
-        AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> AppColors.TiviSurfaceBase.copy(alpha = 0.94f)
+        AppShapeSet.EpgCellStyle.RECTANGULAR -> colors.programSurface
+        AppShapeSet.EpgCellStyle.SOFT -> colors.programSurface
+        AppShapeSet.EpgCellStyle.ACCENT_STRIPE -> colors.programSurface
+        AppShapeSet.EpgCellStyle.BEVELED -> colors.programSurface.copy(alpha = 0.92f)
+        AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> colors.programSurface
     }
 }
 
@@ -877,10 +852,8 @@ private fun epgCellFocusedColor(
     isCurrent: Boolean
 ): Color =
     when {
-        isAfterglowLabsGuideTheme -> LabsGuidePanelFocused
-        isCurrent -> AppColors.FocusFill.copy(alpha = 0.55f)
-        style == AppShapeSet.EpgCellStyle.RECTANGULAR -> AppColors.SurfaceAccent.copy(alpha = 0.95f)
-        else -> SurfaceHighlight
+        isCurrent -> epgThemeColors().programCurrentSurface
+        else -> epgThemeColors().programFocusedSurface
     }
 
 private fun epgCellBorderColor(
@@ -889,13 +862,10 @@ private fun epgCellBorderColor(
     isCurrent: Boolean
 ): Color =
     when {
-        isAfterglowLabsGuideTheme -> LabsGuideDivider
-        isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.DOUBLE_EDGE -> AppColors.EpgNowLine.copy(alpha = 0.52f)
-        isCurrent -> AppColors.EpgNowLine.copy(alpha = 0.46f)
-        style == AppShapeSet.EpgCellStyle.ACCENT_STRIPE -> AppColors.TiviAccent.copy(alpha = 0.28f)
-        style == AppShapeSet.EpgCellStyle.BEVELED -> Color.White.copy(alpha = 0.18f)
-        style == AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> Color.White.copy(alpha = 0.18f)
-        else -> Color.White.copy(alpha = 0.12f)
+        isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.DOUBLE_EDGE -> epgThemeColors().nowLine.copy(alpha = 0.62f)
+        isCurrent -> epgThemeColors().nowLine.copy(alpha = 0.54f)
+        style == AppShapeSet.EpgCellStyle.ACCENT_STRIPE -> epgThemeColors().accentStripe.copy(alpha = 0.36f)
+        else -> epgThemeColors().gridLine
     }
 
 private fun epgCellBorderWidth(
@@ -904,7 +874,6 @@ private fun epgCellBorderWidth(
     isCurrent: Boolean
 ): Dp =
     when {
-        isAfterglowLabsGuideTheme -> 1.dp
         isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.DOUBLE_EDGE -> 1.dp
         style == AppShapeSet.EpgCellStyle.DOUBLE_EDGE -> 1.dp
         else -> 1.dp
@@ -913,23 +882,27 @@ private fun epgCellBorderWidth(
 private fun epgProgramTitleColor(
     liveStyle: AppShapeSet.EpgLiveCellStyle,
     isCurrent: Boolean,
-    isFocused: Boolean
+    isFocused: Boolean,
+    cellContainerColor: Color,
+    focusedCellColor: Color
 ): Color =
     when {
-        isAfterglowLabsGuideTheme -> LabsGuideText
-        isFocused -> TextPrimary
-        isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.NOW_FILL -> AppColors.TiviAccentLight
-        isCurrent -> AppColors.EpgNowLine
-        else -> OnSurface
+        isFocused -> AppColors.primaryContentColorFor(focusedCellColor)
+        isCurrent && liveStyle == AppShapeSet.EpgLiveCellStyle.NOW_FILL ->
+            AppColors.ensureReadableColor(epgThemeColors().nowLine, cellContainerColor, 4.5f)
+        isCurrent -> AppColors.ensureReadableColor(epgThemeColors().nowLine, cellContainerColor, 4.5f)
+        else -> AppColors.primaryContentColorFor(cellContainerColor)
     }
 
-private fun epgProgramMetaColor(isFocused: Boolean): Color =
-    if (isAfterglowLabsGuideTheme) {
-        if (isFocused) LabsGuideText else LabsGuideTextMuted
-    } else if (isFocused) {
-        TextSecondary
+private fun epgProgramMetaColor(
+    isFocused: Boolean,
+    cellContainerColor: Color,
+    focusedCellColor: Color
+): Color =
+    if (isFocused) {
+        AppColors.secondaryContentColorFor(focusedCellColor)
     } else {
-        OnSurfaceDim
+        AppColors.secondaryContentColorFor(cellContainerColor)
     }
 
 private fun List<Program>.currentProgramAt(now: Long): Program? =

@@ -51,6 +51,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
+import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.interaction.TvButton
 import com.afterglowtv.app.ui.time.LocalAppTimeFormat
@@ -110,6 +111,9 @@ internal fun GuideSearchOverlay(
     onDismiss: () -> Unit
 ) {
     val searchFocusRequester = remember { FocusRequester() }
+    val guideColors = epgThemeColors()
+    val dialogSurface = guideColors.heroSurface
+    val dialogText = AppColors.primaryContentColorFor(dialogSurface)
     val applySearchAndClose = remember(onQueryChange, onDismiss) {
         { submittedQuery: String ->
             onQueryChange(submittedQuery)
@@ -136,7 +140,7 @@ internal fun GuideSearchOverlay(
                 .fillMaxWidth(0.72f)
                 .padding(top = 32.dp)
                 .focusGroup(),
-            colors = SurfaceDefaults.colors(containerColor = SurfaceElevated),
+            colors = SurfaceDefaults.colors(containerColor = dialogSurface),
             shape = RoundedCornerShape(18.dp)
         ) {
             Column(
@@ -151,7 +155,7 @@ internal fun GuideSearchOverlay(
                     Text(
                         text = stringResource(R.string.epg_search_label),
                         style = MaterialTheme.typography.titleLarge,
-                        color = OnSurface
+                        color = dialogText
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         GuideShortcutChip(
@@ -205,6 +209,9 @@ internal fun GuideOptionsOverlay(
     onManageEpgMatch: (() -> Unit)? = null
 ) {
     val optionsFocusRequester = remember { FocusRequester() }
+    val guideColors = epgThemeColors()
+    val dialogSurface = guideColors.heroSurface
+    val dialogText = AppColors.primaryContentColorFor(dialogSurface)
     LaunchedEffect(Unit) {
         optionsFocusRequester.requestFocus()
     }
@@ -214,7 +221,7 @@ internal fun GuideOptionsOverlay(
                 .fillMaxWidth(0.68f)
                 .fillMaxHeight(0.78f)
                 .focusGroup(),
-            colors = SurfaceDefaults.colors(containerColor = SurfaceElevated),
+            colors = SurfaceDefaults.colors(containerColor = dialogSurface),
             shape = RoundedCornerShape(20.dp)
         ) {
             Column(
@@ -234,7 +241,7 @@ internal fun GuideOptionsOverlay(
                     Text(
                         text = stringResource(R.string.epg_options_short),
                         style = MaterialTheme.typography.headlineSmall,
-                        color = OnSurface
+                        color = dialogText
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         GuideShortcutChip(
@@ -325,6 +332,13 @@ internal fun CompactGuideProgramDialog(
     var showDetails by rememberSaveable(program.startTime, program.endTime, program.title, program.isPlaceholder) {
         mutableStateOf(program.isPlaceholder)
     }
+    val guideColors = epgThemeColors()
+    val dialogSurface = guideColors.heroSurface
+    val dialogAccentSurface = guideColors.heroAccentSurface
+    val dialogText = AppColors.primaryContentColorFor(dialogSurface)
+    val dialogMutedText = AppColors.secondaryContentColorFor(dialogSurface)
+    val dialogAccentText = AppColors.primaryContentColorFor(dialogAccentSurface)
+    val dialogHighlightText = AppColors.ensureReadableColor(guideColors.nowLine, dialogSurface, 4.5f)
     val appTimeFormat = LocalAppTimeFormat.current
     val format = remember(appTimeFormat) { appTimeFormat.createTimeFormat() }
     val firstButtonFocusRequester = remember { FocusRequester() }
@@ -335,7 +349,7 @@ internal fun CompactGuideProgramDialog(
     GuideModalDialog(onDismiss = onDismiss) {
         Surface(
             modifier = Modifier.widthIn(min = 420.dp, max = 640.dp),
-            colors = SurfaceDefaults.colors(containerColor = SurfaceElevated),
+            colors = SurfaceDefaults.colors(containerColor = dialogSurface),
             shape = RoundedCornerShape(20.dp)
         ) {
             Column(
@@ -348,7 +362,7 @@ internal fun CompactGuideProgramDialog(
                 Text(
                     text = displayTitle,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = OnSurface,
+                    color = dialogText,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -367,7 +381,7 @@ internal fun CompactGuideProgramDialog(
                         }
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = OnSurfaceDim,
+                    color = dialogMutedText,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -375,7 +389,7 @@ internal fun CompactGuideProgramDialog(
                     Text(
                         text = providerLabel,
                         style = MaterialTheme.typography.labelMedium,
-                        color = Primary
+                        color = dialogHighlightText
                     )
                 }
                 if (!program.isPlaceholder && now in program.startTime until program.endTime) {
@@ -384,15 +398,15 @@ internal fun CompactGuideProgramDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(4.dp),
-                        color = Primary,
-                        trackColor = SurfaceHighlight
+                        color = guideColors.nowLine,
+                        trackColor = dialogAccentSurface
                     )
                 }
                 if (showDetails) {
                     Text(
                         text = program.description.ifBlank { stringResource(R.string.epg_no_info) },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = OnSurface,
+                        color = dialogText,
                         maxLines = 6,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -423,8 +437,8 @@ internal fun CompactGuideProgramDialog(
                             onClick = onToggleReminder,
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.colors(
-                                containerColor = SurfaceHighlight,
-                                contentColor = OnSurface
+                                containerColor = dialogAccentSurface,
+                                contentColor = dialogAccentText
                             ),
                             shape = actionButtonShape
                         ) {
@@ -449,8 +463,8 @@ internal fun CompactGuideProgramDialog(
                             onClick = { onScheduleDailyRecording(); onDismiss() },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.colors(
-                                containerColor = SurfaceHighlight,
-                                contentColor = OnSurface
+                                containerColor = dialogAccentSurface,
+                                contentColor = dialogAccentText
                             ),
                             shape = actionButtonShape
                         ) {
@@ -462,8 +476,8 @@ internal fun CompactGuideProgramDialog(
                             onClick = { onScheduleWeeklyRecording(); onDismiss() },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.colors(
-                                containerColor = SurfaceHighlight,
-                                contentColor = OnSurface
+                                containerColor = dialogAccentSurface,
+                                contentColor = dialogAccentText
                             ),
                             shape = actionButtonShape
                         ) {
@@ -474,8 +488,8 @@ internal fun CompactGuideProgramDialog(
                         onClick = { showDetails = !showDetails },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.colors(
-                            containerColor = SurfaceHighlight,
-                            contentColor = OnSurface
+                            containerColor = dialogAccentSurface,
+                            contentColor = dialogAccentText
                         ),
                         shape = actionButtonShape
                     ) {
@@ -489,7 +503,7 @@ internal fun CompactGuideProgramDialog(
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.colors(
                             containerColor = Color.Transparent,
-                            contentColor = OnSurface
+                            contentColor = dialogText
                         ),
                         shape = actionButtonShape
                     ) {
@@ -512,6 +526,7 @@ private fun GuideDialogActionButton(
     shape: RoundedCornerShape = RoundedCornerShape(12.dp),
     content: @Composable () -> Unit
 ) {
+    val guideColors = epgThemeColors()
     TvButton(
         onClick = onClick,
         modifier = modifier,
@@ -524,7 +539,7 @@ private fun GuideDialogActionButton(
                 shape = shape
             ),
             focusedBorder = Border(
-                border = BorderStroke(3.dp, FocusBorder),
+                border = BorderStroke(3.dp, guideColors.focusBorder),
                 shape = shape
             )
         ),

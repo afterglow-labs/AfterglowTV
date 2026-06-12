@@ -60,10 +60,10 @@ object AppColors {
     val BrandStrong: Color get() = palette.accentLight
     val Focus: Color get() = palette.accentLight
 
-    val TextPrimary: Color get() = palette.textPrimary
-    val TextSecondary: Color get() = palette.textSecondary
-    val TextTertiary: Color get() = palette.textTertiary
-    val TextDisabled: Color get() = palette.textDisabled
+    val TextPrimary: Color get() = primaryContentColorFor(Surface)
+    val TextSecondary: Color get() = secondaryContentColorFor(Surface)
+    val TextTertiary: Color get() = tertiaryContentColorFor(Surface)
+    val TextDisabled: Color get() = contentColorFor(Surface).copy(alpha = 0.38f)
 
     val Live: Color get() = palette.live
     val Success: Color get() = palette.success
@@ -75,4 +75,70 @@ object AppColors {
 
     val HeroTop: Color get() = palette.surfaceDeep.copy(alpha = 0.8f)
     val HeroBottom: Color get() = palette.surfaceDeep.copy(alpha = 0.95f)
+
+    fun primaryContentColorFor(background: Color): Color =
+        contentColorFor(background).copy(alpha = 1f)
+
+    fun secondaryContentColorFor(background: Color): Color =
+        contentColorFor(background).copy(alpha = 0.78f)
+
+    fun tertiaryContentColorFor(background: Color): Color =
+        contentColorFor(background).copy(alpha = 0.58f)
+
+    fun contentColorFor(background: Color): Color {
+        val effectiveBackground = background.compositeOver(palette.surfaceDeep)
+        val light = Color.White
+        val dark = Color(0xFF121624)
+        return if (contrastRatio(light, effectiveBackground) >= contrastRatio(dark, effectiveBackground)) {
+            light
+        } else {
+            dark
+        }
+    }
+
+    fun ensureReadableColor(
+        color: Color,
+        background: Color,
+        minimumContrast: Float = 4.5f
+    ): Color {
+        val effectiveBackground = background.compositeOver(palette.surfaceDeep)
+        return if (contrastRatio(color, effectiveBackground) >= minimumContrast) {
+            color
+        } else {
+            contentColorFor(background)
+        }
+    }
+
+    private fun Color.compositeOver(background: Color): Color {
+        if (alpha >= 1f) return this
+        val outAlpha = alpha + background.alpha * (1f - alpha)
+        if (outAlpha <= 0f) return Color.Transparent
+        return Color(
+            red = (red * alpha + background.red * background.alpha * (1f - alpha)) / outAlpha,
+            green = (green * alpha + background.green * background.alpha * (1f - alpha)) / outAlpha,
+            blue = (blue * alpha + background.blue * background.alpha * (1f - alpha)) / outAlpha,
+            alpha = outAlpha
+        )
+    }
+
+    private fun contrastRatio(foreground: Color, background: Color): Float {
+        val foregroundLuminance = foreground.relativeLuminance()
+        val backgroundLuminance = background.relativeLuminance()
+        val lighter = maxOf(foregroundLuminance, backgroundLuminance)
+        val darker = minOf(foregroundLuminance, backgroundLuminance)
+        return (lighter + 0.05f) / (darker + 0.05f)
+    }
+
+    private fun Color.relativeLuminance(): Float {
+        fun channel(value: Float): Float =
+            if (value <= 0.03928f) {
+                value / 12.92f
+            } else {
+                ((value + 0.055f) / 1.055f).pow(2.4f)
+            }
+        return 0.2126f * channel(red) + 0.7152f * channel(green) + 0.0722f * channel(blue)
+    }
+
+    private fun Float.pow(power: Float): Float =
+        Math.pow(this.toDouble(), power.toDouble()).toFloat()
 }

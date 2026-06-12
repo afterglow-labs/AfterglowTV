@@ -39,6 +39,7 @@ import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
 import com.afterglowtv.app.R
 import com.afterglowtv.app.ui.components.ChannelLogoBadge
+import com.afterglowtv.app.ui.design.AppColors
 import com.afterglowtv.app.ui.model.isArchivePlayable
 import com.afterglowtv.app.ui.interaction.TvClickableSurface
 import com.afterglowtv.app.ui.model.guideLookupKey
@@ -167,12 +168,13 @@ internal fun ImmersiveGuideHero(
     BoxWithConstraints(modifier = modifier) {
         val showInlinePreview = maxWidth >= 860.dp && selection != null
         val heroHeight = if (showInlinePreview) 164.dp else 96.dp
+        val guideColors = epgThemeColors()
 
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(heroHeight),
-            colors = SurfaceDefaults.colors(containerColor = SurfaceElevated),
+            colors = SurfaceDefaults.colors(containerColor = guideColors.heroSurface),
             shape = RoundedCornerShape(20.dp)
         ) {
             Row(
@@ -203,7 +205,7 @@ internal fun ImmersiveGuideHero(
                             fontSize = 15.sp,
                             lineHeight = 18.sp
                         ),
-                        color = OnSurface,
+                        color = guideColors.heroText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -220,7 +222,7 @@ internal fun ImmersiveGuideHero(
                             }
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = OnSurfaceDim,
+                        color = guideColors.heroSecondaryText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -228,7 +230,7 @@ internal fun ImmersiveGuideHero(
                         Text(
                             text = "${format.format(Date(program.startTime))} - ${format.format(Date(program.endTime))}",
                             style = MaterialTheme.typography.labelSmall.copy(lineHeight = 11.sp),
-                            color = OnSurface
+                            color = guideColors.heroText
                         )
                         if (currentTime in program.startTime until program.endTime) {
                             LinearProgressIndicator(
@@ -236,14 +238,14 @@ internal fun ImmersiveGuideHero(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(4.dp),
-                                color = Primary,
-                                trackColor = SurfaceHighlight
+                                color = guideColors.nowLine,
+                                trackColor = guideColors.heroAccentSurface
                             )
                         }
                         Text(
                             text = program.description.ifBlank { stringResource(R.string.epg_hero_no_program_description) },
                             style = MaterialTheme.typography.labelSmall,
-                            color = OnSurfaceDim,
+                            color = guideColors.heroSecondaryText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -251,12 +253,12 @@ internal fun ImmersiveGuideHero(
                         Text(
                             text = stringResource(R.string.epg_no_schedule),
                             style = MaterialTheme.typography.labelLarge,
-                            color = OnSurface
+                            color = guideColors.heroText
                         )
                         Text(
                             text = stringResource(R.string.epg_hero_no_schedule_hint),
                             style = MaterialTheme.typography.labelSmall,
-                            color = OnSurfaceDim,
+                            color = guideColors.heroSecondaryText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -295,7 +297,7 @@ internal fun ImmersiveGuideHero(
                         Text(
                             text = lastUpdatedLabel,
                             style = MaterialTheme.typography.labelSmall,
-                            color = OnSurfaceDim
+                            color = guideColors.heroSecondaryText
                         )
                     }
                 }
@@ -319,17 +321,23 @@ internal fun GuideHeroBadge(
     highlight: Boolean = false,
     accentColor: Color = Primary
 ) {
+    val guideColors = epgThemeColors()
+    val containerColor = if (highlight) guideColors.badgeHighlightSurface else guideColors.badgeSurface
     Surface(
         shape = RoundedCornerShape(999.dp),
         colors = SurfaceDefaults.colors(
-            containerColor = if (highlight) accentColor.copy(alpha = 0.18f) else SurfaceHighlight
+            containerColor = containerColor
         )
     ) {
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             style = MaterialTheme.typography.labelMedium,
-            color = if (highlight) accentColor else OnSurface,
+            color = if (highlight) {
+                AppColors.ensureReadableColor(accentColor, containerColor, 4.5f)
+            } else {
+                guideColors.badgeText
+            },
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -408,6 +416,7 @@ internal fun GuideToolbarButton(
     onFocused: () -> Unit
 ) {
     var focused by remember { mutableStateOf(false) }
+    val guideColors = epgThemeColors()
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier.onFocusChanged {
@@ -415,13 +424,13 @@ internal fun GuideToolbarButton(
             focused = it.isFocused
         },
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = SurfaceElevated,
-            focusedContainerColor = SurfaceHighlight
+            containerColor = guideColors.toolbarSurface,
+            focusedContainerColor = guideColors.toolbarFocusedSurface
         ),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(14.dp)),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(2.dp, FocusBorder),
+                border = BorderStroke(2.dp, guideColors.focusBorder),
                 shape = RoundedCornerShape(14.dp)
             )
         )
@@ -430,7 +439,7 @@ internal fun GuideToolbarButton(
             text = label,
             modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp),
             style = MaterialTheme.typography.labelMedium,
-            color = OnSurface,
+            color = if (focused) guideColors.toolbarFocusedText else guideColors.toolbarText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
