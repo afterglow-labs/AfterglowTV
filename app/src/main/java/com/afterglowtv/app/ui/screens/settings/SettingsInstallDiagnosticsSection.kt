@@ -159,11 +159,7 @@ private fun runInstallPathwayDiagnostics(context: Context): List<String> {
         add("Global adb_enabled: ${readGlobalSetting(context, "adb_enabled")}")
         add("Global development_settings_enabled: ${readGlobalSetting(context, "development_settings_enabled")}")
         add("Secure install_non_market_apps: ${readSecureSetting(context, "install_non_market_apps")}")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            add("canRequestPackageInstalls: ${pm.canRequestPackageInstalls()}")
-        } else {
-            add("canRequestPackageInstalls: n/a before Android O")
-        }
+        add("canRequestPackageInstalls: ${safeCanRequestPackageInstalls(pm)}")
         add("")
         add("Known installer package inventory:")
         KnownInstallerPackages.forEach { packageName ->
@@ -339,42 +335,7 @@ private fun runInstallPathwayDiagnostics(context: Context): List<String> {
             intent = Intent("android.intent.action.VIEW_DOWNLOADS")
         )
         add("")
-        add("Guarded startActivity probes:")
-        addStartActivityProbe(
-            context = context,
-            label = "Start developer settings",
-            intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        )
-        addStartActivityProbe(
-            context = context,
-            label = "Start unknown app sources settings",
-            intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                data = Uri.parse("package:${context.packageName}")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        )
-        addStartActivityProbe(
-            context = context,
-            label = "Start app details settings",
-            intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.parse("package:${context.packageName}")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        )
-        addStartActivityProbe(
-            context = context,
-            label = "Start package installer dummy content",
-            intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(
-                    Uri.parse("content://${BuildConfig.APPLICATION_ID}.fileprovider/probe.apk"),
-                    PACKAGE_INSTALLER_MIME
-                )
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-        )
+        add("Launch probes: skipped by Test so diagnostics cannot move focus or close the app.")
         add("")
         add("Probe complete.")
     }
@@ -406,8 +367,16 @@ private fun MutableList<String>.addIntentProbe(
     pm: PackageManager,
     intent: Intent
 ) {
-    val resolved = intent.resolveActivity(pm)
-    val matches = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
+    val resolved = runCatching { intent.resolveActivity(pm) }
+        .getOrElse {
+            add("$label: blocked ${it.javaClass.simpleName} resolving default ${it.message.orEmpty()}")
+            return
+        }
+    val matches = runCatching { pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY) }
+        .getOrElse {
+            add("$label: blocked ${it.javaClass.simpleName} querying handlers ${it.message.orEmpty()}")
+            return
+        }
     if (resolved == null && matches.isEmpty()) {
         add("$label: FAIL no handler")
     } else {
@@ -427,7 +396,11 @@ private fun MutableList<String>.addComponentProbe(
     val intent = Intent().apply {
         component = ComponentName(packageName, className)
     }
-    val resolved = intent.resolveActivity(pm)
+    val resolved = runCatching { intent.resolveActivity(pm) }
+        .getOrElse {
+            add("$label: blocked ${it.javaClass.simpleName} ${it.message.orEmpty()}")
+            return
+        }
     add("$label: ${if (resolved == null) "FAIL no handler" else "OK ${resolved.flattenToShortString()}"}")
 }
 
@@ -486,7 +459,16 @@ private fun PackageManager.hasPackage(packageName: String): Boolean =
     }.getOrDefault(false)
 
 private fun PackageManager.hasPermission(packageName: String, permission: String): Boolean =
-    checkPermission(permission, packageName) == PackageManager.PERMISSION_GRANTED
+    runCatching { checkPermission(permission, packageName) == PackageManager.PERMISSION_GRANTED }
+        .getOrDefault(false)
+
+private fun safeCanRequestPackageInstalls(pm: PackageManager): String =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        runCatching { pm.canRequestPackageInstalls().toString() }
+            .getOrElse { "blocked ${it.javaClass.simpleName}: ${it.message.orEmpty()}" }
+    } else {
+        "n/a before Android O"
+    }
 
 private fun readGlobalSetting(context: Context, key: String): String =
     runCatching { Settings.Global.getString(context.contentResolver, key) ?: "null" }

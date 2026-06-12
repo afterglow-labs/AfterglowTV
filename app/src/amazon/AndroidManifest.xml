@@ -11,10 +11,6 @@
     <uses-permission android:name="com.amazon.device.messaging.permission.RECEIVE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <uses-permission
-        android:name="android.permission.REQUEST_INSTALL_PACKAGES"
-        tools:node="remove" />
-
     <queries>
         <package android:name="com.amazon.sdktestclient" />
         <package android:name="com.amazon.venezia" />
