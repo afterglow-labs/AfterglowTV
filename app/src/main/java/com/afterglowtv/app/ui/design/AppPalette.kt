@@ -186,6 +186,37 @@ data class AppPalette(
             glowIntensity = 0.35f,
         )
 
+        /** Neon Forest — cream, mint, emerald, teal, and deep navy from the reference palette. */
+        val NeonForest = AppPalette(
+            id = "neon_forest",
+            displayName = "Neon Forest",
+            description = "Cream, mint, emerald, teal, and deep navy with a clean neon forest glow.",
+            surfaceDeep = Color(0xFF08316C),
+            surfaceBase = Color(0xFF0B4B73),
+            surfaceCool = Color(0xFF389584),
+            surfaceAccent = Color(0xFF5CDB94),
+            accent = Color(0xFF8DE4AF),
+            accentLight = Color(0xFFE6EDD3),
+            accentMuted = Color(0x665CDB94),
+            panelScrim = Color(0xD608316C),
+            osdScrim = Color(0xA608316C),
+            nowLine = Color(0xFFE6EDD3),
+            nowFill = Color(0x335CDB94),
+            live = Color(0xFF8DE4AF),
+            pipPreviewOutline = Color(0xFFE6EDD3),
+            focusFill = Color(0x405CDB94),
+            textPrimary = Color(0xFFF7FFE9),
+            textSecondary = Color(0xD9E6EDD3),
+            textTertiary = Color(0x99E6EDD3),
+            textDisabled = Color(0x66E6EDD3),
+            success = Color(0xFF5CDB94),
+            warning = Color(0xFFE6EDD3),
+            info = Color(0xFF8DE4AF),
+            divider = Color(0x225CDB94),
+            outline = Color(0x668DE4AF),
+            glowIntensity = 0.72f,
+        )
+
         /** Minimal mono: near-black + clean whites + grey accents. For minimalists. */
         val PureOnyx = AppPalette(
             id = "pure_onyx",
@@ -855,6 +886,7 @@ data class AppPalette(
             GoldenSlate,
             MineralSlate,
             NeonDusk,
+            NeonForest,
             PureOnyx,
             RachelsSunrise,       // Rachel's Sunrise
             SunsetAurora,         // Rachel's Sunset
