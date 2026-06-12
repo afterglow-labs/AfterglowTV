@@ -519,7 +519,7 @@ private fun HomeBottomToolbarRow(
     ) {
         Surface(
             modifier = Modifier
-                .weight(1.34f)
+                .weight(1.24f)
                 .fillMaxHeight(),
             shape = shape,
             colors = SurfaceDefaults.colors(containerColor = homeWindowFill),
@@ -555,7 +555,7 @@ private fun HomeBottomToolbarRow(
         }
         Surface(
             modifier = Modifier
-                .weight(0.66f)
+                .weight(0.76f)
                 .fillMaxHeight(),
             shape = shape,
             colors = SurfaceDefaults.colors(containerColor = homeWindowFill),
