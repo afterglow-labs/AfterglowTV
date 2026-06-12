@@ -1528,7 +1528,10 @@ private fun HomeAppearanceWindow(
                 modifier = Modifier
                     .weight(if (compact) 0.66f else 0.58f)
                     .fillMaxHeight(),
-                verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)
+                verticalArrangement = Arrangement.spacedBy(
+                    space = if (compact) 8.dp else 10.dp,
+                    alignment = Alignment.CenterVertically
+                )
             ) {
                 cards.drop(1).forEach { card ->
                     HomeSmallTextAction(
@@ -1538,7 +1541,7 @@ private fun HomeAppearanceWindow(
                         accent = card.accent,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f),
+                            .height(if (compact) 74.dp else 88.dp),
                         compact = compact,
                         onClick = { card.route?.let(onNavigate) }
                     )
