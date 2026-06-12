@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,7 +64,10 @@ internal fun EpgSourceCard(
                     }
                 }
                 val sourceActionShape = RoundedCornerShape(8.dp)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.focusGroup()
+                ) {
                     TvClickableSurface(
                         onClick = { onToggleEnabled(!source.enabled) },
                         shape = ClickableSurfaceDefaults.shape(sourceActionShape),

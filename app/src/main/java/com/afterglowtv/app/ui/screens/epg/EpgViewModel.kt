@@ -28,6 +28,7 @@ import com.afterglowtv.domain.model.ContentType
 import com.afterglowtv.domain.model.EpgOverrideCandidate
 import com.afterglowtv.domain.model.Favorite
 import com.afterglowtv.domain.model.Program
+import com.afterglowtv.domain.model.ProviderType
 import com.afterglowtv.domain.model.VirtualCategoryIds
 import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.domain.repository.CombinedM3uRepository
@@ -36,6 +37,7 @@ import com.afterglowtv.domain.repository.EpgSourceRepository
 import com.afterglowtv.domain.repository.FavoriteRepository
 import com.afterglowtv.domain.repository.LiveStreamProgramRequest
 import com.afterglowtv.domain.repository.ProviderRepository
+import com.afterglowtv.domain.repository.SyncMetadataRepository
 import com.afterglowtv.domain.model.RecordingRecurrence
 import com.afterglowtv.domain.model.RecordingItem
 import com.afterglowtv.domain.model.RecordingRequest
@@ -51,11 +53,13 @@ import com.afterglowtv.data.preferences.AdultCategoryCache
 import com.afterglowtv.data.preferences.AdultCategoryCacheEntry
 import com.afterglowtv.data.preferences.PreferencesRepository
 import com.afterglowtv.data.sync.SyncManager
+import com.afterglowtv.data.sync.SyncRepairSection
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -268,6 +272,7 @@ class EpgViewModel @Inject constructor(
     private val channelRepository: ChannelRepository,
     private val epgRepository: EpgRepository,
     private val epgSourceRepository: EpgSourceRepository,
+    private val syncMetadataRepository: SyncMetadataRepository,
     private val favoriteRepository: FavoriteRepository,
     private val preferencesRepository: PreferencesRepository,
     private val parentalControlManager: ParentalControlManager,
@@ -343,6 +348,7 @@ class EpgViewModel @Inject constructor(
     private var adultRenderLimit: Int = ADULT_RENDER_PAGE_SIZE
     private val adultSortBatchSize = MutableStateFlow(DEFAULT_ADULT_SORT_BATCH_SIZE)
     private var cachedBaseSnapshotForRestore: GuideBaseSnapshot? = cachedInitialBaseSnapshot
+    private val guideReadinessAttemptedProviderIds = mutableSetOf<Long>()
 
     init {
         observeGuideStateCache()
@@ -401,6 +407,7 @@ class EpgViewModel @Inject constructor(
     }
 
     fun refresh() {
+        guideReadinessAttemptedProviderIds.clear()
         refreshNonce.update { it + 1 }
     }
 
@@ -430,6 +437,90 @@ class EpgViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private suspend fun ensureGuideReadyForProvider(
+        provider: com.afterglowtv.domain.model.Provider,
+        request: GuideBaseRequest
+    ) {
+        if (request.isAdultRequest()) return
+        if (!guideReadinessAttemptedProviderIds.add(provider.id)) return
+
+        val savedChannelCount = channelRepository.getChannelCount(provider.id).first()
+        if (savedChannelCount <= 0) {
+            _uiState.update {
+                it.copy(
+                    currentProviderName = provider.name,
+                    providerSourceLabel = buildProviderSourceLabel(provider),
+                    providerArchiveSummary = buildProviderArchiveSummary(provider),
+                    categories = request.categories,
+                    selectedCategoryId = request.resolvedCategoryId,
+                    guideAnchorTime = request.anchorTime,
+                    guideWindowStart = request.windowStart,
+                    guideWindowEnd = request.windowEnd,
+                    isInitialLoading = true,
+                    isRefreshing = false,
+                    loadedChannelCount = 0,
+                    totalChannelCount = request.estimatedChannelCount,
+                    recordingMessage = "Loading playlist channels for TV Guide...",
+                    error = null
+                )
+            }
+            val liveResult = withContext(NonCancellable) {
+                syncManager.retrySection(
+                    providerId = provider.id,
+                    section = SyncRepairSection.LIVE,
+                    onProgress = { progress ->
+                        _uiState.update { state ->
+                            state.copy(recordingMessage = progress)
+                        }
+                    }
+                )
+            }
+            if (liveResult is Result.Error) {
+                _uiState.update {
+                    it.copy(recordingMessage = "Channel sync failed: ${liveResult.message}")
+                }
+                return
+            }
+        }
+
+        val metadata = syncMetadataRepository.getMetadata(provider.id)
+        val hasNativeGuideRows = (metadata?.epgCount ?: 0) > 0 && (metadata?.lastEpgSuccess ?: 0L) > 0L
+        val hasAssignedExternalSources = epgSourceRepository.getAssignmentsForProvider(provider.id).first().isNotEmpty()
+        val hasProviderEpgPath = when (provider.type) {
+            ProviderType.XTREAM_CODES -> true
+            ProviderType.M3U,
+            ProviderType.STALKER_PORTAL -> provider.epgUrl.isNotBlank()
+        }
+        if (!hasNativeGuideRows && (hasProviderEpgPath || hasAssignedExternalSources)) {
+            _uiState.update {
+                it.copy(
+                    isInitialLoading = it.channels.isEmpty(),
+                    isRefreshing = it.channels.isNotEmpty(),
+                    recordingMessage = "Syncing TV Guide schedule data...",
+                    error = null
+                )
+            }
+            val epgResult = withContext(NonCancellable) {
+                syncManager.retrySection(
+                    providerId = provider.id,
+                    section = SyncRepairSection.EPG,
+                    onProgress = { progress ->
+                        _uiState.update { state ->
+                            state.copy(recordingMessage = progress)
+                        }
+                    }
+                )
+            }
+            if (epgResult is Result.Error) {
+                _uiState.update {
+                    it.copy(recordingMessage = "EPG sync failed: ${epgResult.message}")
+                }
+                return
+            }
+        }
+        _uiState.update { it.copy(recordingMessage = null) }
     }
 
     fun previewChannel(channel: Channel) {
@@ -1105,6 +1196,7 @@ class EpgViewModel @Inject constructor(
                 )
             }.collectLatest { request ->
                 val categories = request.categories
+                ensureGuideReadyForProvider(provider, request)
                 val hasVisibleGuide = _uiState.value.channels.isNotEmpty() || _uiState.value.programsByChannel.isNotEmpty()
                 val providerSourceLabel = buildProviderSourceLabel(provider)
                 val providerArchiveSummary = buildProviderArchiveSummary(provider)
@@ -1785,8 +1877,9 @@ class EpgViewModel @Inject constructor(
         channelSelection: GuideChannelSelection,
         visibleChannels: List<Channel>
     ) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { current ->
+            val keepExistingPrograms = current.channels.isNotEmpty() && !request.isAdultRequest()
+            current.copy(
                 currentProviderName = providerName,
                 providerSourceLabel = providerSourceLabel,
                 providerArchiveSummary = providerArchiveSummary,
@@ -1796,14 +1889,14 @@ class EpgViewModel @Inject constructor(
                 showFavoritesOnly = request.favoritesOnly,
                 favoriteChannelIds = channelSelection.favoriteChannelIds,
                 channels = visibleChannels,
-                programsByChannel = emptyMap(),
+                programsByChannel = if (keepExistingPrograms) current.programsByChannel else emptyMap(),
                 isInitialLoading = false,
                 isRefreshing = !request.isAdultRequest(),
                 error = null,
                 loadedChannelCount = channelSelection.channels.size,
                 totalChannelCount = channelSelection.channels.size,
-                channelsWithSchedule = 0,
-                failedScheduleCount = 0,
+                channelsWithSchedule = if (keepExistingPrograms) current.channelsWithSchedule else 0,
+                failedScheduleCount = if (keepExistingPrograms) current.failedScheduleCount else 0,
                 guideAnchorTime = request.anchorTime,
                 guideWindowStart = request.windowStart,
                 guideWindowEnd = request.windowEnd,

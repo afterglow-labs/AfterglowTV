@@ -1,6 +1,7 @@
 package com.afterglowtv.app.ui.screens.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -118,7 +119,12 @@ private fun ProviderEpgAssignmentRow(
     onMoveDown: () -> Unit,
     onRemove: () -> Unit
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusGroup()
+    ) {
         Text(
             "${assignment.epgSourceName} (priority: ${assignment.priority})",
             style = MaterialTheme.typography.bodySmall,

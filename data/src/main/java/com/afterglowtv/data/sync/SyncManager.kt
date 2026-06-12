@@ -2287,19 +2287,16 @@ class SyncManager @Inject constructor(
             ProviderType.STALKER_PORTAL -> providerDao.getById(provider.id)?.epgUrl ?: provider.epgUrl
         }
         if (epgUrl.isBlank()) {
-            if (provider.type == ProviderType.STALKER_PORTAL) {
-                progress(provider.id, onProgress, "Refreshing external EPG sources...")
-                retryTransient {
-                    requireResult(
-                        epgSourceRepository.refreshAllForProvider(provider.id),
-                        "External EPG source refresh failed"
-                    )
-                }
-                progress(provider.id, onProgress, "Resolving EPG mappings...")
-                epgSourceRepository.resolveForProvider(provider.id, hiddenLiveCategoryIds)
-                return
+            progress(provider.id, onProgress, "Refreshing external EPG sources...")
+            retryTransient {
+                requireResult(
+                    epgSourceRepository.refreshAllForProvider(provider.id),
+                    "External EPG source refresh failed"
+                )
             }
-            throw IllegalStateException("No EPG URL configured for this provider")
+            progress(provider.id, onProgress, "Resolving EPG mappings...")
+            epgSourceRepository.resolveForProvider(provider.id, hiddenLiveCategoryIds)
+            return
         }
         val validationError = when (provider.type) {
             ProviderType.XTREAM_CODES -> UrlSecurityPolicy.validateXtreamEpgUrl(epgUrl)
