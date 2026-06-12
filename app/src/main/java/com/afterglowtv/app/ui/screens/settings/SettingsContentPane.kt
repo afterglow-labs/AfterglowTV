@@ -211,6 +211,8 @@ internal fun SettingsContentPane(
                 uiState = uiState,
                 viewModel = viewModel
             )
+        } else if (selectedCategory == SETTINGS_CATEGORY_INSTALL_DIAGNOSTICS) {
+            settingsInstallDiagnosticsSection(context = context)
         } else if (selectedCategory == SETTINGS_CATEGORY_ABOUT) {
             settingsAboutSection(
                 uiState = uiState,

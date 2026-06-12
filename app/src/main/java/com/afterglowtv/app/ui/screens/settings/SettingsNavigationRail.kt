@@ -41,6 +41,7 @@ internal const val SETTINGS_CATEGORY_EPG_SOURCES = 7
 internal const val SETTINGS_CATEGORY_ABOUT = 8
 internal const val SETTINGS_CATEGORY_PROVIDERS_VOD = 9
 internal const val SETTINGS_CATEGORY_PREMIUM = 10
+internal const val SETTINGS_CATEGORY_INSTALL_DIAGNOSTICS = 11
 
 internal fun visibleSettingsCategoryIds(
     policy: StorePolicySnapshot = StorePolicy.current,
@@ -73,6 +74,9 @@ internal fun visibleSettingsCategoryIds(
     add(SETTINGS_CATEGORY_LOCAL_MEDIA)
     add(SETTINGS_CATEGORY_BACKUP)
     add(SETTINGS_CATEGORY_EPG_SOURCES)
+    if (developerModeEnabled) {
+        add(SETTINGS_CATEGORY_INSTALL_DIAGNOSTICS)
+    }
     add(SETTINGS_CATEGORY_ABOUT)
 }
 
@@ -146,6 +150,12 @@ internal fun SettingsNavigationRail(
             label = "EPG Sources",
             icon = Icons.Default.Info,
             accent = Color(0xFF66BB6A)
+        ),
+        SettingsNavEntry(
+            categoryId = SETTINGS_CATEGORY_INSTALL_DIAGNOSTICS,
+            label = "Install Pathways",
+            icon = Icons.Default.Info,
+            accent = Color(0xFFFF7A38)
         ),
         SettingsNavEntry(
             categoryId = SETTINGS_CATEGORY_ABOUT,
