@@ -730,20 +730,20 @@ private val homeFocusOutlineColor: Color
     get() = HomeNeonOrange
 
 private val homeWindowFill: Color
-    get() = if (isBrightHomeTheme) AppColors.SurfaceElevated else SurfaceElevated.copy(alpha = 0.96f)
+    get() = AppColors.PanelScrim.copy(alpha = if (isBrightHomeTheme) 0.90f else 0.94f)
 
 private fun homeActionFill(accent: Color, selected: Boolean = false): Color =
     if (isBrightHomeTheme) {
-        AppColors.Surface
+        AppColors.PanelScrim.copy(alpha = if (selected) 0.98f else 0.86f)
     } else {
-        accent.copy(alpha = if (selected) 0.30f else 0.22f)
+        AppColors.PanelScrim.copy(alpha = if (selected) 0.98f else 0.84f)
     }
 
 private fun homeActionBorderColor(accent: Color, selected: Boolean = false): Color =
     if (isBrightHomeTheme) {
-        homeOutlineColor.copy(alpha = if (selected) 0.92f else 0.74f)
+        accent.copy(alpha = if (selected) 0.95f else 0.72f)
     } else {
-        accent.copy(alpha = if (selected) 0.66f else 0.40f)
+        accent.copy(alpha = if (selected) 0.82f else 0.56f)
     }
 
 private fun Modifier.homeActiveGlow(shape: RoundedCornerShape, active: Boolean = false): Modifier =
