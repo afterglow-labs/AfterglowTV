@@ -52,12 +52,11 @@ import com.afterglowtv.domain.repository.ChannelRepository
 import com.afterglowtv.app.ui.screens.dashboard.DashboardScreen
 import com.afterglowtv.app.ui.components.dialogs.AmazonPremiumPurchaseDialog
 import com.afterglowtv.app.ui.screens.multiview.MultiViewScreen
-import com.afterglowtv.app.ui.screens.home.HomeScreen
+import com.afterglowtv.app.ui.screens.live.LiveTvScreen
 import com.afterglowtv.app.ui.screens.local.LocalMediaScreen
 import com.afterglowtv.app.ui.screens.player.PlayerScreen
 import com.afterglowtv.app.ui.screens.settings.SettingsScreen
 import com.afterglowtv.app.ui.screens.vod.VodScreen
-import com.afterglowtv.app.ui.screens.welcome.WelcomeScreen
 import com.afterglowtv.app.MainActivity
 import com.afterglowtv.data.preferences.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -73,6 +72,7 @@ import kotlinx.coroutines.launch
 
 
 private const val PLAYER_REQUEST_KEY = "player_request"
+private const val CONTENT_RESPONSIBILITY_NOTICE_MAX_SHOWN_COUNT = 1
 
 private val NoticeFontFamily = FontFamily(
     Font(R.font.inter_regular, FontWeight.Normal),
@@ -120,7 +120,6 @@ object Routes {
     const val PLAYER = "player"
     const val SEARCH = "search"
     const val SEARCH_DESTINATION = "search?query={query}"
-    const val WELCOME = "welcome"
     const val PARENTAL_CONTROL_GROUPS = "parental_control_groups/{providerId}"
     const val MULTI_VIEW = "multi_view"
 
@@ -296,7 +295,7 @@ private fun NavHostController.navigateToExternalPlayer(request: PlayerNavigation
 
 @HiltViewModel
 class AppStartupDestinationViewModel @Inject constructor(
-    preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
     init {
         viewModelScope.launch {
@@ -342,6 +341,19 @@ class AppStartupDestinationViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000L),
         initialValue = resolveStartupRoute(StartupDestination.default, false)
     )
+
+    val contentResponsibilityNoticeShownCount: StateFlow<Int> = preferencesRepository.contentResponsibilityNoticeShownCount
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = 0
+        )
+
+    fun recordContentResponsibilityNoticeShown() {
+        viewModelScope.launch {
+            preferencesRepository.incrementContentResponsibilityNoticeShownCount()
+        }
+    }
 }
 
 internal fun resolveStartupRoute(destination: StartupDestination, developerModeEnabled: Boolean): String =
@@ -354,8 +366,7 @@ internal fun resolveStartupRoute(
 ): String =
     if (
         (policy.guideOnlyReviewSurface && !isGuideOnlyAllowedRoute(destination.route)) ||
-        (destination.requiresDeveloperMode && (!developerModeEnabled || !policy.showAdultSurfaces)) ||
-        (destination.route == Routes.WELCOME && !policy.showWelcomeRoute)
+        (destination.requiresDeveloperMode && (!developerModeEnabled || !policy.showAdultSurfaces))
     ) {
         Routes.HOME
     } else {
@@ -431,7 +442,13 @@ fun AppNavigation(mainActivity: MainActivity) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val externalNavigationRequest = mainActivity.externalNavigationRequestFlow.collectAsStateWithLifecycle().value
     var premiumPurchaseDialogDismissed by remember { mutableStateOf(false) }
-    var showContentResponsibilityNotice by remember { mutableStateOf(StorePolicy.rawCurrent.amazonReviewBuild) }
+    val contentResponsibilityNoticeShownCount =
+        startupDestinationViewModel.contentResponsibilityNoticeShownCount.collectAsStateWithLifecycle().value
+    var contentResponsibilityNoticeDismissedThisSession by remember { mutableStateOf(false) }
+    val showContentResponsibilityNotice =
+        StorePolicy.rawCurrent.amazonReviewBuild &&
+            contentResponsibilityNoticeShownCount < CONTENT_RESPONSIBILITY_NOTICE_MAX_SHOWN_COUNT &&
+            !contentResponsibilityNoticeDismissedThisSession
     val shouldShowPremiumPurchaseOptions = StorePolicy.rawCurrent.shouldShowPremiumPurchaseOptions(
         storedDeveloperModeEnabled = storedDeveloperModeEnabled,
         amazonPremiumEntitled = amazonPremiumEntitled,
@@ -542,16 +559,6 @@ fun AppNavigation(mainActivity: MainActivity) {
             navController = navController,
             startDestination = startupRoute
         ) {
-        composable(Routes.WELCOME) {
-            WelcomeScreen(
-                onNavigateToHome = dropUnlessResumed {
-                    navController.navigate(startupRoute) {
-                        popUpTo(Routes.WELCOME) { inclusive = true }
-                    }
-                }
-            )
-        }
-
         composable(Routes.HOME) {
             DashboardScreen(
                 onNavigate = { route -> tabNavigate(route) },
@@ -571,7 +578,7 @@ fun AppNavigation(mainActivity: MainActivity) {
             )
         ) { backStackEntry ->
             val initialCategoryId = backStackEntry.arguments?.getLong("categoryId")?.takeIf { it != -1L }
-            HomeScreen(
+            LiveTvScreen(
                 onChannelClick = { channel, category, provider, combinedProfileId, combinedSourceFilterProviderId ->
                     navController.navigateToPlayer(
                         Routes.livePlayer(
@@ -623,7 +630,7 @@ fun AppNavigation(mainActivity: MainActivity) {
                 }
                 return@composable
             }
-            HomeScreen(
+            LiveTvScreen(
                 onChannelClick = { channel, category, provider, combinedProfileId, combinedSourceFilterProviderId ->
                     navController.navigateToPlayer(
                         Routes.livePlayer(
@@ -872,7 +879,10 @@ fun AppNavigation(mainActivity: MainActivity) {
 
         if (showContentResponsibilityNotice) {
             ContentResponsibilityNoticeDialog(
-                onDismissRequest = { showContentResponsibilityNotice = false }
+                onDismissRequest = {
+                    contentResponsibilityNoticeDismissedThisSession = true
+                    startupDestinationViewModel.recordContentResponsibilityNoticeShown()
+                }
             )
         }
 

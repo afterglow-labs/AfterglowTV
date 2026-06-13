@@ -42,8 +42,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -73,7 +75,9 @@ fun SearchInput(
     focusRequester: FocusRequester = remember { FocusRequester() },
     imeAction: ImeAction = ImeAction.Search,
     onSearch: () -> Unit = {},
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    textStyle: TextStyle = MaterialTheme.typography.bodySmall,
+    height: Dp = 40.dp
 ) {
     val isTelevisionDevice = rememberIsTelevisionDevice()
     var hasContainerFocus by remember { mutableStateOf(false) }
@@ -154,7 +158,7 @@ fun SearchInput(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(40.dp)
+            .height(height)
             .focusRequester(focusRequester)
             .bringIntoViewRequester(bringIntoViewRequester)
             .background(backgroundColor, RoundedCornerShape(8.dp))
@@ -184,7 +188,7 @@ fun SearchInput(
                 if (value.isEmpty() && !isFocused) {
                     Text(
                         text = placeholder,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = textStyle,
                         color = OnSurfaceDim
                     )
                 }
@@ -237,7 +241,7 @@ fun SearchInput(
                                 else -> false
                             }
                         },
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = OnSurface),
+                    textStyle = textStyle.copy(color = OnSurface),
                     singleLine = true,
                     cursorBrush = SolidColor(Primary),
                     enabled = enabled,

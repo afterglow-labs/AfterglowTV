@@ -1,4 +1,4 @@
-package com.afterglowtv.app.ui.screens.home
+package com.afterglowtv.app.ui.screens.live
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas

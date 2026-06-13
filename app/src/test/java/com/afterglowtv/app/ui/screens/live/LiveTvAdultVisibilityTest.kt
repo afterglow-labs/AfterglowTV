@@ -1,4 +1,4 @@
-package com.afterglowtv.app.ui.screens.home
+package com.afterglowtv.app.ui.screens.live
 
 import com.afterglowtv.domain.model.Category
 import com.afterglowtv.domain.model.ContentType
@@ -6,7 +6,7 @@ import com.afterglowtv.domain.repository.ChannelRepository
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class HomeAdultVisibilityTest {
+class LiveTvAdultVisibilityTest {
 
     @Test
     fun `adult can hide generated categories`() {
@@ -18,7 +18,7 @@ class HomeAdultVisibilityTest {
             isAdult = true
         )
 
-        assertThat(canHideHomeCategory(category, adultMode = true)).isTrue()
+        assertThat(canHideLiveTvCategory(category, adultMode = true)).isTrue()
     }
 
     @Test
@@ -64,7 +64,7 @@ class HomeAdultVisibilityTest {
             isVirtual = true
         )
 
-        assertThat(canHideHomeCategory(category, adultMode = false)).isFalse()
+        assertThat(canHideLiveTvCategory(category, adultMode = false)).isFalse()
     }
 
     @Test

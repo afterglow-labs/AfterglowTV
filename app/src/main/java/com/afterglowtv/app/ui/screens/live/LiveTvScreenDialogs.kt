@@ -1,4 +1,4 @@
-package com.afterglowtv.app.ui.screens.home
+package com.afterglowtv.app.ui.screens.live
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -36,9 +36,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun HomeDialogsHost(
-    uiState: HomeUiState,
+    uiState: LiveTvUiState,
     multiViewViewModel: MultiViewViewModel,
-    viewModel: HomeViewModel,
+    viewModel: LiveTvViewModel,
     showPinDialog: Boolean,
     pinError: String?,
     pendingUnlockCategory: Category?,
@@ -140,7 +140,7 @@ internal fun HomeDialogsHost(
             onTogglePinned = if (!isCategoryLocked && !category.isVirtual && category.id != ChannelRepository.ALL_CHANNELS_ID) {
                 { viewModel.toggleCategoryPinned(category) }
             } else null,
-            onHide = if (!isCategoryLocked && canHideHomeCategory(category, uiState.isAdultMode)) {
+            onHide = if (!isCategoryLocked && canHideLiveTvCategory(category, uiState.isAdultMode)) {
                 { viewModel.hideCategory(category) }
             } else null,
             onHideFromLiveTV = if (!isCategoryLocked && category.id in setOf(VirtualCategoryIds.RECENT, ChannelRepository.ALL_CHANNELS_ID)) {

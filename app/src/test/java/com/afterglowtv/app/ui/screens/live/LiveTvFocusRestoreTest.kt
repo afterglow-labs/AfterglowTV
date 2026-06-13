@@ -1,10 +1,10 @@
-package com.afterglowtv.app.ui.screens.home
+package com.afterglowtv.app.ui.screens.live
 
 import com.afterglowtv.domain.model.Channel
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class HomeFocusRestoreTest {
+class LiveTvFocusRestoreTest {
 
     @Test
     fun `restore loads another page when saved channel is not loaded yet`() {
@@ -22,7 +22,7 @@ class HomeFocusRestoreTest {
             hasMoreChannels = true
         )
 
-        assertThat(plan).isEqualTo(HomeChannelRestorePlan.LoadMoreForSavedChannel)
+        assertThat(plan).isEqualTo(LiveTvChannelRestorePlan.LoadMoreForSavedChannel)
     }
 
     @Test
@@ -41,6 +41,6 @@ class HomeFocusRestoreTest {
             hasMoreChannels = false
         )
 
-        assertThat(plan).isEqualTo(HomeChannelRestorePlan.FocusChannel(channelId = 230L, index = 5))
+        assertThat(plan).isEqualTo(LiveTvChannelRestorePlan.FocusChannel(channelId = 230L, index = 5))
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -59,6 +61,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
+import androidx.tv.material3.Typography
 import com.afterglowtv.app.R
 import com.afterglowtv.app.navigation.StartupDestination
 import com.afterglowtv.app.navigation.Routes
@@ -136,42 +139,44 @@ fun DashboardScreen(
                 return@AppScreenScaffold
             }
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                HomeCommandHub(
-                    policy = policy,
-                    developerModeEnabled = developerModeEnabled,
-                    activeProviderName = uiState.provider?.name,
-                    providerHealth = uiState.providerHealth,
-                    activeSource = uiState.activeLiveSource,
-                    sourceOptions = uiState.liveSourceOptions,
-                    startupDestination = startupDestination,
-                    remoteDpadChannelZapping = remoteDpadChannelZapping,
-                    remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
-                    remoteShowInfoOnZap = remoteShowInfoOnZap,
-                    preventStandbyDuringPlayback = preventStandbyDuringPlayback,
-                    autoPlayNextEpisode = autoPlayNextEpisode,
-                    backgroundGradientsEnabled = backgroundGradientsEnabled,
-                    themePaletteId = themePaletteId,
-                    themePalettes = AppPalette.ALL,
-                    showLiveSourceSwitcher = showLiveSourceSwitcher,
-                    showAllChannelsCategory = showAllChannelsCategory,
-                    showRecentChannelsCategory = showRecentChannelsCategory,
-                    onNavigate = onNavigate,
-                    onAddProvider = onAddProvider,
-                    onSourceSelected = viewModel::switchLiveSource,
-                    onThemeSelected = viewModel::setThemePalette,
-                    onStartupDestinationChange = viewModel::setStartupDestination,
-                    onRemoteDpadChannelZappingChange = viewModel::setRemoteDpadChannelZapping,
-                    onRemoteDpadInvertChannelZappingChange = viewModel::setRemoteDpadInvertChannelZapping,
-                    onRemoteShowInfoOnZapChange = viewModel::setRemoteShowInfoOnZap,
-                    onPreventStandbyDuringPlaybackChange = viewModel::setPreventStandbyDuringPlayback,
-                    onAutoPlayNextEpisodeChange = viewModel::setAutoPlayNextEpisode,
-                    onBackgroundGradientsEnabledChange = viewModel::setBackgroundGradientsEnabled,
-                    onShowLiveSourceSwitcherChange = viewModel::setShowLiveSourceSwitcher,
-                    onShowAllChannelsCategoryChange = viewModel::setShowAllChannelsCategory,
-                    onShowRecentChannelsCategoryChange = viewModel::setShowRecentChannelsCategory,
-                    modifier = Modifier.fillMaxSize()
-                )
+            MaterialTheme(typography = HomeDashboardTypography) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    HomeCommandHub(
+                        policy = policy,
+                        developerModeEnabled = developerModeEnabled,
+                        activeProviderName = uiState.provider?.name,
+                        providerHealth = uiState.providerHealth,
+                        activeSource = uiState.activeLiveSource,
+                        sourceOptions = uiState.liveSourceOptions,
+                        startupDestination = startupDestination,
+                        remoteDpadChannelZapping = remoteDpadChannelZapping,
+                        remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
+                        remoteShowInfoOnZap = remoteShowInfoOnZap,
+                        preventStandbyDuringPlayback = preventStandbyDuringPlayback,
+                        autoPlayNextEpisode = autoPlayNextEpisode,
+                        backgroundGradientsEnabled = backgroundGradientsEnabled,
+                        themePaletteId = themePaletteId,
+                        themePalettes = AppPalette.ALL,
+                        showLiveSourceSwitcher = showLiveSourceSwitcher,
+                        showAllChannelsCategory = showAllChannelsCategory,
+                        showRecentChannelsCategory = showRecentChannelsCategory,
+                        onNavigate = onNavigate,
+                        onAddProvider = onAddProvider,
+                        onSourceSelected = viewModel::switchLiveSource,
+                        onThemeSelected = viewModel::setThemePalette,
+                        onStartupDestinationChange = viewModel::setStartupDestination,
+                        onRemoteDpadChannelZappingChange = viewModel::setRemoteDpadChannelZapping,
+                        onRemoteDpadInvertChannelZappingChange = viewModel::setRemoteDpadInvertChannelZapping,
+                        onRemoteShowInfoOnZapChange = viewModel::setRemoteShowInfoOnZap,
+                        onPreventStandbyDuringPlaybackChange = viewModel::setPreventStandbyDuringPlayback,
+                        onAutoPlayNextEpisodeChange = viewModel::setAutoPlayNextEpisode,
+                        onBackgroundGradientsEnabledChange = viewModel::setBackgroundGradientsEnabled,
+                        onShowLiveSourceSwitcherChange = viewModel::setShowLiveSourceSwitcher,
+                        onShowAllChannelsCategoryChange = viewModel::setShowAllChannelsCategory,
+                        onShowRecentChannelsCategoryChange = viewModel::setShowRecentChannelsCategory,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
 
@@ -233,7 +238,12 @@ private fun HomeCommandHub(
     }
     val searchEnabled = true
     val appearanceCards = listOf(
-        HomeHubCardModel("Themes", "Colors", Routes.THEMES, Icons.Default.Star, Color(0xFFFF77FF)),
+        HomeHubCardModel(
+            title = "Themes",
+            route = Routes.THEMES,
+            icon = Icons.Default.Star,
+            accent = Color(0xFFFF77FF)
+        ),
         HomeHubCardModel("Glow", "Focus light", Routes.GLOW_SETTINGS, Icons.Default.Info, Color(0xFF5EEAD4)),
         HomeHubCardModel("Customize", "Shapes", Routes.STYLE_CUSTOMIZER, Icons.Default.Settings, Color(0xFFFF7A38))
     )
@@ -247,235 +257,78 @@ private fun HomeCommandHub(
     val visibleStartupDestination = StartupDestination.visibleOrDefault(startupDestination, developerModeEnabled)
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val layoutMode = if (maxHeight < 540.dp || maxWidth < 800.dp) {
-            HomeDashboardLayoutMode.CompactGrid
-        } else {
-            HomeDashboardLayoutMode.SpaciousGrid
-        }
-        val compactHome = layoutMode != HomeDashboardLayoutMode.SpaciousGrid
-        val outerHorizontalPadding = if (compactHome) 12.dp else 24.dp
-        val outerVerticalPadding = if (compactHome) 6.dp else 12.dp
-        val gap = if (compactHome) 8.dp else 12.dp
+        val layoutMode = HomeDashboardLayoutMode.SpaciousGrid
+        val outerHorizontalPadding = 24.dp
+        val outerVerticalPadding = 12.dp
+        val gap = 12.dp
+        val toolbarHeight = 47.dp
+        val topPanelHeight = ((maxHeight - outerVerticalPadding * 2 - toolbarHeight - gap * 2) * 0.56f)
+            .coerceAtMost(405.dp)
+            .coerceAtLeast(310.dp)
 
-        when (layoutMode) {
-            HomeDashboardLayoutMode.ShortWide -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = outerHorizontalPadding, vertical = outerVerticalPadding),
-                    horizontalArrangement = Arrangement.spacedBy(gap)
-                ) {
-                    HomeWatchWindow(
-                        cards = watchCards,
-                        searchEnabled = searchEnabled,
-                        onNavigate = onNavigate,
-                        layoutMode = layoutMode,
-                        modifier = Modifier.weight(1.08f)
-                    )
-                    Column(
-                        modifier = Modifier
-                            .weight(0.92f)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(gap)
-                    ) {
-                        HomeSourcesShortcutWindow(
-                            activeProviderName = activeProviderName,
-                            providerHealth = providerHealth,
-                            activeSource = activeSource,
-                            sourceOptions = sourceOptions,
-                            onAddProvider = onAddProvider,
-                            onOpenSettings = { onNavigate(Routes.SETTINGS) },
-                            onSourceSelected = onSourceSelected,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(0.82f)
-                        )
-                        HomeAppearanceWindow(
-                            cards = appearanceCards,
-                            themePalettes = themePalettes,
-                            activePaletteId = themePaletteId,
-                            onNavigate = onNavigate,
-                            onThemeSelected = onThemeSelected,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(1.18f)
-                        )
-                    }
-                    HomeQuickWindow(
-                        selectedDestination = visibleStartupDestination,
-                        startupOptions = startupOptions,
-                        remoteDpadChannelZapping = remoteDpadChannelZapping,
-                        remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
-                        remoteShowInfoOnZap = remoteShowInfoOnZap,
-                        preventStandbyDuringPlayback = preventStandbyDuringPlayback,
-                        autoPlayNextEpisode = autoPlayNextEpisode,
-                        backgroundGradientsEnabled = backgroundGradientsEnabled,
-                        showLiveSourceSwitcher = showLiveSourceSwitcher,
-                        showAllChannelsCategory = showAllChannelsCategory,
-                        showRecentChannelsCategory = showRecentChannelsCategory,
-                        onDestinationSelected = onStartupDestinationChange,
-                        onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
-                        onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
-                        onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange,
-                        onPreventStandbyDuringPlaybackChange = onPreventStandbyDuringPlaybackChange,
-                        onAutoPlayNextEpisodeChange = onAutoPlayNextEpisodeChange,
-                        onBackgroundGradientsEnabledChange = onBackgroundGradientsEnabledChange,
-                        onShowLiveSourceSwitcherChange = onShowLiveSourceSwitcherChange,
-                        onShowAllChannelsCategoryChange = onShowAllChannelsCategoryChange,
-                        onShowRecentChannelsCategoryChange = onShowRecentChannelsCategoryChange,
-                        layoutMode = layoutMode,
-                        modifier = Modifier.weight(1.22f)
-                    )
-                }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = outerHorizontalPadding, vertical = outerVerticalPadding),
+            verticalArrangement = Arrangement.spacedBy(gap)
+        ) {
+            HomeBottomToolbarRow(
+                cards = watchCards,
+                searchEnabled = searchEnabled,
+                onNavigate = onNavigate,
+                onAddProvider = onAddProvider,
+                onOpenSourceSettings = { onNavigate(Routes.SETTINGS) },
+                layoutMode = layoutMode,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(toolbarHeight)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(topPanelHeight),
+                horizontalArrangement = Arrangement.spacedBy(gap)
+            ) {
+                HomeAppearanceWindow(
+                    cards = appearanceCards,
+                    themePalettes = themePalettes,
+                    activePaletteId = themePaletteId,
+                    onNavigate = onNavigate,
+                    onThemeSelected = onThemeSelected,
+                    layoutMode = layoutMode,
+                    modifier = Modifier.weight(1.24f)
+                )
+                HomeQuickWindow(
+                    selectedDestination = visibleStartupDestination,
+                    startupOptions = startupOptions,
+                    remoteDpadChannelZapping = remoteDpadChannelZapping,
+                    remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
+                    remoteShowInfoOnZap = remoteShowInfoOnZap,
+                    preventStandbyDuringPlayback = preventStandbyDuringPlayback,
+                    autoPlayNextEpisode = autoPlayNextEpisode,
+                    backgroundGradientsEnabled = backgroundGradientsEnabled,
+                    showLiveSourceSwitcher = showLiveSourceSwitcher,
+                    showAllChannelsCategory = showAllChannelsCategory,
+                    showRecentChannelsCategory = showRecentChannelsCategory,
+                    onDestinationSelected = onStartupDestinationChange,
+                    onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
+                    onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
+                    onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange,
+                    onPreventStandbyDuringPlaybackChange = onPreventStandbyDuringPlaybackChange,
+                    onAutoPlayNextEpisodeChange = onAutoPlayNextEpisodeChange,
+                    onBackgroundGradientsEnabledChange = onBackgroundGradientsEnabledChange,
+                    onShowLiveSourceSwitcherChange = onShowLiveSourceSwitcherChange,
+                    onShowAllChannelsCategoryChange = onShowAllChannelsCategoryChange,
+                    onShowRecentChannelsCategoryChange = onShowRecentChannelsCategoryChange,
+                    layoutMode = layoutMode,
+                    modifier = Modifier.weight(0.76f)
+                )
             }
-
-            HomeDashboardLayoutMode.NarrowCompact -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = outerHorizontalPadding, vertical = outerVerticalPadding),
-                    horizontalArrangement = Arrangement.spacedBy(gap)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(gap)
-                    ) {
-                        HomeWatchWindow(
-                            cards = watchCards,
-                            searchEnabled = searchEnabled,
-                            onNavigate = onNavigate,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(1.28f)
-                        )
-                        HomeSourcesShortcutWindow(
-                            activeProviderName = activeProviderName,
-                            providerHealth = providerHealth,
-                            activeSource = activeSource,
-                            sourceOptions = sourceOptions,
-                            onAddProvider = onAddProvider,
-                            onOpenSettings = { onNavigate(Routes.SETTINGS) },
-                            onSourceSelected = onSourceSelected,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(0.72f)
-                        )
-                    }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(gap)
-                    ) {
-                        HomeQuickWindow(
-                            selectedDestination = visibleStartupDestination,
-                            startupOptions = startupOptions,
-                            remoteDpadChannelZapping = remoteDpadChannelZapping,
-                            remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
-                            remoteShowInfoOnZap = remoteShowInfoOnZap,
-                            preventStandbyDuringPlayback = preventStandbyDuringPlayback,
-                            autoPlayNextEpisode = autoPlayNextEpisode,
-                            backgroundGradientsEnabled = backgroundGradientsEnabled,
-                            showLiveSourceSwitcher = showLiveSourceSwitcher,
-                            showAllChannelsCategory = showAllChannelsCategory,
-                            showRecentChannelsCategory = showRecentChannelsCategory,
-                            onDestinationSelected = onStartupDestinationChange,
-                            onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
-                            onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
-                            onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange,
-                            onPreventStandbyDuringPlaybackChange = onPreventStandbyDuringPlaybackChange,
-                            onAutoPlayNextEpisodeChange = onAutoPlayNextEpisodeChange,
-                            onBackgroundGradientsEnabledChange = onBackgroundGradientsEnabledChange,
-                            onShowLiveSourceSwitcherChange = onShowLiveSourceSwitcherChange,
-                            onShowAllChannelsCategoryChange = onShowAllChannelsCategoryChange,
-                            onShowRecentChannelsCategoryChange = onShowRecentChannelsCategoryChange,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(1.2f)
-                        )
-                        HomeAppearanceWindow(
-                            cards = appearanceCards,
-                            themePalettes = themePalettes,
-                            activePaletteId = themePaletteId,
-                            onNavigate = onNavigate,
-                            onThemeSelected = onThemeSelected,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(0.8f)
-                        )
-                    }
-                }
-            }
-
-            HomeDashboardLayoutMode.CompactGrid,
-            HomeDashboardLayoutMode.SpaciousGrid -> {
-                val toolbarHeight = if (compactHome) 112.dp else 134.dp
-                val topPanelHeight = ((maxHeight - outerVerticalPadding * 2 - toolbarHeight - gap * 2) * 0.56f)
-                    .coerceAtMost(if (compactHome) 320.dp else 405.dp)
-                    .coerceAtLeast(if (compactHome) 245.dp else 310.dp)
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = outerHorizontalPadding, vertical = outerVerticalPadding),
-                    verticalArrangement = Arrangement.spacedBy(gap)
-                ) {
-                    HomeBottomToolbarRow(
-                        cards = watchCards,
-                        searchEnabled = searchEnabled,
-                        onNavigate = onNavigate,
-                        onAddProvider = onAddProvider,
-                        onOpenSourceSettings = { onNavigate(Routes.SETTINGS) },
-                        layoutMode = layoutMode,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(toolbarHeight)
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(topPanelHeight),
-                        horizontalArrangement = Arrangement.spacedBy(gap)
-                    ) {
-                        HomeAppearanceWindow(
-                            cards = appearanceCards,
-                            themePalettes = themePalettes,
-                            activePaletteId = themePaletteId,
-                            onNavigate = onNavigate,
-                            onThemeSelected = onThemeSelected,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(1.24f)
-                        )
-                        HomeQuickWindow(
-                            selectedDestination = visibleStartupDestination,
-                            startupOptions = startupOptions,
-                            remoteDpadChannelZapping = remoteDpadChannelZapping,
-                            remoteDpadInvertChannelZapping = remoteDpadInvertChannelZapping,
-                            remoteShowInfoOnZap = remoteShowInfoOnZap,
-                            preventStandbyDuringPlayback = preventStandbyDuringPlayback,
-                            autoPlayNextEpisode = autoPlayNextEpisode,
-                            backgroundGradientsEnabled = backgroundGradientsEnabled,
-                            showLiveSourceSwitcher = showLiveSourceSwitcher,
-                            showAllChannelsCategory = showAllChannelsCategory,
-                            showRecentChannelsCategory = showRecentChannelsCategory,
-                            onDestinationSelected = onStartupDestinationChange,
-                            onRemoteDpadChannelZappingChange = onRemoteDpadChannelZappingChange,
-                            onRemoteDpadInvertChannelZappingChange = onRemoteDpadInvertChannelZappingChange,
-                            onRemoteShowInfoOnZapChange = onRemoteShowInfoOnZapChange,
-                            onPreventStandbyDuringPlaybackChange = onPreventStandbyDuringPlaybackChange,
-                            onAutoPlayNextEpisodeChange = onAutoPlayNextEpisodeChange,
-                            onBackgroundGradientsEnabledChange = onBackgroundGradientsEnabledChange,
-                            onShowLiveSourceSwitcherChange = onShowLiveSourceSwitcherChange,
-                            onShowAllChannelsCategoryChange = onShowAllChannelsCategoryChange,
-                            onShowRecentChannelsCategoryChange = onShowRecentChannelsCategoryChange,
-                            layoutMode = layoutMode,
-                            modifier = Modifier.weight(0.76f)
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f))
-                    HomeDashboardWordmark(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(if (compactHome) 30.dp else 40.dp)
-                    )
-                }
-            }
+            HomeDashboardWordmark(
+                modifier = Modifier
+                    .width(260.dp)
+                    .height(56.dp)
+            )
         }
     }
 }
@@ -493,8 +346,7 @@ private fun HomeDashboardWordmark(
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
-                .fillMaxWidth(0.14f)
-                .fillMaxHeight()
+                .fillMaxSize()
                 .alpha(0.56f)
         )
     }
@@ -511,10 +363,10 @@ private fun HomeBottomToolbarRow(
     modifier: Modifier = Modifier
 ) {
     val compact = layoutMode != HomeDashboardLayoutMode.SpaciousGrid
-    val shape = RoundedCornerShape(if (compact) 14.dp else 18.dp)
+    val shape = RoundedCornerShape(if (compact) 14.dp else 16.dp)
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
@@ -528,7 +380,7 @@ private fun HomeBottomToolbarRow(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = if (compact) 7.dp else 8.dp),
+                    .padding(horizontal = if (compact) 10.dp else 12.dp, vertical = if (compact) 7.dp else 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp)
             ) {
@@ -536,7 +388,7 @@ private fun HomeBottomToolbarRow(
                     HomeWatchToolbarButton(
                         model = card,
                         compact = compact,
-                        modifier = Modifier.width(if (compact) 70.dp else 84.dp),
+                        modifier = Modifier.width(if (compact) 70.dp else 62.dp),
                         onClick = { card.route?.let(onNavigate) }
                     )
                 }
@@ -545,7 +397,7 @@ private fun HomeBottomToolbarRow(
                         compact = compact,
                         modifier = Modifier
                             .weight(1f)
-                            .height(if (compact) 64.dp else 74.dp),
+                            .height(if (compact) 64.dp else 38.dp),
                         onSubmit = { query -> onNavigate(Routes.search(query)) }
                     )
                 } else {
@@ -564,7 +416,7 @@ private fun HomeBottomToolbarRow(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = if (compact) 7.dp else 8.dp),
+                .padding(horizontal = if (compact) 10.dp else 12.dp, vertical = if (compact) 7.dp else 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp)
             ) {
@@ -607,7 +459,7 @@ private fun HomeSourceToolbarButton(
     onClick: () -> Unit
 ) {
     Column(
-        modifier = modifier.width(if (compact) 70.dp else 86.dp),
+        modifier = modifier.width(if (compact) 70.dp else 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -615,7 +467,7 @@ private fun HomeSourceToolbarButton(
             title = "",
             icon = icon,
             accent = accent,
-            modifier = Modifier.size(if (compact) 46.dp else 54.dp),
+            modifier = Modifier.size(if (compact) 46.dp else 17.dp),
             compact = compact,
             centered = true,
             onClick = onClick
@@ -627,7 +479,7 @@ private fun HomeSourceToolbarButton(
                 fontSize = if (compact) 9.sp else 10.sp,
                 lineHeight = if (compact) 10.sp else 12.sp
             ),
-            color = TextPrimary,
+            color = homeWindowTextColor,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
@@ -639,15 +491,12 @@ private fun HomeSourceToolbarButton(
 }
 
 private enum class HomeDashboardLayoutMode {
-    SpaciousGrid,
-    CompactGrid,
-    ShortWide,
-    NarrowCompact
+    SpaciousGrid
 }
 
 private data class HomeHubCardModel(
     val title: String,
-    val subtitle: String,
+    val subtitle: String? = null,
     val route: String?,
     val icon: ImageVector,
     val accent: Color
@@ -705,6 +554,33 @@ private val HomeLabsPurple = Color(0xFF6F35D8)
 private val HomeNeonOrange = Color(0xFFFF6A00)
 private val HomeVoxRoundWideBold = FontFamily(
     Font(R.font.vox_round_wide_bold, FontWeight.Bold)
+)
+private val HomeVoxRound = FontFamily(
+    Font(R.font.vox_round, FontWeight.Normal)
+)
+private val HomeVoxRoundLight = FontFamily(
+    Font(R.font.vox_round_light, FontWeight.Light)
+)
+private val HomeVoxRoundWide = FontFamily(
+    Font(R.font.vox_round_wide, FontWeight.Normal)
+)
+
+private val HomeDashboardTypography = Typography(
+    displayLarge = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 34.sp, lineHeight = 40.sp),
+    displayMedium = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 30.sp, lineHeight = 36.sp),
+    displaySmall = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 24.sp, lineHeight = 30.sp),
+    headlineLarge = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 24.sp, lineHeight = 30.sp),
+    headlineMedium = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 20.sp, lineHeight = 26.sp),
+    headlineSmall = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 18.sp, lineHeight = 24.sp),
+    titleLarge = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 18.sp, lineHeight = 24.sp),
+    titleMedium = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 22.sp),
+    titleSmall = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp),
+    bodyLarge = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 20.sp),
+    bodyMedium = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 18.sp),
+    bodySmall = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp),
+    labelLarge = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 13.sp, lineHeight = 16.sp),
+    labelMedium = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 14.sp),
+    labelSmall = TextStyle(fontFamily = HomeVoxRoundWide, fontWeight = FontWeight.Normal, fontSize = 11.sp, lineHeight = 13.sp)
 )
 
 private val BrightHomeThemeIds = setOf(
@@ -809,19 +685,14 @@ private fun HomeWindow(
                 .padding(horizontal = if (compact) 12.dp else 16.dp, vertical = if (compact) 10.dp else 14.dp),
             verticalArrangement = Arrangement.spacedBy(if (compact) 7.dp else 10.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = title,
-                    style = if (compact) {
-                        MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-                    } else {
-                        MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                    },
-                    color = homeWindowTextColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+            Column(verticalArrangement = Arrangement.spacedBy(if (subtitle.isBlank()) 0.dp else 2.dp)) {
+                HomePanelTitleBar(
+                    title = title,
+                    accent = accent,
+                    compact = compact,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                if (!compact) {
+                if (!compact && subtitle.isNotBlank()) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
@@ -833,6 +704,51 @@ private fun HomeWindow(
             }
             content()
         }
+    }
+}
+
+@Composable
+private fun HomePanelTitleBar(
+    title: String,
+    accent: Color,
+    compact: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(if (compact) 8.dp else 10.dp)
+    val palette = AppColors.palette
+    val background = if (isBrightHomeTheme) {
+        palette.surfaceCool.copy(alpha = 0.88f)
+    } else {
+        palette.surfaceAccent.copy(alpha = 0.72f)
+    }
+    val textColor = AppColors.primaryContentColorFor(background)
+    Box(
+        modifier = modifier
+            .height(if (compact) 20.dp else 24.dp)
+            .clip(shape)
+            .background(background)
+            .padding(horizontal = if (compact) 8.dp else 10.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            text = title,
+            style = if (compact) {
+                MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 13.sp,
+                    lineHeight = 16.sp
+                )
+            } else {
+                MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 15.sp,
+                    lineHeight = 18.sp
+                )
+            },
+            color = textColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -958,7 +874,7 @@ private fun HomeWatchToolbarButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val circleSize = if (compact) 52.dp else 62.dp
+    val circleSize = if (compact) 52.dp else 19.dp
     val labelColor = homeWindowTextColor
     Column(
         modifier = modifier,
@@ -978,8 +894,8 @@ private fun HomeWatchToolbarButton(
             text = model.title,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.SemiBold,
-                fontSize = if (compact) 10.sp else 11.sp,
-                lineHeight = if (compact) 11.sp else 13.sp
+                fontSize = if (compact) 10.sp else 10.sp,
+                lineHeight = if (compact) 11.sp else 12.sp
             ),
             color = labelColor,
             maxLines = 1,
@@ -1005,70 +921,23 @@ private fun HomeDashboardSearchPanel(
             onSubmit(trimmed)
         }
     }
-    val shape = RoundedCornerShape(14.dp)
-    val containerColor = if (isBrightHomeTheme) AppColors.Surface else AppColors.Surface.copy(alpha = 0.64f)
-    val titleColor = homeSurfaceTextColor(containerColor)
-    Surface(
-        modifier = modifier
-            .homeActiveGlow(shape, active = false),
-        shape = shape,
-        colors = SurfaceDefaults.colors(
-            containerColor = containerColor
-        ),
-        border = Border(
-            BorderStroke(
-                if (isBrightHomeTheme || isAfterglowLabsTheme) 2.dp else 1.dp,
-                homeActionBorderColor(Color(0xFFFF77FF))
-            )
-        )
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = if (compact) 8.dp else 10.dp, vertical = if (compact) 6.dp else 8.dp),
-            verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp, Alignment.CenterVertically)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                IconBadge(
-                    icon = Icons.Default.Search,
-                    accent = Color(0xFFFF77FF),
-                    size = if (compact) 23.dp else 28.dp
-                )
-                Text(
-                    text = "Search",
-                    style = if (compact) {
-                        MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            lineHeight = 16.sp
-                        )
-                    } else {
-                        MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 17.sp,
-                            lineHeight = 19.sp
-                        )
-                    },
-                    color = titleColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            SearchInput(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = "Type here",
-                imeAction = ImeAction.Search,
-                onSearch = submit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(if (compact) 46.dp else 54.dp)
-            )
-        }
+        SearchInput(
+            value = query,
+            onValueChange = { query = it },
+            placeholder = "Search here",
+            imeAction = ImeAction.Search,
+            onSearch = submit,
+            textStyle = MaterialTheme.typography.bodySmall.copy(
+                fontSize = if (compact) 12.sp else 11.sp,
+                lineHeight = if (compact) 14.sp else 13.sp
+            ),
+            height = if (compact) 46.dp else 30.dp,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -1451,7 +1320,7 @@ private fun HomeSourceCommandAction(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = if (compact) 6.dp else 8.dp, vertical = if (compact) 5.dp else 7.dp),
+                    .padding(horizontal = if (compact) 6.dp else 0.dp, vertical = if (compact) 5.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -1529,7 +1398,7 @@ private fun HomeAppearanceWindow(
     val compact = layoutMode != HomeDashboardLayoutMode.SpaciousGrid
     HomeWindow(
         title = "Appearance",
-        subtitle = "Visual shortcuts.",
+        subtitle = "",
         accent = Color(0xFFFF77FF),
         modifier = modifier,
         compact = compact
@@ -1544,14 +1413,14 @@ private fun HomeAppearanceWindow(
                 activePaletteId = activePaletteId,
                 compact = compact,
                 modifier = Modifier
-                    .weight(if (compact) 1.62f else 1.72f)
+                    .weight(if (compact) 1.52f else 1.54f)
                     .fillMaxHeight(),
                 onOpenThemes = { cards[0].route?.let(onNavigate) },
                 onThemeSelected = onThemeSelected
             )
             Column(
                 modifier = Modifier
-                    .weight(if (compact) 0.38f else 0.28f)
+                    .weight(if (compact) 0.48f else 0.46f)
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(
                     space = if (compact) 8.dp else 10.dp,
@@ -1561,12 +1430,12 @@ private fun HomeAppearanceWindow(
                 cards.drop(1).forEach { card ->
                     HomeSmallTextAction(
                         title = card.title,
-                        subtitle = card.subtitle,
+                        subtitle = card.subtitle.orEmpty(),
                         icon = card.icon,
                         accent = card.accent,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(if (compact) 74.dp else 88.dp),
+                            .height(if (compact) 46.dp else 54.dp),
                         compact = compact,
                         onClick = { card.route?.let(onNavigate) }
                     )
@@ -1631,25 +1500,15 @@ private fun HomeQuickWindow(
                         )
                     }
                 )
-                .padding(horizontal = if (compact) 10.dp else 12.dp, vertical = if (compact) 8.dp else 10.dp),
+                .padding(horizontal = if (compact) 12.dp else 16.dp, vertical = if (compact) 10.dp else 14.dp),
             verticalArrangement = Arrangement.spacedBy(if (compact) 3.dp else 5.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Quick Settings",
-                    style = if (compact) {
-                        MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-                    } else {
-                        MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                    },
-                    color = titleColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            HomePanelTitleBar(
+                title = "Quick Settings",
+                accent = accent,
+                compact = compact,
+                modifier = Modifier.fillMaxWidth()
+            )
             if (compact) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -1953,14 +1812,14 @@ private fun HomeRemoteOptionsColumn(
             onCheckedChange = onRemoteDpadChannelZappingChange
         )
         HomeMiniToggle(
-            title = "Reverse channel order",
+            title = "Reverse channels",
             checked = remoteDpadInvertChannelZapping,
             enabled = remoteDpadChannelZapping,
             compact = compact,
             onCheckedChange = onRemoteDpadInvertChannelZappingChange
         )
         HomeMiniToggle(
-            title = "Show info while changing",
+            title = "Show channel info",
             checked = remoteShowInfoOnZap,
             compact = compact,
             onCheckedChange = onRemoteShowInfoOnZapChange
@@ -2021,7 +1880,11 @@ private fun HomeQuickSectionLabel(
                 lineHeight = 11.sp
             )
         } else {
-            MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+            MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 10.sp,
+                lineHeight = 12.sp
+            )
         },
         color = homeWindowSecondaryTextColor,
         maxLines = 1,
@@ -2082,16 +1945,18 @@ private fun HomeThemeFeatureAction(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(
-                        text = model.subtitle,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = if (compact) 10.sp else 11.sp,
-                            lineHeight = if (compact) 12.sp else 14.sp
-                        ),
-                        color = subtitleColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    model.subtitle?.takeIf { it.isNotBlank() }?.let { subtitle ->
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = if (compact) 10.sp else 11.sp,
+                                lineHeight = if (compact) 12.sp else 14.sp
+                            ),
+                            color = subtitleColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
                 HomeOpenThemesButton(
                     compact = compact,
@@ -2288,7 +2153,7 @@ private fun HomeWatchAction(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                    .padding(horizontal = if (compact) 8.dp else 0.dp, vertical = if (compact) 8.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -2384,32 +2249,29 @@ private fun HomeSmallTextAction(
 ) {
     val shape = RoundedCornerShape(14.dp)
     val outline = homeOutlineColor
-    val iconSize = if (compact) 22.dp else 30.dp
-    val verticalPadding = if (compact) 6.dp else 9.dp
-    val horizontalPadding = if (compact) 10.dp else 12.dp
-    val horizontalGap = if (compact) 8.dp else 10.dp
+    val iconSize = if (compact) 18.dp else 20.dp
     val titleStyle = if (compact) {
         MaterialTheme.typography.labelLarge.copy(
             fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp,
-            lineHeight = 16.sp
+            fontSize = 10.sp,
+            lineHeight = 11.sp
         )
     } else {
-        MaterialTheme.typography.titleSmall.copy(
+        MaterialTheme.typography.labelLarge.copy(
             fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp,
-            lineHeight = 20.sp
+            fontSize = 11.sp,
+            lineHeight = 12.sp
         )
     }
     val subtitleStyle = if (compact) {
         MaterialTheme.typography.labelSmall.copy(
-            fontSize = 10.sp,
-            lineHeight = 12.sp
+            fontSize = 8.sp,
+            lineHeight = 10.sp
         )
     } else {
         MaterialTheme.typography.labelSmall.copy(
-            fontSize = 11.sp,
-            lineHeight = 14.sp
+            fontSize = 9.sp,
+            lineHeight = 10.sp
         )
     }
     TvClickableSurface(
@@ -2434,34 +2296,30 @@ private fun HomeSmallTextAction(
             )
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = horizontalPadding, vertical = verticalPadding),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(horizontalGap)
+                .padding(0.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             IconBadge(icon = icon, accent = accent, size = iconSize)
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(1.dp)
-            ) {
+            Spacer(modifier = Modifier.height(if (compact) 1.dp else 2.dp))
+            Text(
+                text = title,
+                style = titleStyle,
+                color = if (isBrightHomeTheme) TextPrimary else homeWindowTextColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (showSubtitle) {
                 Text(
-                    text = title,
-                    style = titleStyle,
-                    color = TextPrimary,
+                    text = subtitle,
+                    style = subtitleStyle,
+                    color = if (isBrightHomeTheme) OnSurfaceDim else homeWindowSecondaryTextColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (showSubtitle) {
-                    Text(
-                        text = subtitle,
-                        style = subtitleStyle,
-                        color = OnSurfaceDim,
-                        maxLines = if (compact) 2 else 1,
-                        overflow = if (compact) TextOverflow.Clip else TextOverflow.Ellipsis
-                    )
-                }
             }
         }
     }
@@ -2487,7 +2345,7 @@ private fun HomeStartupChip(
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier
-            .height(if (compact) 25.dp else 33.dp)
+            .height(18.dp)
             .homeActiveGlow(shape, active = selected),
         shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
@@ -2499,35 +2357,47 @@ private fun HomeStartupChip(
             border = Border(
                 border = BorderStroke(
                     if (isAfterglowLabsTheme) {
-                        if (selected) 4.dp else 2.dp
+                        1.dp
                     } else {
-                        if (selected) 2.dp else 1.dp
+                        1.dp
                     },
                     if (isAfterglowLabsTheme) outline.copy(alpha = if (selected) 0.95f else 0.64f) else homeActionBorderColor(accent, selected)
                 ),
                 shape = shape
             ),
             focusedBorder = Border(
-                border = BorderStroke(3.dp, homeFocusOutlineColor),
+                border = BorderStroke(1.dp, homeFocusOutlineColor),
                 shape = shape
             )
         )
     ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = title,
                 style = if (compact) {
                     MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 9.sp,
-                        lineHeight = 11.sp
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = HomeVoxRoundWide,
+                        fontSize = 8.sp,
+                        lineHeight = 10.sp
                     )
                 } else {
-                    MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                    MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = HomeVoxRoundWide,
+                        fontSize = 8.sp,
+                        lineHeight = 10.sp
+                    )
                 },
                 color = TextPrimary,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -2540,6 +2410,7 @@ private fun HomeMiniToggle(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     compact: Boolean = false,
+    tallLabel: Boolean = false,
     onCheckedChange: (Boolean) -> Unit
 ) {
     val accent = if (checked) HomeNeonOrange else Color(0xFF7DD3FC)
@@ -2549,7 +2420,7 @@ private fun HomeMiniToggle(
         onClick = { if (enabled) onCheckedChange(!checked) },
         modifier = modifier
             .fillMaxWidth()
-            .height(if (compact) 25.dp else 33.dp)
+            .height(if (tallLabel) 36.dp else 18.dp)
             .homeActiveGlow(shape, active = checked),
         enabled = enabled,
         shape = ClickableSurfaceDefaults.shape(shape),
@@ -2562,7 +2433,7 @@ private fun HomeMiniToggle(
             border = Border(
                 border = BorderStroke(
                     if (isAfterglowLabsTheme) {
-                        if (checked) 4.dp else 2.dp
+                        1.dp
                     } else {
                         1.dp
                     },
@@ -2571,46 +2442,63 @@ private fun HomeMiniToggle(
                 shape = shape
             ),
             focusedBorder = Border(
-                border = BorderStroke(3.dp, homeFocusOutlineColor),
+                border = BorderStroke(1.dp, homeFocusOutlineColor),
                 shape = shape
             )
         )
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = if (compact) 7.dp else 10.dp, vertical = if (compact) 4.dp else 6.dp),
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(if (compact) 5.dp else 8.dp)
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(if (compact) 7.dp else 9.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(accent.copy(alpha = if (enabled) 1f else 0.35f))
-            )
+                    .width(7.dp)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(accent.copy(alpha = if (enabled) 1f else 0.35f))
+                )
+            }
             Text(
                 text = title,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = if (compact) 9.sp else 11.sp,
-                    lineHeight = if (compact) 11.sp else 14.sp
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = HomeVoxRoundWide,
+                    fontSize = 8.sp,
+                    lineHeight = 10.sp
                 ),
                 color = TextPrimary.copy(alpha = if (enabled) 1f else 0.48f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                maxLines = if (tallLabel) 2 else 1,
+                overflow = if (tallLabel) TextOverflow.Clip else TextOverflow.Ellipsis
             )
-            Text(
-                text = if (checked) "On" else "Off",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = if (compact) 9.sp else 11.sp,
-                    lineHeight = if (compact) 11.sp else 14.sp
-                ),
-                color = OnSurfaceDim.copy(alpha = if (enabled) 1f else 0.48f),
-                maxLines = 1
-            )
+            Box(
+                modifier = Modifier
+                    .width(20.dp)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (checked) "On" else "Off",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = HomeVoxRoundWide,
+                        fontSize = 8.sp,
+                        lineHeight = 10.sp
+                    ),
+                    color = OnSurfaceDim.copy(alpha = if (enabled) 1f else 0.48f),
+                    maxLines = 1,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }

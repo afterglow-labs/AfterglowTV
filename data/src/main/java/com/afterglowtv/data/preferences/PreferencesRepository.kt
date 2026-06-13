@@ -160,6 +160,7 @@ class PreferencesRepository @Inject constructor(
         val STYLE_PROGRESS = stringPreferencesKey("style_progress")
         val BACKGROUND_GRADIENTS_ENABLED = booleanPreferencesKey("background_gradients_enabled")
         val DASHBOARD_WELCOME_SEEN = booleanPreferencesKey("dashboard_welcome_seen")
+        val CONTENT_RESPONSIBILITY_NOTICE_SHOWN_COUNT = intPreferencesKey("content_responsibility_notice_shown_count")
         val BUNDLED_PUBLIC_SOURCE_SEEDED = booleanPreferencesKey("bundled_public_source_seeded")
         val GLOW_INTENSITY = stringPreferencesKey("glow_intensity")
         val GLOW_FOCUS_SPECS = stringPreferencesKey("glow_focus_specs")
@@ -452,6 +453,10 @@ class PreferencesRepository @Inject constructor(
 
     val playerNoticeTimeoutSeconds: Flow<Int> = context.dataStore.data.map { preferences ->
         (preferences[PreferencesKeys.PLAYER_NOTICE_TIMEOUT_SECONDS] ?: 6).coerceIn(2, 60)
+    }
+
+    val contentResponsibilityNoticeShownCount: Flow<Int> = context.dataStore.data.map { preferences ->
+        (preferences[PreferencesKeys.CONTENT_RESPONSIBILITY_NOTICE_SHOWN_COUNT] ?: 0).coerceAtLeast(0)
     }
 
     val playerDiagnosticsTimeoutSeconds: Flow<Int> = context.dataStore.data.map { preferences ->
@@ -1085,6 +1090,13 @@ class PreferencesRepository @Inject constructor(
     suspend fun setPlayerNoticeTimeoutSeconds(seconds: Int) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.PLAYER_NOTICE_TIMEOUT_SECONDS] = seconds.coerceIn(2, 60)
+        }
+    }
+
+    suspend fun incrementContentResponsibilityNoticeShownCount() {
+        context.dataStore.edit { preferences ->
+            val current = preferences[PreferencesKeys.CONTENT_RESPONSIBILITY_NOTICE_SHOWN_COUNT] ?: 0
+            preferences[PreferencesKeys.CONTENT_RESPONSIBILITY_NOTICE_SHOWN_COUNT] = (current + 1).coerceAtMost(1)
         }
     }
 

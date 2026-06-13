@@ -1,4 +1,4 @@
-package com.afterglowtv.app.ui.screens.home
+package com.afterglowtv.app.ui.screens.live
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -79,7 +79,7 @@ import javax.inject.Provider as InjectProvider
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-class HomeViewModel @Inject constructor(
+class LiveTvViewModel @Inject constructor(
     application: Application,
     private val providerRepository: ProviderRepository,
     private val adultCacheRepository: AdultCacheRepository,
@@ -106,7 +106,7 @@ class HomeViewModel @Inject constructor(
      * Warm the TCP/TLS connection to a channel the user has focused but
      * not yet selected. Fire-and-forget, deduplicated by the prewarmer.
      *
-     * Called from [HomeScreen] on every channel-card focus change. By the
+     * Called from [LiveTvScreen] on every channel-card focus change. By the
      * time the user actually presses OK, the connection is in OkHttp's
      * idle pool and the first segment fetch reuses it instead of paying
      * the full DNS+TCP+TLS cost.
@@ -149,8 +149,8 @@ class HomeViewModel @Inject constructor(
 
     private val appContext = application
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(LiveTvUiState())
+    val uiState: StateFlow<LiveTvUiState> = _uiState.asStateFlow()
 
     private val _localChannels = MutableStateFlow<List<Channel>>(emptyList())
     private val _adultMode = MutableStateFlow(false)
@@ -1794,7 +1794,7 @@ class HomeViewModel @Inject constructor(
 
     fun hideCategory(category: Category) {
         if (_uiState.value.isCombinedLiveSource) return
-        if (!canHideHomeCategory(category, _uiState.value.isAdultMode)) return
+        if (!canHideLiveTvCategory(category, _uiState.value.isAdultMode)) return
         val providerId = _uiState.value.provider?.id ?: return
         viewModelScope.launch {
             preferencesRepository.setCategoryHidden(
@@ -2157,7 +2157,7 @@ class HomeViewModel @Inject constructor(
             .filter { it.enabled }
             .map { it.providerId }
 
-    private fun currentLiveProviderIds(state: HomeUiState = _uiState.value): List<Long> = when (val source = state.activeLiveSource) {
+    private fun currentLiveProviderIds(state: LiveTvUiState = _uiState.value): List<Long> = when (val source = state.activeLiveSource) {
         is ActiveLiveSource.ProviderSource -> listOf(source.providerId)
         is ActiveLiveSource.CombinedM3uSource -> state.currentCombinedProfileMembers
             .filter { it.enabled }
@@ -2215,7 +2215,7 @@ class HomeViewModel @Inject constructor(
 private fun Provider.isLiveTvSourceProvider(): Boolean =
     type != ProviderType.M3U || m3uPlaylistKind != ProviderM3uPlaylistKind.VOD
 
-data class HomeUiState(
+data class LiveTvUiState(
     val provider: Provider? = null,
     val activeLiveSource: ActiveLiveSource? = null,
     val activeLiveSourceTitle: String = "",

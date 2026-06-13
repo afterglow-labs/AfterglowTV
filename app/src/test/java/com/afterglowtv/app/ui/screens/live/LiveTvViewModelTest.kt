@@ -1,4 +1,4 @@
-package com.afterglowtv.app.ui.screens.home
+package com.afterglowtv.app.ui.screens.live
 
 import android.app.Application
 import androidx.lifecycle.ViewModel
@@ -41,7 +41,7 @@ import javax.inject.Provider as InjectProvider
 import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class HomeViewModelTest {
+class LiveTvViewModelTest {
 
     private val providerRepository: ProviderRepository = mock()
     private val adultCacheRepository: AdultCacheRepository = mock()
@@ -63,9 +63,9 @@ class HomeViewModelTest {
     private val playerEngineProvider: InjectProvider<PlayerEngine> = mock()
     private val connectionPrewarmer: ConnectionPrewarmer = mock()
     private val application: Application = mock()
-    private val createdViewModels = mutableListOf<HomeViewModel>()
+    private val createdViewModels = mutableListOf<LiveTvViewModel>()
 
-    private lateinit var viewModel: HomeViewModel
+    private lateinit var viewModel: LiveTvViewModel
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -124,8 +124,8 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): HomeViewModel =
-        HomeViewModel(
+    private fun createViewModel(): LiveTvViewModel =
+        LiveTvViewModel(
             application = application,
             providerRepository = providerRepository,
             adultCacheRepository = adultCacheRepository,
@@ -147,7 +147,7 @@ class HomeViewModelTest {
             connectionPrewarmer = connectionPrewarmer
         ).also(createdViewModels::add)
 
-    private fun clearViewModel(viewModel: HomeViewModel) {
+    private fun clearViewModel(viewModel: LiveTvViewModel) {
         val clearMethod = ViewModel::class.java.declaredMethods.firstOrNull {
             it.parameterCount == 0 && it.name.startsWith("clear")
         } ?: error("Unable to find ViewModel clear method")

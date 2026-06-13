@@ -1,4 +1,4 @@
-package com.afterglowtv.app.ui.screens.home
+package com.afterglowtv.app.ui.screens.live
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.basicMarquee
@@ -111,46 +111,46 @@ internal fun liveContentPaneWeights(
     else -> LiveContentPaneWeights(channelList = 1.08f, preview = 0.92f)
 }
 
-internal fun canHideHomeCategory(category: Category, adultMode: Boolean): Boolean =
+internal fun canHideLiveTvCategory(category: Category, adultMode: Boolean): Boolean =
     if (adultMode) {
         category.id != VirtualCategoryIds.ADULT
     } else {
         !category.isVirtual && category.id != ChannelRepository.ALL_CHANNELS_ID
     }
 
-internal sealed interface HomeChannelRestorePlan {
-    data class FocusChannel(val channelId: Long, val index: Int) : HomeChannelRestorePlan
-    data object LoadMoreForSavedChannel : HomeChannelRestorePlan
-    data object NoChannels : HomeChannelRestorePlan
+internal sealed interface LiveTvChannelRestorePlan {
+    data class FocusChannel(val channelId: Long, val index: Int) : LiveTvChannelRestorePlan
+    data object LoadMoreForSavedChannel : LiveTvChannelRestorePlan
+    data object NoChannels : LiveTvChannelRestorePlan
 }
 
 internal fun resolveChannelRestorePlan(
     savedChannelId: Long?,
     channels: List<Channel>,
     hasMoreChannels: Boolean
-): HomeChannelRestorePlan {
+): LiveTvChannelRestorePlan {
     if (savedChannelId != null) {
         val savedIndex = channels.indexOfFirst { it.id == savedChannelId }
         if (savedIndex != -1) {
-            return HomeChannelRestorePlan.FocusChannel(savedChannelId, savedIndex)
+            return LiveTvChannelRestorePlan.FocusChannel(savedChannelId, savedIndex)
         }
         if (hasMoreChannels) {
-            return HomeChannelRestorePlan.LoadMoreForSavedChannel
+            return LiveTvChannelRestorePlan.LoadMoreForSavedChannel
         }
     }
 
     val firstChannel = channels.firstOrNull()
     return if (firstChannel == null) {
-        HomeChannelRestorePlan.NoChannels
+        LiveTvChannelRestorePlan.NoChannels
     } else {
-        HomeChannelRestorePlan.FocusChannel(firstChannel.id, 0)
+        LiveTvChannelRestorePlan.FocusChannel(firstChannel.id, 0)
     }
 }
 
-private const val HOME_ALL_FILTER_KEY = "__all_categories__"
+private const val LIVE_TV_ALL_FILTER_KEY = "__all_categories__"
 
 @Composable
-private fun HomeLoadingPane(
+private fun LiveTvLoadingPane(
     message: String,
     modifier: Modifier = Modifier
 ) {
@@ -181,14 +181,14 @@ private fun HomeLoadingPane(
 // ── Screen ─────────────────────────────────────────────────────────
 
 @Composable
-fun HomeScreen(
+fun LiveTvScreen(
     onChannelClick: (Channel, Category?, Provider?, Long?, Long?) -> Unit,
     onNavigate: (String) -> Unit,
     currentRoute: String,
     initialCategoryId: Long? = null,
     adultMode: Boolean = false,
     titleRes: Int = R.string.nav_live_tv,
-    viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: LiveTvViewModel = hiltViewModel(),
     multiViewViewModel: MultiViewViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -380,7 +380,7 @@ fun HomeScreen(
                             .background(SurfaceElevated)
                             .padding(horizontal = 16.dp, vertical = 24.dp)
                     ) {
-                        HomeLoadingPane(
+                        LiveTvLoadingPane(
                             message = stringResource(R.string.home_loading_categories)
                         )
                     }
@@ -391,7 +391,7 @@ fun HomeScreen(
                             .fillMaxHeight()
                             .padding(24.dp)
                     ) {
-                        HomeLoadingPane(
+                        LiveTvLoadingPane(
                             message = stringResource(R.string.home_loading_channels)
                         )
                     }
@@ -460,31 +460,31 @@ fun HomeScreen(
                 fun requestChannelFocus(channelId: Long?): Boolean {
                     val resolvedChannelId = channelId ?: return false
                     return channelFocusRequesters[resolvedChannelId]
-                        ?.requestFocusSafely(tag = "HomeScreen", target = "Channel $resolvedChannelId")
+                        ?.requestFocusSafely(tag = "LiveTvScreen", target = "Channel $resolvedChannelId")
                         ?: false
                 }
 
                 fun requestCategoryFocus(categoryId: Long?): Boolean {
                     val resolvedCategoryId = categoryId ?: return false
                     return categoryFocusRequesters[resolvedCategoryId]
-                        ?.requestFocusSafely(tag = "HomeScreen", target = "Category $resolvedCategoryId")
+                        ?.requestFocusSafely(tag = "LiveTvScreen", target = "Category $resolvedCategoryId")
                         ?: false
                 }
 
-                fun queueChannelRestore(plan: HomeChannelRestorePlan): Boolean {
+                fun queueChannelRestore(plan: LiveTvChannelRestorePlan): Boolean {
                     return when (plan) {
-                        is HomeChannelRestorePlan.FocusChannel -> {
+                        is LiveTvChannelRestorePlan.FocusChannel -> {
                             lastFocusedChannelId = plan.channelId
                             pendingChannelFocusId = plan.channelId
                             pendingChannelScrollIndex = plan.index
                             pendingRestoreTarget = null
                             true
                         }
-                        HomeChannelRestorePlan.LoadMoreForSavedChannel -> {
+                        LiveTvChannelRestorePlan.LoadMoreForSavedChannel -> {
                             viewModel.loadMoreChannels()
                             true
                         }
-                        HomeChannelRestorePlan.NoChannels -> false
+                        LiveTvChannelRestorePlan.NoChannels -> false
                     }
                 }
 
@@ -495,7 +495,7 @@ fun HomeScreen(
                         channels = uiState.filteredChannels,
                         hasMoreChannels = uiState.hasMoreChannels
                     )
-                    val preferredChannelId = (restorePlan as? HomeChannelRestorePlan.FocusChannel)?.channelId
+                    val preferredChannelId = (restorePlan as? LiveTvChannelRestorePlan.FocusChannel)?.channelId
                         ?: uiState.filteredChannels.first().id
                     preferredRestoreTarget = FocusRestoreTarget.CHANNEL.name
                     pendingRestoreTarget = FocusRestoreTarget.CHANNEL
@@ -617,7 +617,7 @@ fun HomeScreen(
                             hasMoreChannels = uiState.hasMoreChannels
                         )
                     } else {
-                        HomeChannelRestorePlan.NoChannels
+                        LiveTvChannelRestorePlan.NoChannels
                     }
                     val restored = when (restoreTarget) {
                         FocusRestoreTarget.CHANNEL -> queueChannelRestore(channelRestorePlan)
@@ -642,7 +642,7 @@ fun HomeScreen(
                             }
                         }
                     }
-                    if (channelRestorePlan !is HomeChannelRestorePlan.LoadMoreForSavedChannel) {
+                    if (channelRestorePlan !is LiveTvChannelRestorePlan.LoadMoreForSavedChannel) {
                         pendingRestoreTarget = null
                     }
                 }
@@ -825,7 +825,7 @@ fun HomeScreen(
                                             chips = buildList {
                                                 add(
                                                     SelectionChip(
-                                                        key = HOME_ALL_FILTER_KEY,
+                                                        key = LIVE_TV_ALL_FILTER_KEY,
                                                         label = stringResource(R.string.home_quick_filters_all)
                                                     )
                                                 )
@@ -835,12 +835,12 @@ fun HomeScreen(
                                                     }
                                                 )
                                             },
-                                            selectedKey = uiState.activeCategoryFilter ?: HOME_ALL_FILTER_KEY.takeIf {
+                                            selectedKey = uiState.activeCategoryFilter ?: LIVE_TV_ALL_FILTER_KEY.takeIf {
                                                 uiState.categorySearchQuery.isBlank()
                                             },
                                             onChipSelected = { filter ->
                                                 if (!isReorderMode) {
-                                                    if (filter == HOME_ALL_FILTER_KEY) {
+                                                    if (filter == LIVE_TV_ALL_FILTER_KEY) {
                                                         viewModel.clearCategorySearchQuery()
                                                     } else {
                                                         viewModel.applySavedCategoryFilter(filter)

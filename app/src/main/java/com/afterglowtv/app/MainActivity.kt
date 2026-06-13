@@ -138,8 +138,6 @@ class MainActivity : ComponentActivity() {
             val appLanguage by preferencesRepository.appLanguage.collectAsState(initial = "system")
             val appTimeFormat by preferencesRepository.appTimeFormat.collectAsState(initial = com.afterglowtv.domain.model.AppTimeFormat.SYSTEM)
             val currentContext = LocalContext.current
-            val screenConfiguration = LocalConfiguration.current
-            val baseDensity = LocalDensity.current
             
             val configuration = remember(appLanguage) {
                 val locale = resolveAppLocale(
@@ -174,56 +172,17 @@ class MainActivity : ComponentActivity() {
                     LayoutDirection.Ltr
                 }
             }
-            val appDensity = remember(
-                baseDensity,
-                screenConfiguration.screenWidthDp,
-                screenConfiguration.screenHeightDp
-            ) {
-                resolveAppUiDensity(
-                    context = currentContext,
-                    baseDensity = baseDensity,
-                    configuration = screenConfiguration
-                )
-            }
 
             CompositionLocalProvider(
                 LocalContext provides localizedContext,
                 LocalLayoutDirection provides layoutDirection,
-                LocalAppTimeFormat provides appTimeFormat,
-                LocalDensity provides appDensity
+                LocalAppTimeFormat provides appTimeFormat
             ) {
                 AfterglowTVTheme {
                     AppNavigation(mainActivity = this@MainActivity)
                 }
             }
         }
-    }
-
-    private fun resolveAppUiDensity(
-        context: Context,
-        baseDensity: Density,
-        configuration: Configuration
-    ): Density {
-        val widthDp = configuration.screenWidthDp.takeIf { it > 0 } ?: return baseDensity
-        val heightDp = configuration.screenHeightDp.takeIf { it > 0 } ?: return baseDensity
-        val widthPx = widthDp * baseDensity.density
-        val heightPx = heightDp * baseDensity.density
-        val isLargeLivingRoomCanvas = widthPx >= 1600f && heightPx >= 900f
-        if (!context.isTelevisionDevice() && !isLargeLivingRoomCanvas) return baseDensity
-
-        val targetWidthDp = 1280f
-        val targetHeightDp = 720f
-        val targetDensity = minOf(
-            baseDensity.density,
-            widthPx / targetWidthDp,
-            heightPx / targetHeightDp
-        ).coerceAtLeast(1f)
-
-        if (targetDensity >= baseDensity.density) return baseDensity
-        return Density(
-            density = targetDensity,
-            fontScale = baseDensity.fontScale
-        )
     }
 
     override fun onNewIntent(intent: Intent) {

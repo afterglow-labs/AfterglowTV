@@ -1,9 +1,9 @@
-package com.afterglowtv.app.ui.screens.home
+package com.afterglowtv.app.ui.screens.live
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class HomeLayoutTest {
+class LiveTvLayoutTest {
 
     @Test
     fun `adult gives more width to preview than regular pro mode`() {

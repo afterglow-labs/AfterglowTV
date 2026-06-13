@@ -19,7 +19,6 @@ data class StorePolicySnapshot(
     val amazonReviewBuild: Boolean,
     val showAdvancedSourceTypes: Boolean,
     val showAdultSurfaces: Boolean,
-    val showWelcomeRoute: Boolean,
     val enableBundledPublicSource: Boolean,
     val bundledPublicSources: List<BundledPublicSourceSpec>,
     val allowXtreamPlaylistAutoDetection: Boolean,
@@ -136,7 +135,6 @@ data class StorePolicySnapshot(
             amazonReviewBuild = false,
             showAdvancedSourceTypes = true,
             showAdultSurfaces = true,
-            showWelcomeRoute = true,
             enableBundledPublicSource = false,
             bundledPublicSources = emptyList(),
             allowXtreamPlaylistAutoDetection = true,
@@ -149,7 +147,6 @@ data class StorePolicySnapshot(
             amazonReviewBuild = true,
             showAdvancedSourceTypes = false,
             showAdultSurfaces = true,
-            showWelcomeRoute = false,
             enableBundledPublicSource = true,
             bundledPublicSources = listOf(
                 BundledPublicSourceSpec(
@@ -184,7 +181,6 @@ data class StorePolicySnapshot(
                 amazonReviewBuild = BuildConfig.AMAZON_REVIEW_BUILD,
                 showAdvancedSourceTypes = BuildConfig.SHOW_ADVANCED_SOURCE_TYPES,
                 showAdultSurfaces = BuildConfig.SHOW_ADULT_SURFACES,
-                showWelcomeRoute = BuildConfig.SHOW_WELCOME_ROUTE,
                 enableBundledPublicSource = BuildConfig.ENABLE_BUNDLED_PUBLIC_SOURCE,
                 bundledPublicSources = parseBundledPublicSourceSpecs(BuildConfig.BUNDLED_PUBLIC_SOURCE_SPECS),
                 allowXtreamPlaylistAutoDetection = BuildConfig.ALLOW_XTREAM_PLAYLIST_AUTO_DETECTION,

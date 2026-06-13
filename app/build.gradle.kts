@@ -75,7 +75,6 @@ android {
             buildConfigField("String", "DEFAULT_NETWORK_SHARE_PATH", "\"\"")
             buildConfigField("boolean", "SHOW_ADVANCED_SOURCE_TYPES", "false")
             buildConfigField("boolean", "SHOW_ADULT_SURFACES", "true")
-            buildConfigField("boolean", "SHOW_WELCOME_ROUTE", "false")
             buildConfigField("boolean", "ENABLE_BUNDLED_PUBLIC_SOURCE", "true")
             buildConfigField(
                 "String",
